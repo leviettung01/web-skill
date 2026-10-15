@@ -1,0 +1,323 @@
+:root {
+  --brand: #6366f1;
+  --bg-dark: #080716;
+  --panel-dark: #0f0e26;
+  --border-dark: #1f1b4b;
+  --text-primary: #e2e1f5;
+  --text-secondary: #9f9dbb;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+/* Custom Scrollbar in Dark Theme */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #2e2a5e; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+
+.line-clamp-1 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 1; }
+.line-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 2; }
+.line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 3; }
+
+/* Custom layouts */
+.sidebar-minimized {
+  width: 4.5rem !important;
+}
+.sidebar-minimized .sidebar-text,
+.sidebar-minimized .sidebar-header-text,
+.sidebar-minimized .sidebar-badge {
+  display: none !important;
+}
+.sidebar-minimized .sidebar-menu-item {
+  justify-content: center;
+  padding: 0.75rem 0 !important;
+}
+.content-expanded {
+  margin-left: 4.5rem !important;
+}
+
+/* Hero animated background */
+.hero-mesh {
+  background:
+    radial-gradient(at 15% 20%, rgba(99,102,241,.15) 0px, transparent 50%),
+    radial-gradient(at 85% 10%, rgba(217,70,239,.12) 0px, transparent 50%),
+    radial-gradient(at 70% 80%, rgba(6,182,212,.10) 0px, transparent 50%),
+    radial-gradient(at 20% 90%, rgba(244,63,94,.08) 0px, transparent 50%);
+}
+.hero-grid {
+  background-image: linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 40%, transparent 100%);
+}
+@keyframes float-slow { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-12px) } }
+.animate-float { animation: float-slow 6s ease-in-out infinite; }
+
+/* Marquee logos */
+@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee-track { animation: marquee 26s linear infinite; }
+.marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+
+/* Fade in on scroll */
+.reveal { opacity: 0; transform: translateY(15px); transition: opacity .45s ease, transform .45s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* Prose in Dark Theme */
+.prose-vn { color: var(--text-secondary); line-height: 1.8; font-size: 15px; }
+.prose-vn h2 { font-size: 1.35rem; font-weight: 800; color: #fff; margin: 1.8rem 0 .8rem; padding-left: .7rem; border-left: 4px solid var(--brand); }
+.prose-vn h3 { font-size: 1.12rem; font-weight: 700; color: #f1f0fc; margin: 1.5rem 0 .6rem; }
+.prose-vn p { margin: .8rem 0; }
+.prose-vn ul { margin: .8rem 0; padding-left: 0; list-style: none; }
+.prose-vn ul li { position: relative; padding-left: 1.6rem; margin: .5rem 0; }
+.prose-vn ul li::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 0; top: .1rem; color: #10b981; font-size: .9rem; }
+.prose-vn ol { margin: .8rem 0 .8rem 1.3rem; list-style: decimal; }
+.prose-vn ol li { margin: .5rem 0; padding-left: .3rem; }
+.prose-vn b, .prose-vn strong { color: #fff; font-weight: 700; }
+.prose-vn code { background: #16143c; color: #a5b4fc; padding: .12rem .4rem; border-radius: .3rem; font-size: .88em; font-family: ui-monospace, monospace; }
+.prose-vn a { color: var(--brand); text-decoration: underline; }
+.prose-vn img { border-radius: .75rem; margin: 1rem 0; max-width: 100%; border: 1px solid var(--border-dark); }
+.prose-vn i { color: var(--text-secondary); }
+
+/* Custom Video Demo Modal (Vertical player like Shorts/TikTok) */
+.vertical-player-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 9 / 16;
+  border-radius: 20px;
+  overflow: hidden;
+  background-color: #000;
+  border: 4px solid #1f1b4b;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* Custom Web Mockup Player Controls */
+.video-mockup-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 15%, transparent 80%, rgba(0,0,0,0.6) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  z-index: 10;
+}
+.video-mockup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: auto;
+}
+.video-mockup-actions {
+  display: flex;
+  gap: 12px;
+}
+.video-mockup-btn {
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.video-mockup-btn:hover {
+  background: rgba(0,0,0,0.8);
+}
+.video-mockup-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+.video-mockup-info {
+  color: white;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+.video-mockup-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+}
+.video-mockup-progress-bar {
+  height: 100%;
+  background: var(--brand);
+  border-radius: 2px;
+  width: 45%;
+}
+.video-mockup-play-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 11;
+}
+.video-mockup-play-center:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(99,102,241,0.8);
+}
+
+/* Toast */
+.toast {
+  min-width: 260px; max-width: 340px;
+  background: var(--panel-dark) !important;
+  border-color: var(--border-dark) !important;
+  animation: toast-in .3s cubic-bezier(.2,.9,.3,1.2);
+}
+.toast div { color: var(--text-primary) !important; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(40px) } to { opacity: 1; transform: none } }
+.toast.out { animation: toast-out .25s ease forwards; }
+@keyframes toast-out { to { opacity: 0; transform: translateX(40px) } }
+
+/* Loading spinner */
+.spinner { border: 2.5px solid rgba(255,255,255,.2); border-top-color: var(--brand); border-radius: 50%; width: 16px; height: 16px; animation: spin .6s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg) } }
+
+/* Countdown pulse */
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(244,63,94,.4) } 70% { box-shadow: 0 0 0 8px rgba(244,63,94,0) } 100% { box-shadow: 0 0 0 0 rgba(244,63,94,0) } }
+.pulse-ring { animation: pulse-ring 2s infinite; }
+
+/* Admin table in Dark Theme */
+.admin-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-secondary); font-weight: 700; border-bottom: 1px solid var(--border-dark); }
+.admin-table td, .admin-table th { padding: .75rem 1rem; }
+.admin-table tbody tr { border-bottom: 1px solid rgba(31, 27, 75, 0.4); }
+.admin-table tbody tr:hover { background: rgba(31, 27, 75, 0.2); }
+
+/* Glow Effects */
+.glow-brand {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+.glow-text-brand {
+  text-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+/* ==========================================================================
+   GLOBAL DARK MODE OVERRIDES FOR CUSTOMER PORTAL
+   Translates tailwind light-mode classes on the fly for premium dark theme.
+   ========================================================================== */
+body.bg-\[\#080716\] .bg-white {
+  background-color: #0f0e26 !important;
+  color: #e2e1f5 !important;
+}
+
+body.bg-\[\#080716\] .border-slate-200,
+body.bg-\[\#080716\] .border-slate-100,
+body.bg-\[\#080716\] .divide-slate-200 > *,
+body.bg-\[\#080716\] .divide-slate-100 > * {
+  border-color: #1f1b4b !important;
+}
+
+body.bg-\[\#080716\] .text-slate-900,
+body.bg-\[\#080716\] .text-slate-800,
+body.bg-\[\#080716\] .text-gray-900,
+body.bg-\[\#080716\] .text-gray-800 {
+  color: #ffffff !important;
+}
+
+body.bg-\[\#080716\] .text-slate-700,
+body.bg-\[\#080716\] .text-slate-600,
+body.bg-\[\#080716\] .text-gray-700,
+body.bg-\[\#080716\] .text-gray-600 {
+  color: #c7c6e1 !important;
+}
+
+body.bg-\[\#080716\] .text-slate-500,
+body.bg-\[\#080716\] .text-slate-400,
+body.bg-\[\#080716\] .text-gray-500,
+body.bg-\[\#080716\] .text-gray-400 {
+  color: #9f9dbb !important;
+}
+
+body.bg-\[\#080716\] .bg-slate-50,
+body.bg-\[\#080716\] .bg-slate-100,
+body.bg-\[\#080716\] .bg-gray-50,
+body.bg-\[\#080716\] .bg-gray-100 {
+  background-color: #161533 !important;
+}
+
+body.bg-\[\#080716\] .hover\:bg-slate-50:hover,
+body.bg-\[\#080716\] .hover\:bg-slate-100:hover,
+body.bg-\[\#080716\] .hover\:bg-gray-50:hover,
+body.bg-\[\#080716\] .hover\:bg-gray-100:hover {
+  background-color: #242254 !important;
+}
+
+/* Inputs & Form Fields overrides for Dark Theme */
+body.bg-\[\#080716\] input[type="text"],
+body.bg-\[\#080716\] input[type="email"],
+body.bg-\[\#080716\] input[type="password"],
+body.bg-\[\#080716\] input[type="url"],
+body.bg-\[\#080716\] input[type="number"],
+body.bg-\[\#080716\] select,
+body.bg-\[\#080716\] textarea {
+  background-color: #141332 !important;
+  border-color: #25215c !important;
+  color: #ffffff !important;
+}
+
+body.bg-\[\#080716\] input[type="text"]:focus,
+body.bg-\[\#080716\] input[type="email"]:focus,
+body.bg-\[\#080716\] input[type="password"]:focus,
+body.bg-\[\#080716\] input[type="url"]:focus,
+body.bg-\[\#080716\] input[type="number"]:focus,
+body.bg-\[\#080716\] select:focus,
+body.bg-\[\#080716\] textarea:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Active links and dynamic tags overrides */
+body.bg-\[\#080716\] .hover\:text-brand-600:hover {
+  color: #818cf8 !important;
+}
+
+body.bg-\[\#080716\] .text-brand-600 {
+  color: #818cf8 !important;
+}
+
+body.bg-\[\#080716\] .bg-brand-50 {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  color: #818cf8 !important;
+}
+
+body.bg-\[\#080716\] .hover\:bg-brand-50:hover {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+body.bg-\[\#080716\] .hover\:bg-rose-50:hover {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+}
+
+body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
