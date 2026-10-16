@@ -253,75 +253,38 @@
   /* ---------- Gallery lightbox ---------- */
   window.openVideoModal = function (url, aspect) {
     const isVertical = aspect === 'vertical' || url.includes('aspect=vertical');
+    const isMp4 = url.endsWith('.mp4') || url.includes('/videos/');
     const m = document.createElement('div');
-    m.className = 'fixed inset-0 z-[200] bg-black/85 grid place-items-center p-4 backdrop-blur-sm';
+    m.className = 'fixed inset-0 z-[200] bg-black/90 grid place-items-center p-4 backdrop-blur-md';
     
     if (isVertical) {
-      m.innerHTML = '<div class="vertical-player-wrapper flex flex-col relative">' +
-        '<div class="video-mockup-overlay">' +
-          '<div class="video-mockup-header">' +
-            '<span class="text-xs font-semibold text-white tracking-wider bg-black/40 px-2 py-1 rounded">VEO 3 SHORTS</span>' +
-            '<div class="video-mockup-actions">' +
-              '<button class="video-mockup-btn btn-vol" title="Âm thanh"><i class="fas fa-volume-up"></i></button>' +
-              '<button class="video-mockup-btn" title="Cài đặt"><i class="fas fa-gear"></i></button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="video-mockup-play-center" id="mockup-play-btn"><i class="fas fa-pause"></i></div>' +
-          '<div class="video-mockup-footer">' +
-            '<div class="video-mockup-info">' +
-              '<p class="text-sm font-bold">@srctool.ai</p>' +
-              '<p class="text-xs text-white/80 mt-1 line-clamp-2">Video Demo mẫu tạo bằng AI cực nét</p>' +
-            '</div>' +
-            '<div class="video-mockup-progress"><div class="video-mockup-progress-bar"></div></div>' +
-          '</div>' +
-        '</div>' +
-        '<iframe src="' + url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=0" class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
-        '<button class="absolute top-4 right-4 z-[210] w-9 h-9 rounded-full bg-black/60 text-white hover:bg-black/90 flex items-center justify-center border border-white/20" id="close-mockup-btn"><i class="fas fa-xmark"></i></button>' +
+      const mediaHtml = isMp4
+        ? '<video src="' + url + '" class="w-full h-full object-cover bg-black" playsinline controls autoplay></video>'
+        : '<iframe src="' + url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=0" class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+
+      m.innerHTML = '<div class="vertical-player-wrapper flex flex-col relative max-w-[360px] aspect-[9/16] rounded-3xl overflow-hidden border border-white/20 shadow-2xl">' +
+        mediaHtml +
+        '<button class="absolute top-4 right-4 z-[210] w-9 h-9 rounded-full bg-black/70 text-white hover:bg-black/90 flex items-center justify-center border border-white/20 cursor-pointer shadow-lg" id="close-mockup-btn"><i class="fas fa-xmark"></i></button>' +
         '</div>';
     } else {
-      m.innerHTML = '<div class="w-full max-w-4xl"><div class="relative pt-[56.25%] rounded-xl overflow-hidden bg-black border border-slate-800">' +
-        '<iframe src="' + url + '?autoplay=1" class="absolute inset-0 w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
-        '</div><button class="mt-3 mx-auto block px-4 py-2 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20"><i class="fas fa-xmark mr-1"></i>Đóng</button></div>';
+      const mediaHtml = isMp4
+        ? '<video src="' + url + '" class="w-full h-full object-contain bg-black" playsinline controls autoplay></video>'
+        : '<iframe src="' + url + '?autoplay=1" class="absolute inset-0 w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+
+      m.innerHTML = '<div class="w-full max-w-4xl relative">' +
+        '<button class="absolute -top-12 right-0 z-[210] px-3.5 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 flex items-center gap-1.5 text-xs font-bold border border-white/20 cursor-pointer" id="close-mockup-btn"><i class="fas fa-xmark"></i>Đóng</button>' +
+        '<div class="relative pt-[56.25%] rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-2xl">' +
+        mediaHtml +
+        '</div></div>';
     }
     
     m.onclick = (e) => { 
-      if (e.target === m || e.target.id === 'close-mockup-btn' || e.target.closest('#close-mockup-btn') || (!isVertical && e.target.closest('button'))) {
+      if (e.target === m || e.target.id === 'close-mockup-btn' || e.target.closest('#close-mockup-btn')) {
+        const v = m.querySelector('video');
+        if (v) v.pause();
         m.remove(); 
       }
     };
-    
-    if (isVertical) {
-      setTimeout(() => {
-        const playBtn = m.querySelector('#mockup-play-btn');
-        const playIcon = playBtn ? playBtn.querySelector('i') : null;
-        if (playBtn) {
-          playBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (playIcon.classList.contains('fa-pause')) {
-              playIcon.className = 'fas fa-play';
-              toast('Tạm dừng video', 'info');
-            } else {
-              playIcon.className = 'fas fa-pause';
-              toast('Tiếp tục phát', 'info');
-            }
-          };
-        }
-        const volBtn = m.querySelector('.btn-vol');
-        if (volBtn) {
-          volBtn.onclick = (e) => {
-            e.stopPropagation();
-            const volIcon = volBtn.querySelector('i');
-            if (volIcon.classList.contains('fa-volume-up')) {
-              volIcon.className = 'fas fa-volume-mute';
-              toast('Đã tắt tiếng', 'info');
-            } else {
-              volIcon.className = 'fas fa-volume-up';
-              toast('Đã bật tiếng', 'info');
-            }
-          };
-        }
-      }, 100);
-    }
     
     document.body.appendChild(m);
   };
@@ -334,9 +297,320 @@
     }
   });
 
+  /* =========================================================================
+     1CLICKVN-STYLE VIDEO HERO, WALL MARQUEE & CINEMA THEATER
+     ========================================================================= */
+  
+  // 1. HERO FRONT PHONE CONTROLS
+  const heroFrontPhone = document.getElementById('heroFrontPhone');
+  const heroFrontVideo = document.getElementById('heroFrontVideo');
+  const heroPlayCenterBtn = document.getElementById('heroPlayCenterBtn');
+  const heroPlayCenterIcon = document.getElementById('heroPlayCenterIcon');
+  const heroSoundBtn = document.getElementById('heroSoundBtn');
+  const heroProgressTrack = document.getElementById('heroProgressTrack');
+  const heroProgressFill = document.getElementById('heroProgressFill');
+  const heroTrailerBtn = document.getElementById('heroTrailerBtn');
+
+  if (heroFrontVideo) {
+    // Autoplay when visible
+    heroFrontVideo.play().catch(() => {});
+
+    function toggleHeroPlay() {
+      if (heroFrontVideo.paused) {
+        heroFrontVideo.play();
+        if (heroFrontPhone) heroFrontPhone.classList.remove('is-paused');
+        if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-pause text-white';
+      } else {
+        heroFrontVideo.pause();
+        if (heroFrontPhone) heroFrontPhone.classList.add('is-paused');
+        if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-play text-white ml-0.5';
+      }
+    }
+
+    if (heroPlayCenterBtn) heroPlayCenterBtn.onclick = (e) => { e.stopPropagation(); toggleHeroPlay(); };
+    heroFrontVideo.onclick = toggleHeroPlay;
+
+    heroFrontVideo.addEventListener('timeupdate', () => {
+      if (heroFrontVideo.duration && heroProgressFill) {
+        const pct = (heroFrontVideo.currentTime / heroFrontVideo.duration) * 100;
+        heroProgressFill.style.width = pct + '%';
+      }
+    });
+
+    if (heroProgressTrack) {
+      heroProgressTrack.onclick = (e) => {
+        e.stopPropagation();
+        const rect = heroProgressTrack.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        if (heroFrontVideo.duration) {
+          heroFrontVideo.currentTime = ratio * heroFrontVideo.duration;
+        }
+      };
+    }
+
+    if (heroSoundBtn) {
+      heroSoundBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (heroFrontVideo.muted) {
+          heroFrontVideo.muted = false;
+          heroSoundBtn.classList.add('is-unmuted');
+          heroSoundBtn.innerHTML = '<i class="fas fa-volume-high mr-1"></i><span>Tắt tiếng</span>';
+          toast('Đã bật âm thanh video', 'success');
+        } else {
+          heroFrontVideo.muted = true;
+          heroSoundBtn.classList.remove('is-unmuted');
+          heroSoundBtn.innerHTML = '<i class="fas fa-volume-xmark mr-1"></i><span>Bật tiếng</span>';
+          toast('Đã tắt tiếng video', 'info');
+        }
+      };
+    }
+  }
+
+  // 2. VIDEO WALL CARDS INTERACTION
+  const wallCards = document.querySelectorAll('.wall-card');
+  wallCards.forEach(card => {
+    const v = card.querySelector('video');
+    card.addEventListener('mouseenter', () => {
+      if (v && v.paused) {
+        v.play().catch(() => {});
+      }
+    });
+    card.addEventListener('mouseleave', () => {
+      if (v && !v.paused) {
+        v.pause();
+      }
+    });
+
+    card.addEventListener('click', () => {
+      const idx = Number(card.dataset.videoIndex || 0);
+      switchTheaterVideo(idx, true);
+      const th = document.getElementById('theater');
+      if (th) th.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // 3. CINEMA THEATER SECTION
+  const THEATER_PLAYLIST = [
+    {
+      title: 'Khóa Học Video Muse AI — Từ Prompt Đến Video 10s Chuẩn Viral',
+      shortTitle: 'Khóa học Muse AI Pro 30s',
+      tag: 'Khóa học',
+      dur: '0:30',
+      desc: 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
+      videoUrl: '/videos/demo-khoa-hoc-muse-ai.mp4',
+      posterUrl: '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
+      slug: 'khoa-hoc-video-muse-ai',
+      price: '599.000đ',
+      origPrice: '1.299.000đ'
+    },
+    {
+      title: 'Khóa Học Video Seedance 2.5 — One-Take 30s Build Page',
+      shortTitle: 'Seedance 2.5 · One-Take 30s',
+      tag: 'Khóa học',
+      dur: '0:30',
+      desc: 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
+      videoUrl: '/videos/demo-khoa-hoc-seedance.mp4',
+      posterUrl: '/videos/posters/poster-khoa-hoc-seedance.jpg',
+      slug: 'khoa-hoc-video-seedance-25-30s',
+      price: '699.000đ',
+      origPrice: '1.399.000đ'
+    },
+    {
+      title: 'Skill Video Thuỷ Sinh 30s — Build Page Reels',
+      shortTitle: 'Skill Video Thuỷ Sinh 30s',
+      tag: 'Skill AI',
+      dur: '0:15',
+      desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
+      videoUrl: '/videos/demo-skill-thuy-sinh.mp4',
+      posterUrl: '/videos/posters/poster-skill-thuy-sinh.jpg',
+      slug: 'skill-video-thuy-sinh-30s',
+      price: '399.000đ',
+      origPrice: '799.000đ'
+    },
+    {
+      title: 'Skill Video DIY Làm Vườn 30s — Build Page Reels',
+      shortTitle: 'Skill Làm Vườn DIY 30s',
+      tag: 'Skill AI',
+      dur: '0:25',
+      desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
+      videoUrl: '/videos/demo-skill-lam-vuon.mp4',
+      posterUrl: '/videos/posters/poster-skill-lam-vuon.jpg',
+      slug: 'skill-video-diy-lam-vuon-30s',
+      price: '399.000đ',
+      origPrice: '799.000đ'
+    },
+    {
+      title: 'Skill Video Affiliate Fitness — Video 30s Chốt Đơn',
+      shortTitle: 'Skill Affiliate Fitness 30s',
+      tag: 'Skill AI',
+      dur: '0:20',
+      desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
+      videoUrl: '/videos/demo-skill-fitness.mp4',
+      posterUrl: '/videos/posters/poster-skill-fitness.jpg',
+      slug: 'skill-video-affiliate-fitness',
+      price: '449.000đ',
+      origPrice: '899.000đ'
+    }
+  ];
+
+  const cinemaBox = document.getElementById('cinemaScreenBox');
+  const theaterVideo = document.getElementById('theaterVideoElement');
+  const theaterBigPlayBtn = document.getElementById('theaterBigPlayBtn');
+  const theaterPlayBtn = document.getElementById('theaterPlayBtn');
+  const theaterPlayIcon = document.getElementById('theaterPlayIcon');
+  const theaterProgressTrack = document.getElementById('theaterProgressTrack');
+  const theaterProgressFill = document.getElementById('theaterProgressFill');
+  const theaterTimecode = document.getElementById('theaterTimecode');
+  const theaterSoundBtn = document.getElementById('theaterSoundBtn');
+  const theaterSoundIcon = document.getElementById('theaterSoundIcon');
+  const theaterFullscreenBtn = document.getElementById('theaterFullscreenBtn');
+  const theaterAmbientBg = document.getElementById('theaterAmbientBg');
+  const playlistItems = document.querySelectorAll('#theaterPlaylist .playlist-item');
+
+  function fmtTime(sec) {
+    if (!sec || isNaN(sec)) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function toggleTheaterPlay() {
+    if (!theaterVideo) return;
+    if (theaterVideo.paused) {
+      // Pause hero front video if playing with sound
+      if (heroFrontVideo && !heroFrontVideo.muted) heroFrontVideo.muted = true;
+      theaterVideo.play().then(() => {
+        if (cinemaBox) cinemaBox.classList.add('is-playing');
+        if (theaterPlayIcon) theaterPlayIcon.className = 'fas fa-pause';
+      }).catch(() => {});
+    } else {
+      theaterVideo.pause();
+      if (cinemaBox) cinemaBox.classList.remove('is-playing');
+      if (theaterPlayIcon) theaterPlayIcon.className = 'fas fa-play';
+    }
+  }
+
+  if (theaterBigPlayBtn) theaterBigPlayBtn.onclick = toggleTheaterPlay;
+  if (theaterPlayBtn) theaterPlayBtn.onclick = toggleTheaterPlay;
+  if (theaterVideo) {
+    theaterVideo.onclick = toggleTheaterPlay;
+
+    theaterVideo.addEventListener('timeupdate', () => {
+      if (theaterProgressFill && theaterVideo.duration) {
+        const pct = (theaterVideo.currentTime / theaterVideo.duration) * 100;
+        theaterProgressFill.style.width = pct + '%';
+      }
+      if (theaterTimecode) {
+        theaterTimecode.textContent = fmtTime(theaterVideo.currentTime) + ' / ' + fmtTime(theaterVideo.duration || 30);
+      }
+    });
+
+    theaterVideo.addEventListener('ended', () => {
+      if (cinemaBox) cinemaBox.classList.remove('is-playing');
+      if (theaterPlayIcon) theaterPlayIcon.className = 'fas fa-play';
+    });
+  }
+
+  if (theaterProgressTrack && theaterVideo) {
+    theaterProgressTrack.onclick = (e) => {
+      const rect = theaterProgressTrack.getBoundingClientRect();
+      const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      if (theaterVideo.duration) {
+        theaterVideo.currentTime = pos * theaterVideo.duration;
+      }
+    };
+  }
+
+  if (theaterSoundBtn && theaterVideo) {
+    theaterSoundBtn.onclick = () => {
+      theaterVideo.muted = !theaterVideo.muted;
+      if (theaterSoundIcon) {
+        theaterSoundIcon.className = theaterVideo.muted
+          ? 'fas fa-volume-xmark text-rose-400'
+          : 'fas fa-volume-high text-white';
+      }
+      toast(theaterVideo.muted ? 'Đã tắt tiếng' : 'Đã bật tiếng', 'info');
+    };
+  }
+
+  if (theaterFullscreenBtn && theaterVideo) {
+    theaterFullscreenBtn.onclick = () => {
+      if (theaterVideo.requestFullscreen) theaterVideo.requestFullscreen();
+      else if (theaterVideo.webkitRequestFullscreen) theaterVideo.webkitRequestFullscreen();
+    };
+  }
+
+  function switchTheaterVideo(idx, autoPlay = true) {
+    const item = THEATER_PLAYLIST[idx];
+    if (!item || !theaterVideo) return;
+
+    // Update active playlist UI
+    playlistItems.forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+
+    // Update video source & poster
+    theaterVideo.src = item.videoUrl;
+    theaterVideo.poster = item.posterUrl;
+    if (theaterAmbientBg) {
+      theaterAmbientBg.style.backgroundImage = 'url("' + item.posterUrl + '")';
+    }
+
+    // Update details info
+    const tagEl = document.getElementById('activeVideoTag');
+    const durEl = document.getElementById('activeVideoDur');
+    const titleEl = document.getElementById('activeVideoTitle');
+    const descEl = document.getElementById('activeVideoDesc');
+    const priceEl = document.getElementById('activeVideoPrice');
+    const origPriceEl = document.getElementById('activeVideoOrigPrice');
+    const linkEl = document.getElementById('activeVideoLink');
+
+    if (tagEl) tagEl.textContent = item.tag;
+    if (durEl) durEl.textContent = 'Thời lượng: ' + item.dur;
+    if (titleEl) titleEl.textContent = item.title;
+    if (descEl) descEl.textContent = item.desc;
+    if (priceEl) priceEl.textContent = item.price;
+    if (origPriceEl) origPriceEl.textContent = item.origPrice;
+    if (linkEl) linkEl.href = '/san-pham/' + item.slug;
+
+    // Also update front hero video if user wants preview
+    if (heroFrontVideo) {
+      heroFrontVideo.src = item.videoUrl;
+      heroFrontVideo.poster = item.posterUrl;
+      const heroTitle = document.getElementById('heroVideoTitle');
+      if (heroTitle) heroTitle.textContent = item.shortTitle;
+      heroFrontVideo.play().catch(() => {});
+    }
+
+    if (autoPlay) {
+      theaterVideo.muted = false;
+      if (theaterSoundIcon) theaterSoundIcon.className = 'fas fa-volume-high text-white';
+      theaterVideo.play().then(() => {
+        if (cinemaBox) cinemaBox.classList.add('is-playing');
+        if (theaterPlayIcon) theaterPlayIcon.className = 'fas fa-pause';
+      }).catch(() => {});
+    }
+  }
+
+  playlistItems.forEach((el, i) => {
+    el.addEventListener('click', () => {
+      switchTheaterVideo(i, true);
+    });
+  });
+
+  if (heroTrailerBtn) {
+    heroTrailerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchTheaterVideo(0, true);
+      const th = document.getElementById('theater');
+      if (th) th.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
   /* ---------- Sort/filter auto submit ---------- */
   document.querySelectorAll('[data-auto-submit]').forEach(el => {
     el.addEventListener('change', () => el.closest('form').submit());
   });
 
 })();
+

@@ -40,6 +40,74 @@ const FAQS = [
   { q: 'Tôi có thể dùng skill cho nhiều kênh không?', a: 'Có. Skill mua một lần dùng không giới hạn cho mọi kênh TikTok, Reels, YouTube Shorts của chính bạn.' }
 ]
 
+const DEMO_VIDEOS = [
+  {
+    id: 'muse-ai',
+    title: 'Khóa Học Video Muse AI — Từ Prompt Đến Video 10s Chuẩn Viral',
+    shortTitle: 'Khóa học Muse AI Pro 30s',
+    tag: 'Khóa học',
+    dur: '0:30',
+    desc: 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
+    videoUrl: '/videos/demo-khoa-hoc-muse-ai.mp4',
+    posterUrl: '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
+    slug: 'khoa-hoc-video-muse-ai',
+    price: 599000,
+    originalPrice: 1299000
+  },
+  {
+    id: 'seedance-25',
+    title: 'Khóa Học Video Seedance 2.5 — One-Take 30s Build Page',
+    shortTitle: 'Seedance 2.5 · One-Take 30s',
+    tag: 'Khóa học',
+    dur: '0:30',
+    desc: 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
+    videoUrl: '/videos/demo-khoa-hoc-seedance.mp4',
+    posterUrl: '/videos/posters/poster-khoa-hoc-seedance.jpg',
+    slug: 'khoa-hoc-video-seedance-25-30s',
+    price: 699000,
+    originalPrice: 1399000
+  },
+  {
+    id: 'skill-thuy-sinh',
+    title: 'Skill Video Thuỷ Sinh 30s — Build Page Reels',
+    shortTitle: 'Skill Video Thuỷ Sinh 30s',
+    tag: 'Skill AI',
+    dur: '0:15',
+    desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
+    videoUrl: '/videos/demo-skill-thuy-sinh.mp4',
+    posterUrl: '/videos/posters/poster-skill-thuy-sinh.jpg',
+    slug: 'skill-video-thuy-sinh-30s',
+    price: 399000,
+    originalPrice: 799000
+  },
+  {
+    id: 'skill-lam-vuon',
+    title: 'Skill Video DIY Làm Vườn 30s — Build Page Reels',
+    shortTitle: 'Skill Làm Vườn DIY 30s',
+    tag: 'Skill AI',
+    dur: '0:25',
+    desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
+    videoUrl: '/videos/demo-skill-lam-vuon.mp4',
+    posterUrl: '/videos/posters/poster-skill-lam-vuon.jpg',
+    slug: 'skill-video-diy-lam-vuon-30s',
+    price: 399000,
+    originalPrice: 799000
+  },
+  {
+    id: 'skill-fitness',
+    title: 'Skill Video Affiliate Fitness — Video 30s Chốt Đơn',
+    shortTitle: 'Skill Affiliate Fitness 30s',
+    tag: 'Skill AI',
+    dur: '0:20',
+    desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
+    videoUrl: '/videos/demo-skill-fitness.mp4',
+    posterUrl: '/videos/posters/poster-skill-fitness.jpg',
+    slug: 'skill-video-affiliate-fitness',
+    price: 449000,
+    originalPrice: 899000
+  }
+]
+
 export const HomePage: FC<Props> = (props) => {
   const { categories, featured, hot, newest, combos, posts, reviews, stats } = props
   return (
@@ -48,8 +116,8 @@ export const HomePage: FC<Props> = (props) => {
       <section id="hero-section" class="relative bg-slate-950 text-white overflow-hidden">
         <div class="absolute inset-0 hero-mesh"></div>
         <div class="absolute inset-0 hero-grid"></div>
-        <div class="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
-          <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="relative max-w-7xl mx-auto px-4 py-14 md:py-20">
+          <div class="grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
             <div>
               <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -63,12 +131,16 @@ export const HomePage: FC<Props> = (props) => {
                 kèm skill theo ngách Thuỷ Sinh, Làm Vườn, Affiliate Fitness.
                 Mua một lần — sở hữu trọn đời — giao hàng tự động 24/7.
               </p>
-              <div class="flex flex-wrap gap-3 mb-9">
+              <div class="flex flex-wrap items-center gap-3 mb-9">
                 <a href="/san-pham" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition">
                   <i class="fas fa-cubes"></i>Xem tất cả sản phẩm
                 </a>
-                <a href="/combo" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 backdrop-blur font-semibold hover:bg-white/20 transition">
-                  <i class="fas fa-box-open"></i>Combo giảm 60%
+                <a href="#theater" id="heroTrailerBtn" class="h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg">
+                  <span class="w-6 h-6 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow"><i class="fas fa-play ml-0.5"></i></span>
+                  Xem trailer 30s
+                </a>
+                <a href="/combo" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition">
+                  <i class="fas fa-box-open text-amber-400"></i>Combo -60%
                 </a>
               </div>
               <div class="grid grid-cols-3 gap-4 max-w-md">
@@ -86,37 +158,80 @@ export const HomePage: FC<Props> = (props) => {
               </div>
             </div>
 
-            {/* Hero card preview */}
-            <div class="relative hidden lg:block">
-              <div class="animate-float">
-                <div class="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-5 shadow-2xl">
-                  <div class="flex items-center gap-2 mb-4">
-                    <span class="w-3 h-3 rounded-full bg-rose-400"></span>
-                    <span class="w-3 h-3 rounded-full bg-amber-400"></span>
-                    <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
-                    <span class="ml-2 text-xs text-slate-400">webskill.ai — AI Video Studio</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-3">
-                    {['fa-film', 'fa-robot', 'fa-wand-magic-sparkles', 'fa-gears'].map((ic, i) => (
-                      <div class="aspect-video rounded-xl grid place-items-center text-white/90 text-2xl"
-                        style={`background:linear-gradient(135deg,${['#6366f1,#a855f7', '#8b5cf6,#ec4899', '#06b6d4,#3b82f6', '#f59e0b,#ef4444'][i]})`}>
-                        <i class={`fas ${ic}`}></i>
-                      </div>
-                    ))}
-                  </div>
-                  <div class="mt-4 space-y-2">
-                    <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-white/5">
-                      <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 grid place-items-center text-xs"><i class="fas fa-check"></i></div>
-                      <span class="text-xs text-slate-300">Render video 8s hoàn tất</span>
+            {/* Hero 3D Multi-Device Stage (1clickvn style) */}
+            <div class="hero-stage-wrapper relative">
+              <div class="hero-stage">
+                {/* Back Left Phone */}
+                <div class="phone phone-back phone-left" aria-hidden="true">
+                  <video
+                    src="/videos/demo-skill-lam-vuon.mp4"
+                    poster="/videos/posters/poster-skill-lam-vuon.jpg"
+                    playsinline
+                    muted
+                    loop
+                    autoplay
+                    preload="metadata"
+                  ></video>
+                </div>
+
+                {/* Back Right Phone */}
+                <div class="phone phone-back phone-right" aria-hidden="true">
+                  <video
+                    src="/videos/demo-skill-fitness.mp4"
+                    poster="/videos/posters/poster-skill-fitness.jpg"
+                    playsinline
+                    muted
+                    loop
+                    autoplay
+                    preload="metadata"
+                  ></video>
+                </div>
+
+                {/* Main Front Phone */}
+                <div class="phone phone-front" id="heroFrontPhone">
+                  {/* Smartphone dynamic notch */}
+                  <div class="phone-notch"></div>
+
+                  {/* Main video */}
+                  <video
+                    id="heroFrontVideo"
+                    src="/videos/demo-khoa-hoc-muse-ai.mp4"
+                    poster="/videos/posters/poster-khoa-hoc-muse-ai.jpg"
+                    playsinline
+                    muted
+                    loop
+                    autoplay
+                    preload="auto"
+                  ></video>
+
+                  {/* Center play/pause overlay */}
+                  <button id="heroPlayCenterBtn" class="phone-play-btn" aria-label="Phát / tạm dừng">
+                    <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon"></i>
+                  </button>
+
+                  {/* Bottom in-video bar */}
+                  <div class="phone-bottom-bar">
+                    <div class="phone-progress-track" id="heroProgressTrack">
+                      <div class="phone-progress-fill" id="heroProgressFill"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-white/90 pt-1.5">
+                      <span class="font-bold truncate max-w-[170px]" id="heroVideoTitle">Muse AI Pro · 30s</span>
+                      <button id="heroSoundBtn" class="phone-sound-toggle snd" aria-label="Bật tiếng">
+                        <i class="fas fa-volume-xmark mr-1"></i><span>Bật tiếng</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="absolute -bottom-5 -left-6 bg-[#0f0e26] border border-[#1f1b4b] text-white rounded-xl shadow-2xl p-3.5 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 grid place-items-center"><i class="fas fa-download"></i></div>
-                <div>
-                  <div class="text-xs text-slate-400">Giao sản phẩm</div>
-                  <div class="font-bold text-sm">Tự động &lt; 1 phút</div>
+
+                {/* Floating Chips matching 1clickvn */}
+                <div class="float-chip chip-seed">
+                  <span class="chip-mono">0:30</span>
+                  <span>Clip Seedance liền mạch</span>
+                </div>
+
+                <div class="float-chip chip-proof">
+                  <span class="chip-ic ok"><i class="fas fa-check"></i></span>
+                  <span><b>84/84 video</b> · Lỗi 0</span>
                 </div>
               </div>
             </div>
@@ -124,8 +239,8 @@ export const HomePage: FC<Props> = (props) => {
         </div>
 
         {/* Trust marquee */}
-        <div class="relative border-t border-white/5 bg-[#080716]/60 backdrop-blur py-4 marquee-wrap overflow-hidden">
-          <div class="marquee-track flex gap-10 w-max text-slate-500 text-sm font-semibold whitespace-nowrap">
+        <div class="relative border-t border-white/5 bg-[#080716]/60 backdrop-blur py-3 marquee-wrap overflow-hidden">
+          <div class="marquee-track flex gap-10 w-max text-slate-500 text-xs font-semibold whitespace-nowrap">
             {[...Array(2)].map(() => (
               <>
                 {['Muse AI', 'Seedance 2.5', 'Veo 3', 'Google Flow', 'Kling AI', 'ChatGPT', 'Gemini', 'CapCut', 'Sora', 'Runway'].map(b => (
@@ -133,6 +248,153 @@ export const HomePage: FC<Props> = (props) => {
                 ))}
               </>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ VIDEO WALL MARQUEE (1clickvn style) ============ */}
+      <section class="wall" id="theater-wall" aria-label="Clip mẫu làm bằng AI">
+        <div class="wall-head">
+          <span class="wall-kicker">
+            <i class="fas fa-wand-magic-sparkles text-brand-400"></i>
+            Làm bằng Muse AI &amp; Seedance
+          </span>
+          <span class="wall-note">
+            <i class="fas fa-mouse-pointer text-slate-400 mr-1"></i>
+            Clip thật từ repo, không dựng lại. Rê chuột để dừng · Bấm để xem lớn.
+          </span>
+        </div>
+        <div class="wall-track-wrapper">
+          <div class="wall-track" id="wallTrack">
+            {[...DEMO_VIDEOS, ...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => (
+              <div class="wall-card" data-video-index={idx % DEMO_VIDEOS.length} data-src={v.videoUrl} data-title={v.title} data-slug={v.slug} data-desc={v.desc} data-poster={v.posterUrl}>
+                <video src={v.videoUrl} poster={v.posterUrl} playsinline muted loop preload="none"></video>
+                <span class="card-tag">{v.tag}</span>
+                <span class="card-dur">{v.dur}</span>
+                <div class="wall-card-play">
+                  <div class="wall-card-play-icon"><i class="fas fa-play ml-0.5"></i></div>
+                </div>
+                <div class="card-info">
+                  <div class="card-title">{v.shortTitle}</div>
+                  <div class="card-action"><i class="fas fa-circle-play text-[10px]"></i>Bấm để xem video</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ THEATER SECTION (1clickvn style) ============ */}
+      <section class="theater-section reveal" id="theater">
+        <div class="max-w-7xl mx-auto px-4">
+          <div class="text-center max-w-3xl mx-auto mb-10">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 font-mono text-xs uppercase font-bold tracking-wider mb-3">
+              <i class="fas fa-eye text-xs"></i>Xem Tận Mắt · Video AI Thật
+            </span>
+            <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
+              Xem Trước Khi Sở Hữu
+            </h2>
+            <p class="text-slate-300 text-sm md:text-base leading-relaxed">
+              Trailer 30s, video học viên và clip demo các ngách từ kho repo. Bấm chọn video bên phải để chuyển ngay lập tức.
+            </p>
+          </div>
+
+          <div class="theater-layout">
+            {/* Cinema Main Player */}
+            <div class="cinema-box" id="cinemaScreenBox">
+              <div class="player-frame" id="theaterPlayerFrame">
+                <div class="video-ambient-bg" id="theaterAmbientBg" style="background-image: url('/videos/posters/poster-khoa-hoc-muse-ai.jpg')"></div>
+                <video
+                  id="theaterVideoElement"
+                  class="main-video"
+                  src={DEMO_VIDEOS[0].videoUrl}
+                  poster={DEMO_VIDEOS[0].posterUrl}
+                  playsinline
+                  preload="metadata"
+                ></video>
+                <button class="player-big-play" id="theaterBigPlayBtn" aria-label="Phát video">
+                  <i class="fas fa-play text-white ml-1"></i>
+                </button>
+                <div class="player-bar">
+                  <button class="theater-ctrl-btn" id="theaterPlayBtn" aria-label="Phát / tạm dừng">
+                    <i class="fas fa-play" id="theaterPlayIcon"></i>
+                  </button>
+                  <div class="theater-progress" id="theaterProgressTrack">
+                    <div class="theater-progress-fill" id="theaterProgressFill"></div>
+                  </div>
+                  <span class="theater-timecode" id="theaterTimecode">00:00 / 00:30</span>
+                  <button class="theater-ctrl-btn" id="theaterSoundBtn" aria-label="Bật / tắt tiếng">
+                    <i class="fas fa-volume-high" id="theaterSoundIcon"></i>
+                  </button>
+                  <button class="theater-ctrl-btn" id="theaterFullscreenBtn" aria-label="Toàn màn hình">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="player-info border-t border-[#1f1b4b]">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+                  <span class="px-2.5 py-0.5 rounded bg-brand-500/10 text-brand-400 text-xs font-bold uppercase tracking-wider" id="activeVideoTag">
+                    {DEMO_VIDEOS[0].tag}
+                  </span>
+                  <span class="font-mono text-xs text-slate-400" id="activeVideoDur">
+                    Thời lượng: {DEMO_VIDEOS[0].dur}
+                  </span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-extrabold text-white mb-2" id="activeVideoTitle">
+                  {DEMO_VIDEOS[0].title}
+                </h3>
+                <p class="text-slate-300 text-sm leading-relaxed mb-5" id="activeVideoDesc">
+                  {DEMO_VIDEOS[0].desc}
+                </p>
+                <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-black text-white" id="activeVideoPrice">
+                      {formatVND(DEMO_VIDEOS[0].price)}
+                    </span>
+                    <span class="text-xs text-slate-500 line-through" id="activeVideoOrigPrice">
+                      {formatVND(DEMO_VIDEOS[0].originalPrice)}
+                    </span>
+                  </div>
+                  <div class="flex gap-2">
+                    <a href={`/san-pham/${DEMO_VIDEOS[0].slug}`} id="activeVideoLink" class="h-10 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 text-white font-semibold text-xs hover:opacity-90 transition">
+                      <i class="fas fa-bolt"></i>Mua sản phẩm này
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Playlist Sidebar */}
+            <div class="playlist-panel">
+              <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#1f1b4b]">
+                <div class="text-sm font-bold text-white flex items-center gap-2">
+                  <i class="fas fa-list-ul text-brand-400"></i>Danh sách video ({DEMO_VIDEOS.length})
+                </div>
+                <span class="text-[11px] text-slate-400 font-medium">Bấm để đổi video</span>
+              </div>
+              <div class="playlist" id="theaterPlaylist">
+                {DEMO_VIDEOS.map((v, i) => (
+                  <div class={`playlist-item ${i === 0 ? 'active' : ''}`} data-index={i}>
+                    <div class="playlist-thumb-wrap">
+                      <img src={v.posterUrl} alt={v.shortTitle} loading="lazy" />
+                      <span class="thumb-dur">{v.dur}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] uppercase font-bold text-brand-400">{v.tag}</span>
+                      </div>
+                      <h4 class="text-xs font-bold text-white truncate group-hover:text-brand-300">{v.shortTitle}</h4>
+                      <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
+                        <span class="font-extrabold text-amber-400">{formatVND(v.price)}</span>
+                      </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-slate-400 shrink-0">
+                      <i class="fas fa-play"></i>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
