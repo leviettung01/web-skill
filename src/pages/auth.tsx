@@ -12,7 +12,7 @@ const AuthShell: FC<{ title: string; subtitle: string; children: any }> = ({ tit
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 grid place-items-center">
             <i class="fas fa-wand-magic-sparkles"></i>
           </div>
-          <span class="font-extrabold text-lg">SrcTool AI</span>
+          <span class="font-extrabold text-lg">WebSkill AI</span>
         </a>
       </div>
       <div class="relative">
@@ -24,7 +24,7 @@ const AuthShell: FC<{ title: string; subtitle: string; children: any }> = ({ tit
         </p>
         <ul class="space-y-3.5">
           {[
-            ['fa-bolt', 'Giao source code tự động 24/7'],
+            ['fa-bolt', 'Giao hàng tự động 24/7'],
             ['fa-infinity', 'Sở hữu trọn đời, cập nhật miễn phí'],
             ['fa-headset', 'Hỗ trợ kỹ thuật 1-1 qua Zalo'],
             ['fa-shield-halved', 'Hoàn tiền 100% trong 7 ngày']
@@ -38,7 +38,7 @@ const AuthShell: FC<{ title: string; subtitle: string; children: any }> = ({ tit
           ))}
         </ul>
       </div>
-      <div class="relative text-xs text-slate-500">© 2026 SrcTool AI — Phát triển tại Việt Nam</div>
+      <div class="relative text-xs text-slate-500">© 2026 WebSkill AI — Phát triển tại Việt Nam</div>
     </div>
 
     {/* Right form */}
@@ -90,8 +90,8 @@ export const LoginPage: FC<LayoutProps & { next?: string; registered?: boolean }
       <div class="mt-5 p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm">
         <div class="font-semibold text-blue-900 mb-1.5"><i class="fas fa-flask mr-1.5"></i>Tài khoản demo</div>
         <div class="text-blue-800 space-y-0.5 text-xs">
-          <div>👤 User: <code class="bg-white px-1.5 py-0.5 rounded">demo@srctool.ai</code> / <code class="bg-white px-1.5 py-0.5 rounded">123456</code></div>
-          <div>🛡️ Admin: <code class="bg-white px-1.5 py-0.5 rounded">admin@srctool.ai</code> / <code class="bg-white px-1.5 py-0.5 rounded">123456</code></div>
+          <div>👤 User: <code class="bg-white px-1.5 py-0.5 rounded">demo@webskill.ai</code> / <code class="bg-white px-1.5 py-0.5 rounded">123456</code></div>
+          <div>🛡️ Admin: <code class="bg-white px-1.5 py-0.5 rounded">admin@webskill.ai</code> / <code class="bg-white px-1.5 py-0.5 rounded">123456</code></div>
         </div>
       </div>
 
@@ -124,7 +124,7 @@ export const RegisterPage: FC<LayoutProps & { ref?: string }> = (props) => (
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Số điện thoại <span class="text-slate-400 font-normal">(tuỳ chọn)</span></label>
           <div class="relative">
-            <input type="tel" name="phone" placeholder="0987654321" class={inputCls + ' pl-11'} />
+            <input type="tel" name="phone" placeholder="0915967790" class={inputCls + ' pl-11'} />
             <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
           </div>
         </div>

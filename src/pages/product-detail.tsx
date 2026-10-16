@@ -1,7 +1,7 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { Breadcrumb, ProductCard, Stars, SectionTitle } from '../components/ui'
-import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, formatDate } from '../lib/utils'
+import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate } from '../lib/utils'
 import type { Product } from '../lib/types'
 
 interface Props extends LayoutProps {
@@ -23,6 +23,9 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const gallery = parseJSON<string[]>(p.gallery, [])
   const save = (p.original_price || 0) - p.price
 
+  const isMp4 = !!p.demo_video_url && /\.mp4(\?|$)/i.test(p.demo_video_url)
+  const demoPoster = isMp4 ? p.demo_video_url!.replace(/\/videos\/demo-(.+)\.mp4/i, '/videos/posters/poster-$1.jpg') : undefined
+
   return (
     <Layout {...props} active="products" title={p.name} description={p.short_desc} ogImage={p.thumbnail || undefined}>
       <div class="bg-[#0f0e26] border-b border-[#1f1b4b]">
@@ -41,19 +44,23 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 <div class="vertical-player-wrapper mx-auto mb-4 border-4 border-[#1f1b4b] shadow-2xl relative">
                   <div class="video-mockup-overlay">
                     <div class="video-mockup-header">
-                      <span class="text-xs font-semibold text-white tracking-wider bg-black/40 px-2.5 py-1 rounded">VEO 3 DEMO</span>
+                      <span class="text-xs font-semibold text-white tracking-wider bg-black/40 px-2.5 py-1 rounded">VIDEO DEMO</span>
                       <div class="video-mockup-actions">
                         <button class="video-mockup-btn btn-vol" title="Âm thanh"><i class="fas fa-volume-up"></i></button>
                       </div>
                     </div>
                     <div class="video-mockup-footer">
                       <div class="video-mockup-info">
-                        <p class="text-sm font-bold text-white">@srctool.ai</p>
+                        <p class="text-sm font-bold text-white">@webskill.ai</p>
                         <p class="text-xs text-white/90 mt-1 line-clamp-1">{p.name}</p>
                       </div>
                     </div>
                   </div>
-                  <iframe src={p.demo_video_url} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                  {isMp4 ? (
+                    <video src={p.demo_video_url} poster={demoPoster} class="w-full h-full border-none bg-black" controls playsinline preload="metadata"></video>
+                  ) : (
+                    <iframe src={p.demo_video_url} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                  )}
                 </div>
               ) : p.thumbnail ? (
                 <div class="rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] relative shadow-lg">
@@ -63,7 +70,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 <div class="rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] grid place-items-center text-white/95 relative shadow-lg"
                   style={`background:${gradientFor(p.id)}`}>
                   <div class="text-center p-4">
-                    <i class={`fas ${p.product_type === 'chatbot' ? 'fa-robot' : p.product_type === 'prompt' ? 'fa-wand-magic-sparkles' : p.product_type === 'combo' ? 'fa-box-open' : 'fa-code'} text-6xl mb-3 opacity-90`}></i>
+                    <i class={`fas ${PRODUCT_TYPE_ICON[p.product_type] || 'fa-cube'} text-6xl mb-3 opacity-90`}></i>
                     <div class="text-sm font-bold uppercase tracking-[0.2em] opacity-80">{PRODUCT_TYPE_LABEL[p.product_type]}</div>
                   </div>
                 </div>
@@ -83,29 +90,29 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
                   <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-400 grid place-items-center text-sm shrink-0"><i class="fas fa-bolt"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Tốc độ render</div>
-                    <div class="text-xs font-bold text-white">Tối ưu &lt; 5s/video</div>
+                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Giao hàng</div>
+                    <div class="text-xs font-bold text-white">Tự động 24/7</div>
                   </div>
                 </div>
                 <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
                   <div class="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-cubes"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Tài nguyên</div>
-                    <div class="text-xs font-bold text-white">Full code + HDSD</div>
+                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Nội dung</div>
+                    <div class="text-xs font-bold text-white">Full tài liệu + HDSD</div>
                   </div>
                 </div>
                 <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
                   <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-400 grid place-items-center text-sm shrink-0"><i class="fas fa-infinity"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Bản quyền</div>
-                    <div class="text-xs font-bold text-white">Sử dụng vĩnh viễn</div>
+                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Truy cập</div>
+                    <div class="text-xs font-bold text-white">Trọn đời + update free</div>
                   </div>
                 </div>
                 <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
                   <div class="w-9 h-9 rounded-lg bg-rose-500/10 text-rose-400 grid place-items-center text-sm shrink-0"><i class="fas fa-headset"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Hỗ trợ cài đặt</div>
-                    <div class="text-xs font-bold text-white">Free qua Zalo/Ultra</div>
+                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Hỗ trợ</div>
+                    <div class="text-xs font-bold text-white">1-1 qua Zalo</div>
                   </div>
                 </div>
               </div>
@@ -174,7 +181,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
                   <div class="flex items-center gap-2.5 text-emerald-400 font-bold mb-2">
                     <i class="fas fa-circle-check text-lg"></i>Bạn đã sở hữu sản phẩm này
                   </div>
-                  <p class="text-xs text-emerald-300/80 mb-3.5 leading-relaxed">Truy cập link source code và license key trong khu vực tài khoản của bạn.</p>
+                  <p class="text-xs text-emerald-300/80 mb-3.5 leading-relaxed">Truy cập link tải sản phẩm và license key trong khu vực tài khoản của bạn.</p>
                   <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition">
                     <i class="fas fa-download"></i>Truy cập sản phẩm
                   </a>
@@ -344,7 +351,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
             <div class="tab-panel hidden bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 md:p-8" data-tab="policy" data-group="pd">
               <div class="prose-vn max-w-none">
                 <h3>Chính sách giao hàng</h3>
-                <p>Sản phẩm số được giao <b>tự động 100%</b>. Ngay sau khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link source code và license key sẽ xuất hiện trong mục <b>Tài khoản → Sản phẩm của tôi</b>.</p>
+                <p>Sản phẩm số được giao <b>tự động 100%</b>. Ngay sau khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link tải sản phẩm và license key sẽ xuất hiện trong mục <b>Tài khoản → Sản phẩm của tôi</b>.</p>
                 <h3>Chính sách bảo hành</h3>
                 <ul>
                   <li>Hỗ trợ kỹ thuật miễn phí 6-12 tháng tuỳ sản phẩm</li>
@@ -369,7 +376,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
               <h3 class="font-bold text-white mb-3.5 text-xs uppercase tracking-wider">Cam kết của chúng tôi</h3>
               <ul class="space-y-3 text-xs">
                 {[
-                  ['fa-bolt', 'Giao source tự động 24/7'],
+                  ['fa-bolt', 'Giao hàng tự động 24/7'],
                   ['fa-infinity', 'Sở hữu trọn đời, update free'],
                   ['fa-headset', 'Hỗ trợ kỹ thuật 1-1 qua Zalo'],
                   ['fa-shield-halved', 'Hoàn tiền 100% trong 7 ngày'],

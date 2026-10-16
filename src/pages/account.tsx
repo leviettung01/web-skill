@@ -145,11 +145,11 @@ export const AccountDashboard: FC<LayoutProps & {
 /* ---------- My Products (source code delivery) ---------- */
 export const MyProductsPage: FC<LayoutProps & { licenses: any[] }> = (props) => (
   <AccountShell {...props} activeKey="products" title="Sản phẩm của tôi" heading="Sản phẩm của tôi"
-    sub="Truy cập link source code, tài liệu và license key của các sản phẩm bạn đã mua.">
+    sub="Truy cập link tải sản phẩm, tài liệu và license key của các sản phẩm bạn đã mua.">
     {props.licenses.length === 0 ? (
       <div class="bg-white rounded-2xl border border-slate-200">
         <EmptyState icon="fa-box-archive" title="Bạn chưa sở hữu sản phẩm nào"
-          desc="Sau khi thanh toán thành công, link source code sẽ xuất hiện tại đây."
+          desc="Sau khi thanh toán thành công, link tải sản phẩm sẽ xuất hiện tại đây."
           action={{ href: '/san-pham', label: 'Khám phá sản phẩm' }} />
       </div>
     ) : (

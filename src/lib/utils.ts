@@ -59,11 +59,26 @@ export function gradientFor(id: number): string {
 }
 
 export const PRODUCT_TYPE_LABEL: Record<string, string> = {
-  source: 'Source Code',
+  course: 'Khóa học',
+  skill: 'Skill AI',
   chatbot: 'Chatbot',
+  app: 'App Video AI',
   prompt: 'Bộ Prompt',
   tool: 'Phần Mềm',
+  source: 'Source Code',
   combo: 'Combo'
+}
+
+/** Icon FontAwesome cho từng loại sản phẩm (dùng ở card & trang chi tiết) */
+export const PRODUCT_TYPE_ICON: Record<string, string> = {
+  course: 'fa-graduation-cap',
+  skill: 'fa-wand-magic-sparkles',
+  chatbot: 'fa-robot',
+  app: 'fa-mobile-screen-button',
+  prompt: 'fa-layer-group',
+  tool: 'fa-gears',
+  source: 'fa-code',
+  combo: 'fa-box-open'
 }
 
 /** URL ảnh QR VietQR cho thanh toán chuyển khoản */

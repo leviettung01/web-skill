@@ -6,7 +6,7 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
 <p><b>Bước 1 — Đăng ký tài khoản.</b> Truy cập trang <a href="/dang-ky">Đăng ký</a>, điền họ tên, email và mật khẩu. Quá trình chỉ mất khoảng 30 giây.</p>
 <p><b>Bước 2 — Chọn sản phẩm.</b> Duyệt qua <a href="/san-pham">danh sách sản phẩm</a>, xem video demo và đọc mô tả chi tiết. Bấm "Thêm vào giỏ" hoặc "Mua ngay".</p>
 <p><b>Bước 3 — Thanh toán.</b> Tại trang thanh toán, chọn phương thức (VietQR / MoMo / số dư ví), nhập mã giảm giá nếu có rồi bấm "Đặt hàng ngay".</p>
-<p><b>Bước 4 — Nhận source code.</b> Quét mã QR chuyển khoản theo đúng số tiền và nội dung hiển thị. Sau khi xác nhận, link source code và license key sẽ xuất hiện trong mục <a href="/tai-khoan/san-pham">Sản phẩm của tôi</a>.</p>
+<p><b>Bước 4 — Nhận sản phẩm.</b> Quét mã QR chuyển khoản theo đúng số tiền và nội dung hiển thị. Sau khi xác nhận, link tải sản phẩm và license key sẽ xuất hiện trong mục <a href="/tai-khoan/san-pham">Sản phẩm của tôi</a>.</p>
 
 <h2>Lưu ý khi chuyển khoản</h2>
 <ul>
@@ -32,7 +32,7 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
     heading: 'Chính sách bảo hành & hoàn tiền',
     html: `
 <h2>Chính sách giao hàng</h2>
-<p>Toàn bộ sản phẩm trên SrcTool AI là sản phẩm số, được giao <b>tự động 100%</b>. Ngay khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link truy cập và license key sẽ hiển thị trong tài khoản của bạn. Không cần chờ admin duyệt thủ công.</p>
+<p>Toàn bộ sản phẩm trên WebSkill AI là sản phẩm số, được giao <b>tự động 100%</b>. Ngay khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link truy cập và license key sẽ hiển thị trong tài khoản của bạn. Không cần chờ admin duyệt thủ công.</p>
 
 <h2>Chính sách bảo hành</h2>
 <ul>
@@ -64,7 +64,7 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
     heading: 'Điều khoản sử dụng',
     html: `
 <h2>1. Chấp nhận điều khoản</h2>
-<p>Khi truy cập và sử dụng website SrcTool AI, bạn đồng ý tuân thủ các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.</p>
+<p>Khi truy cập và sử dụng website WebSkill AI, bạn đồng ý tuân thủ các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.</p>
 
 <h2>2. Tài khoản người dùng</h2>
 <ul>
@@ -86,19 +86,19 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
 <li>Bán lại nguyên bản source code cho bên thứ ba</li>
 <li>Chia sẻ công khai link tải hoặc license key</li>
 <li>Đăng tải source code lên các diễn đàn chia sẻ miễn phí</li>
-<li>Sử dụng thương hiệu SrcTool AI khi bán lại sản phẩm đã chỉnh sửa</li>
+<li>Sử dụng thương hiệu WebSkill AI khi bán lại sản phẩm đã chỉnh sửa</li>
 </ul>
 <p>Vi phạm bản quyền sẽ dẫn đến việc <b>huỷ license vĩnh viễn</b> mà không hoàn tiền.</p>
 
 <h2>4. Giới hạn trách nhiệm</h2>
-<p>Chúng tôi cung cấp sản phẩm "nguyên trạng". SrcTool AI không chịu trách nhiệm cho các thiệt hại gián tiếp phát sinh từ việc sử dụng sản phẩm, bao gồm nhưng không giới hạn ở mất dữ liệu, mất doanh thu hoặc gián đoạn kinh doanh.</p>
+<p>Chúng tôi cung cấp sản phẩm "nguyên trạng". WebSkill AI không chịu trách nhiệm cho các thiệt hại gián tiếp phát sinh từ việc sử dụng sản phẩm, bao gồm nhưng không giới hạn ở mất dữ liệu, mất doanh thu hoặc gián đoạn kinh doanh.</p>
 <p>Các sản phẩm phụ thuộc vào API bên thứ ba (Veo 3, ChatGPT, Kling...). Chúng tôi không chịu trách nhiệm nếu các nền tảng này thay đổi chính sách, tăng giá hoặc ngừng dịch vụ, tuy nhiên sẽ cập nhật sản phẩm miễn phí trong khả năng có thể.</p>
 
 <h2>5. Chương trình Affiliate</h2>
 <ul>
 <li>Hoa hồng được tính trên giá trị đơn hàng thực thu sau giảm giá</li>
 <li>Không áp dụng cho đơn tự mua bằng mã của chính mình</li>
-<li>Nghiêm cấm spam hoặc chạy quảng cáo trên thương hiệu SrcTool AI</li>
+<li>Nghiêm cấm spam hoặc chạy quảng cáo trên thương hiệu WebSkill AI</li>
 <li>Chúng tôi có quyền thu hồi hoa hồng nếu phát hiện gian lận</li>
 </ul>
 

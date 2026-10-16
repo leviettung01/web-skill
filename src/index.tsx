@@ -25,8 +25,19 @@ import {
   AdminBankTx
 } from './pages/admin'
 import { POLICY_DOCS } from './lib/docs'
+import { pgDb, pgConnectionString } from './lib/pg'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Vercel/Node: khi không có D1 binding (c.env.DB) nhưng có POSTGRES_URL,
+// dùng pgDb (Postgres) thay thế để cùng 1 codebase chạy được cả 2 nền tảng.
+app.use('*', async (c, next) => {
+  if (!c.env.DB) {
+    const cs = (c.env as any).POSTGRES_URL || pgConnectionString()
+    if (cs) (c.env as any).DB = pgDb
+  }
+  await next()
+})
 
 app.use('/api/*', cors())
 
@@ -151,7 +162,7 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   const heading = opts.comboOnly ? 'Combo Trọn Bộ' : currentCat ? currentCat.name : q ? `Kết quả cho "${q}"` : 'Tất cả sản phẩm'
   const headingDesc = opts.comboOnly ? 'Gói combo tiết kiệm tới 60% so với mua lẻ từng sản phẩm'
     : currentCat ? currentCat.description
-      : 'Khám phá toàn bộ source code, chatbot, prompt và tool AI tạo video của chúng tôi'
+      : 'Khám phá toàn bộ khóa học, skill, chatbot và app làm video AI của chúng tôi'
   const baseUrl = opts.comboOnly ? '/combo' : opts.catSlug ? `/danh-muc/${opts.catSlug}` : '/san-pham'
 
   return c.html(<ProductListPage {...base(c)}
@@ -748,7 +759,7 @@ app.get('/tai-xuong/:licenseId', requireAuth, async (c) => {
 app.get('/tai-khoan/don-hang', requireAuth, async (c) => {
   const u = c.get('user')!
   const rows = await c.env.DB.prepare(
-    `SELECT o.*, (SELECT GROUP_CONCAT(product_name, ', ') FROM order_items WHERE order_id=o.id) product_names
+    `SELECT o.*, (SELECT STRING_AGG(product_name, ', ') FROM order_items WHERE order_id=o.id) product_names
      FROM orders o WHERE o.user_id=? ORDER BY o.id DESC`
   ).bind(u.id).all()
   return c.html(<MyOrdersPage {...base(c)} orders={rows.results as any} />)
@@ -848,13 +859,13 @@ app.get('/admin', requireAdmin, async (c) => {
       (SELECT COUNT(*) FROM orders WHERE status='paid') paidOrders,
       (SELECT COUNT(*) FROM orders WHERE status='pending') pendingOrders,
       (SELECT COUNT(*) FROM users) users,
-      (SELECT COUNT(*) FROM users WHERE created_at >= datetime('now','-30 days')) newUsers,
+      (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '30 days') newUsers,
       (SELECT COUNT(*) FROM products) products,
       (SELECT COALESCE(SUM(sold_count),0) FROM products) totalSold`).first<any>(),
     db.prepare(`SELECT o.*, u.full_name, u.email FROM orders o JOIN users u ON u.id=o.user_id ORDER BY o.id DESC LIMIT 8`).all(),
     db.prepare(`SELECT name, price, sold_count FROM products ORDER BY sold_count DESC LIMIT 6`).all(),
-    db.prepare(`SELECT date(created_at) d, COALESCE(SUM(total),0) v FROM orders
-                WHERE status='paid' AND created_at >= datetime('now','-7 days') GROUP BY date(created_at)`).all()
+    db.prepare(`SELECT created_at::date d, COALESCE(SUM(total),0) v FROM orders
+                WHERE status='paid' AND created_at >= NOW() - INTERVAL '7 days' GROUP BY created_at::date`).all()
   ])
   const map: Record<string, number> = {}
   for (const r of chartRows.results as any[]) map[r.d] = r.v

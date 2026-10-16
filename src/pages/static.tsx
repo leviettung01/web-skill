@@ -59,7 +59,7 @@ export const BlogDetailPage: FC<LayoutProps & { post: any; related: any[] }> = (
 
         <div class="mt-10 p-6 rounded-2xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white text-center">
           <h3 class="text-xl font-extrabold mb-2">Bắt đầu làm video AI ngay hôm nay</h3>
-          <p class="text-white/85 text-sm mb-5">Khám phá kho source code, chatbot và bộ prompt đã được hàng nghìn creator tin dùng.</p>
+          <p class="text-white/85 text-sm mb-5">Khám phá kho khóa học, skill, chatbot và app làm video AI đã được hàng nghìn creator tin dùng.</p>
           <a href="/san-pham" class="inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition">
             <i class="fas fa-cubes"></i>Xem sản phẩm
           </a>
@@ -79,27 +79,27 @@ export const BlogDetailPage: FC<LayoutProps & { post: any; related: any[] }> = (
 /* ---------------- PRICING ---------------- */
 const PLANS = [
   {
-    name: 'Starter', price: 199000, tag: 'Người mới bắt đầu', icon: 'fa-seedling', highlight: false,
-    desc: 'Chọn 1 chatbot hoặc bộ prompt để bắt đầu làm video AI.',
-    features: ['1 chatbot viết kịch bản', 'Truy cập trọn đời', 'Cập nhật prompt miễn phí', 'Hỗ trợ qua Zalo', 'Tài liệu hướng dẫn chi tiết'],
-    cta: 'Xem chatbot', href: '/danh-muc/chatbot-prompt'
+    name: 'Starter', price: 299000, tag: 'Người mới bắt đầu', icon: 'fa-seedling', highlight: false,
+    desc: 'Chọn 1 skill hoặc chatbot để bắt đầu làm video AI ngay hôm nay.',
+    features: ['1 skill theo ngách hoặc 1 chatbot', 'Video demo xem trước khi mua', 'Truy cập trọn đời', 'Cập nhật miễn phí', 'Hỗ trợ qua Zalo'],
+    cta: 'Xem skill', href: '/danh-muc/skill-video-ai'
   },
   {
-    name: 'Creator', price: 890000, tag: 'Phổ biến nhất', icon: 'fa-rocket', highlight: true,
-    desc: 'Combo 10 chatbot đa ngành + 100 prompt Veo 3 tặng kèm.',
-    features: ['10 chatbot đa ngành hàng', 'Tặng 100 prompt Veo 3', 'Nhận chatbot mới 12 tháng', 'Hỗ trợ ưu tiên 24/7', 'Truy cập trọn đời', 'Nhóm cộng đồng riêng'],
-    cta: 'Mua combo', href: '/combo'
+    name: 'Creator', price: 899000, tag: 'Phổ biến nhất', icon: 'fa-rocket', highlight: true,
+    desc: '1 khóa học video AI + 1 skill theo ngách: học xong làm được ngay.',
+    features: ['1 khóa học (Muse AI / Seedance / Flow Veo)', '1 skill theo ngách tự chọn', 'Video demo thực tế từng sản phẩm', 'Hỗ trợ ưu tiên 1-1 qua Zalo', 'Truy cập trọn đời', 'Cập nhật miễn phí'],
+    cta: 'Xem khóa học', href: '/danh-muc/khoa-hoc-video-ai'
   },
   {
-    name: 'Business', price: 4990000, tag: 'Kinh doanh', icon: 'fa-crown', highlight: false,
-    desc: 'Full source code để tự vận hành nền tảng video AI của riêng bạn.',
-    features: ['4 source code trị giá 7.7 triệu', 'Bộ 500 prompt Veo 3', '2 buổi setup 1-1 Ultraview', 'Hỗ trợ kỹ thuật 12 tháng', 'Không giới hạn domain', 'Ưu tiên nhận bản cập nhật', 'Tư vấn mô hình kinh doanh'],
-    cta: 'Liên hệ tư vấn', href: '/san-pham/combo-source-code-all-in-one'
+    name: 'All-In-One', price: 1999000, tag: 'Tiết kiệm 55%', icon: 'fa-crown', highlight: false,
+    desc: 'Trọn bộ WebSkill AI: 3 khóa học + 3 skill + chatbot + app render.',
+    features: ['3 khóa học video AI', '3 skill theo ngách', 'Chatbot viết kịch bản + app render', 'Tặng sản phẩm mới trong 12 tháng', 'Hỗ trợ ưu tiên 1-1', 'Truy cập trọn đời'],
+    cta: 'Mua combo', href: '/san-pham/combo-video-ai-all-in-one'
   }
 ]
 
 export const PricingPage: FC<LayoutProps> = (props) => (
-  <Layout {...props} active="pricing" title="Bảng giá" description="Bảng giá các gói sản phẩm source code và tool AI tạo video">
+  <Layout {...props} active="pricing" title="Bảng giá" description="Bảng giá các gói khóa học, skill, chatbot và app làm video AI">
     <div class="bg-slate-950 text-white relative overflow-hidden">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-7xl mx-auto px-4 py-16 text-center">
@@ -154,15 +154,15 @@ export const PricingPage: FC<LayoutProps> = (props) => (
             </thead>
             <tbody class="divide-y divide-slate-100">
               {[
-                ['Số sản phẩm', '1', '10+', '4 source + 500 prompt'],
+                ['Số sản phẩm', '1', '2', '8'],
                 ['Sở hữu trọn đời', true, true, true],
                 ['Cập nhật miễn phí', true, true, true],
                 ['Hỗ trợ Zalo', true, true, true],
-                ['Hỗ trợ ưu tiên 24/7', false, true, true],
-                ['Setup 1-1 Ultraview', false, false, true],
-                ['Full source code', false, false, true],
-                ['Dùng cho thương mại', false, true, true],
-                ['Không giới hạn domain', false, false, true]
+                ['Hỗ trợ ưu tiên 1-1', false, true, true],
+                ['Video demo xem trước', true, true, true],
+                ['Khóa học video AI', false, true, true],
+                ['Skill theo ngách', true, true, true],
+                ['Chatbot + App render', false, false, true]
               ].map(([label, ...vals]) => (
                 <tr>
                   <td class="py-3 text-slate-600 font-medium">{label}</td>
@@ -185,12 +185,12 @@ export const PricingPage: FC<LayoutProps> = (props) => (
 
 /* ---------------- ABOUT ---------------- */
 export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => (
-  <Layout {...props} title="Giới thiệu" description="Về SrcTool AI — kho source code và tool AI tạo video hàng đầu Việt Nam">
+  <Layout {...props} title="Giới thiệu" description="Về WebSkill AI — kho chatbot, skill và app AI làm video hàng đầu Việt Nam">
     <div class="bg-slate-950 text-white relative overflow-hidden">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
-        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">Về SrcTool AI</h1>
-        <p class="text-slate-300 leading-relaxed">Chúng tôi giúp người Việt tiếp cận công nghệ video AI một cách dễ dàng nhất — thông qua source code chất lượng, chatbot kịch bản thông minh và bộ prompt đã được kiểm chứng.</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">Về WebSkill AI</h1>
+        <p class="text-slate-300 leading-relaxed">Chúng tôi giúp người Việt làm video AI bán hàng một cách dễ dàng nhất — thông qua khóa học thực chiến, skill theo ngách, chatbot kịch bản thông minh và app tạo video tự động.</p>
       </div>
     </div>
 
@@ -213,14 +213,14 @@ export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => (
 
       <div class="prose-vn max-w-none bg-white rounded-2xl border border-slate-200 p-7 md:p-10">
         <h2>Câu chuyện của chúng tôi</h2>
-        <p>SrcTool AI ra đời từ nhu cầu thực tế: rất nhiều người muốn làm video bán hàng bằng AI nhưng không biết viết prompt, không biết quay dựng và cũng không đủ ngân sách thuê agency.</p>
-        <p>Chúng tôi bắt đầu bằng việc xây dựng những chatbot viết kịch bản chuyên ngành, sau đó mở rộng sang bộ prompt Veo 3 và cuối cùng là full source code nền tảng tạo video AI dành cho người muốn kinh doanh dịch vụ.</p>
+        <p>WebSkill AI ra đời từ nhu cầu thực tế: rất nhiều người muốn làm video bán hàng bằng AI nhưng không biết viết prompt, không biết quay dựng và cũng không đủ ngân sách thuê agency.</p>
+        <p>Chúng tôi bắt đầu bằng việc xây dựng những chatbot viết kịch bản chuyên ngành, sau đó phát triển các <b>skill tạo video AI theo ngách</b> (Thuỷ Sinh, Làm Vườn, Fitness...) và các <b>khóa học thực chiến</b> trên Muse AI, Seedance 2.5, Google Flow Veo — tất cả đều có video demo thật để bạn xem trước khi mua.</p>
         <h2>Chúng tôi cung cấp gì?</h2>
         <ul>
-          <li><b>Source code tool AI:</b> mã nguồn đầy đủ, không mã hoá, kèm tài liệu triển khai chi tiết</li>
+          <li><b>Khóa học video AI:</b> học theo lộ trình từ cơ bản đến nâng cao trên Muse AI, Seedance 2.5 30s, Google Flow Veo</li>
+          <li><b>Skill tạo video AI:</b> bộ skill đóng gói theo ngách — Thuỷ Sinh 30s, DIY Làm Vườn 30s, Affiliate Fitness — làm theo là ra video chuẩn build page Reels/TikTok</li>
           <li><b>Chatbot viết kịch bản:</b> sinh sẵn prompt ảnh và prompt video theo từng ngành hàng</li>
-          <li><b>Bộ prompt Veo 3:</b> hàng trăm prompt đã test thực tế, đảm bảo ra video đẹp</li>
-          <li><b>Tool automation:</b> phần mềm render hàng loạt, đăng bài đa kênh tự động</li>
+          <li><b>App làm video AI:</b> phần mềm render hàng loạt, tự động ghép voice - sub - nhạc</li>
         </ul>
         <h2>Cam kết</h2>
         <ul>
@@ -238,7 +238,7 @@ export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => (
 
 /* ---------------- CONTACT ---------------- */
 export const ContactPage: FC<LayoutProps> = (props) => (
-  <Layout {...props} active="contact" title="Liên hệ" description="Liên hệ hỗ trợ SrcTool AI">
+  <Layout {...props} active="contact" title="Liên hệ" description="Liên hệ hỗ trợ WebSkill AI">
     <div class="max-w-6xl mx-auto px-4 py-10">
       <Breadcrumb items={[{ label: 'Liên hệ' }]} />
       <div class="grid lg:grid-cols-[1fr_360px] gap-7">
@@ -311,7 +311,7 @@ export const ContactPage: FC<LayoutProps> = (props) => (
 
 /* ---------------- AFFILIATE LANDING ---------------- */
 export const AffiliateLandingPage: FC<LayoutProps & { percent: number }> = (props) => (
-  <Layout {...props} active="affiliate" title="Chương trình Affiliate" description="Kiếm hoa hồng khi giới thiệu sản phẩm SrcTool AI">
+  <Layout {...props} active="affiliate" title="Chương trình Affiliate" description="Kiếm hoa hồng khi giới thiệu sản phẩm WebSkill AI">
     <div class="bg-slate-950 text-white relative overflow-hidden">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
@@ -366,7 +366,7 @@ export const AffiliateLandingPage: FC<LayoutProps & { percent: number }> = (prop
             'Hoa hồng được ghi nhận khi đơn hàng chuyển sang trạng thái "Đã thanh toán"',
             'Rút hoa hồng tối thiểu 200.000đ, xử lý trong 1-3 ngày làm việc',
             'Không áp dụng cho đơn hàng tự mua bằng mã của chính mình',
-            'Nghiêm cấm spam, chạy quảng cáo trên thương hiệu SrcTool AI'
+            'Nghiêm cấm spam, chạy quảng cáo trên thương hiệu WebSkill AI'
           ].map(t => (
             <li class="flex gap-2.5"><i class="fas fa-circle-check text-emerald-500 mt-0.5 shrink-0"></i>{t}</li>
           ))}

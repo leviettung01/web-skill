@@ -18,7 +18,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
     title, description, user, settings = {}, cartCount = 0,
     active = '', canonical, children
   } = props
-  const siteName = settings.site_name || 'SrcTool AI'
+  const siteName = settings.site_name || 'WebSkill AI'
   const fullTitle = title ? `${title} | ${siteName}` : `${siteName} — ${settings.site_tagline || ''}`
   const desc = description || settings.site_tagline || 'Kho source code & tool AI tạo video'
 
@@ -45,10 +45,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         {props.ogImage && <meta property="og:image" content={props.ogImage} />}
         {canonical && <link rel="canonical" href={canonical} />}
         <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script dangerouslySetInnerHTML={{
-          __html: `tailwind.config={theme:{extend:{colors:{brand:{50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',950:'#1e1b4b'}},fontFamily:{sans:['Be Vietnam Pro','system-ui','sans-serif']}}}}`
-        }}></script>
+        <link href="/static/tailwind.css" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -80,9 +77,9 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                       <i class="fas fa-house w-5 text-center text-slate-400"></i>
                       <span class="sidebar-text">Trang chủ</span>
                     </a>
-                    <a href="/san-pham?type=prompt" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-gift w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Prompt miễn phí</span>
+                    <a href="/san-pham?sort=hot" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
+                      <i class="fas fa-fire w-5 text-center text-slate-400"></i>
+                      <span class="sidebar-text">Bán chạy nhất</span>
                     </a>
                   </nav>
                 </div>
@@ -90,27 +87,27 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                 <div>
                   <div class="px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text">Sản phẩm</div>
                   <nav class="flex flex-col gap-1">
+                    <a href="/san-pham?type=course" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
+                      <i class="fas fa-graduation-cap w-5 text-center text-slate-400"></i>
+                      <span class="sidebar-text">Khóa học</span>
+                    </a>
+                    <a href="/san-pham?type=skill" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
+                      <i class="fas fa-wand-magic-sparkles w-5 text-center text-slate-400"></i>
+                      <span class="sidebar-text">Skill AI</span>
+                    </a>
                     <a href="/san-pham?type=chatbot" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'chatbot' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
                       <i class="fas fa-robot w-5 text-center text-slate-400"></i>
                       <span class="sidebar-text">Chatbot</span>
                     </a>
-                    <a href="/san-pham?type=source" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'workflow' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
-                      <i class="fas fa-code-branch w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Workflow</span>
-                    </a>
-                    <a href="/san-pham?type=tool" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-cubes w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">App</span>
-                    </a>
-                    <a href="/danh-muc/prompt-veo3" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-wand-magic-sparkles w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">VEO3 Workflow</span>
+                    <a href="/san-pham?type=app" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
+                      <i class="fas fa-mobile-screen-button w-5 text-center text-slate-400"></i>
+                      <span class="sidebar-text">App Video AI</span>
                     </a>
                     <a href="/combo" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-file-invoice w-5 text-center text-slate-400"></i>
+                      <i class="fas fa-box-open w-5 text-center text-slate-400"></i>
                       <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Viral Video Hooks</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none">FREE</span>
+                        <span>Combo tiết kiệm</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold leading-none">-60%</span>
                       </span>
                     </a>
                     <a href="/lien-he" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
@@ -277,10 +274,10 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                   <div>
                     <h4 class="text-white font-bold mb-4 text-xs uppercase tracking-wider">Sản phẩm</h4>
                     <ul class="space-y-2 text-xs">
-                      <li><a href="/san-pham?type=source" class="hover:text-indigo-400 transition">Source Code Tool AI</a></li>
+                      <li><a href="/san-pham?type=course" class="hover:text-indigo-400 transition">Khóa học Video AI</a></li>
+                      <li><a href="/san-pham?type=skill" class="hover:text-indigo-400 transition">Skill Tạo Video AI</a></li>
                       <li><a href="/san-pham?type=chatbot" class="hover:text-indigo-400 transition">Chatbot Kịch Bản</a></li>
-                      <li><a href="/san-pham?type=prompt" class="hover:text-indigo-400 transition">Prompt Veo 3</a></li>
-                      <li><a href="/san-pham?type=tool" class="hover:text-indigo-400 transition">Tool Automation</a></li>
+                      <li><a href="/san-pham?type=app" class="hover:text-indigo-400 transition">App Làm Video AI</a></li>
                       <li><a href="/combo" class="hover:text-indigo-400 transition">Combo Trọn Bộ</a></li>
                     </ul>
                   </div>

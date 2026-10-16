@@ -8,3 +8,4 @@ logs/
 .pm2/
 *.tar.gz
 .DS_Store
+__pycache__/

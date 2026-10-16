@@ -1,6 +1,6 @@
 import type { FC } from 'hono/jsx'
 import type { Product, Category } from '../lib/types'
-import { formatVND, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, formatDate } from '../lib/utils'
+import { formatVND, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate } from '../lib/utils'
 
 export const Stars: FC<{ rating: number; size?: string }> = ({ rating, size = 'text-xs' }) => (
   <span class={`text-amber-400 ${size}`}>
@@ -21,7 +21,7 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
           : (
             <div class="w-full h-full grid place-items-center text-white/95 p-4 text-center">
               <div>
-                <i class={`fas ${p.product_type === 'chatbot' ? 'fa-robot' : p.product_type === 'prompt' ? 'fa-wand-magic-sparkles' : p.product_type === 'combo' ? 'fa-box-open' : p.product_type === 'tool' ? 'fa-gears' : 'fa-code'} text-4xl mb-2 opacity-95`}></i>
+                <i class={`fas ${PRODUCT_TYPE_ICON[p.product_type] || 'fa-cube'} text-4xl mb-2 opacity-95`}></i>
                 <div class="text-[11px] font-bold uppercase tracking-widest opacity-80">{PRODUCT_TYPE_LABEL[p.product_type] || 'Sản phẩm'}</div>
               </div>
             </div>
@@ -37,7 +37,7 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
         </div>
         <div class="absolute top-3 right-3 z-10">
           <span class="px-2 py-1 rounded bg-[#0068ff] text-white text-[9px] font-black tracking-wider uppercase shadow-md">
-            {p.product_type === 'chatbot' ? 'Chatbot' : p.product_type === 'prompt' ? 'Prompt' : p.product_type === 'combo' ? 'Combo' : 'App'}
+            {PRODUCT_TYPE_LABEL[p.product_type] || 'Sản phẩm'}
           </span>
         </div>
 

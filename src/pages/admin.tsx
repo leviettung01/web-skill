@@ -30,7 +30,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>{props.heading} | Quản trị SrcTool AI</title>
+      <title>{props.heading} | Quản trị WebSkill AI</title>
       <meta name="robots" content="noindex,nofollow" />
       <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
       <script src="https://cdn.tailwindcss.com"></script>
@@ -51,7 +51,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
             </div>
             <div class="leading-none">
               <div class="font-extrabold text-white text-sm">Admin Panel</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">SrcTool AI</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">WebSkill AI</div>
             </div>
           </a>
           <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
@@ -295,7 +295,7 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
               </div>
               <div>
                 <label class={labelCls}>Video Demo sản phẩm (YouTube embed URL)</label>
-                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="https://www.youtube.com/embed/xxx" class={fieldCls} />
+                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="Link YouTube embed hoặc file MP4: /videos/demo-xxx.mp4" class={fieldCls} />
               </div>
             </div>
           </div>

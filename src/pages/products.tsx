@@ -2,7 +2,7 @@ import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { ProductCard, Breadcrumb, Pagination, EmptyState, SectionTitle } from '../components/ui'
 import type { Product, Category } from '../lib/types'
-import { formatVND } from '../lib/utils'
+import { formatVND, PRODUCT_TYPE_LABEL } from '../lib/utils'
 
 interface ListProps extends LayoutProps {
   products: Product[]
@@ -31,13 +31,9 @@ const SORTS = [
   ['featured', 'Nổi bật']
 ]
 
-const TYPES = [
+const TYPES: [string, string][] = [
   ['', 'Tất cả loại'],
-  ['source', 'Source Code'],
-  ['chatbot', 'Chatbot'],
-  ['prompt', 'Bộ Prompt'],
-  ['tool', 'Phần mềm'],
-  ['combo', 'Combo']
+  ...Object.entries(PRODUCT_TYPE_LABEL)
 ]
 
 export const ProductListPage: FC<ListProps> = (props) => {

@@ -16,28 +16,28 @@ interface Props extends LayoutProps {
 }
 
 const BENEFITS = [
-  { icon: 'fa-bolt', title: 'Giao hàng tự động 24/7', desc: 'Thanh toán xong nhận link source code ngay lập tức trong tài khoản, không cần chờ admin.' },
-  { icon: 'fa-infinity', title: 'Sở hữu trọn đời', desc: 'Mua một lần dùng mãi mãi, không phí ẩn, không giới hạn thời gian, nhận update miễn phí.' },
-  { icon: 'fa-code', title: 'Full source, không mã hoá', desc: 'Bàn giao toàn bộ mã nguồn sạch, có comment tiếng Việt, tự do chỉnh sửa theo ý bạn.' },
-  { icon: 'fa-headset', title: 'Hỗ trợ kỹ thuật 1-1', desc: 'Đội ngũ dev hỗ trợ cài đặt qua Zalo/Ultraview, cam kết chạy được mới thôi.' },
-  { icon: 'fa-shield-halved', title: 'Bảo hành & hoàn tiền', desc: 'Hoàn tiền 100% trong 7 ngày nếu sản phẩm không đúng như mô tả.' },
-  { icon: 'fa-rocket', title: 'Cập nhật liên tục', desc: 'Sản phẩm được nâng cấp theo API mới của Veo 3, Kling, Runway... hoàn toàn miễn phí.' }
+  { icon: 'fa-bolt', title: 'Giao hàng tự động 24/7', desc: 'Thanh toán xong nhận link tải, link kích hoạt hoặc key bản quyền ngay trong tài khoản, không cần chờ admin.' },
+  { icon: 'fa-infinity', title: 'Sở hữu trọn đời', desc: 'Mua một lần dùng mãi mãi, không phí ẩn, không giới hạn thời gian, nhận mọi bản cập nhật miễn phí.' },
+  { icon: 'fa-wand-magic-sparkles', title: 'Skill thực chiến, test kỹ', desc: 'Mỗi skill, chatbot và khóa học đều đã chạy thực tế ra video demo bạn xem được ngay trên trang sản phẩm.' },
+  { icon: 'fa-headset', title: 'Hỗ trợ 1-1', desc: 'Đội ngũ hỗ trợ qua Zalo/Ultraview, cầm tay chỉ việc đến khi bạn tự làm được video đầu tiên.' },
+  { icon: 'fa-shield-halved', title: 'Bảo hành & hoàn tiền', desc: 'Hoàn tiền 100% trong 7 ngày nếu sản phẩm không đúng như mô tả hoặc video demo.' },
+  { icon: 'fa-rocket', title: 'Cập nhật theo model mới', desc: 'Skill và khóa học được nâng cấp liên tục theo Muse AI, Seedance, Veo, Flow... hoàn toàn miễn phí.' }
 ]
 
 const STEPS = [
   { n: '01', icon: 'fa-user-plus', title: 'Đăng ký tài khoản', desc: 'Tạo tài khoản miễn phí chỉ với email trong 30 giây.' },
-  { n: '02', icon: 'fa-cart-shopping', title: 'Chọn sản phẩm', desc: 'Xem demo, đọc mô tả chi tiết rồi thêm vào giỏ hàng.' },
+  { n: '02', icon: 'fa-cart-shopping', title: 'Chọn sản phẩm', desc: 'Xem video demo, đọc mô tả chi tiết rồi thêm vào giỏ hàng.' },
   { n: '03', icon: 'fa-qrcode', title: 'Thanh toán QR', desc: 'Quét mã VietQR chuyển khoản, hệ thống xác nhận nhanh chóng.' },
-  { n: '04', icon: 'fa-download', title: 'Nhận source code', desc: 'Link tải + license key xuất hiện ngay trong "Sản phẩm của tôi".' }
+  { n: '04', icon: 'fa-download', title: 'Nhận sản phẩm', desc: 'Link tải + license key xuất hiện ngay trong "Sản phẩm của tôi".' }
 ]
 
 const FAQS = [
-  { q: 'Mua source code có được chỉnh sửa và bán lại không?', a: 'Bạn được toàn quyền chỉnh sửa, sử dụng cho dự án cá nhân và kinh doanh dịch vụ. Tuy nhiên không được bán lại nguyên bản source code cho bên thứ ba.' },
-  { q: 'Tôi không biết code thì có dùng được không?', a: 'Có. Mỗi sản phẩm đều kèm tài liệu cài đặt từng bước có hình ảnh và video hướng dẫn. Ngoài ra chúng tôi hỗ trợ cài đặt 1-1 qua Ultraview nếu bạn cần.' },
-  { q: 'Chatbot kịch bản hoạt động như thế nào?', a: 'Sau khi mua, bạn nhận được link chatbot GPT/Gemini riêng. Chỉ cần bấm Start, chọn chủ đề là chatbot sẽ sinh ra 6 prompt tạo ảnh và 6 prompt tạo video hoàn chỉnh để bạn dán vào Veo 3 hoặc Flow.' },
-  { q: 'Thanh toán xong bao lâu thì nhận được hàng?', a: 'Hệ thống giao tự động. Ngay khi đơn hàng được xác nhận thanh toán, link source code và license key sẽ xuất hiện trong mục "Sản phẩm của tôi".' },
-  { q: 'Có được hỗ trợ khi gặp lỗi không?', a: 'Có. Mỗi sản phẩm đi kèm 6-12 tháng hỗ trợ kỹ thuật qua Zalo. Với gói Combo All-In-One bạn còn được 2 buổi setup 1-1 trực tiếp.' },
-  { q: 'Tôi có thể dùng cho nhiều domain không?', a: 'Với source code, bạn được cài không giới hạn số domain cho mục đích sử dụng của chính bạn.' }
+  { q: 'Mua khóa học / skill thì tôi nhận được gì?', a: 'Bạn nhận toàn bộ nội dung số của sản phẩm: video bài giảng + tài liệu với khóa học; bộ prompt, quy trình và file cấu hình với skill; link chatbot riêng với chatbot; bộ cài/app với app. Tất cả được giao tự động ngay sau khi thanh toán.' },
+  { q: 'Tôi không biết gì về AI thì có học được không?', a: 'Có. Mỗi khóa học và skill đều thiết kế cho người mới: xem video demo trước khi mua, làm theo từng bước có hình ảnh minh hoạ. Ngoài ra chúng tôi hỗ trợ 1-1 qua Zalo nếu bạn cần.' },
+  { q: 'Skill tạo video AI hoạt động như thế nào?', a: 'Sau khi mua, bạn nhận bộ skill gồm prompt, quy trình và file cấu hình cho đúng ngách của mình (Thuỷ Sinh, Làm Vườn, Fitness...). Chỉ cần làm theo là ra video 30s đúng chuẩn để build page Reels/TikTok.' },
+  { q: 'Thanh toán xong bao lâu thì nhận được hàng?', a: 'Hệ thống giao tự động. Ngay khi đơn hàng được xác nhận thanh toán, link tải và license key sẽ xuất hiện trong mục "Sản phẩm của tôi".' },
+  { q: 'Có được hỗ trợ khi gặp lỗi không?', a: 'Có. Mỗi sản phẩm đi kèm hỗ trợ qua Zalo. Với gói Combo All-In-One bạn còn được ưu tiên hỗ trợ 1-1 trực tiếp.' },
+  { q: 'Tôi có thể dùng skill cho nhiều kênh không?', a: 'Có. Skill mua một lần dùng không giới hạn cho mọi kênh TikTok, Reels, YouTube Shorts của chính bạn.' }
 ]
 
 export const HomePage: FC<Props> = (props) => {
@@ -56,11 +56,12 @@ export const HomePage: FC<Props> = (props) => {
                 Đã có <b class="text-emerald-300">{stats.sold.toLocaleString('vi-VN')}+</b> lượt mua thành công
               </div>
               <h1 class="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5">
-                Kho <span class="bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Source Code &amp; Tool AI</span> tạo video số 1 Việt Nam
+                Kho <span class="bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Chatbot, Skill &amp; App AI</span> làm video số 1 Việt Nam
               </h1>
               <p class="text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl">
-                Full source code tool tạo video AI, chatbot viết kịch bản, bộ prompt Veo 3 chuẩn điện ảnh.
-                Mua một lần — sở hữu trọn đời — giao source tự động 24/7.
+                Khóa học, skill, chatbot và app làm video AI: Video Muse AI, Seedance 2.5 30s, Google Flow Veo —
+                kèm skill theo ngách Thuỷ Sinh, Làm Vườn, Affiliate Fitness.
+                Mua một lần — sở hữu trọn đời — giao hàng tự động 24/7.
               </p>
               <div class="flex flex-wrap gap-3 mb-9">
                 <a href="/san-pham" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition">
@@ -93,7 +94,7 @@ export const HomePage: FC<Props> = (props) => {
                     <span class="w-3 h-3 rounded-full bg-rose-400"></span>
                     <span class="w-3 h-3 rounded-full bg-amber-400"></span>
                     <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
-                    <span class="ml-2 text-xs text-slate-400">srctool.ai — AI Video Studio</span>
+                    <span class="ml-2 text-xs text-slate-400">webskill.ai — AI Video Studio</span>
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     {['fa-film', 'fa-robot', 'fa-wand-magic-sparkles', 'fa-gears'].map((ic, i) => (
@@ -114,7 +115,7 @@ export const HomePage: FC<Props> = (props) => {
               <div class="absolute -bottom-5 -left-6 bg-[#0f0e26] border border-[#1f1b4b] text-white rounded-xl shadow-2xl p-3.5 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 grid place-items-center"><i class="fas fa-download"></i></div>
                 <div>
-                  <div class="text-xs text-slate-400">Giao source code</div>
+                  <div class="text-xs text-slate-400">Giao sản phẩm</div>
                   <div class="font-bold text-sm">Tự động &lt; 1 phút</div>
                 </div>
               </div>
@@ -127,7 +128,7 @@ export const HomePage: FC<Props> = (props) => {
           <div class="marquee-track flex gap-10 w-max text-slate-500 text-sm font-semibold whitespace-nowrap">
             {[...Array(2)].map(() => (
               <>
-                {['Veo 3', 'Google Flow', 'Kling AI', 'Runway ML', 'ChatGPT', 'Gemini', 'Midjourney', 'CapCut', 'Luma AI', 'Sora'].map(b => (
+                {['Muse AI', 'Seedance 2.5', 'Veo 3', 'Google Flow', 'Kling AI', 'ChatGPT', 'Gemini', 'CapCut', 'Sora', 'Runway'].map(b => (
                   <span class="flex items-center gap-2"><i class="fas fa-circle-nodes text-indigo-500/60"></i>{b}</span>
                 ))}
               </>
@@ -221,7 +222,7 @@ export const HomePage: FC<Props> = (props) => {
       {/* ============ BENEFITS ============ */}
       <section id="benefits-section" class="bg-[#0f0e26]/60 border-y border-[#1f1b4b] py-16 mt-10 reveal">
         <div class="max-w-7xl mx-auto px-4">
-          <SectionTitle center title="Lợi ích khi mua tại SrcTool AI" subtitle="Trải nghiệm tuyệt vời cùng những ưu điểm vượt trội" />
+          <SectionTitle center title="Lợi ích khi mua tại WebSkill AI" subtitle="Trải nghiệm tuyệt vời cùng những ưu điểm vượt trội" />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
             {BENEFITS.map(b => (
               <div class="p-6 rounded-2xl border border-[#1f1b4b] bg-[#0f0e26] hover:border-indigo-500/20 hover:shadow-lg transition group">

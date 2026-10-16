@@ -1,8 +1,14 @@
-# SrcTool AI — Website Bán Source Code & Tool AI Tạo Video
+# WebSkill AI — Website Bán Chatbot, Skill, App & Khóa Học Làm Video AI
 
 ## Tổng quan dự án
-- **Tên**: SrcTool AI
-- **Mục tiêu**: Nền tảng thương mại điện tử bán sản phẩm số (source code tool AI tạo video, chatbot viết kịch bản, bộ prompt Veo 3, tool automation, combo) với giao source code **tự động 24/7** sau thanh toán.
+- **Tên**: WebSkill AI
+- **Mục tiêu**: Nền tảng thương mại điện tử bán sản phẩm số (khóa học video AI, skill tạo video AI theo ngách, chatbot viết kịch bản, app render video) với giao hàng **tự động 24/7** sau thanh toán.
+- **Danh mục chính**:
+  - **Khóa học Video AI**: Video Muse AI, Video Seedance 2.5 30s, Video Google Flow Veo
+  - **Skill Tạo Video AI** (theo ngách/key): Video Thuỷ Sinh 30s Build Page Reels, Video DIY Làm Vườn 30s Build Page Reels, Video Affiliate Fitness
+  - **Chatbot AI**: chatbot viết kịch bản video đa ngành
+  - **App Làm Video AI**: app render video hàng loạt
+- **Video demo**: mỗi sản phẩm có video demo thật (`public/videos/*.mp4` + poster) phát ngay trên trang chi tiết bằng thẻ `<video>` (hỗ trợ cả YouTube embed qua `demo_video_url`).
 - **Tham chiếu**: Kết hợp mô hình của `toolkichban.com` (landing bán bộ tool) và `maulamvideo.com` (marketplace chatbot/prompt AI, cấu trúc `/chatbotprompt`, `/prompts`, `/combo`, `/pricing`, `/affiliate`).
 
 ## URLs
@@ -12,8 +18,14 @@
 ### Tài khoản demo
 | Vai trò | Email | Mật khẩu |
 |---|---|---|
-| Khách hàng | `demo@srctool.ai` | `123456` |
-| Quản trị viên | `admin@srctool.ai` | `123456` |
+| Khách hàng | `demo@webskill.ai` | `123456` |
+| Quản trị viên | `admin@webskill.ai` | `123456` |
+
+### Thêm video demo mới cho sản phẩm
+1. Nén video dưới 25MB/file (giới hạn Cloudflare Pages), đặt vào `public/videos/` (VD: `demo-ten-san-pham.mp4`).
+2. Tạo poster: `ffmpeg -ss 2 -i public/videos/demo-xxx.mp4 -frames:v 1 -q:v 3 public/videos/posters/poster-xxx.jpg`
+3. Vào `/admin` → sửa sản phẩm → điền **Link video demo** là `/videos/demo-xxx.mp4` (file MP4 local sẽ tự phát bằng thẻ `<video>` kèm poster; link YouTube embed vẫn phát bằng iframe như cũ).
+4. Build lại và deploy (`npm run build && npm run deploy`).
 
 ---
 
@@ -142,9 +154,9 @@ curl -X POST http://localhost:3000/api/webhook/bank \
 
 ## Hướng dẫn sử dụng nhanh
 
-**Khách hàng**: Đăng ký → chọn sản phẩm → thêm giỏ → thanh toán (quét VietQR, ghi nội dung là **mã đơn**) → hệ thống tự xác nhận qua webhook ngân hàng trong ~10–60 giây → nhận link source code tại **Tài khoản → Sản phẩm của tôi**.
+**Khách hàng**: Đăng ký → chọn sản phẩm → thêm giỏ → thanh toán (quét VietQR, ghi nội dung là **mã đơn**) → hệ thống tự xác nhận qua webhook ngân hàng trong ~10–60 giây → nhận link tải sản phẩm tại **Tài khoản → Sản phẩm của tôi**.
 
-**Admin**: Đăng nhập `admin@srctool.ai` → `/admin` → thêm sản phẩm (nhớ điền **Link source code**) → cấu hình webhook tại `/admin/giao-dich` → theo dõi đối soát và gán thủ công giao dịch lạc → cấu hình tài khoản ngân hàng tại `/admin/cai-dat`.
+**Admin**: Đăng nhập `admin@webskill.ai` → `/admin` → thêm sản phẩm (nhớ điền **Link tải/tài liệu** giao cho khách sau khi mua) → cấu hình webhook tại `/admin/giao-dich` → theo dõi đối soát và gán thủ công giao dịch lạc → cấu hình tài khoản ngân hàng tại `/admin/cai-dat`.
 
 ---
 
@@ -188,4 +200,4 @@ npm run deploy:prod
 # dán Webhook URL + API Key vào dashboard SePay/Casso,
 # rồi vào /admin/cai-dat bỏ tick "Bật chế độ DEMO".
 ```
-> ⚠️ Sau khi deploy, đổi mật khẩu tài khoản `admin@srctool.ai` và cập nhật thông tin ngân hàng tại `/admin/cai-dat`.
+> ⚠️ Sau khi deploy, đổi mật khẩu tài khoản `admin@webskill.ai` và cập nhật thông tin ngân hàng tại `/admin/cai-dat`.
