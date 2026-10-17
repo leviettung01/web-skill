@@ -301,33 +301,279 @@
      1CLICKVN-STYLE VIDEO HERO, WALL MARQUEE & CINEMA THEATER
      ========================================================================= */
   
-  // 1. HERO FRONT PHONE CONTROLS
+  // 1. HERO 3D PHONE CAROUSEL & SHORT VIDEO GUI (TikTok / Reels / Instagram)
+  const HERO_VIDEOS = [
+    {
+      platform: 'tiktok',
+      title: 'Khoá học Video Muse AI Pro · 30s',
+      videoUrl: '/videos/demo-khoa-hoc-muse-ai.mp4',
+      posterUrl: '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
+      author: '@webskill.ai',
+      authorName: 'WebSkill AI',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=webskill1',
+      desc: 'Làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #TikTokViral',
+      sound: '♫ WebSkill AI - Âm thanh gốc',
+      likes: '142.8K',
+      comments: '2.5K',
+      saves: '18.4K',
+      shares: '3.9K'
+    },
+    {
+      platform: 'reels',
+      title: 'Khóa Học Video Seedance 2.5 · 30s',
+      videoUrl: '/videos/demo-khoa-hoc-seedance.mp4',
+      posterUrl: '/videos/posters/poster-khoa-hoc-seedance.jpg',
+      author: 'WebSkill AI Video',
+      authorName: 'WebSkill AI Video',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=seedance',
+      desc: 'Bí quyết quay one-take 30s nhân vật giữ nguyên 100% bằng Seedance 2.5 🔥 #Reels #AICommunity #Shop',
+      sound: '🎵 Nhạc thịnh hành · WebSkill Reels Audio',
+      likes: '98.4K',
+      comments: '1.8K',
+      saves: '12.1K',
+      shares: '4.6K'
+    },
+    {
+      platform: 'instagram',
+      title: 'Skill Video Affiliate Fitness · 30s',
+      videoUrl: '/videos/demo-skill-fitness.mp4',
+      posterUrl: '/videos/posters/poster-skill-fitness.jpg',
+      author: 'webskill_fitness',
+      authorName: 'WebSkill Fitness',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=fitness',
+      desc: 'Kịch bản chuyển đổi cao chốt đơn affiliate 30s với video AI nhân vật thể hình 💪 #reelsinstagram #affiliate #fitness',
+      sound: '🎵 webskill_fitness · Âm thanh gốc',
+      likes: '86.1K',
+      comments: '942',
+      saves: '9.3K',
+      shares: '2.8K'
+    },
+    {
+      platform: 'tiktok',
+      title: 'Skill Video DIY Làm Vườn · 30s',
+      videoUrl: '/videos/demo-skill-lam-vuon.mp4',
+      posterUrl: '/videos/posters/poster-skill-lam-vuon.jpg',
+      author: '@webskill.garden',
+      authorName: 'WebSkill Làm Vườn',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=garden',
+      desc: 'Quy trình làm clip làm vườn 30s hút triệu view build page bán nông sản, dụng cụ làm vườn 🌿 #LàmVườn #AI #Shorts',
+      sound: '♫ Âm thanh thư giãn - Garden Chill',
+      likes: '115.3K',
+      comments: '1.9K',
+      saves: '14.2K',
+      shares: '2.3K'
+    },
+    {
+      platform: 'reels',
+      title: 'Skill Video Thuỷ Sinh 30s',
+      videoUrl: '/videos/demo-skill-thuy-sinh.mp4',
+      posterUrl: '/videos/posters/poster-skill-thuy-sinh.jpg',
+      author: 'Thuỷ Sinh AI Page',
+      authorName: 'Thuỷ Sinh AI Page',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=aquarium',
+      desc: 'Full bộ prompt và cách dựng clip hồ cá thuỷ sinh siêu thực, màu nước trong vắt 🐠 #ReelsVN #Aquarium #AI',
+      sound: '🎵 Nhạc nước chảy êm dịu · Nature Sound',
+      likes: '74.2K',
+      comments: '820',
+      saves: '7.8K',
+      shares: '3.1K'
+    }
+  ];
+
+  let currentHeroIdx = 0;
+  let heroIsMuted = true;
+
   const heroFrontPhone = document.getElementById('heroFrontPhone');
   const heroFrontVideo = document.getElementById('heroFrontVideo');
+  const heroLeftPhone = document.getElementById('heroLeftPhone');
+  const heroLeftVideo = document.getElementById('heroLeftVideo');
+  const heroRightPhone = document.getElementById('heroRightPhone');
+  const heroRightVideo = document.getElementById('heroRightVideo');
+
+  const heroPrevPhoneBtn = document.getElementById('heroPrevPhoneBtn');
+  const heroNextPhoneBtn = document.getElementById('heroNextPhoneBtn');
   const heroPlayCenterBtn = document.getElementById('heroPlayCenterBtn');
   const heroPlayCenterIcon = document.getElementById('heroPlayCenterIcon');
   const heroSoundBtn = document.getElementById('heroSoundBtn');
+  const heroSoundText = document.getElementById('heroSoundText');
   const heroProgressTrack = document.getElementById('heroProgressTrack');
   const heroProgressFill = document.getElementById('heroProgressFill');
-  const heroTrailerBtn = document.getElementById('heroTrailerBtn');
 
-  if (heroFrontVideo) {
-    // Autoplay when visible
-    heroFrontVideo.play().catch(() => {});
+  // Short GUI Elements
+  const shortGuiOverlay = document.getElementById('shortGuiOverlay');
+  const shortTopLeft = document.getElementById('shortTopLeft');
+  const shortTopCenter = document.getElementById('shortTopCenter');
+  const shortAvatarImg = document.getElementById('shortAvatarImg');
+  const shortFollowPlus = document.getElementById('shortFollowPlus');
+  const shortLikeBtn = document.getElementById('shortLikeBtn');
+  const shortLikeIcon = document.getElementById('shortLikeIcon');
+  const shortLikeCount = document.getElementById('shortLikeCount');
+  const shortCommentCount = document.getElementById('shortCommentCount');
+  const shortSaveBtn = document.getElementById('shortSaveBtn');
+  const shortSaveIcon = document.getElementById('shortSaveIcon');
+  const shortSaveCount = document.getElementById('shortSaveCount');
+  const shortShareBtn = document.getElementById('shortShareBtn');
+  const shortShareIcon = document.getElementById('shortShareIcon');
+  const shortShareCount = document.getElementById('shortShareCount');
+  const shortAuthorHandle = document.getElementById('shortAuthorHandle');
+  const shortFollowPill = document.getElementById('shortFollowPill');
+  const shortCaption = document.getElementById('shortCaption');
+  const shortMusicTitle = document.getElementById('shortMusicTitle');
 
-    function toggleHeroPlay() {
-      if (heroFrontVideo.paused) {
-        heroFrontVideo.play();
-        if (heroFrontPhone) heroFrontPhone.classList.remove('is-paused');
-        if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-pause text-white';
+  function renderHeroState() {
+    const total = HERO_VIDEOS.length;
+    const centerItem = HERO_VIDEOS[currentHeroIdx];
+    const leftIdx = (currentHeroIdx - 1 + total) % total;
+    const rightIdx = (currentHeroIdx + 1) % total;
+    const leftItem = HERO_VIDEOS[leftIdx];
+    const rightItem = HERO_VIDEOS[rightIdx];
+
+    // 1. Update Video sources
+    if (heroFrontVideo) {
+      if (!heroFrontVideo.src.endsWith(centerItem.videoUrl)) {
+        heroFrontVideo.src = centerItem.videoUrl;
+        heroFrontVideo.poster = centerItem.posterUrl;
+        heroFrontVideo.currentTime = 0;
+      }
+      heroFrontVideo.muted = heroIsMuted;
+      heroFrontVideo.play().catch(() => {});
+    }
+
+    if (heroLeftVideo) {
+      if (!heroLeftVideo.src.endsWith(leftItem.videoUrl)) {
+        heroLeftVideo.src = leftItem.videoUrl;
+        heroLeftVideo.poster = leftItem.posterUrl;
+        heroLeftVideo.currentTime = 0;
+      }
+      heroLeftVideo.muted = true;
+      heroLeftVideo.play().catch(() => {});
+    }
+
+    if (heroRightVideo) {
+      if (!heroRightVideo.src.endsWith(rightItem.videoUrl)) {
+        heroRightVideo.src = rightItem.videoUrl;
+        heroRightVideo.poster = rightItem.posterUrl;
+        heroRightVideo.currentTime = 0;
+      }
+      heroRightVideo.muted = true;
+      heroRightVideo.play().catch(() => {});
+    }
+
+    // 2. Update Short GUI for Platform
+    if (shortGuiOverlay) {
+      shortGuiOverlay.dataset.platform = centerItem.platform;
+    }
+
+    // Top Bar Customization
+    if (shortTopLeft) {
+      if (centerItem.platform === 'tiktok') {
+        shortTopLeft.innerHTML = '<span class="short-badge-live"><i class="fas fa-tower-broadcast mr-1 text-rose-500"></i>LIVE</span>' +
+          '<span class="short-top-pill">Dành cho bạn</span>';
+      } else if (centerItem.platform === 'reels') {
+        shortTopLeft.innerHTML = '<span class="short-badge-live text-[#1877f2] font-extrabold text-[11px]"><i class="fab fa-facebook mr-1"></i>Reels</span>' +
+          '<span class="short-top-pill">Đề xuất</span>';
       } else {
-        heroFrontVideo.pause();
-        if (heroFrontPhone) heroFrontPhone.classList.add('is-paused');
-        if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-play text-white ml-0.5';
+        // Instagram
+        shortTopLeft.innerHTML = '<span class="text-[12px] font-extrabold text-white flex items-center gap-1.5"><i class="fab fa-instagram text-rose-400"></i>Reels <i class="fas fa-chevron-down text-[8px] opacity-70"></i></span>';
       }
     }
 
-    if (heroPlayCenterBtn) heroPlayCenterBtn.onclick = (e) => { e.stopPropagation(); toggleHeroPlay(); };
+    // Avatar & Buttons
+    if (shortAvatarImg) shortAvatarImg.src = centerItem.avatar;
+    if (shortFollowPlus) {
+      shortFollowPlus.style.display = (centerItem.platform === 'tiktok') ? 'flex' : 'none';
+    }
+
+    if (shortLikeCount) shortLikeCount.textContent = centerItem.likes;
+    if (shortCommentCount) shortCommentCount.textContent = centerItem.comments;
+    if (shortSaveCount) shortSaveCount.textContent = centerItem.saves;
+    if (shortShareCount) shortShareCount.textContent = centerItem.shares;
+
+    // Platform-specific action icons
+    if (shortLikeIcon) {
+      shortLikeIcon.className = (centerItem.platform === 'reels') ? 'fas fa-thumbs-up text-white' : 'fas fa-heart text-white';
+    }
+    if (shortShareIcon) {
+      shortShareIcon.className = (centerItem.platform === 'instagram') ? 'fas fa-paper-plane text-white' : 'fas fa-share text-white';
+    }
+
+    // Reset liked & saved states
+    if (shortLikeBtn) shortLikeBtn.classList.remove('liked');
+    if (shortSaveBtn) shortSaveBtn.classList.remove('saved');
+
+    // Author & Caption
+    if (shortAuthorHandle) shortAuthorHandle.textContent = centerItem.author;
+    if (shortFollowPill) {
+      shortFollowPill.textContent = 'Theo dõi';
+      shortFollowPill.classList.remove('followed');
+      shortFollowPill.style.background = '';
+    }
+    if (shortCaption) shortCaption.textContent = centerItem.desc;
+    if (shortMusicTitle) shortMusicTitle.textContent = centerItem.sound;
+
+    // Update sound button UI
+    if (heroSoundBtn) {
+      heroSoundBtn.classList.toggle('is-unmuted', !heroIsMuted);
+      heroSoundBtn.innerHTML = heroIsMuted
+        ? '<i class="fas fa-volume-xmark mr-1"></i><span id="heroSoundText">Bật tiếng</span>'
+        : '<i class="fas fa-volume-high mr-1"></i><span id="heroSoundText">Tắt tiếng</span>';
+    }
+  }
+
+  function switchHero(direction) {
+    const total = HERO_VIDEOS.length;
+    if (direction === 'prev' || direction === 'left') {
+      currentHeroIdx = (currentHeroIdx - 1 + total) % total;
+    } else {
+      currentHeroIdx = (currentHeroIdx + 1) % total;
+    }
+
+    if (heroFrontPhone) {
+      heroFrontPhone.style.transform = 'translateX(-50%) scale(0.96)';
+      setTimeout(() => {
+        if (heroFrontPhone) heroFrontPhone.style.transform = '';
+      }, 250);
+    }
+    renderHeroState();
+  }
+
+  // Bind Switch Handlers
+  if (heroPrevPhoneBtn) heroPrevPhoneBtn.onclick = (e) => { e.preventDefault(); switchHero('prev'); };
+  if (heroNextPhoneBtn) heroNextPhoneBtn.onclick = (e) => { e.preventDefault(); switchHero('next'); };
+  if (heroLeftPhone) heroLeftPhone.onclick = (e) => { e.preventDefault(); switchHero('prev'); };
+  if (heroRightPhone) heroRightPhone.onclick = (e) => { e.preventDefault(); switchHero('next'); };
+
+  // Touch Swipe for Mobile
+  if (heroFrontPhone) {
+    let touchStartX = 0;
+    heroFrontPhone.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    heroFrontPhone.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchEndX - touchStartX;
+      if (diff > 45) switchHero('prev');
+      else if (diff < -45) switchHero('next');
+    }, { passive: true });
+  }
+
+  // Play / Pause Toggle on Screen Click
+  function toggleHeroPlay() {
+    if (!heroFrontVideo) return;
+    if (heroFrontVideo.paused) {
+      heroFrontVideo.play().catch(() => {});
+      if (heroFrontPhone) heroFrontPhone.classList.remove('is-paused');
+      if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-pause text-white';
+    } else {
+      heroFrontVideo.pause();
+      if (heroFrontPhone) heroFrontPhone.classList.add('is-paused');
+      if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-play text-white ml-0.5';
+    }
+  }
+
+  if (heroPlayCenterBtn) heroPlayCenterBtn.onclick = (e) => { e.stopPropagation(); toggleHeroPlay(); };
+  if (heroFrontVideo) {
     heroFrontVideo.onclick = toggleHeroPlay;
 
     heroFrontVideo.addEventListener('timeupdate', () => {
@@ -336,35 +582,84 @@
         heroProgressFill.style.width = pct + '%';
       }
     });
+  }
 
-    if (heroProgressTrack) {
-      heroProgressTrack.onclick = (e) => {
-        e.stopPropagation();
-        const rect = heroProgressTrack.getBoundingClientRect();
-        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        if (heroFrontVideo.duration) {
-          heroFrontVideo.currentTime = ratio * heroFrontVideo.duration;
-        }
-      };
-    }
+  if (heroProgressTrack && heroFrontVideo) {
+    heroProgressTrack.onclick = (e) => {
+      e.stopPropagation();
+      const rect = heroProgressTrack.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      if (heroFrontVideo.duration) {
+        heroFrontVideo.currentTime = ratio * heroFrontVideo.duration;
+      }
+    };
+  }
 
-    if (heroSoundBtn) {
-      heroSoundBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (heroFrontVideo.muted) {
-          heroFrontVideo.muted = false;
-          heroSoundBtn.classList.add('is-unmuted');
-          heroSoundBtn.innerHTML = '<i class="fas fa-volume-high mr-1"></i><span>Tắt tiếng</span>';
-          toast('Đã bật âm thanh video', 'success');
-        } else {
-          heroFrontVideo.muted = true;
-          heroSoundBtn.classList.remove('is-unmuted');
-          heroSoundBtn.innerHTML = '<i class="fas fa-volume-xmark mr-1"></i><span>Bật tiếng</span>';
-          toast('Đã tắt tiếng video', 'info');
-        }
-      };
+  // Sound Button Toggle
+  if (heroSoundBtn) {
+    heroSoundBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (!heroFrontVideo) return;
+      heroIsMuted = !heroIsMuted;
+      heroFrontVideo.muted = heroIsMuted;
+      heroSoundBtn.classList.toggle('is-unmuted', !heroIsMuted);
+      heroSoundBtn.innerHTML = heroIsMuted
+        ? '<i class="fas fa-volume-xmark mr-1"></i><span id="heroSoundText">Bật tiếng</span>'
+        : '<i class="fas fa-volume-high mr-1"></i><span id="heroSoundText">Tắt tiếng</span>';
+      toast(heroIsMuted ? 'Đã tắt tiếng' : 'Đã bật âm thanh video', heroIsMuted ? 'info' : 'success');
+    };
+  }
+
+  // Interactive Short UI Buttons
+  if (shortLikeBtn) {
+    shortLikeBtn.onclick = (e) => {
+      e.stopPropagation();
+      shortLikeBtn.classList.toggle('liked');
+      const isLiked = shortLikeBtn.classList.contains('liked');
+      toast(isLiked ? 'Đã thích video ❤️' : 'Đã bỏ thích', 'info');
+    };
+  }
+
+  if (shortSaveBtn) {
+    shortSaveBtn.onclick = (e) => {
+      e.stopPropagation();
+      shortSaveBtn.classList.toggle('saved');
+      const isSaved = shortSaveBtn.classList.contains('saved');
+      toast(isSaved ? 'Đã lưu video vào mục yêu thích ⭐' : 'Đã bỏ lưu', 'info');
+    };
+  }
+
+  if (shortShareBtn) {
+    shortShareBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (navigator.share) {
+        navigator.share({
+          title: 'WebSkill AI Video',
+          url: location.href
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(location.href);
+        toast('Đã sao chép link video để chia sẻ! 🚀', 'success');
+      }
+    };
+  }
+
+  function handleFollow(e) {
+    e.stopPropagation();
+    if (shortFollowPill) {
+      const isFollowed = shortFollowPill.classList.toggle('followed');
+      shortFollowPill.textContent = isFollowed ? 'Đang follow' : 'Theo dõi';
+      shortFollowPill.style.background = isFollowed ? '#334155' : '';
+      if (shortFollowPlus) shortFollowPlus.style.display = isFollowed ? 'none' : 'flex';
+      toast(isFollowed ? 'Đã theo dõi kênh! ✨' : 'Đã hủy theo dõi', 'info');
     }
   }
+
+  if (shortFollowPill) shortFollowPill.onclick = handleFollow;
+  if (shortFollowPlus) shortFollowPlus.onclick = handleFollow;
+
+  // Initialize hero phone on load
+  renderHeroState();
 
   // 2. VIDEO WALL CARDS INTERACTION
   const wallCards = document.querySelectorAll('.wall-card');

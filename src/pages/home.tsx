@@ -158,33 +158,51 @@ export const HomePage: FC<Props> = (props) => {
               </div>
             </div>
 
-            {/* Hero 3D Multi-Device Stage (1clickvn style) */}
+            {/* Hero 3D Multi-Device Stage with Switchable Carousel & Short GUI */}
             <div class="hero-stage-wrapper relative">
-              <div class="hero-stage">
+              {/* Navigation arrows for switching phones */}
+              <button id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button id="heroNextPhoneBtn" class="phone-nav-arrow phone-nav-next" aria-label="Xem video tiếp theo" title="Chuyển video kế tiếp (Phải)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+
+              <div class="hero-stage" id="heroStage">
                 {/* Back Left Phone */}
-                <div class="phone phone-back phone-left" aria-hidden="true">
+                <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
+                  <div class="phone-notch"></div>
                   <video
-                    src="/videos/demo-skill-lam-vuon.mp4"
-                    poster="/videos/posters/poster-skill-lam-vuon.jpg"
+                    id="heroLeftVideo"
+                    src="/videos/demo-skill-thuy-sinh.mp4"
+                    poster="/videos/posters/poster-skill-thuy-sinh.jpg"
                     playsinline
                     muted
                     loop
                     autoplay
                     preload="metadata"
                   ></video>
+                  <div class="phone-side-hint phone-side-hint-left">
+                    <i class="fas fa-arrow-right mr-1"></i> Bấm để xem
+                  </div>
                 </div>
 
                 {/* Back Right Phone */}
-                <div class="phone phone-back phone-right" aria-hidden="true">
+                <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
+                  <div class="phone-notch"></div>
                   <video
-                    src="/videos/demo-skill-fitness.mp4"
-                    poster="/videos/posters/poster-skill-fitness.jpg"
+                    id="heroRightVideo"
+                    src="/videos/demo-khoa-hoc-seedance.mp4"
+                    poster="/videos/posters/poster-khoa-hoc-seedance.jpg"
                     playsinline
                     muted
                     loop
                     autoplay
                     preload="metadata"
                   ></video>
+                  <div class="phone-side-hint phone-side-hint-right">
+                    Bấm để xem <i class="fas fa-arrow-left ml-1"></i>
+                  </div>
                 </div>
 
                 {/* Main Front Phone */}
@@ -209,30 +227,90 @@ export const HomePage: FC<Props> = (props) => {
                     <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon"></i>
                   </button>
 
-                  {/* Bottom in-video bar */}
-                  <div class="phone-bottom-bar">
-                    <div class="phone-progress-track" id="heroProgressTrack">
-                      <div class="phone-progress-fill" id="heroProgressFill"></div>
+                  {/* Short Video GUI Overlay (TikTok / Reels / Instagram) */}
+                  <div class="short-gui-overlay" id="shortGuiOverlay" data-platform="tiktok">
+                    {/* Top Bar */}
+                    <div class="short-top-bar" id="shortTopBar">
+                      <div class="short-top-left" id="shortTopLeft">
+                        <span class="short-badge-live"><i class="fas fa-tower-broadcast mr-1 text-rose-500"></i>LIVE</span>
+                        <span class="short-top-pill">Dành cho bạn</span>
+                      </div>
+                      <div class="short-top-right">
+                        <button id="heroSoundBtn" class="short-sound-btn" aria-label="Bật tiếng" title="Bật / tắt tiếng">
+                          <i class="fas fa-volume-xmark mr-1"></i><span id="heroSoundText">Bật tiếng</span>
+                        </button>
+                      </div>
                     </div>
-                    <div class="flex items-center justify-between text-[11px] text-white/90 pt-1.5">
-                      <span class="font-bold truncate max-w-[170px]" id="heroVideoTitle">Muse AI Pro · 30s</span>
-                      <button id="heroSoundBtn" class="phone-sound-toggle snd" aria-label="Bật tiếng">
-                        <i class="fas fa-volume-xmark mr-1"></i><span>Bật tiếng</span>
-                      </button>
+
+                    {/* Right Action Icons Column */}
+                    <div class="short-actions" id="shortActions">
+                      {/* Avatar */}
+                      <div class="short-avatar-box" id="shortAvatarBox">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=webskill1" alt="Avatar" class="short-avatar-img" id="shortAvatarImg" />
+                        <button class="short-follow-plus" id="shortFollowPlus" title="Theo dõi"><i class="fas fa-plus"></i></button>
+                      </div>
+
+                      {/* Like */}
+                      <div class="short-action-btn" id="shortLikeBtn" role="button" title="Thích">
+                        <div class="action-icon-circle"><i class="fas fa-heart text-white" id="shortLikeIcon"></i></div>
+                        <span class="action-count" id="shortLikeCount">142.8K</span>
+                      </div>
+
+                      {/* Comment */}
+                      <div class="short-action-btn" id="shortCommentBtn" role="button" title="Bình luận">
+                        <div class="action-icon-circle"><i class="fas fa-comment-dots text-white" id="shortCommentIcon"></i></div>
+                        <span class="action-count" id="shortCommentCount">2.5K</span>
+                      </div>
+
+                      {/* Bookmark / Save */}
+                      <div class="short-action-btn" id="shortSaveBtn" role="button" title="Lưu">
+                        <div class="action-icon-circle"><i class="fas fa-bookmark text-white" id="shortSaveIcon"></i></div>
+                        <span class="action-count" id="shortSaveCount">18.4K</span>
+                      </div>
+
+                      {/* Share */}
+                      <div class="short-action-btn" id="shortShareBtn" role="button" title="Chia sẻ">
+                        <div class="action-icon-circle"><i class="fas fa-share text-white" id="shortShareIcon"></i></div>
+                        <span class="action-count" id="shortShareCount">3.9K</span>
+                      </div>
+
+                      {/* Music Disc */}
+                      <div class="short-disc-box" id="shortDiscBox">
+                        <div class="short-disc-spin" id="shortDiscSpin">
+                          <i class="fas fa-compact-disc text-white text-lg"></i>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Info Overlay */}
+                    <div class="short-bottom-info" id="shortBottomInfo">
+                      <div class="short-author-row" id="shortAuthorRow">
+                        <span class="short-author-handle" id="shortAuthorHandle">@webskill.ai</span>
+                        <span class="short-verified-badge" id="shortVerifiedBadge"><i class="fas fa-circle-check text-sky-400"></i></span>
+                        <button class="short-follow-pill" id="shortFollowPill">Theo dõi</button>
+                      </div>
+                      <p class="short-caption" id="shortCaption">
+                        Làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #TikTokViral
+                      </p>
+                      <div class="short-music-track" id="shortMusicTrack">
+                        <i class="fas fa-music text-[10px] animate-pulse"></i>
+                        <span class="short-music-title" id="shortMusicTitle">♫ WebSkill AI - Âm thanh gốc</span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Scrubber */}
+                    <div class="short-progress-track" id="heroProgressTrack">
+                      <div class="short-progress-fill" id="heroProgressFill"></div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Floating Chips matching 1clickvn */}
-                <div class="float-chip chip-seed">
-                  <span class="chip-mono">0:30</span>
-                  <span>Clip Seedance liền mạch</span>
-                </div>
-
-                <div class="float-chip chip-proof">
-                  <span class="chip-ic ok"><i class="fas fa-check"></i></span>
-                  <span><b>84/84 video</b> · Lỗi 0</span>
-                </div>
+              {/* Stage interaction hint */}
+              <div class="stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm">
+                  <i class="fas fa-arrow-left-right text-brand-400"></i> Bấm <b>Trái / Phải</b> hoặc <b>chạm điện thoại 2 bên</b> để đổi chiều xem video
+                </span>
               </div>
             </div>
           </div>

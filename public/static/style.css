@@ -444,110 +444,348 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
   background: #4f46e5;
 }
 
-/* Bottom in-video bar */
-.phone-bottom-bar {
+/* Phone navigation arrows */
+.phone-nav-arrow {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 24px 14px 12px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-  z-index: 11;
-  border-radius: 0 0 28px 28px;
-  pointer-events: auto;
-}
-.phone-progress-track {
-  width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 2px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-.phone-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #6366f1, #06b6d4);
-  border-radius: 2px;
-  transition: width 0.1s linear;
-}
-.phone-sound-toggle {
-  display: inline-flex;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 14, 38, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  z-index: 25;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.phone-nav-arrow:hover {
+  background: #6366f1;
+  border-color: #818cf8;
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+}
+.phone-nav-prev {
+  left: -22px;
+}
+.phone-nav-next {
+  right: -22px;
+}
+@media (max-width: 640px) {
+  .phone-nav-prev { left: 4px; }
+  .phone-nav-next { right: 4px; }
+}
+
+.phone-side-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 4px 10px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  opacity: 0.9;
+  transition: all 0.2s;
+}
+.phone-back:hover .phone-side-hint {
+  opacity: 1;
+  background: rgba(99, 102, 241, 0.9);
+  border-color: rgba(99, 102, 241, 0.6);
+  transform: translateX(-50%) scale(1.05);
+}
+
+/* ==========================================================================
+   SHORT VIDEO GUI OVERLAY (TikTok / Reels / Instagram)
+   ========================================================================== */
+.short-gui-overlay {
+  position: absolute;
+  inset: 8px;
+  border-radius: 28px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 10;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 22%, transparent 58%, rgba(0, 0, 0, 0.88) 100%);
+}
+
+/* Top bar */
+.short-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 10px 6px;
+  z-index: 15;
+}
+.short-top-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.short-badge-live {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.short-top-pill {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+.short-top-pill::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #fff;
+  border-radius: 1px;
+}
+.short-sound-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
+  pointer-events: auto;
   backdrop-filter: blur(4px);
   transition: all 0.2s;
 }
-.phone-sound-toggle:hover {
-  background: rgba(99, 102, 241, 0.8);
+.short-sound-btn:hover {
+  background: rgba(99, 102, 241, 0.85);
   border-color: rgba(99, 102, 241, 0.6);
 }
-.phone-sound-toggle.is-unmuted {
+.short-sound-btn.is-unmuted {
   background: #10b981;
   border-color: #059669;
 }
 
-/* Floating chips (1clickvn style) */
-.float-chip {
+/* Right Actions Column */
+.short-actions {
   position: absolute;
-  z-index: 10;
+  right: 8px;
+  bottom: 58px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
-  background: #ffffff;
-  color: #0f172a;
-  border-radius: 16px;
-  padding: 10px 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
-  font-size: 0.88rem;
-  font-weight: 600;
-  white-space: nowrap;
-  pointer-events: none;
+  z-index: 15;
+  pointer-events: auto;
 }
-.chip-seed {
-  right: -2%;
-  top: 10%;
-  animation: floaty 8s ease-in-out -2s infinite;
+.short-avatar-box {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 2px;
 }
-.chip-seed .chip-mono {
-  background: #0f172a;
-  color: #ffffff;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.72rem;
+.short-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  background: #1e1b4b;
+}
+.short-follow-plus {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f43f5e;
+  color: #fff;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #fff;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.short-follow-plus:hover {
+  transform: translateX(-50%) scale(1.15);
+}
+.short-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  cursor: pointer;
+}
+.short-action-btn .action-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  transition: transform 0.15s ease;
+}
+.short-action-btn:hover .action-icon-circle {
+  transform: scale(1.18);
+}
+.short-action-btn.liked .action-icon-circle i {
+  color: #f43f5e !important;
+}
+.short-action-btn.saved .action-icon-circle i {
+  color: #fbbf24 !important;
+}
+.short-action-btn .action-count {
+  font-size: 9px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
-.chip-proof {
-  left: -2%;
-  bottom: 12%;
-  animation: floaty 7s ease-in-out infinite;
+
+/* Vinyl disc */
+.short-disc-box {
+  margin-top: 2px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #111;
+  border: 2px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
-.chip-ic {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
+.short-disc-spin {
+  animation: disc-spin 3.5s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.chip-ic.ok {
-  background: #dcfce7;
-  color: #16a34a;
+@keyframes disc-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Bottom info */
+.short-bottom-info {
+  position: absolute;
+  left: 10px;
+  right: 56px;
+  bottom: 12px;
+  z-index: 15;
+  pointer-events: auto;
+  text-align: left;
+}
+.short-author-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+}
+.short-author-handle {
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.short-verified-badge {
   font-size: 11px;
 }
-@keyframes floaty {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+.short-follow-pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: #f43f5e;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+.short-follow-pill:hover {
+  opacity: 0.9;
+}
+.short-caption {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+.short-music-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Scrubber */
+.short-progress-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  z-index: 20;
+  pointer-events: auto;
+}
+.short-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  transition: width 0.1s linear;
+}
+
+/* Platform-specific GUI variants */
+.short-gui-overlay[data-platform="tiktok"] .short-follow-pill {
+  background: #f43f5e;
+}
+.short-gui-overlay[data-platform="reels"] .short-follow-pill {
+  background: #1877f2;
+}
+.short-gui-overlay[data-platform="reels"] .short-badge-live {
+  color: #1877f2;
+}
+.short-gui-overlay[data-platform="instagram"] .short-follow-pill {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
 /* ==========================================================================
@@ -928,7 +1166,7 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
 }
 @media (max-width: 640px) {
   .hero-stage {
-    height: 380px;
+    height: 420px;
   }
   .phone-back {
     display: none;
@@ -936,18 +1174,13 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
   .phone-front {
     height: 98%;
     top: 1%;
+    width: 236px;
   }
-  .chip-seed {
-    right: 2%;
-    top: 4%;
-    font-size: 0.75rem;
-    padding: 8px 12px;
+  .phone-nav-prev {
+    left: 2px;
   }
-  .chip-proof {
-    left: 2%;
-    bottom: 6%;
-    font-size: 0.75rem;
-    padding: 8px 12px;
+  .phone-nav-next {
+    right: 2px;
   }
   .wall-card {
     width: 155px;
