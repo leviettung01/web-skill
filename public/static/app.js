@@ -466,16 +466,16 @@
 
     // Top Bar Customization
     if (shortTopLeft) {
+      let badgeHtml = '';
       if (centerItem.platform === 'tiktok') {
-        shortTopLeft.innerHTML = '<span class="short-badge-live"><i class="fas fa-tower-broadcast mr-1 text-rose-500"></i>LIVE</span>' +
-          '<span class="short-top-pill">Dành cho bạn</span>';
+        badgeHtml = '<span class="short-badge-live"><i class="fab fa-tiktok mr-1 text-cyan-400"></i>TikTok 16:9</span>';
       } else if (centerItem.platform === 'reels') {
-        shortTopLeft.innerHTML = '<span class="short-badge-live text-[#1877f2] font-extrabold text-[11px]"><i class="fab fa-facebook mr-1"></i>Reels</span>' +
-          '<span class="short-top-pill">Đề xuất</span>';
+        badgeHtml = '<span class="short-badge-live"><i class="fab fa-facebook mr-1 text-blue-400"></i>Reels 16:9</span>';
       } else {
-        // Instagram
-        shortTopLeft.innerHTML = '<span class="text-[12px] font-extrabold text-white flex items-center gap-1.5"><i class="fab fa-instagram text-rose-400"></i>Reels <i class="fas fa-chevron-down text-[8px] opacity-70"></i></span>';
+        badgeHtml = '<span class="short-badge-live"><i class="fab fa-instagram mr-1 text-rose-400"></i>Instagram 16:9</span>';
       }
+      shortTopLeft.innerHTML = badgeHtml +
+        `<span class="landscape-title truncate max-w-[200px] md:max-w-[280px]" id="heroVideoTitle">${centerItem.title}</span>`;
     }
 
     // Avatar & Buttons
@@ -529,7 +529,7 @@
     }
 
     if (heroFrontPhone) {
-      heroFrontPhone.style.transform = 'translateX(-50%) scale(0.96)';
+      heroFrontPhone.style.transform = 'translate(-50%, -50%) scale(0.96)';
       setTimeout(() => {
         if (heroFrontPhone) heroFrontPhone.style.transform = '';
       }, 250);

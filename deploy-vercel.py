@@ -153,6 +153,6 @@ else:
     raise RuntimeError("Deployment timed out")
 
 url = d.get("url")
-print(f"\n🎉 DEPLOYMENT SUCCESSFUL!")
+print(f"\n[OK] DEPLOYMENT SUCCESSFUL!")
 print(f"Production URL: https://{url}")
 print(f"Main Alias: https://webskill-ai.vercel.app/")
