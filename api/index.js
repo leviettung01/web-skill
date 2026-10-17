@@ -9518,7 +9518,7 @@ var HomePage = (props) => {
           /* @__PURE__ */ jsxDEV("button", { id: "heroNextPhoneBtn", class: "phone-nav-arrow phone-nav-next", "aria-label": "Xem video ti\u1EBFp theo", title: "Chuy\u1EC3n video k\u1EBF ti\u1EBFp (Ph\u1EA3i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right" }) }),
           /* @__PURE__ */ jsxDEV("div", { class: "hero-stage", id: "heroStage", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-left", id: "heroLeftPhone", role: "button", tabindex: "0", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "phone-notch-h" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
                 "video",
                 {
@@ -9534,17 +9534,17 @@ var HomePage = (props) => {
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "phone-side-hint phone-side-hint-left", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right mr-1" }),
-                " B\u1EA5m xem Full"
+                " B\u1EA5m \u0111\u1EC3 xem"
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-right", id: "heroRightPhone", role: "button", tabindex: "0", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "phone-notch-h" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
                 "video",
                 {
                   id: "heroRightVideo",
-                  src: "/videos/demo-skill-fitness.mp4",
-                  poster: "/videos/posters/poster-skill-fitness.jpg",
+                  src: "/videos/demo-khoa-hoc-seedance.mp4",
+                  poster: "/videos/posters/poster-khoa-hoc-seedance.jpg",
                   playsinline: true,
                   muted: true,
                   loop: true,
@@ -9553,12 +9553,12 @@ var HomePage = (props) => {
                 }
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "phone-side-hint phone-side-hint-right", children: [
-                "B\u1EA5m xem Full ",
+                "B\u1EA5m \u0111\u1EC3 xem ",
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left ml-1" })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "phone phone-front", id: "heroFrontPhone", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "phone-notch-h" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
                 "video",
                 {
@@ -9573,57 +9573,67 @@ var HomePage = (props) => {
                 }
               ),
               /* @__PURE__ */ jsxDEV("button", { id: "heroPlayCenterBtn", class: "phone-play-btn", "aria-label": "Ph\xE1t / t\u1EA1m d\u1EEBng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-white ml-0.5", id: "heroPlayCenterIcon" }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "landscape-gui-overlay", id: "shortGuiOverlay", "data-platform": "tiktok", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "landscape-top-bar", id: "shortTopBar", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "landscape-top-left", id: "shortTopLeft", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "short-gui-overlay", id: "shortGuiOverlay", "data-platform": "tiktok", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "short-top-bar", id: "shortTopBar", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-top-left", id: "shortTopLeft", children: [
                     /* @__PURE__ */ jsxDEV("span", { class: "short-badge-live", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-play mr-1 text-rose-500" }),
-                      /* @__PURE__ */ jsxDEV("span", { id: "heroPlatformBadge", children: "Video 16:9 G\u1ED1c" })
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-tower-broadcast mr-1 text-rose-500" }),
+                      "LIVE"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "landscape-title truncate max-w-[200px]", id: "heroVideoTitle", children: "Muse AI Pro \xB7 30s" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "short-top-pill", children: "D\xE0nh cho b\u1EA1n" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "landscape-top-right", children: /* @__PURE__ */ jsxDEV("button", { id: "heroSoundBtn", class: "short-sound-btn", "aria-label": "B\u1EADt ti\u1EBFng", title: "B\u1EADt / t\u1EAFt ti\u1EBFng", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-top-right", children: /* @__PURE__ */ jsxDEV("button", { id: "heroSoundBtn", class: "short-sound-btn", "aria-label": "B\u1EADt ti\u1EBFng", title: "B\u1EADt / t\u1EAFt ti\u1EBFng", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-xmark mr-1" }),
                     /* @__PURE__ */ jsxDEV("span", { id: "heroSoundText", children: "B\u1EADt ti\u1EBFng" })
                   ] }) })
                 ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "landscape-bottom-bar", id: "shortBottomInfo", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between text-xs mb-1.5 px-1", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 min-w-0", children: [
-                      /* @__PURE__ */ jsxDEV("span", { class: "short-author-handle font-bold text-white text-[11px]", id: "shortAuthorHandle", children: "@webskill.ai" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "short-verified-badge", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-sky-400 text-[10px]" }) }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-white/80 truncate max-w-[180px] hidden sm:inline", id: "shortCaption", children: "L\xE0m video AI 30s li\u1EC1n m\u1EA1ch ch\u1EC9 v\u1EDBi 1 prompt chu\u1EA9n viral \u{1F680}" })
-                    ] }),
-                    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
-                      /* @__PURE__ */ jsxDEV("div", { class: "short-action-pill", id: "shortLikeBtn", role: "button", title: "Th\xEDch", children: [
-                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-heart text-white mr-1 text-[11px]", id: "shortLikeIcon" }),
-                        /* @__PURE__ */ jsxDEV("span", { id: "shortLikeCount", class: "text-[10px] font-bold", children: "142.8K" })
-                      ] }),
-                      /* @__PURE__ */ jsxDEV("div", { class: "short-action-pill", id: "shortShareBtn", role: "button", title: "Chia s\u1EBB", children: [
-                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-share text-white mr-1 text-[11px]", id: "shortShareIcon" }),
-                        /* @__PURE__ */ jsxDEV("span", { id: "shortShareCount", class: "text-[10px] font-bold", children: "3.9K" })
-                      ] })
-                    ] })
+                /* @__PURE__ */ jsxDEV("div", { class: "short-actions", id: "shortActions", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-avatar-box", id: "shortAvatarBox", children: [
+                    /* @__PURE__ */ jsxDEV("img", { src: "https://api.dicebear.com/7.x/bottts/svg?seed=webskill1", alt: "Avatar", class: "short-avatar-img", id: "shortAvatarImg" }),
+                    /* @__PURE__ */ jsxDEV("button", { class: "short-follow-plus", id: "shortFollowPlus", title: "Theo d\xF5i", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plus" }) })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-progress-track", id: "heroProgressTrack", children: /* @__PURE__ */ jsxDEV("div", { class: "short-progress-fill", id: "heroProgressFill" }) })
-                ] })
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortLikeBtn", role: "button", title: "Th\xEDch", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-heart text-white", id: "shortLikeIcon" }) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortLikeCount", children: "142.8K" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortCommentBtn", role: "button", title: "B\xECnh lu\u1EADn", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-comment-dots text-white", id: "shortCommentIcon" }) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortCommentCount", children: "2.5K" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortSaveBtn", role: "button", title: "L\u01B0u", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bookmark text-white", id: "shortSaveIcon" }) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortSaveCount", children: "18.4K" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortShareBtn", role: "button", title: "Chia s\u1EBB", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-share text-white", id: "shortShareIcon" }) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortShareCount", children: "3.9K" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-disc-box", id: "shortDiscBox", children: /* @__PURE__ */ jsxDEV("div", { class: "short-disc-spin", id: "shortDiscSpin", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-compact-disc text-white text-lg" }) }) })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "short-bottom-info", id: "shortBottomInfo", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-author-row", id: "shortAuthorRow", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "short-author-handle", id: "shortAuthorHandle", children: "@webskill.ai" }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "short-verified-badge", id: "shortVerifiedBadge", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-sky-400" }) }),
+                    /* @__PURE__ */ jsxDEV("button", { class: "short-follow-pill", id: "shortFollowPill", children: "Theo d\xF5i" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("p", { class: "short-caption", id: "shortCaption", children: "L\xE0m video AI 30s li\u1EC1n m\u1EA1ch ch\u1EC9 v\u1EDBi 1 prompt chu\u1EA9n viral \u{1F680} Kh\xF3a nh\xE2n v\u1EADt c\u1EF1c \u0111\u1EC9nh #MuseAI #AIVideo #TikTokViral" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "short-music-track", id: "shortMusicTrack", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-music text-[10px] animate-pulse" }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "short-music-title", id: "shortMusicTitle", children: "\u266B WebSkill AI - \xC2m thanh g\u1ED1c" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "short-progress-track", id: "heroProgressTrack", children: /* @__PURE__ */ jsxDEV("div", { class: "short-progress-fill", id: "heroProgressFill" }) })
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2 flex-wrap", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left-right text-brand-400" }),
-              " B\u1EA5m ",
-              /* @__PURE__ */ jsxDEV("b", { children: "Tr\xE1i / Ph\u1EA3i" }),
-              " ho\u1EB7c ",
-              /* @__PURE__ */ jsxDEV("b", { children: "ch\u1EA1m 2 m\xE0n h\xECnh b\xEAn" }),
-              " \u0111\u1EC3 \u0111\u1ED5i video"
-            ] }),
-            /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300 font-semibold", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-film text-indigo-400" }),
-              " Video ngang chu\u1EA9n 16:9 nguy\xEAn b\u1EA3n"
-            ] })
-          ] })
+          /* @__PURE__ */ jsxDEV("div", { class: "stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2", children: /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left-right text-brand-400" }),
+            " B\u1EA5m ",
+            /* @__PURE__ */ jsxDEV("b", { children: "Tr\xE1i / Ph\u1EA3i" }),
+            " ho\u1EB7c ",
+            /* @__PURE__ */ jsxDEV("b", { children: "ch\u1EA1m \u0111i\u1EC7n tho\u1EA1i 2 b\xEAn" }),
+            " \u0111\u1EC3 \u0111\u1ED5i chi\u1EC1u xem video"
+          ] }) })
         ] })
       ] }) }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative border-t border-white/5 bg-[#080716]/60 backdrop-blur py-3 marquee-wrap overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "marquee-track flex gap-10 w-max text-slate-500 text-xs font-semibold whitespace-nowrap", children: [...Array(2)].map(() => /* @__PURE__ */ jsxDEV(Fragment, { children: ["Muse AI", "Seedance 2.5", "Veo 3", "Google Flow", "Kling AI", "ChatGPT", "Gemini", "CapCut", "Sora", "Runway"].map((b) => /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [

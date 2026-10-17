@@ -158,7 +158,7 @@ export const HomePage: FC<Props> = (props) => {
               </div>
             </div>
 
-            {/* Hero 3D Multi-Device Stage with Switchable Carousel (16:9 Landscape Format) */}
+            {/* Hero 3D Multi-Device Stage with Switchable Carousel & Short GUI (Phone dọc chuẩn TikTok / Reels) */}
             <div class="hero-stage-wrapper relative">
               {/* Navigation arrows for switching phones */}
               <button id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
@@ -169,9 +169,9 @@ export const HomePage: FC<Props> = (props) => {
               </button>
 
               <div class="hero-stage" id="heroStage">
-                {/* Back Left Phone (16:9 Landscape) */}
+                {/* Back Left Phone */}
                 <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
-                  <div class="phone-notch-h"></div>
+                  <div class="phone-notch"></div>
                   <video
                     id="heroLeftVideo"
                     src="/videos/demo-skill-thuy-sinh.mp4"
@@ -183,17 +183,17 @@ export const HomePage: FC<Props> = (props) => {
                     preload="metadata"
                   ></video>
                   <div class="phone-side-hint phone-side-hint-left">
-                    <i class="fas fa-arrow-right mr-1"></i> Bấm xem Full
+                    <i class="fas fa-arrow-right mr-1"></i> Bấm để xem
                   </div>
                 </div>
 
-                {/* Back Right Phone (16:9 Landscape) */}
+                {/* Back Right Phone */}
                 <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
-                  <div class="phone-notch-h"></div>
+                  <div class="phone-notch"></div>
                   <video
                     id="heroRightVideo"
-                    src="/videos/demo-skill-fitness.mp4"
-                    poster="/videos/posters/poster-skill-fitness.jpg"
+                    src="/videos/demo-khoa-hoc-seedance.mp4"
+                    poster="/videos/posters/poster-khoa-hoc-seedance.jpg"
                     playsinline
                     muted
                     loop
@@ -201,16 +201,16 @@ export const HomePage: FC<Props> = (props) => {
                     preload="metadata"
                   ></video>
                   <div class="phone-side-hint phone-side-hint-right">
-                    Bấm xem Full <i class="fas fa-arrow-left ml-1"></i>
+                    Bấm để xem <i class="fas fa-arrow-left ml-1"></i>
                   </div>
                 </div>
 
-                {/* Main Front Phone (16:9 Landscape) */}
+                {/* Main Front Phone (Phone dọc 9:16) */}
                 <div class="phone phone-front" id="heroFrontPhone">
-                  {/* Smartphone dynamic notch in landscape */}
-                  <div class="phone-notch-h"></div>
+                  {/* Smartphone dynamic notch */}
+                  <div class="phone-notch"></div>
 
-                  {/* Main video (16:9 ngang nguyên bản, không bị cắt xén) */}
+                  {/* Main video: giữ nguyên tỉ lệ gốc (object-fit: contain), không crop */}
                   <video
                     id="heroFrontVideo"
                     src="/videos/demo-khoa-hoc-muse-ai.mp4"
@@ -227,59 +227,89 @@ export const HomePage: FC<Props> = (props) => {
                     <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon"></i>
                   </button>
 
-                  {/* Video GUI Overlay (16:9 Widescreen Player) */}
-                  <div class="landscape-gui-overlay" id="shortGuiOverlay" data-platform="tiktok">
+                  {/* Short Video GUI Overlay (TikTok / Reels / Instagram) */}
+                  <div class="short-gui-overlay" id="shortGuiOverlay" data-platform="tiktok">
                     {/* Top Bar */}
-                    <div class="landscape-top-bar" id="shortTopBar">
-                      <div class="landscape-top-left" id="shortTopLeft">
-                        <span class="short-badge-live"><i class="fas fa-circle-play mr-1 text-rose-500"></i><span id="heroPlatformBadge">Video 16:9 Gốc</span></span>
-                        <span class="landscape-title truncate max-w-[200px]" id="heroVideoTitle">Muse AI Pro · 30s</span>
+                    <div class="short-top-bar" id="shortTopBar">
+                      <div class="short-top-left" id="shortTopLeft">
+                        <span class="short-badge-live"><i class="fas fa-tower-broadcast mr-1 text-rose-500"></i>LIVE</span>
+                        <span class="short-top-pill">Dành cho bạn</span>
                       </div>
-                      <div class="landscape-top-right">
+                      <div class="short-top-right">
                         <button id="heroSoundBtn" class="short-sound-btn" aria-label="Bật tiếng" title="Bật / tắt tiếng">
                           <i class="fas fa-volume-xmark mr-1"></i><span id="heroSoundText">Bật tiếng</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Bottom Info & Controls Bar */}
-                    <div class="landscape-bottom-bar" id="shortBottomInfo">
-                      <div class="flex items-center justify-between text-xs mb-1.5 px-1">
-                        <div class="flex items-center gap-2 min-w-0">
-                          <span class="short-author-handle font-bold text-white text-[11px]" id="shortAuthorHandle">@webskill.ai</span>
-                          <span class="short-verified-badge"><i class="fas fa-circle-check text-sky-400 text-[10px]"></i></span>
-                          <span class="text-[10px] text-white/80 truncate max-w-[180px] hidden sm:inline" id="shortCaption">
-                            Làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀
-                          </span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                          <div class="short-action-pill" id="shortLikeBtn" role="button" title="Thích">
-                            <i class="fas fa-heart text-white mr-1 text-[11px]" id="shortLikeIcon"></i>
-                            <span id="shortLikeCount" class="text-[10px] font-bold">142.8K</span>
-                          </div>
-                          <div class="short-action-pill" id="shortShareBtn" role="button" title="Chia sẻ">
-                            <i class="fas fa-share text-white mr-1 text-[11px]" id="shortShareIcon"></i>
-                            <span id="shortShareCount" class="text-[10px] font-bold">3.9K</span>
-                          </div>
-                        </div>
+                    {/* Right Action Icons Column */}
+                    <div class="short-actions" id="shortActions">
+                      {/* Avatar */}
+                      <div class="short-avatar-box" id="shortAvatarBox">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=webskill1" alt="Avatar" class="short-avatar-img" id="shortAvatarImg" />
+                        <button class="short-follow-plus" id="shortFollowPlus" title="Theo dõi"><i class="fas fa-plus"></i></button>
                       </div>
 
-                      {/* Scrubber */}
-                      <div class="short-progress-track" id="heroProgressTrack">
-                        <div class="short-progress-fill" id="heroProgressFill"></div>
+                      {/* Like */}
+                      <div class="short-action-btn" id="shortLikeBtn" role="button" title="Thích">
+                        <div class="action-icon-circle"><i class="fas fa-heart text-white" id="shortLikeIcon"></i></div>
+                        <span class="action-count" id="shortLikeCount">142.8K</span>
                       </div>
+
+                      {/* Comment */}
+                      <div class="short-action-btn" id="shortCommentBtn" role="button" title="Bình luận">
+                        <div class="action-icon-circle"><i class="fas fa-comment-dots text-white" id="shortCommentIcon"></i></div>
+                        <span class="action-count" id="shortCommentCount">2.5K</span>
+                      </div>
+
+                      {/* Bookmark / Save */}
+                      <div class="short-action-btn" id="shortSaveBtn" role="button" title="Lưu">
+                        <div class="action-icon-circle"><i class="fas fa-bookmark text-white" id="shortSaveIcon"></i></div>
+                        <span class="action-count" id="shortSaveCount">18.4K</span>
+                      </div>
+
+                      {/* Share */}
+                      <div class="short-action-btn" id="shortShareBtn" role="button" title="Chia sẻ">
+                        <div class="action-icon-circle"><i class="fas fa-share text-white" id="shortShareIcon"></i></div>
+                        <span class="action-count" id="shortShareCount">3.9K</span>
+                      </div>
+
+                      {/* Music Disc */}
+                      <div class="short-disc-box" id="shortDiscBox">
+                        <div class="short-disc-spin" id="shortDiscSpin">
+                          <i class="fas fa-compact-disc text-white text-lg"></i>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Info Overlay */}
+                    <div class="short-bottom-info" id="shortBottomInfo">
+                      <div class="short-author-row" id="shortAuthorRow">
+                        <span class="short-author-handle" id="shortAuthorHandle">@webskill.ai</span>
+                        <span class="short-verified-badge" id="shortVerifiedBadge"><i class="fas fa-circle-check text-sky-400"></i></span>
+                        <button class="short-follow-pill" id="shortFollowPill">Theo dõi</button>
+                      </div>
+                      <p class="short-caption" id="shortCaption">
+                        Làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #TikTokViral
+                      </p>
+                      <div class="short-music-track" id="shortMusicTrack">
+                        <i class="fas fa-music text-[10px] animate-pulse"></i>
+                        <span class="short-music-title" id="shortMusicTitle">♫ WebSkill AI - Âm thanh gốc</span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Scrubber */}
+                    <div class="short-progress-track" id="heroProgressTrack">
+                      <div class="short-progress-fill" id="heroProgressFill"></div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Stage interaction hint */}
-              <div class="stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2 flex-wrap">
-                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm">
-                  <i class="fas fa-arrow-left-right text-brand-400"></i> Bấm <b>Trái / Phải</b> hoặc <b>chạm 2 màn hình bên</b> để đổi video
-                </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300 font-semibold">
-                  <i class="fas fa-film text-indigo-400"></i> Video ngang chuẩn 16:9 nguyên bản
+              <div class="stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm">
+                  <i class="fas fa-arrow-left-right text-brand-400"></i> Bấm <b>Trái / Phải</b> hoặc <b>chạm điện thoại 2 bên</b> để đổi chiều xem video
                 </span>
               </div>
             </div>
