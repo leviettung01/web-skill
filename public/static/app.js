@@ -436,7 +436,9 @@
         heroFrontVideo.currentTime = 0;
       }
       heroFrontVideo.muted = heroIsMuted;
-      heroFrontVideo.play().catch(() => {});
+      heroFrontVideo.play().then(() => {
+        if (heroFrontPhone) heroFrontPhone.classList.remove('is-paused');
+      }).catch(() => {});
     }
 
     if (heroLeftVideo) {
@@ -575,6 +577,18 @@
   if (heroPlayCenterBtn) heroPlayCenterBtn.onclick = (e) => { e.stopPropagation(); toggleHeroPlay(); };
   if (heroFrontVideo) {
     heroFrontVideo.onclick = toggleHeroPlay;
+
+    heroFrontVideo.addEventListener('play', () => {
+      if (heroFrontPhone) heroFrontPhone.classList.remove('is-paused');
+      if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-pause text-white';
+    });
+    heroFrontVideo.addEventListener('playing', () => {
+      if (heroFrontPhone) heroFrontPhone.classList.remove('is-paused');
+    });
+    heroFrontVideo.addEventListener('pause', () => {
+      if (heroFrontPhone) heroFrontPhone.classList.add('is-paused');
+      if (heroPlayCenterIcon) heroPlayCenterIcon.className = 'fas fa-play text-white ml-0.5';
+    });
 
     heroFrontVideo.addEventListener('timeupdate', () => {
       if (heroFrontVideo.duration && heroProgressFill) {

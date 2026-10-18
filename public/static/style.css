@@ -417,35 +417,42 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Center play/pause overlay */
+/* Center play/pause overlay - Tự động ẩn hoàn toàn khi video đang phát, không che mặt nhân vật khi hover */
 .phone-play-btn {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
-  width: 58px;
-  height: 58px;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(99, 102, 241, 0.9);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   cursor: pointer;
-  box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.3), 0 15px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(6px);
-  transition: transform 0.2s, opacity 0.25s, background 0.2s;
-  z-index: 11;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s, background 0.2s;
+  z-index: 12;
   opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
-.phone-front:hover .phone-play-btn,
+/* CHỈ HIỆN KHI BỊ TẠM DỪNG (is-paused), TUYỆT ĐỐI KHÔNG HIỆN KHI RÊ CHUỘT (HOVER) */
 .phone-front.is-paused .phone-play-btn {
   opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
 }
 .phone-play-btn:hover {
-  transform: translate(-50%, -50%) scale(1.08);
-  background: #4f46e5;
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(99, 102, 241, 0.85);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 /* Phone navigation arrows */
