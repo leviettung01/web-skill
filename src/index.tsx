@@ -42,6 +42,13 @@ app.use('*', async (c, next) => {
 
 app.use('/api/*', cors())
 
+async function fetchSettings(db: D1Database): Promise<Record<string, string>> {
+  const map: Record<string, string> = {}
+  const rs = await db.prepare('SELECT key, value FROM settings').all()
+  for (const r of rs.results as any[]) map[r.key] = r.value
+  return map
+}
+
 /* ============ GLOBAL MIDDLEWARE ============ */
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url)
@@ -52,12 +59,11 @@ app.use('*', async (c, next) => {
   const [user, settings] = await Promise.all([
     getSession(c),
     cached('settings:all', 30000, async () => {
-      const map: Record<string, string> = {}
       try {
-        const rs = await c.env.DB.prepare('SELECT key, value FROM settings').all()
-        for (const r of rs.results as any[]) map[r.key] = r.value
-      } catch { }
-      return map
+        return await fetchSettings(c.env.DB)
+      } catch {
+        return {}
+      }
     })
   ])
   c.set('user', user)
@@ -756,10 +762,12 @@ app.get('/don-hang/:code', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
   const o = await db.prepare('SELECT * FROM orders WHERE order_code=? AND user_id=?').bind(c.req.param('code'), u.id).first<any>()
   if (!o) return c.html(<NotFoundPage {...base(c)} />, 404)
-  const items = await db.prepare(
-    `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
-  ).bind(o.id).all()
-  const s = c.get('settings')
+  const [items, s] = await Promise.all([
+    db.prepare(
+      `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
+    ).bind(o.id).all(),
+    fetchSettings(db).catch(() => c.get('settings'))
+  ])
   return c.html(<OrderPage {...base(c)} order={o} items={items.results as any}
     bank={{ bank_name: s.bank_name, bank_code: s.bank_code, bank_account: s.bank_account, bank_owner: s.bank_owner }} />)
 })
@@ -900,8 +908,8 @@ app.post('/api/tickets', async (c) => {
 app.get('/admin', requireAdmin, async (c) => {
   const db = c.env.DB
   const u = c.get('user')!
-  const s = c.get('settings') || {}
-  const [stats, recentOrders, topProducts, chartRows, adminRow] = await Promise.all([
+  const [s, stats, recentOrders, topProducts, chartRows, adminRow] = await Promise.all([
+    fetchSettings(db).catch(() => c.get('settings') || {}),
     db.prepare(`SELECT
       (SELECT COALESCE(SUM(total),0) FROM orders WHERE status='paid') revenue,
       (SELECT COUNT(*) FROM orders) orders,
@@ -1116,7 +1124,7 @@ app.get('/admin/giao-dich', requireAdmin, async (c) => {
   if (q) { w.push('(content LIKE ? OR matched_order_code LIKE ? OR reference_code LIKE ?)'); binds.push(`%${q}%`, `%${q}%`, `%${q}%`) }
   const where = w.join(' AND ')
 
-  const [cnt, rows, stats] = await Promise.all([
+  const [cnt, rows, stats, freshSettings] = await Promise.all([
     db.prepare(`SELECT COUNT(*) n FROM bank_transactions WHERE ${where}`).bind(...binds).first<any>(),
     db.prepare(`SELECT * FROM bank_transactions WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`)
       .bind(...binds, perPage, (page - 1) * perPage).all(),
@@ -1126,13 +1134,14 @@ app.get('/admin/giao-dich', requireAdmin, async (c) => {
         COALESCE(SUM(CASE WHEN match_status='unmatched' THEN 1 ELSE 0 END),0) unmatched,
         COALESCE(SUM(CASE WHEN match_status='amount_mismatch' THEN 1 ELSE 0 END),0) mismatch,
         COALESCE(SUM(CASE WHEN match_status='matched' THEN amount_in ELSE 0 END),0) revenue
-      FROM bank_transactions`).first<any>()
+      FROM bank_transactions`).first<any>(),
+    fetchSettings(db).catch(() => c.get('settings'))
   ])
 
   return c.html(<AdminBankTx user={c.get('user')!} activeKey="banktx" heading="Giao dịch ngân hàng"
     txs={rows.results as any} stats={stats} page={page}
     totalPages={Math.ceil((cnt?.n || 0) / perPage)} status={st} q={q}
-    settings={c.get('settings')} origin={new URL(c.req.url).origin} />)
+    settings={freshSettings} origin={new URL(c.req.url).origin} />)
 })
 
 /** Đối soát thủ công: gán 1 giao dịch lạc cho 1 đơn hàng */
@@ -1163,6 +1172,7 @@ app.post('/api/admin/webhook/regenerate-key', requireAdmin, async (c) => {
   await c.env.DB.prepare(
     'INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?'
   ).bind('webhook_api_key', key, key).run()
+  invalidateCache('settings')
   return c.json({ ok: true, key, message: 'Đã tạo API key mới. Hãy cập nhật lại trong dashboard SePay/Casso!' })
 })
 
@@ -1328,14 +1338,26 @@ app.post('/api/admin/tickets/:id/close', requireAdmin, async (c) => {
   return c.json({ ok: true })
 })
 
-app.get('/admin/cai-dat', requireAdmin, (c) =>
-  c.html(<AdminSettings user={c.get('user')!} activeKey="settings" heading="Cài đặt hệ thống" settings={c.get('settings')} />))
+app.get('/admin/cai-dat', requireAdmin, async (c) => {
+  const fresh = await fetchSettings(c.env.DB).catch(() => c.get('settings'))
+  return c.html(<AdminSettings user={c.get('user')!} activeKey="settings" heading="Cài đặt hệ thống" settings={fresh} />)
+})
+
+const SETTINGS_KEYS = new Set([
+  'site_name', 'site_tagline', 'hotline', 'email', 'zalo', 'facebook', 'youtube', 'tiktok',
+  'bank_name', 'bank_code', 'bank_account', 'bank_owner',
+  'affiliate_percent', 'payment_provider', 'payment_timeout_minutes', 'amount_tolerance', 'auto_confirm_manual'
+])
 
 app.post('/api/admin/settings', requireAdmin, async (c) => {
   const b = await c.req.json<any>()
   for (const [k, v] of Object.entries(b)) {
+    if (!SETTINGS_KEYS.has(k)) continue
+    let val = v == null ? '' : String(v).trim()
+    if (k === 'bank_account') val = val.replace(/\s+/g, '')
+    else if (k === 'bank_code' || k === 'bank_owner') val = val.toUpperCase()
     await c.env.DB.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?')
-      .bind(k, String(v), String(v)).run()
+      .bind(k, val, val).run()
   }
   invalidateCache('settings')
   return c.json({ ok: true, message: 'Đã lưu cài đặt!' })

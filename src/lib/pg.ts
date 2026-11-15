@@ -100,7 +100,11 @@ class PgStmt {
   }
   private async execQuery() {
     let s = rewritePlaceholders(this.sql)
-    if (/^\s*insert\s/i.test(s) && !/\sreturning\s/i.test(s)) {
+    if (
+      /^\s*insert\s/i.test(s) &&
+      !/\sreturning\s/i.test(s) &&
+      !/^\s*insert\s+into\s+["'`]?settings\b/i.test(s)
+    ) {
       s += ' RETURNING id'
     }
     return getExecutor()(s, this.params)

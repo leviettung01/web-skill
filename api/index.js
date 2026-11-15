@@ -14096,7 +14096,7 @@ var PgStmt = class _PgStmt {
   }
   async execQuery() {
     let s = rewritePlaceholders(this.sql);
-    if (/^\s*insert\s/i.test(s) && !/\sreturning\s/i.test(s)) {
+    if (/^\s*insert\s/i.test(s) && !/\sreturning\s/i.test(s) && !/^\s*insert\s+into\s+["'`]?settings\b/i.test(s)) {
       s += " RETURNING id";
     }
     return getExecutor()(s, this.params);
@@ -14166,6 +14166,12 @@ app.use("*", async (c, next) => {
   await next();
 });
 app.use("/api/*", cors());
+async function fetchSettings(db) {
+  const map = {};
+  const rs = await db.prepare("SELECT key, value FROM settings").all();
+  for (const r of rs.results) map[r.key] = r.value;
+  return map;
+}
 app.use("*", async (c, next) => {
   const url = new URL(c.req.url);
   if (url.pathname.startsWith("/static/") || url.pathname === "/favicon.ico" || url.pathname === "/robots.txt" || url.pathname.startsWith("/videos/")) {
@@ -14174,13 +14180,11 @@ app.use("*", async (c, next) => {
   const [user, settings] = await Promise.all([
     getSession(c),
     cached("settings:all", 3e4, async () => {
-      const map = {};
       try {
-        const rs = await c.env.DB.prepare("SELECT key, value FROM settings").all();
-        for (const r of rs.results) map[r.key] = r.value;
+        return await fetchSettings(c.env.DB);
       } catch {
+        return {};
       }
-      return map;
     })
   ]);
   c.set("user", user);
@@ -14863,10 +14867,12 @@ app.get("/don-hang/:code", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
   const o = await db.prepare("SELECT * FROM orders WHERE order_code=? AND user_id=?").bind(c.req.param("code"), u.id).first();
   if (!o) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
-  const items = await db.prepare(
-    `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
-  ).bind(o.id).all();
-  const s = c.get("settings");
+  const [items, s] = await Promise.all([
+    db.prepare(
+      `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
+    ).bind(o.id).all(),
+    fetchSettings(db).catch(() => c.get("settings"))
+  ]);
   return c.html(/* @__PURE__ */ jsxDEV(
     OrderPage,
     {
@@ -14995,8 +15001,8 @@ app.post("/api/tickets", async (c) => {
 app.get("/admin", requireAdmin, async (c) => {
   const db = c.env.DB;
   const u = c.get("user");
-  const s = c.get("settings") || {};
-  const [stats, recentOrders, topProducts, chartRows, adminRow] = await Promise.all([
+  const [s, stats, recentOrders, topProducts, chartRows, adminRow] = await Promise.all([
+    fetchSettings(db).catch(() => c.get("settings") || {}),
     db.prepare(`SELECT
       (SELECT COALESCE(SUM(total),0) FROM orders WHERE status='paid') revenue,
       (SELECT COUNT(*) FROM orders) orders,
@@ -15300,7 +15306,7 @@ app.get("/admin/giao-dich", requireAdmin, async (c) => {
     binds.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
   const where = w.join(" AND ");
-  const [cnt, rows, stats] = await Promise.all([
+  const [cnt, rows, stats, freshSettings] = await Promise.all([
     db.prepare(`SELECT COUNT(*) n FROM bank_transactions WHERE ${where}`).bind(...binds).first(),
     db.prepare(`SELECT * FROM bank_transactions WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`).bind(...binds, perPage, (page - 1) * perPage).all(),
     db.prepare(`SELECT
@@ -15309,7 +15315,8 @@ app.get("/admin/giao-dich", requireAdmin, async (c) => {
         COALESCE(SUM(CASE WHEN match_status='unmatched' THEN 1 ELSE 0 END),0) unmatched,
         COALESCE(SUM(CASE WHEN match_status='amount_mismatch' THEN 1 ELSE 0 END),0) mismatch,
         COALESCE(SUM(CASE WHEN match_status='matched' THEN amount_in ELSE 0 END),0) revenue
-      FROM bank_transactions`).first()
+      FROM bank_transactions`).first(),
+    fetchSettings(db).catch(() => c.get("settings"))
   ]);
   return c.html(/* @__PURE__ */ jsxDEV(
     AdminBankTx,
@@ -15323,7 +15330,7 @@ app.get("/admin/giao-dich", requireAdmin, async (c) => {
       totalPages: Math.ceil((cnt?.n || 0) / perPage),
       status: st,
       q,
-      settings: c.get("settings"),
+      settings: freshSettings,
       origin: new URL(c.req.url).origin
     }
   ));
@@ -15349,6 +15356,7 @@ app.post("/api/admin/webhook/regenerate-key", requireAdmin, async (c) => {
   await c.env.DB.prepare(
     "INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?"
   ).bind("webhook_api_key", key, key).run();
+  invalidateCache("settings");
   return c.json({ ok: true, key, message: "\u0110\xE3 t\u1EA1o API key m\u1EDBi. H\xE3y c\u1EADp nh\u1EADt l\u1EA1i trong dashboard SePay/Casso!" });
 });
 app.get("/admin/thanh-vien", requireAdmin, async (c) => {
@@ -15499,11 +15507,37 @@ app.post("/api/admin/tickets/:id/close", requireAdmin, async (c) => {
   await c.env.DB.prepare(`UPDATE tickets SET status='closed' WHERE id=?`).bind(c.req.param("id")).run();
   return c.json({ ok: true });
 });
-app.get("/admin/cai-dat", requireAdmin, (c) => c.html(/* @__PURE__ */ jsxDEV(AdminSettings, { user: c.get("user"), activeKey: "settings", heading: "C\xE0i \u0111\u1EB7t h\u1EC7 th\u1ED1ng", settings: c.get("settings") })));
+app.get("/admin/cai-dat", requireAdmin, async (c) => {
+  const fresh = await fetchSettings(c.env.DB).catch(() => c.get("settings"));
+  return c.html(/* @__PURE__ */ jsxDEV(AdminSettings, { user: c.get("user"), activeKey: "settings", heading: "C\xE0i \u0111\u1EB7t h\u1EC7 th\u1ED1ng", settings: fresh }));
+});
+var SETTINGS_KEYS = /* @__PURE__ */ new Set([
+  "site_name",
+  "site_tagline",
+  "hotline",
+  "email",
+  "zalo",
+  "facebook",
+  "youtube",
+  "tiktok",
+  "bank_name",
+  "bank_code",
+  "bank_account",
+  "bank_owner",
+  "affiliate_percent",
+  "payment_provider",
+  "payment_timeout_minutes",
+  "amount_tolerance",
+  "auto_confirm_manual"
+]);
 app.post("/api/admin/settings", requireAdmin, async (c) => {
   const b = await c.req.json();
   for (const [k, v] of Object.entries(b)) {
-    await c.env.DB.prepare("INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?").bind(k, String(v), String(v)).run();
+    if (!SETTINGS_KEYS.has(k)) continue;
+    let val = v == null ? "" : String(v).trim();
+    if (k === "bank_account") val = val.replace(/\s+/g, "");
+    else if (k === "bank_code" || k === "bank_owner") val = val.toUpperCase();
+    await c.env.DB.prepare("INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?").bind(k, val, val).run();
   }
   invalidateCache("settings");
   return c.json({ ok: true, message: "\u0110\xE3 l\u01B0u c\xE0i \u0111\u1EB7t!" });
