@@ -14,20 +14,20 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
         <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7">Giỏ hàng của bạn</h1>
 
         {items.length === 0 ? (
-          <div class="bg-white rounded-2xl border border-slate-200">
+          <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b]">
             <EmptyState icon="fa-cart-shopping" title="Giỏ hàng đang trống"
-              desc="Khám phá kho source code và tool AI của chúng tôi để tìm sản phẩm phù hợp."
-              action={{ href: '/san-pham', label: 'Xem sản phẩm' }} />
+              desc="Khám phá bộ 5 Skill AI làm video đang mở bán của chúng tôi."
+              action={{ href: '/san-pham?type=skill', label: 'Xem 5 Skill đang bán' }} />
           </div>
         ) : (
           <div class="grid lg:grid-cols-[1fr_360px] gap-6">
             <div class="space-y-3">
               {items.map(p => (
-                <div class="bg-white rounded-2xl border border-slate-200 p-4 flex gap-4">
+                <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-4 flex gap-4">
                   <a href={`/san-pham/${p.slug}`} class="w-24 sm:w-32 aspect-video rounded-xl overflow-hidden shrink-0 grid place-items-center text-white"
                     style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
                     {p.thumbnail ? <img src={p.thumbnail} alt={p.name} class="w-full h-full object-cover" />
-                      : <i class={`fas ${p.product_type === 'chatbot' ? 'fa-robot' : p.product_type === 'prompt' ? 'fa-wand-magic-sparkles' : p.product_type === 'combo' ? 'fa-box-open' : 'fa-code'} text-xl`}></i>}
+                      : <i class={`fas ${p.product_type === 'skill' ? 'fa-wand-magic-sparkles' : p.product_type === 'chatbot' ? 'fa-robot' : p.product_type === 'combo' ? 'fa-box-open' : 'fa-code'} text-xl`}></i>}
                   </a>
                   <div class="flex-1 min-w-0">
                     <div class="text-[11px] text-brand-600 font-bold mb-1">{PRODUCT_TYPE_LABEL[p.product_type]}</div>
@@ -68,10 +68,10 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
                 <a href="/thanh-toan" class="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition">
                   <i class="fas fa-lock"></i>Tiến hành thanh toán
                 </a>
-                <div class="mt-4 pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-500">
-                  <div><i class="fas fa-bolt text-brand-500 w-4"></i>Nhận source code ngay sau thanh toán</div>
-                  <div><i class="fas fa-shield-halved text-brand-500 w-4"></i>Hoàn tiền 100% trong 7 ngày</div>
-                  <div><i class="fas fa-headset text-brand-500 w-4"></i>Hỗ trợ kỹ thuật 1-1</div>
+                <div class="mt-4 pt-4 border-t border-[#1f1b4b] space-y-2 text-xs text-[#9f9dbb]">
+                  <div><i class="fas fa-bolt text-indigo-400 w-4"></i>Nhận link tải Skill ngay sau thanh toán</div>
+                  <div><i class="fas fa-shield-halved text-indigo-400 w-4"></i>Hoàn tiền 100% trong 7 ngày</div>
+                  <div><i class="fas fa-headset text-indigo-400 w-4"></i>Hỗ trợ kỹ thuật 1-1 qua Zalo</div>
                 </div>
               </div>
             </aside>
@@ -112,34 +112,25 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
               </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 p-5">
-              <h3 class="font-bold text-slate-900 mb-4"><i class="fas fa-credit-card mr-2 text-brand-500"></i>Phương thức thanh toán</h3>
+            <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5">
+              <h3 class="font-bold text-white mb-4"><i class="fas fa-credit-card mr-2 text-indigo-400"></i>Phương thức thanh toán</h3>
               <div class="space-y-2.5">
-                <label class="flex items-center gap-3.5 p-4 rounded-xl border-2 border-brand-500 bg-brand-50 cursor-pointer">
-                  <input type="radio" name="payment_method" value="bank" checked class="accent-brand-600" />
-                  <div class="w-10 h-10 rounded-lg bg-white grid place-items-center text-brand-600 shrink-0"><i class="fas fa-qrcode"></i></div>
+                <label class="flex items-center gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer">
+                  <input type="radio" name="payment_method" value="bank" checked class="accent-indigo-500" />
+                  <div class="w-10 h-10 rounded-lg bg-[#16143c] border border-indigo-500/30 grid place-items-center text-indigo-400 shrink-0"><i class="fas fa-qrcode"></i></div>
                   <div class="flex-1">
-                    <div class="font-semibold text-slate-900 text-sm">Chuyển khoản QR (VietQR)</div>
-                    <div class="text-xs text-slate-500">Quét mã QR bằng app ngân hàng — xác nhận nhanh nhất</div>
+                    <div class="font-semibold text-white text-sm">Chuyển khoản VietQR (Ngân hàng / MoMo)</div>
+                    <div class="text-xs text-[#9f9dbb]">Quét mã QR bằng app ngân hàng hoặc ví điện tử — đối soát tự động 24/7</div>
                   </div>
-                  <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold">KHUYÊN DÙNG</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">KHUYÊN DÙNG</span>
                 </label>
 
-                <label class="flex items-center gap-3.5 p-4 rounded-xl border-2 border-slate-200 hover:border-slate-300 cursor-pointer transition">
-                  <input type="radio" name="payment_method" value="momo" class="accent-brand-600" />
-                  <div class="w-10 h-10 rounded-lg bg-pink-50 grid place-items-center text-pink-600 shrink-0"><i class="fas fa-wallet"></i></div>
+                <label class={`flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? 'border-[#28235d] bg-[#16143c]/50 hover:border-indigo-500/40' : 'border-[#1f1b4b] bg-[#080716]/40 opacity-50 cursor-not-allowed'}`}>
+                  <input type="radio" name="payment_method" value="balance" disabled={balance < subtotal} class="accent-indigo-500" />
+                  <div class="w-10 h-10 rounded-lg bg-emerald-500/15 grid place-items-center text-emerald-400 shrink-0"><i class="fas fa-piggy-bank"></i></div>
                   <div class="flex-1">
-                    <div class="font-semibold text-slate-900 text-sm">Ví MoMo</div>
-                    <div class="text-xs text-slate-500">Chuyển khoản qua ví điện tử MoMo</div>
-                  </div>
-                </label>
-
-                <label class={`flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? 'border-slate-200 hover:border-slate-300' : 'border-slate-200 opacity-50 cursor-not-allowed'}`}>
-                  <input type="radio" name="payment_method" value="balance" disabled={balance < subtotal} class="accent-brand-600" />
-                  <div class="w-10 h-10 rounded-lg bg-emerald-50 grid place-items-center text-emerald-600 shrink-0"><i class="fas fa-piggy-bank"></i></div>
-                  <div class="flex-1">
-                    <div class="font-semibold text-slate-900 text-sm">Số dư ví <span class="text-emerald-600">({formatVND(balance)})</span></div>
-                    <div class="text-xs text-slate-500">{balance >= subtotal ? 'Thanh toán tức thì, nhận source ngay' : 'Số dư không đủ cho đơn hàng này'}</div>
+                    <div class="font-semibold text-white text-sm">Số dư ví <span class="text-emerald-400">({formatVND(balance)})</span></div>
+                    <div class="text-xs text-[#9f9dbb]">{balance >= subtotal ? 'Thanh toán tức thì, nhận link tải Skill ngay' : 'Số dư không đủ cho đơn hàng này'}</div>
                   </div>
                 </label>
               </div>
@@ -264,14 +255,14 @@ export const OrderPage: FC<LayoutProps & {
         <Breadcrumb items={[{ label: 'Đơn hàng', href: '/tai-khoan/don-hang' }, { label: order.order_code }]} />
 
         {order.status === 'paid' && (
-          <div class="rounded-2xl bg-emerald-50 border-2 border-emerald-200 p-6 mb-6 text-center">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3">
+          <div class="rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25">
               <i class="fas fa-check"></i>
             </div>
-            <h2 class="text-xl font-extrabold text-emerald-900 mb-1.5">Thanh toán thành công!</h2>
-            <p class="text-sm text-emerald-700 mb-4">Sản phẩm đã được kích hoạt trong tài khoản của bạn.</p>
+            <h2 class="text-xl font-extrabold text-white mb-1.5">Thanh toán thành công!</h2>
+            <p class="text-sm text-emerald-200 mb-4">Bộ Skill AI đã được kích hoạt trong tài khoản của bạn.</p>
             <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition">
-              <i class="fas fa-download"></i>Nhận source code ngay
+              <i class="fas fa-download"></i>Mở &amp; tải Skill ngay
             </a>
           </div>
         )}
@@ -279,14 +270,20 @@ export const OrderPage: FC<LayoutProps & {
         <div class="grid lg:grid-cols-[1fr_340px] gap-6">
           <div class="space-y-4">
             {order.status === 'pending' && (
-              <div class="bg-white rounded-2xl border-2 border-amber-200 overflow-hidden">
-                <div class="bg-amber-50 px-5 py-3.5 border-b border-amber-200">
-                  <h3 class="font-bold text-amber-900"><i class="fas fa-qrcode mr-2"></i>Quét mã QR để thanh toán</h3>
+              <div class="bg-[#0f0e26] rounded-2xl border-2 border-amber-500/40 overflow-hidden">
+                <div class="bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30">
+                  <h3 class="font-bold text-amber-300"><i class="fas fa-qrcode mr-2"></i>Quét mã QR để thanh toán</h3>
                 </div>
+                {(!bank.bank_account || bank.bank_account === '0987654321') && (
+                  <div class="mx-5 mt-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200">
+                    <i class="fas fa-triangle-exclamation mr-1.5 text-rose-400"></i>
+                    <b>Thông báo:</b> Tài khoản ngân hàng đang ở cấu hình mẫu. Vui lòng liên hệ Zalo <b>{props.settings?.zalo}</b> để xác nhận STK trước khi chuyển khoản.
+                  </div>
+                )}
                 <div class="p-5 grid sm:grid-cols-[220px_1fr] gap-6">
                   <div class="text-center">
-                    <img src={qr} alt="QR thanh toán" class="w-full max-w-[220px] mx-auto rounded-xl border border-slate-200" />
-                    <p class="text-xs text-slate-500 mt-2">Mở app ngân hàng và quét mã</p>
+                    <img src={qr} alt="QR thanh toán" class="w-full max-w-[220px] mx-auto rounded-xl border border-[#28235d] bg-white p-1.5" />
+                    <p class="text-xs text-[#9f9dbb] mt-2">Mở app ngân hàng và quét mã</p>
                   </div>
                   <div class="space-y-3">
                     {[
@@ -296,31 +293,31 @@ export const OrderPage: FC<LayoutProps & {
                       ['Số tiền', formatVND(order.total)],
                       ['Nội dung CK', content]
                     ].map(([lb, val], i) => (
-                      <div class="flex items-center justify-between gap-3 pb-2.5 border-b border-slate-100">
-                        <span class="text-sm text-slate-500 shrink-0">{lb}</span>
+                      <div class="flex items-center justify-between gap-3 pb-2.5 border-b border-[#1f1b4b]">
+                        <span class="text-sm text-[#9f9dbb] shrink-0">{lb}</span>
                         <div class="flex items-center gap-2 min-w-0">
-                          <b class={`text-sm truncate ${i === 3 ? 'text-rose-600 text-base' : i === 4 ? 'text-brand-600' : 'text-slate-900'}`}>{val}</b>
+                          <b class={`text-sm truncate ${i === 3 ? 'text-rose-400 text-base' : i === 4 ? 'text-indigo-400' : 'text-white'}`}>{val}</b>
                           {i >= 1 && (
-                            <button data-copy={i === 3 ? String(order.total) : val} class="shrink-0 w-7 h-7 rounded-md bg-slate-100 hover:bg-brand-100 hover:text-brand-600 text-slate-500 text-xs transition">
+                            <button data-copy={i === 3 ? String(order.total) : val} class="shrink-0 w-7 h-7 rounded-md bg-[#16143c] hover:bg-indigo-600 text-slate-300 hover:text-white text-xs transition">
                               <i class="far fa-copy"></i>
                             </button>
                           )}
                         </div>
                       </div>
                     ))}
-                    <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 leading-relaxed">
-                      <i class="fas fa-triangle-exclamation mr-1"></i>
-                      <b>Quan trọng:</b> Vui lòng chuyển đúng số tiền và ghi đúng nội dung <b>{content}</b> để hệ thống tự động xác nhận.
+                    <div class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200 leading-relaxed">
+                      <i class="fas fa-triangle-exclamation mr-1 text-rose-400"></i>
+                      <b>Quan trọng:</b> Vui lòng chuyển đúng số tiền và ghi đúng nội dung <b class="text-white">{content}</b> để hệ thống tự động xác nhận.
                     </div>
                   </div>
                 </div>
                 <div class="px-5 pb-5">
                   {/* Trạng thái đối soát tự động */}
-                  <div id="pay-status" class="mb-3 p-3.5 rounded-xl bg-brand-50 border border-brand-200 flex items-center gap-3">
+                  <div id="pay-status" class="mb-3 p-3.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center gap-3">
                     <span class="spinner shrink-0"></span>
                     <div class="min-w-0">
-                      <div class="text-sm font-bold text-brand-900">Đang chờ giao dịch của bạn…</div>
-                      <div id="pay-status-msg" class="text-xs text-brand-700 mt-0.5">
+                      <div class="text-sm font-bold text-white">Đang chờ giao dịch của bạn…</div>
+                      <div id="pay-status-msg" class="text-xs text-indigo-200 mt-0.5">
                         Hệ thống tự động kiểm tra ngân hàng mỗi 5 giây. Trang sẽ tự chuyển khi nhận được tiền.
                       </div>
                     </div>
@@ -407,10 +404,10 @@ export const OrderPage: FC<LayoutProps & {
 
   function onPaid(){
     if(timer) clearInterval(timer);
-    box.className='mb-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center gap-3';
-    box.innerHTML='<i class="fas fa-circle-check text-emerald-600 text-xl shrink-0"></i>'
-      +'<div><div class="text-sm font-bold text-emerald-900">Đã nhận được tiền!</div>'
-      +'<div class="text-xs text-emerald-700 mt-0.5">Đang kích hoạt sản phẩm và chuyển trang…</div></div>';
+    box.className='mb-3 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center gap-3';
+    box.innerHTML='<i class="fas fa-circle-check text-emerald-400 text-xl shrink-0"></i>'
+      +'<div><div class="text-sm font-bold text-white">Đã nhận được tiền!</div>'
+      +'<div class="text-xs text-emerald-200 mt-0.5">Đang kích hoạt sản phẩm và chuyển trang…</div></div>';
     btn.disabled=true;
     if(window.toast) toast('Thanh toán thành công! Sản phẩm đã được kích hoạt.','success');
     setTimeout(function(){ location.reload(); },1200);
@@ -418,10 +415,10 @@ export const OrderPage: FC<LayoutProps & {
 
   function stopWaiting(){
     if(timer) clearInterval(timer);
-    box.className='mb-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3';
+    box.className='mb-3 p-3.5 rounded-xl bg-[#16143c] border border-[#28235d] flex items-center gap-3';
     box.innerHTML='<i class="fas fa-clock text-slate-400 text-xl shrink-0"></i>'
-      +'<div><div class="text-sm font-bold text-slate-700">Đã tạm dừng kiểm tra tự động</div>'
-      +'<div class="text-xs text-slate-500 mt-0.5">Tải lại trang để kiểm tra tiếp, hoặc liên hệ Zalo nếu bạn đã chuyển khoản.</div></div>';
+      +'<div><div class="text-sm font-bold text-white">Đã tạm dừng kiểm tra tự động</div>'
+      +'<div class="text-xs text-[#9f9dbb] mt-0.5">Tải lại trang để kiểm tra tiếp, hoặc liên hệ Zalo nếu bạn đã chuyển khoản.</div></div>';
   }
 
   async function check(silent){

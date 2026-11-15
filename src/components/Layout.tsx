@@ -18,9 +18,9 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
     title, description, user, settings = {}, cartCount = 0,
     active = '', canonical, children
   } = props
-  const siteName = settings.site_name || 'WebSkill AI'
+  const siteName = settings.site_name || 'KhoSkill AI'
   const fullTitle = title ? `${title} | ${siteName}` : `${siteName} — ${settings.site_tagline || ''}`
-  const desc = description || settings.site_tagline || 'Kho source code & tool AI tạo video'
+  const desc = description || settings.site_tagline || 'Kho Skill AI tạo video chuyên nghiệp'
 
   const nav = [
     { href: '/', label: 'Trang chủ', key: 'home', icon: 'fa-house' },
@@ -64,7 +64,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                 </div>
                 <div class="leading-none sidebar-header-text">
                   <div class="font-extrabold text-sm tracking-tight text-white">{siteName}</div>
-                  <div class="text-[9px] text-[#9f9dbb] mt-0.5">AI Video Templates</div>
+                  <div class="text-[9px] text-[#9f9dbb] mt-0.5">Kho Skill Video AI</div>
                 </div>
               </div>
 
@@ -87,34 +87,46 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                 <div>
                   <div class="px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text">Sản phẩm</div>
                   <nav class="flex flex-col gap-1">
+                    <a href="/san-pham?type=skill" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-white bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20">
+                      <i class="fas fa-wand-magic-sparkles w-5 text-center text-indigo-400"></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between">
+                        <span>Skill AI</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none">Đang bán</span>
+                      </span>
+                    </a>
                     <a href="/san-pham?type=course" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
                       <i class="fas fa-graduation-cap w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Khóa học</span>
-                    </a>
-                    <a href="/san-pham?type=skill" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-wand-magic-sparkles w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Skill AI</span>
+                      <span class="sidebar-text flex-1 flex items-center justify-between">
+                        <span>Khóa học</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                      </span>
                     </a>
                     <a href="/san-pham?type=chatbot" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'chatbot' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
                       <i class="fas fa-robot w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Chatbot</span>
+                      <span class="sidebar-text flex-1 flex items-center justify-between">
+                        <span>Chatbot</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                      </span>
                     </a>
                     <a href="/san-pham?type=app" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
                       <i class="fas fa-mobile-screen-button w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">App Video AI</span>
+                      <span class="sidebar-text flex-1 flex items-center justify-between">
+                        <span>App Video AI</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                      </span>
                     </a>
                     <a href="/combo" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
                       <i class="fas fa-box-open w-5 text-center text-slate-400"></i>
                       <span class="sidebar-text flex-1 flex items-center justify-between">
                         <span>Combo tiết kiệm</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold leading-none">-60%</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
                       </span>
                     </a>
                     <a href="/lien-he" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
                       <i class="fas fa-video w-5 text-center text-slate-400"></i>
                       <span class="sidebar-text flex-1 flex items-center justify-between">
                         <span>Yêu cầu Video AI</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold leading-none">NEW</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
                       </span>
                     </a>
                   </nav>
@@ -125,7 +137,10 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                   <nav class="flex flex-col gap-1">
                     <a href="/lien-he" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
                       <i class="fas fa-user-gear w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Custom Chatbot</span>
+                      <span class="sidebar-text flex-1 flex items-center justify-between">
+                        <span>Custom Chatbot</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                      </span>
                     </a>
                     <a href="/bang-gia" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'pricing' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
                       <i class="fas fa-tags w-5 text-center text-slate-400"></i>
@@ -265,20 +280,28 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                     </div>
                     <p class="text-xs leading-relaxed mb-4">{settings.site_tagline}</p>
                     <div class="flex gap-2">
-                      <a href={settings.facebook || '#'} target="_blank" rel="noopener" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-indigo-600 grid place-items-center transition text-slate-300 hover:text-white"><i class="fab fa-facebook-f text-xs"></i></a>
-                      <a href={`https://zalo.me/${settings.zalo}`} target="_blank" rel="noopener" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-[#0068ff] grid place-items-center transition text-slate-300 hover:text-white text-[10px] font-bold">Zalo</a>
-                      <a href="#" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-red-600 grid place-items-center transition text-slate-300 hover:text-white"><i class="fab fa-youtube text-xs"></i></a>
-                      <a href="#" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-slate-900 grid place-items-center transition text-slate-300 hover:text-white"><i class="fab fa-tiktok text-xs"></i></a>
+                      {settings.facebook && (
+                        <a href={settings.facebook} target="_blank" rel="noopener" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-indigo-600 grid place-items-center transition text-slate-300 hover:text-white" title="Facebook"><i class="fab fa-facebook-f text-xs"></i></a>
+                      )}
+                      {settings.zalo && (
+                        <a href={`https://zalo.me/${settings.zalo}`} target="_blank" rel="noopener" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-[#0068ff] grid place-items-center transition text-slate-300 hover:text-white text-[10px] font-bold" title="Zalo">Zalo</a>
+                      )}
+                      {settings.youtube && (
+                        <a href={settings.youtube} target="_blank" rel="noopener" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-red-600 grid place-items-center transition text-slate-300 hover:text-white" title="YouTube"><i class="fab fa-youtube text-xs"></i></a>
+                      )}
+                      {settings.tiktok && (
+                        <a href={settings.tiktok} target="_blank" rel="noopener" class="w-8 h-8 rounded-lg bg-[#16143c] hover:bg-slate-900 grid place-items-center transition text-slate-300 hover:text-white" title="TikTok"><i class="fab fa-tiktok text-xs"></i></a>
+                      )}
                     </div>
                   </div>
                   <div>
                     <h4 class="text-white font-bold mb-4 text-xs uppercase tracking-wider">Sản phẩm</h4>
                     <ul class="space-y-2 text-xs">
-                      <li><a href="/san-pham?type=course" class="hover:text-indigo-400 transition">Khóa học Video AI</a></li>
-                      <li><a href="/san-pham?type=skill" class="hover:text-indigo-400 transition">Skill Tạo Video AI</a></li>
-                      <li><a href="/san-pham?type=chatbot" class="hover:text-indigo-400 transition">Chatbot Kịch Bản</a></li>
-                      <li><a href="/san-pham?type=app" class="hover:text-indigo-400 transition">App Làm Video AI</a></li>
-                      <li><a href="/combo" class="hover:text-indigo-400 transition">Combo Trọn Bộ</a></li>
+                      <li><a href="/san-pham?type=skill" class="text-white font-semibold hover:text-indigo-400 transition">Skill Tạo Video AI <span class="text-[10px] text-emerald-400 ml-1">(Đang bán)</span></a></li>
+                      <li><a href="/san-pham?type=course" class="hover:text-indigo-400 transition">Khóa học Video AI <span class="text-[10px] text-slate-500 ml-1">(Sắp mở)</span></a></li>
+                      <li><a href="/san-pham?type=chatbot" class="hover:text-indigo-400 transition">Chatbot Kịch Bản <span class="text-[10px] text-slate-500 ml-1">(Sắp mở)</span></a></li>
+                      <li><a href="/san-pham?type=app" class="hover:text-indigo-400 transition">App Làm Video AI <span class="text-[10px] text-slate-500 ml-1">(Sắp mở)</span></a></li>
+                      <li><a href="/combo" class="hover:text-indigo-400 transition">Combo Trọn Bộ <span class="text-[10px] text-slate-500 ml-1">(Sắp mở)</span></a></li>
                     </ul>
                   </div>
                   <div>

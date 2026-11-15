@@ -1,13 +1,13 @@
-/* ============ SrcTool AI - Frontend ============ */
+/* ============ KhoSkill AI - Frontend ============ */
 (function () {
   'use strict';
 
   /* ---------- Toast ---------- */
   const ICONS = {
-    success: ['fa-circle-check', 'text-emerald-500', 'border-emerald-200'],
-    error: ['fa-circle-xmark', 'text-rose-500', 'border-rose-200'],
-    info: ['fa-circle-info', 'text-blue-500', 'border-blue-200'],
-    warning: ['fa-triangle-exclamation', 'text-amber-500', 'border-amber-200']
+    success: ['fa-circle-check', 'text-emerald-400', 'border-emerald-500/40'],
+    error: ['fa-circle-xmark', 'text-rose-400', 'border-rose-500/40'],
+    info: ['fa-circle-info', 'text-indigo-400', 'border-indigo-500/40'],
+    warning: ['fa-triangle-exclamation', 'text-amber-400', 'border-amber-500/40']
   };
   window.toast = function (msg, type) {
     type = type || 'success';
@@ -15,10 +15,10 @@
     if (!box) return alert(msg);
     const [icon, color, border] = ICONS[type] || ICONS.info;
     const el = document.createElement('div');
-    el.className = 'toast bg-white rounded-xl shadow-xl border ' + border + ' px-4 py-3 flex items-start gap-3';
+    el.className = 'toast bg-[#0f0e26] rounded-xl shadow-2xl border ' + border + ' px-4 py-3 flex items-start gap-3';
     el.innerHTML = '<i class="fas ' + icon + ' ' + color + ' mt-0.5"></i>' +
-      '<div class="text-sm text-slate-700 flex-1 leading-snug">' + msg + '</div>' +
-      '<button class="text-slate-300 hover:text-slate-500"><i class="fas fa-xmark text-xs"></i></button>';
+      '<div class="text-sm text-[#e2e1f5] flex-1 leading-snug">' + msg + '</div>' +
+      '<button class="text-slate-500 hover:text-white"><i class="fas fa-xmark text-xs"></i></button>';
     el.querySelector('button').onclick = () => remove(el);
     box.appendChild(el);
     setTimeout(() => remove(el), 3800);
@@ -137,7 +137,7 @@
           if (err.response && err.response.status === 401) {
             toast('Vui lòng đăng nhập để mua hàng', 'warning');
             setTimeout(() => location.href = '/dang-nhap?next=' + encodeURIComponent(location.pathname), 900);
-          } else toast('Có lỗi xảy ra', 'error');
+          } else toast((err.response && err.response.data && err.response.data.error) || 'Có lỗi xảy ra', 'error');
         });
     }
 
@@ -251,16 +251,35 @@
   }
 
   /* ---------- Gallery lightbox ---------- */
+  function toEmbedUrl(raw) {
+    if (!raw) return '';
+    if (raw.includes('/embed/')) return raw;
+    try {
+      const u = new URL(raw);
+      const host = u.hostname.replace(/^www\./, '').toLowerCase();
+      let id = '';
+      if (host === 'youtu.be') id = u.pathname.split('/').filter(Boolean)[0] || '';
+      else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+        if (u.pathname.startsWith('/shorts/')) id = u.pathname.split('/')[2] || '';
+        else if (u.pathname.startsWith('/live/')) id = u.pathname.split('/')[2] || '';
+        else id = u.searchParams.get('v') || '';
+      }
+      if (id) return 'https://www.youtube.com/embed/' + id + '?rel=0&playsinline=1';
+    } catch {}
+    return raw;
+  }
+
   window.openVideoModal = function (url, aspect) {
     const isVertical = aspect === 'vertical' || url.includes('aspect=vertical');
-    const isMp4 = /\.mp4(\?|$)/i.test(url) || url.includes('/videos/');
+    const isMp4 = /\.(mp4|webm|mov)(\?|$)/i.test(url) || url.includes('/videos/');
+    const embedUrl = isMp4 ? url : toEmbedUrl(url);
     const m = document.createElement('div');
     m.className = 'fixed inset-0 z-[200] bg-black/90 grid place-items-center p-4 backdrop-blur-md';
     
     if (isVertical) {
       const mediaHtml = isMp4
         ? '<video src="' + url + '" class="w-full h-full object-cover bg-black" playsinline controls autoplay></video>'
-        : '<iframe src="' + url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=0" class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+        : '<iframe src="' + embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1&mute=0" class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
 
       m.innerHTML = '<div class="vertical-player-wrapper flex flex-col relative max-w-[360px] aspect-[9/16] rounded-3xl overflow-hidden border border-white/20 shadow-2xl">' +
         mediaHtml +
@@ -269,7 +288,7 @@
     } else {
       const mediaHtml = isMp4
         ? '<video src="' + url + '" class="w-full h-full object-contain bg-black" playsinline controls autoplay></video>'
-        : '<iframe src="' + url + '?autoplay=1" class="absolute inset-0 w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+        : '<iframe src="' + embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1" class="absolute inset-0 w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
 
       m.innerHTML = '<div class="w-full max-w-4xl relative">' +
         '<button class="absolute -top-12 right-0 z-[210] px-3.5 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 flex items-center gap-1.5 text-xs font-bold border border-white/20 cursor-pointer" id="close-mockup-btn"><i class="fas fa-xmark"></i>Đóng</button>' +
@@ -294,6 +313,18 @@
     if (v) { 
       e.preventDefault(); 
       window.openVideoModal(v.dataset.video, v.dataset.aspect); 
+      return;
+    }
+    const vol = e.target.closest('.btn-vol');
+    if (vol) {
+      e.preventDefault();
+      const wrap = vol.closest('.relative') || document;
+      const vid = wrap.querySelector('video');
+      if (vid) {
+        vid.muted = !vid.muted;
+        const ic = vol.querySelector('i');
+        if (ic) ic.className = vid.muted ? 'fas fa-volume-xmark' : 'fas fa-volume-high';
+      }
     }
   });
 
@@ -307,14 +338,14 @@
   const HERO_VIDEOS = [
     {
       platform: 'tiktok',
-      title: 'Khoá học Video Muse AI Pro · 30s',
+      title: 'Skill Video Muse AI Pro · 30s',
       videoUrl: R2_BASE + '/videos/demo-khoa-hoc-muse-ai.mp4',
       posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
-      author: '@webskill.ai',
-      authorName: 'WebSkill AI',
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=webskill1',
-      desc: 'Làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #TikTokViral',
-      sound: '♫ WebSkill AI - Âm thanh gốc',
+      author: '@khoskill.ai',
+      authorName: 'KhoSkill AI',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=khoskill1',
+      desc: 'Skill làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #SkillAI',
+      sound: '♫ KhoSkill AI - Âm thanh gốc',
       likes: '142.8K',
       comments: '2.5K',
       saves: '18.4K',
@@ -322,14 +353,14 @@
     },
     {
       platform: 'reels',
-      title: 'Khóa Học Video Seedance 2.5 · 30s',
+      title: 'Skill Video Seedance 2.5 · 30s',
       videoUrl: R2_BASE + '/videos/demo-khoa-hoc-seedance.mp4',
       posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-seedance.jpg',
-      author: 'WebSkill AI Video',
-      authorName: 'WebSkill AI Video',
+      author: 'KhoSkill AI Video',
+      authorName: 'KhoSkill AI Video',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=seedance',
-      desc: 'Bí quyết quay one-take 30s nhân vật giữ nguyên 100% bằng Seedance 2.5 🔥 #Reels #AICommunity #Shop',
-      sound: '🎵 Nhạc thịnh hành · WebSkill Reels Audio',
+      desc: 'Skill quay one-take 30s nhân vật giữ nguyên 100% bằng Seedance 2.5 🔥 #Reels #SkillAI #KhoSkill',
+      sound: '🎵 Nhạc thịnh hành · KhoSkill Reels Audio',
       likes: '98.4K',
       comments: '1.8K',
       saves: '12.1K',
@@ -340,11 +371,11 @@
       title: 'Skill Video Affiliate Fitness · 30s',
       videoUrl: R2_BASE + '/videos/demo-skill-fitness.mp4',
       posterUrl: R2_BASE + '/videos/posters/poster-skill-fitness.jpg',
-      author: 'webskill_fitness',
-      authorName: 'WebSkill Fitness',
+      author: 'khoskill_fitness',
+      authorName: 'KhoSkill Fitness',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=fitness',
       desc: 'Kịch bản chuyển đổi cao chốt đơn affiliate 30s với video AI nhân vật thể hình 💪 #reelsinstagram #affiliate #fitness',
-      sound: '🎵 webskill_fitness · Âm thanh gốc',
+      sound: '🎵 khoskill_fitness · Âm thanh gốc',
       likes: '86.1K',
       comments: '942',
       saves: '9.3K',
@@ -355,8 +386,8 @@
       title: 'Skill Video DIY Làm Vườn · 30s',
       videoUrl: R2_BASE + '/videos/demo-skill-lam-vuon.mp4',
       posterUrl: R2_BASE + '/videos/posters/poster-skill-lam-vuon.jpg',
-      author: '@webskill.garden',
-      authorName: 'WebSkill Làm Vườn',
+      author: '@khoskill.garden',
+      authorName: 'KhoSkill Làm Vườn',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=garden',
       desc: 'Quy trình làm clip làm vườn 30s hút triệu view build page bán nông sản, dụng cụ làm vườn 🌿 #LàmVườn #AI #Shorts',
       sound: '♫ Âm thanh thư giãn - Garden Chill',
@@ -703,11 +734,11 @@
   // 3. CINEMA THEATER SECTION
   const THEATER_PLAYLIST = [
     {
-      title: 'Khóa Học Video Muse AI — Từ Prompt Đến Video 10s Chuẩn Viral',
-      shortTitle: 'Khóa học Muse AI Pro 30s',
-      tag: 'Khóa học',
+      title: 'Skill Video Muse AI Pro — Từ Prompt Đến Video 10s Chuẩn Viral',
+      shortTitle: 'Skill Muse AI Pro 30s',
+      tag: 'Skill AI',
       dur: '0:30',
-      desc: 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
+      desc: 'Bộ Skill làm video AI bằng Muse AI từ A-Z: prompt khóa nhân vật, render clip 10s lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
       videoUrl: R2_BASE + '/videos/demo-khoa-hoc-muse-ai.mp4',
       posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
       slug: 'khoa-hoc-video-muse-ai',
@@ -715,11 +746,11 @@
       origPrice: '1.299.000đ'
     },
     {
-      title: 'Khóa Học Video Seedance 2.5 — One-Take 30s Build Page',
-      shortTitle: 'Seedance 2.5 · One-Take 30s',
-      tag: 'Khóa học',
+      title: 'Skill Video Seedance 2.5 — One-Take 30s Build Page',
+      shortTitle: 'Skill Seedance 2.5 · 30s',
+      tag: 'Skill AI',
       dur: '0:30',
-      desc: 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
+      desc: 'Bộ Skill làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
       videoUrl: R2_BASE + '/videos/demo-khoa-hoc-seedance.mp4',
       posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-seedance.jpg',
       slug: 'khoa-hoc-video-seedance-25-30s',

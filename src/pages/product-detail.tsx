@@ -1,7 +1,7 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { Breadcrumb, ProductCard, Stars, SectionTitle } from '../components/ui'
-import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate } from '../lib/utils'
+import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl } from '../lib/utils'
 import type { Product } from '../lib/types'
 
 interface Props extends LayoutProps {
@@ -23,9 +23,11 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const gallery = parseJSON<string[]>(p.gallery, [])
   const save = (p.original_price || 0) - p.price
 
-  const isMp4 = !!p.demo_video_url && /\.mp4(\?|$)/i.test(p.demo_video_url)
+  const isMp4 = isDirectVideoUrl(p.demo_video_url) || !!p.demo_video_url?.includes('/videos/')
+  const embedVideoUrl = isMp4 ? p.demo_video_url : toEmbedVideoUrl(p.demo_video_url)
   const replacedPoster = isMp4 ? p.demo_video_url!.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, '/videos/posters/poster-$2.jpg') : undefined
   const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : undefined
+  const comingSoon = p.status === 'coming_soon'
 
   return (
     <Layout {...props} active="products" title={p.name} description={p.short_desc} ogImage={p.thumbnail || undefined}>
@@ -45,22 +47,18 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 <div class="vertical-player-wrapper mx-auto mb-4 border-4 border-[#1f1b4b] shadow-2xl relative">
                   <div class="video-mockup-overlay">
                     <div class="video-mockup-header">
-                      <span class="text-xs font-semibold text-white tracking-wider bg-black/40 px-2.5 py-1 rounded">VIDEO DEMO</span>
-                      <div class="video-mockup-actions">
-                        <button class="video-mockup-btn btn-vol" title="Âm thanh"><i class="fas fa-volume-up"></i></button>
-                      </div>
-                    </div>
-                    <div class="video-mockup-footer">
-                      <div class="video-mockup-info">
-                        <p class="text-sm font-bold text-white">@webskill.ai</p>
-                        <p class="text-xs text-white/90 mt-1 line-clamp-1">{p.name}</p>
-                      </div>
+                      <span class="text-[11px] font-semibold text-white tracking-wider bg-black/50 backdrop-blur px-2.5 py-1 rounded">VIDEO DEMO</span>
+                      {isMp4 && (
+                        <div class="video-mockup-actions">
+                          <button type="button" class="video-mockup-btn btn-vol" title="Bật / tắt âm thanh"><i class="fas fa-volume-high"></i></button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {isMp4 ? (
                     <video src={p.demo_video_url} poster={demoPoster} class="w-full h-full border-none bg-black" controls playsinline preload="metadata"></video>
                   ) : (
-                    <iframe src={p.demo_video_url} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    <iframe src={embedVideoUrl} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                   )}
                 </div>
               ) : p.thumbnail ? (
@@ -124,8 +122,14 @@ export const ProductDetailPage: FC<Props> = (props) => {
               <div class="flex flex-wrap items-center gap-2 mb-3">
                 <span class="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
                 {p.category_name && <a href={`/danh-muc/${p.category_slug}`} class="px-2.5 py-1 rounded bg-[#16143c] text-slate-300 text-xs font-medium hover:text-white hover:bg-white/5 transition">{p.category_name}</a>}
-                {p.is_hot === 1 && <span class="px-2.5 py-1 rounded bg-orange-500/15 text-orange-400 text-xs font-bold"><i class="fas fa-fire mr-1 animate-pulse"></i>HOT</span>}
-                {p.is_new === 1 && <span class="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 text-xs font-bold">MỚI</span>}
+                {comingSoon ? (
+                  <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"><i class="fas fa-clock mr-1"></i>CHƯA MỞ BÁN</span>
+                ) : (
+                  <>
+                    {p.is_hot === 1 && <span class="px-2.5 py-1 rounded bg-orange-500/15 text-orange-400 text-xs font-bold"><i class="fas fa-fire mr-1 animate-pulse"></i>HOT</span>}
+                    {p.is_new === 1 && <span class="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 text-xs font-bold">MỚI</span>}
+                  </>
+                )}
               </div>
 
               <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3 glow-text-brand">{p.name}</h1>
@@ -163,19 +167,24 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 </div>
               </div>
 
-              {/* Scarcity Progress Bar */}
-              <div class="mb-5 bg-[#16143c]/60 border border-[#1f1b4b] p-4 rounded-xl">
-                <div class="flex items-center justify-between text-xs mb-2">
-                  <span class="text-rose-400 font-bold flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    Ưu đãi sắp hết hạn!
-                  </span>
-                  <span class="text-slate-300 font-medium">Chỉ còn <b>7/20</b> lượt tải ưu đãi</span>
+              {comingSoon ? (
+                <div class="mb-5 bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl">
+                  <div class="text-sm font-bold text-amber-300 flex items-center gap-2 mb-1">
+                    <i class="fas fa-clock"></i>Sản phẩm hiện đang ở trạng thái Chưa mở bán
+                  </div>
+                  <p class="text-xs text-amber-200/80 leading-relaxed">
+                    Hiện tại hệ thống đang ưu tiên mở bán 5 bộ Skill AI hoàn thiện nhất. Hãy nhắn Zalo hoặc quay lại sau để cập nhật ngày phát hành chính thức.
+                  </p>
                 </div>
-                <div class="w-full h-2.5 rounded-full bg-[#080716] overflow-hidden p-0.5 border border-[#1f1b4b]">
-                  <div class="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full" style="width: 65%;"></div>
+              ) : (
+                <div class="mb-5 bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl flex items-center justify-between gap-3">
+                  <div class="text-xs text-indigo-200 flex items-center gap-2">
+                    <i class="fas fa-bolt text-emerald-400"></i>
+                    <span>Thanh toán VietQR tự động 24/7 — nhận link tải Skill ngay lập tức.</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold shrink-0">Còn hàng</span>
                 </div>
-              </div>
+              )}
 
               {owned ? (
                 <div class="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 mb-4">
@@ -186,6 +195,22 @@ export const ProductDetailPage: FC<Props> = (props) => {
                   <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition">
                     <i class="fas fa-download"></i>Truy cập sản phẩm
                   </a>
+                </div>
+              ) : comingSoon ? (
+                <div class="flex flex-col gap-2.5 mb-4">
+                  <button type="button" disabled class="w-full h-12 rounded-xl bg-[#16143c] border border-[#28235d] text-amber-300 font-bold text-sm cursor-not-allowed">
+                    <i class="fas fa-clock mr-1.5"></i>Tạm thời chưa mở bán
+                  </button>
+                  <div class="grid sm:grid-cols-2 gap-2.5">
+                    <a href={`https://zalo.me/${settings?.zalo || ''}`} target="_blank" rel="noopener"
+                      class="flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-bold text-xs transition">
+                      <i class="fas fa-bell"></i>Nhắn Zalo nhận lịch mở bán
+                    </a>
+                    <a href="/san-pham?type=skill"
+                      class="flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 font-bold text-xs transition">
+                      <i class="fas fa-wand-magic-sparkles"></i>Xem 5 Skill đang bán
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <div class="flex flex-col gap-2.5 mb-4">
@@ -363,9 +388,9 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 <p>Hoàn tiền <b>100%</b> trong vòng <b>7 ngày</b> nếu sản phẩm không đúng như mô tả hoặc không thể cài đặt được do lỗi từ phía chúng tôi.</p>
                 <h3>Bản quyền sử dụng</h3>
                 <ul>
-                  <li>Được dùng cho dự án cá nhân và thương mại không giới hạn</li>
-                  <li>Được chỉnh sửa mã nguồn theo nhu cầu</li>
-                  <li>Không được bán lại nguyên bản source code cho bên thứ ba</li>
+                  <li>Được dùng cho kênh cá nhân và kênh bán hàng của bạn không giới hạn</li>
+                  <li>Được tuỳ biến prompt, kịch bản và quy trình theo ngách riêng</li>
+                  <li>Không được chia sẻ công khai hoặc bán lại nguyên bản bộ Skill cho bên thứ ba</li>
                 </ul>
               </div>
             </div>

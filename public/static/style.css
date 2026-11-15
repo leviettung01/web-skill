@@ -140,7 +140,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  pointer-events: auto;
+  pointer-events: none;
 }
 .video-mockup-info {
   color: white;
@@ -224,7 +224,7 @@ body {
    GLOBAL DARK MODE OVERRIDES FOR CUSTOMER PORTAL
    Translates tailwind light-mode classes on the fly for premium dark theme.
    ========================================================================== */
-body.bg-\[\#080716\] .bg-white {
+body.bg-\[\#080716\] .bg-white:not(.cta-white) {
   background-color: #0f0e26 !important;
   color: #e2e1f5 !important;
 }
@@ -275,6 +275,8 @@ body.bg-\[\#080716\] .hover\:bg-gray-100:hover {
 body.bg-\[\#080716\] input[type="text"],
 body.bg-\[\#080716\] input[type="email"],
 body.bg-\[\#080716\] input[type="password"],
+body.bg-\[\#080716\] input[type="tel"],
+body.bg-\[\#080716\] input[type="search"],
 body.bg-\[\#080716\] input[type="url"],
 body.bg-\[\#080716\] input[type="number"],
 body.bg-\[\#080716\] select,
@@ -287,6 +289,8 @@ body.bg-\[\#080716\] textarea {
 body.bg-\[\#080716\] input[type="text"]:focus,
 body.bg-\[\#080716\] input[type="email"]:focus,
 body.bg-\[\#080716\] input[type="password"]:focus,
+body.bg-\[\#080716\] input[type="tel"]:focus,
+body.bg-\[\#080716\] input[type="search"]:focus,
 body.bg-\[\#080716\] input[type="url"]:focus,
 body.bg-\[\#080716\] input[type="number"]:focus,
 body.bg-\[\#080716\] select:focus,

@@ -160,7 +160,7 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[] }> = (props) => 
               <div class="sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white"
                 style={l.thumbnail ? '' : `background:${gradientFor(l.product_id)}`}>
                 {l.thumbnail ? <img src={l.thumbnail} alt="" class="w-full h-full object-cover rounded-xl" />
-                  : <i class={`fas ${l.product_type === 'chatbot' ? 'fa-robot' : l.product_type === 'prompt' ? 'fa-wand-magic-sparkles' : 'fa-code'} text-2xl`}></i>}
+                  : <i class={`fas ${l.product_type === 'skill' ? 'fa-wand-magic-sparkles' : l.product_type === 'chatbot' ? 'fa-robot' : 'fa-code'} text-2xl`}></i>}
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-1.5">
@@ -193,7 +193,7 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[] }> = (props) => 
                   {l.download_url ? (
                     <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
                       class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-brand-500/20 transition">
-                      <i class="fas fa-download"></i>{l.product_type === 'chatbot' ? 'Mở Chatbot' : l.product_type === 'prompt' ? 'Mở bộ Prompt' : 'Tải Source Code'}
+                      <i class="fas fa-download"></i>{l.product_type === 'skill' ? 'Tải bộ Skill AI' : l.product_type === 'chatbot' ? 'Mở Chatbot' : 'Mở & Tải xuống'}
                     </a>
                   ) : (
                     <span class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-50 text-amber-700 font-semibold text-sm">
@@ -276,9 +276,15 @@ export const WishlistPage: FC<LayoutProps & { items: any[] }> = (props) => (
               </h3>
               <div class="text-lg font-extrabold text-rose-600 mb-2">{formatVND(p.price)}</div>
               <div class="flex gap-2">
-                <button class="btn-add-cart h-9 px-3.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition" data-id={p.id} data-name={p.name}>
-                  <i class="fas fa-cart-plus mr-1"></i>Thêm giỏ
-                </button>
+                {p.status === 'coming_soon' ? (
+                  <a href={`/san-pham/${p.slug}`} class="h-9 px-3.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center gap-1">
+                    <i class="fas fa-clock"></i>Chưa mở bán
+                  </a>
+                ) : (
+                  <button class="btn-add-cart h-9 px-3.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition" data-id={p.id} data-name={p.name}>
+                    <i class="fas fa-cart-plus mr-1"></i>Thêm giỏ
+                  </button>
+                )}
                 <button class="btn-wishlist h-9 px-3.5 rounded-lg border border-slate-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 transition" data-id={p.id}>
                   <i class="fas fa-heart mr-1"></i>Bỏ thích
                 </button>
@@ -318,7 +324,7 @@ export const AffiliateDashboard: FC<LayoutProps & {
         <div class="flex flex-col sm:flex-row gap-2">
           <input type="text" value={link} readonly id="aff-link"
             class="flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur" />
-          <button data-copy={link} class="h-11 px-5 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap">
+          <button data-copy={link} class="cta-white h-11 px-5 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap">
             <i class="far fa-copy mr-1.5"></i>Sao chép link
           </button>
         </div>

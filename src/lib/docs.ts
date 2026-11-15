@@ -5,8 +5,8 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
 <h2>Quy trình mua hàng 4 bước</h2>
 <p><b>Bước 1 — Đăng ký tài khoản.</b> Truy cập trang <a href="/dang-ky">Đăng ký</a>, điền họ tên, email và mật khẩu. Quá trình chỉ mất khoảng 30 giây.</p>
 <p><b>Bước 2 — Chọn sản phẩm.</b> Duyệt qua <a href="/san-pham">danh sách sản phẩm</a>, xem video demo và đọc mô tả chi tiết. Bấm "Thêm vào giỏ" hoặc "Mua ngay".</p>
-<p><b>Bước 3 — Thanh toán.</b> Tại trang thanh toán, chọn phương thức (VietQR / MoMo / số dư ví), nhập mã giảm giá nếu có rồi bấm "Đặt hàng ngay".</p>
-<p><b>Bước 4 — Nhận sản phẩm.</b> Quét mã QR chuyển khoản theo đúng số tiền và nội dung hiển thị. Sau khi xác nhận, link tải sản phẩm và license key sẽ xuất hiện trong mục <a href="/tai-khoan/san-pham">Sản phẩm của tôi</a>.</p>
+<p><b>Bước 3 — Thanh toán.</b> Tại trang thanh toán, chọn phương thức (VietQR qua app Ngân hàng / MoMo hoặc số dư ví), nhập mã giảm giá nếu có rồi bấm "Đặt hàng ngay".</p>
+<p><b>Bước 4 — Nhận sản phẩm.</b> Quét mã QR chuyển khoản theo đúng số tiền và nội dung hiển thị. Sau khi xác nhận, link tải Skill và license key sẽ xuất hiện trong mục <a href="/tai-khoan/san-pham">Sản phẩm của tôi</a>.</p>
 
 <h2>Lưu ý khi chuyển khoản</h2>
 <ul>
@@ -18,10 +18,9 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
 <h2>Cách nhận sản phẩm</h2>
 <p>Tuỳ loại sản phẩm, bạn sẽ nhận được:</p>
 <ul>
-<li><b>Source code:</b> link Google Drive chứa file .zip mã nguồn + tài liệu cài đặt</li>
-<li><b>Chatbot:</b> link truy cập chatbot GPT/Gemini riêng</li>
-<li><b>Bộ prompt:</b> link Google Sheet hoặc Google Doc chứa toàn bộ prompt</li>
-<li><b>Combo:</b> tất cả sản phẩm con được kích hoạt cùng lúc</li>
+<li><b>Skill tạo video AI:</b> link Google Drive / tài liệu chứa trọn bộ prompt, quy trình và file cấu hình theo ngách</li>
+<li><b>Chatbot / App (khi mở bán):</b> link kích hoạt hoặc bộ cài riêng theo hướng dẫn</li>
+<li><b>Combo (khi mở bán):</b> toàn bộ sản phẩm con được kích hoạt cùng lúc</li>
 </ul>
 
 <h2>Gặp vấn đề?</h2>
@@ -32,24 +31,23 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
     heading: 'Chính sách bảo hành & hoàn tiền',
     html: `
 <h2>Chính sách giao hàng</h2>
-<p>Toàn bộ sản phẩm trên WebSkill AI là sản phẩm số, được giao <b>tự động 100%</b>. Ngay khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link truy cập và license key sẽ hiển thị trong tài khoản của bạn. Không cần chờ admin duyệt thủ công.</p>
+<p>Toàn bộ sản phẩm trên KhoSkill AI là sản phẩm số, được giao <b>tự động 100%</b>. Ngay khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link truy cập và license key sẽ hiển thị trong tài khoản của bạn. Không cần chờ admin duyệt thủ công.</p>
 
 <h2>Chính sách bảo hành</h2>
 <ul>
 <li>Hỗ trợ kỹ thuật miễn phí <b>6–12 tháng</b> tuỳ từng sản phẩm</li>
 <li>Nhận bản cập nhật miễn phí <b>trọn đời</b></li>
 <li>Hỗ trợ cài đặt qua Zalo hoặc Ultraview khi bạn gặp khó khăn</li>
-<li>Với gói Combo All-In-One: tặng thêm 2 buổi setup 1-1 trực tiếp</li>
 </ul>
 
 <h2>Chính sách hoàn tiền</h2>
 <p>Chúng tôi hoàn tiền <b>100%</b> trong vòng <b>7 ngày</b> kể từ ngày mua nếu:</p>
 <ul>
-<li>Sản phẩm không đúng như mô tả trên website</li>
-<li>Source code không thể cài đặt được do lỗi từ phía chúng tôi</li>
+<li>Sản phẩm không đúng như mô tả hoặc video demo trên website</li>
+<li>Tài liệu/bộ Skill bị lỗi quy trình mà không thể khắc phục sau khi hỗ trợ</li>
 <li>Link truy cập bị lỗi và không được khắc phục trong 48 giờ</li>
 </ul>
-<p><b>Không áp dụng hoàn tiền</b> trong các trường hợp: bạn đổi ý sau khi đã tải source code, thiết bị/môi trường của bạn không đáp ứng yêu cầu tối thiểu, hoặc bạn tự ý chỉnh sửa code gây lỗi.</p>
+<p><b>Không áp dụng hoàn tiền</b> trong các trường hợp: bạn đổi ý sau khi đã tải bộ Skill, thiết bị/môi trường của bạn không đáp ứng yêu cầu tối thiểu, hoặc bạn tự ý thay đổi cấu hình gây lỗi.</p>
 
 <h2>Chính sách bảo mật</h2>
 <ul>
@@ -64,7 +62,7 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
     heading: 'Điều khoản sử dụng',
     html: `
 <h2>1. Chấp nhận điều khoản</h2>
-<p>Khi truy cập và sử dụng website WebSkill AI, bạn đồng ý tuân thủ các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.</p>
+<p>Khi truy cập và sử dụng website KhoSkill AI (khoskill.site), bạn đồng ý tuân thủ các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.</p>
 
 <h2>2. Tài khoản người dùng</h2>
 <ul>
@@ -77,28 +75,28 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
 <h2>3. Bản quyền sản phẩm</h2>
 <p>Khi mua sản phẩm, bạn <b>được phép</b>:</p>
 <ul>
-<li>Sử dụng cho dự án cá nhân và thương mại không giới hạn</li>
-<li>Chỉnh sửa mã nguồn theo nhu cầu riêng</li>
-<li>Cài đặt trên không giới hạn số domain của chính bạn</li>
+<li>Sử dụng cho các kênh cá nhân và kênh thương mại không giới hạn</li>
+<li>Tuỳ biến prompt, kịch bản và quy trình theo nhu cầu riêng</li>
+<li>Áp dụng cho không giới hạn số kênh của chính bạn</li>
 </ul>
 <p>Bạn <b>không được phép</b>:</p>
 <ul>
-<li>Bán lại nguyên bản source code cho bên thứ ba</li>
+<li>Bán lại nguyên bản bộ Skill hoặc tài liệu cho bên thứ ba</li>
 <li>Chia sẻ công khai link tải hoặc license key</li>
-<li>Đăng tải source code lên các diễn đàn chia sẻ miễn phí</li>
-<li>Sử dụng thương hiệu WebSkill AI khi bán lại sản phẩm đã chỉnh sửa</li>
+<li>Đăng tải nội dung bộ Skill lên các diễn đàn chia sẻ miễn phí</li>
+<li>Sử dụng thương hiệu KhoSkill AI khi phân phối sản phẩm khác</li>
 </ul>
 <p>Vi phạm bản quyền sẽ dẫn đến việc <b>huỷ license vĩnh viễn</b> mà không hoàn tiền.</p>
 
 <h2>4. Giới hạn trách nhiệm</h2>
-<p>Chúng tôi cung cấp sản phẩm "nguyên trạng". WebSkill AI không chịu trách nhiệm cho các thiệt hại gián tiếp phát sinh từ việc sử dụng sản phẩm, bao gồm nhưng không giới hạn ở mất dữ liệu, mất doanh thu hoặc gián đoạn kinh doanh.</p>
-<p>Các sản phẩm phụ thuộc vào API bên thứ ba (Veo 3, ChatGPT, Kling...). Chúng tôi không chịu trách nhiệm nếu các nền tảng này thay đổi chính sách, tăng giá hoặc ngừng dịch vụ, tuy nhiên sẽ cập nhật sản phẩm miễn phí trong khả năng có thể.</p>
+<p>Chúng tôi cung cấp sản phẩm "nguyên trạng". KhoSkill AI không chịu trách nhiệm cho các thiệt hại gián tiếp phát sinh từ việc sử dụng sản phẩm, bao gồm nhưng không giới hạn ở mất dữ liệu, mất doanh thu hoặc gián đoạn kinh doanh.</p>
+<p>Các sản phẩm phụ thuộc vào nền tảng AI bên thứ ba (Muse AI, Seedance, Veo 3, ChatGPT, Kling...). Chúng tôi không chịu trách nhiệm nếu các nền tảng này thay đổi chính sách, tăng giá hoặc ngừng dịch vụ, tuy nhiên sẽ cập nhật Skill miễn phí trong khả năng có thể.</p>
 
 <h2>5. Chương trình Affiliate</h2>
 <ul>
 <li>Hoa hồng được tính trên giá trị đơn hàng thực thu sau giảm giá</li>
 <li>Không áp dụng cho đơn tự mua bằng mã của chính mình</li>
-<li>Nghiêm cấm spam hoặc chạy quảng cáo trên thương hiệu WebSkill AI</li>
+<li>Nghiêm cấm spam hoặc chạy quảng cáo trên thương hiệu KhoSkill AI</li>
 <li>Chúng tôi có quyền thu hồi hoa hồng nếu phát hiện gian lận</li>
 </ul>
 

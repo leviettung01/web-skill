@@ -90,3 +90,30 @@ export function vietQrUrl(bankCode: string, account: string, amount: number, con
   })
   return `https://img.vietqr.io/image/${bankCode}-${account}-compact2.png?${p.toString()}`
 }
+
+/** Kiểm tra URL video trực tiếp (.mp4/.webm/.mov) từ R2/CDN */
+export function isDirectVideoUrl(url?: string | null): boolean {
+  if (!url) return false
+  return /\.(mp4|webm|mov)(\?.*)?$/i.test(url.trim())
+}
+
+/** Chuẩn hóa link YouTube (/watch?v=, youtu.be/, /shorts/) sang URL embed */
+export function toEmbedVideoUrl(url?: string | null): string {
+  const raw = (url || '').trim()
+  if (!raw) return ''
+  if (raw.includes('/embed/')) return raw
+  try {
+    const u = new URL(raw)
+    const host = u.hostname.replace(/^www\./, '').toLowerCase()
+    let id = ''
+    if (host === 'youtu.be') {
+      id = u.pathname.split('/').filter(Boolean)[0] || ''
+    } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+      if (u.pathname.startsWith('/shorts/')) id = u.pathname.split('/')[2] || ''
+      else if (u.pathname.startsWith('/live/')) id = u.pathname.split('/')[2] || ''
+      else id = u.searchParams.get('v') || ''
+    }
+    if (id) return `https://www.youtube.com/embed/${id}?rel=0&playsinline=1`
+  } catch {}
+  return raw
+}

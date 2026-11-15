@@ -33,7 +33,11 @@ const SORTS = [
 
 const TYPES: [string, string][] = [
   ['', 'Tất cả loại'],
-  ...Object.entries(PRODUCT_TYPE_LABEL)
+  ['skill', 'Skill AI (Đang mở bán)'],
+  ['course', 'Khóa học (Sắp mở)'],
+  ['chatbot', 'Chatbot (Sắp mở)'],
+  ['app', 'App Video AI (Sắp mở)'],
+  ['combo', 'Combo (Sắp mở)']
 ]
 
 export const ProductListPage: FC<ListProps> = (props) => {
@@ -121,7 +125,7 @@ export const ProductListPage: FC<ListProps> = (props) => {
               <i class="fas fa-gift text-2xl mb-2.5 opacity-90"></i>
               <h3 class="font-bold mb-1.5">Nhận mã giảm 10%</h3>
               <p class="text-xs text-white/85 mb-3.5 leading-relaxed">Dùng mã <b class="bg-white/20 px-1.5 py-0.5 rounded font-mono">WELCOME10</b> cho đơn đầu tiên từ 100k.</p>
-              <button data-copy="WELCOME10" class="w-full h-9 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md">
+              <button data-copy="WELCOME10" class="cta-white w-full h-9 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md">
                 <i class="far fa-copy mr-1"></i>Sao chép mã
               </button>
             </div>
@@ -129,6 +133,17 @@ export const ProductListPage: FC<ListProps> = (props) => {
 
           {/* Grid */}
           <div>
+            {(baseUrl === '/combo' || ['course', 'chatbot', 'app', 'combo'].includes(type) || (currentCategory && currentCategory.slug !== 'skill-video-ai')) && (
+              <div class="mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs sm:text-sm text-amber-200 leading-relaxed">
+                  <i class="fas fa-clock text-amber-400 mr-2"></i>
+                  <b>Hạng mục này tạm thời chưa mở bán.</b> Hiện tại cửa hàng chỉ mở bán bộ <b>5 Skill AI</b> làm video hoàn thiện bên dưới.
+                </div>
+                <a href="/san-pham?type=skill" class="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition shrink-0">
+                  Xem 5 Skill đang bán →
+                </a>
+              </div>
+            )}
             <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
               <div class="flex flex-wrap gap-1.5">
                 {q && <span class="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold">Từ khoá: {q}</span>}

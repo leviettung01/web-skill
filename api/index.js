@@ -7973,6 +7973,30 @@ function vietQrUrl(bankCode, account, amount, content, owner) {
   });
   return `https://img.vietqr.io/image/${bankCode}-${account}-compact2.png?${p.toString()}`;
 }
+function isDirectVideoUrl(url) {
+  if (!url) return false;
+  return /\.(mp4|webm|mov)(\?.*)?$/i.test(url.trim());
+}
+function toEmbedVideoUrl(url) {
+  const raw2 = (url || "").trim();
+  if (!raw2) return "";
+  if (raw2.includes("/embed/")) return raw2;
+  try {
+    const u = new URL(raw2);
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    let id = "";
+    if (host === "youtu.be") {
+      id = u.pathname.split("/").filter(Boolean)[0] || "";
+    } else if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+      if (u.pathname.startsWith("/shorts/")) id = u.pathname.split("/")[2] || "";
+      else if (u.pathname.startsWith("/live/")) id = u.pathname.split("/")[2] || "";
+      else id = u.searchParams.get("v") || "";
+    }
+    if (id) return `https://www.youtube.com/embed/${id}?rel=0&playsinline=1`;
+  } catch {
+  }
+  return raw2;
+}
 
 // src/lib/webhook.ts
 function safeEqual(a, b) {
@@ -8882,9 +8906,9 @@ var Layout = (props) => {
     canonical,
     children
   } = props;
-  const siteName = settings.site_name || "WebSkill AI";
+  const siteName = settings.site_name || "KhoSkill AI";
   const fullTitle = title2 ? `${title2} | ${siteName}` : `${siteName} \u2014 ${settings.site_tagline || ""}`;
-  const desc = description || settings.site_tagline || "Kho source code & tool AI t\u1EA1o video";
+  const desc = description || settings.site_tagline || "Kho Skill AI t\u1EA1o video chuy\xEAn nghi\u1EC7p";
   const nav = [
     { href: "/", label: "Trang ch\u1EE7", key: "home", icon: "fa-house" },
     { href: "/san-pham", label: "S\u1EA3n ph\u1EA9m", key: "products", icon: "fa-cubes" },
@@ -8921,7 +8945,7 @@ var Layout = (props) => {
               /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm" }) }),
               /* @__PURE__ */ jsxDEV("div", { class: "leading-none sidebar-header-text", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-sm tracking-tight text-white", children: siteName }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-[#9f9dbb] mt-0.5", children: "AI Video Templates" })
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-[#9f9dbb] mt-0.5", children: "Kho Skill Video AI" })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "px-3 py-5 flex flex-col gap-6", children: [
@@ -8941,34 +8965,46 @@ var Layout = (props) => {
               /* @__PURE__ */ jsxDEV("div", { children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text", children: "S\u1EA3n ph\u1EA9m" }),
                 /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-white bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles w-5 text-center text-indigo-400" }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: "Skill AI" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none", children: "\u0110ang b\xE1n" })
+                    ] })
+                  ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-graduation-cap w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Kh\xF3a h\u1ECDc" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Skill AI" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: "Kh\xF3a h\u1ECDc" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                    ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: `sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === "chatbot" ? "text-indigo-400 bg-indigo-500/10" : "text-[#b9b8d9] hover:text-white hover:bg-white/5"}`, children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-robot w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Chatbot" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: "Chatbot" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                    ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-mobile-screen-button w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "App Video AI" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: "App Video AI" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                    ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-open w-5 text-center text-slate-400" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
                       /* @__PURE__ */ jsxDEV("span", { children: "Combo ti\u1EBFt ki\u1EC7m" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold leading-none", children: "-60%" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-video w-5 text-center text-slate-400" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
                       /* @__PURE__ */ jsxDEV("span", { children: "Y\xEAu c\u1EA7u Video AI" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold leading-none", children: "NEW" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] })
                 ] })
@@ -8978,7 +9014,10 @@ var Layout = (props) => {
                 /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
                   /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-gear w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Custom Chatbot" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: "Custom Chatbot" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                    ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: `sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === "pricing" ? "text-indigo-400 bg-indigo-500/10" : "text-[#b9b8d9] hover:text-white hover:bg-white/5"}`, children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-tags w-5 text-center text-slate-400" }),
@@ -9106,20 +9145,35 @@ var Layout = (props) => {
                 ] }),
                 /* @__PURE__ */ jsxDEV("p", { class: "text-xs leading-relaxed mb-4", children: settings.site_tagline }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: settings.facebook || "#", target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-indigo-600 grid place-items-center transition text-slate-300 hover:text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-facebook-f text-xs" }) }),
-                  /* @__PURE__ */ jsxDEV("a", { href: `https://zalo.me/${settings.zalo}`, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-[#0068ff] grid place-items-center transition text-slate-300 hover:text-white text-[10px] font-bold", children: "Zalo" }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "#", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-red-600 grid place-items-center transition text-slate-300 hover:text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-youtube text-xs" }) }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "#", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-slate-900 grid place-items-center transition text-slate-300 hover:text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-tiktok text-xs" }) })
+                  settings.facebook && /* @__PURE__ */ jsxDEV("a", { href: settings.facebook, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-indigo-600 grid place-items-center transition text-slate-300 hover:text-white", title: "Facebook", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-facebook-f text-xs" }) }),
+                  settings.zalo && /* @__PURE__ */ jsxDEV("a", { href: `https://zalo.me/${settings.zalo}`, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-[#0068ff] grid place-items-center transition text-slate-300 hover:text-white text-[10px] font-bold", title: "Zalo", children: "Zalo" }),
+                  settings.youtube && /* @__PURE__ */ jsxDEV("a", { href: settings.youtube, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-red-600 grid place-items-center transition text-slate-300 hover:text-white", title: "YouTube", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-youtube text-xs" }) }),
+                  settings.tiktok && /* @__PURE__ */ jsxDEV("a", { href: settings.tiktok, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-slate-900 grid place-items-center transition text-slate-300 hover:text-white", title: "TikTok", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-tiktok text-xs" }) })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
                 /* @__PURE__ */ jsxDEV("h4", { class: "text-white font-bold mb-4 text-xs uppercase tracking-wider", children: "S\u1EA3n ph\u1EA9m" }),
                 /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2 text-xs", children: [
-                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "hover:text-indigo-400 transition", children: "Kh\xF3a h\u1ECDc Video AI" }) }),
-                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "hover:text-indigo-400 transition", children: "Skill T\u1EA1o Video AI" }) }),
-                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "hover:text-indigo-400 transition", children: "Chatbot K\u1ECBch B\u1EA3n" }) }),
-                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "hover:text-indigo-400 transition", children: "App L\xE0m Video AI" }) }),
-                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "hover:text-indigo-400 transition", children: "Combo Tr\u1ECDn B\u1ED9" }) })
+                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "text-white font-semibold hover:text-indigo-400 transition", children: [
+                    "Skill T\u1EA1o Video AI ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-emerald-400 ml-1", children: "(\u0110ang b\xE1n)" })
+                  ] }) }),
+                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "hover:text-indigo-400 transition", children: [
+                    "Kh\xF3a h\u1ECDc Video AI ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                  ] }) }),
+                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "hover:text-indigo-400 transition", children: [
+                    "Chatbot K\u1ECBch B\u1EA3n ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                  ] }) }),
+                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "hover:text-indigo-400 transition", children: [
+                    "App L\xE0m Video AI ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                  ] }) }),
+                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "hover:text-indigo-400 transition", children: [
+                    "Combo Tr\u1ECDn B\u1ED9 ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                  ] }) })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
@@ -9202,33 +9256,35 @@ var Layout = (props) => {
 var Stars = ({ rating, size = "text-xs" }) => /* @__PURE__ */ jsxDEV("span", { class: `text-amber-400 ${size}`, children: [1, 2, 3, 4, 5].map((i) => /* @__PURE__ */ jsxDEV("i", { class: `fa-star ${rating >= i ? "fas" : rating >= i - 0.5 ? "fas fa-star-half-stroke" : "far"}` })) });
 var ProductCard = ({ p, compact }) => {
   const off = discountPercent(p.price, p.original_price);
-  return /* @__PURE__ */ jsxDEV("article", { class: "product-card group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-300 flex flex-col", children: [
+  const comingSoon = p.status === "coming_soon";
+  return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-300 flex flex-col ${comingSoon ? "opacity-90" : ""}`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "relative aspect-[10/16] overflow-hidden bg-[#080716]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
-      p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, loading: "lazy", class: "w-full h-full object-cover group-hover:scale-105 transition duration-500" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
+      p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, loading: "lazy", class: `w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? "opacity-75 grayscale-[20%]" : ""}` }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
         /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-4xl mb-2 opacity-95` }),
         /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold uppercase tracking-widest opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-col gap-1.5 z-10", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-amber-500 text-black text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-[8px]" }),
-          "Premium"
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-col gap-1.5 z-10", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-amber-500 text-slate-950 text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[8px]" }),
+        "Ch\u01B0a m\u1EDF b\xE1n"
+      ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-orange-500 text-white text-[9px] font-bold shadow-md flex items-center gap-0.5", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[8px]" }),
+          "HOT"
         ] }),
+        p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500 text-white text-[9px] font-bold shadow-md", children: "M\u1EDAI" }),
         off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-rose-500 text-white text-[9px] font-bold shadow-md", children: [
           "-",
           off,
           "%"
-        ] }),
-        p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-orange-500 text-white text-[9px] font-bold shadow-md flex items-center gap-0.5", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[8px]" }),
-          "HOT"
         ] })
-      ] }),
+      ] }) }),
       /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 right-3 z-10", children: /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-[#0068ff] text-white text-[9px] font-black tracking-wider uppercase shadow-md", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" }) }),
-      p.demo_video_url && /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-300 z-20", children: [
+      p.demo_video_url && /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-300 z-20 pointer-events-none", children: [
         /* @__PURE__ */ jsxDEV(
           "button",
           {
-            class: "w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition duration-300 cursor-pointer",
+            type: "button",
+            class: "pointer-events-auto w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition duration-300 cursor-pointer",
             "data-video": p.demo_video_url,
             "data-aspect": "vertical",
             title: "Xem Demo",
@@ -9246,7 +9302,10 @@ var ProductCard = ({ p, compact }) => {
       ] }),
       /* @__PURE__ */ jsxDEV("h3", { class: "font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 group-hover:text-indigo-400 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, children: p.name }) }),
       !compact && /* @__PURE__ */ jsxDEV("p", { class: "text-[12px] text-[#9f9dbb] line-clamp-2 mb-3 leading-relaxed", children: p.short_desc }),
-      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 text-[11px] text-[#9f9dbb] mb-4", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 text-[11px] text-[#9f9dbb] mb-4", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "text-amber-400 font-medium", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hourglass-half mr-1" }),
+        "\u0110ang ho\xE0n thi\u1EC7n & s\u1EAFp ra m\u1EAFt"
+      ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
         /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-1", children: [
           /* @__PURE__ */ jsxDEV(Stars, { rating: p.rating }),
           /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: p.rating.toFixed(1) })
@@ -9256,13 +9315,26 @@ var ProductCard = ({ p, compact }) => {
           p.sold_count,
           " \u0111\xE3 b\xE1n"
         ] })
-      ] }),
+      ] }) }),
       /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 border-t border-[#1f1b4b] flex items-end justify-between gap-2", children: [
-        /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("div", { children: comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-amber-300", children: [
+          "D\u1EF1 ki\u1EBFn: ",
+          formatVND(p.price)
+        ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
           p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-slate-500 line-through leading-none mb-0.5", children: formatVND(p.original_price) }),
           /* @__PURE__ */ jsxDEV("div", { class: "text-base font-extrabold text-[#f43f5e] leading-none", children: formatVND(p.price) })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: [
+        ] }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: comingSoon ? /* @__PURE__ */ jsxDEV(
+          "a",
+          {
+            href: `/san-pham/${p.slug}`,
+            class: "h-8 px-2.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 text-[11px] font-bold flex items-center gap-1 transition",
+            children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]" }),
+              "Ch\u01B0a m\u1EDF b\xE1n"
+            ]
+          }
+        ) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
           /* @__PURE__ */ jsxDEV(
             "button",
             {
@@ -9281,7 +9353,7 @@ var ProductCard = ({ p, compact }) => {
               children: "Th\xEAm"
             }
           )
-        ] })
+        ] }) })
       ] })
     ] })
   ] });
@@ -9296,21 +9368,27 @@ var SectionTitle = ({ title: title2, subtitle, center, more }) => /* @__PURE__ *
     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs" })
   ] })
 ] });
-var CategoryCard = ({ c }) => /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${c.slug}`, class: "group relative p-5 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] hover:border-indigo-500/30 hover:shadow-lg transition-all overflow-hidden", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 group-hover:scale-110 transition`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon}` }) }),
-  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1 group-hover:text-indigo-400 transition", children: c.name }),
-  /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#9f9dbb] line-clamp-2 leading-relaxed", children: c.description }),
-  /* @__PURE__ */ jsxDEV("div", { class: "mt-3 text-xs font-semibold text-indigo-400", children: [
-    c.product_count ?? 0,
-    " s\u1EA3n ph\u1EA9m ",
-    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right ml-0.5 text-[10px]" })
-  ] })
-] });
-var Breadcrumb = ({ items }) => /* @__PURE__ */ jsxDEV("nav", { class: "text-[13px] text-slate-500 mb-5", "aria-label": "Breadcrumb", children: /* @__PURE__ */ jsxDEV("ol", { class: "flex flex-wrap items-center gap-1.5", children: [
-  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "hover:text-brand-600", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house" }) }) }),
+var CategoryCard = ({ c }) => {
+  const count = c.product_count ?? 0;
+  return /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${c.slug}`, class: "group relative p-5 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] hover:border-indigo-500/30 hover:shadow-lg transition-all overflow-hidden flex flex-col", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon}` }) }),
+    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1 group-hover:text-indigo-400 transition", children: c.name }),
+    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#9f9dbb] line-clamp-2 leading-relaxed", children: c.description }),
+    /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 text-xs font-semibold", children: count > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: [
+      count,
+      " Skill \u0111ang m\u1EDF b\xE1n ",
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right ml-0.5 text-[10px]" })
+    ] }) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-semibold", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]" }),
+      "Ch\u01B0a m\u1EDF b\xE1n"
+    ] }) })
+  ] });
+};
+var Breadcrumb = ({ items }) => /* @__PURE__ */ jsxDEV("nav", { class: "text-[13px] text-[#9f9dbb] mb-5", "aria-label": "Breadcrumb", children: /* @__PURE__ */ jsxDEV("ol", { class: "flex flex-wrap items-center gap-1.5", children: [
+  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "hover:text-indigo-400 transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house" }) }) }),
   items.map((i) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
-    /* @__PURE__ */ jsxDEV("li", { class: "text-slate-300", children: "/" }),
-    /* @__PURE__ */ jsxDEV("li", { children: i.href ? /* @__PURE__ */ jsxDEV("a", { href: i.href, class: "hover:text-brand-600", children: i.label }) : /* @__PURE__ */ jsxDEV("span", { class: "text-slate-800 font-medium", children: i.label }) })
+    /* @__PURE__ */ jsxDEV("li", { class: "text-slate-600", children: "/" }),
+    /* @__PURE__ */ jsxDEV("li", { children: i.href ? /* @__PURE__ */ jsxDEV("a", { href: i.href, class: "hover:text-indigo-400 transition", children: i.label }) : /* @__PURE__ */ jsxDEV("span", { class: "text-white font-medium", children: i.label }) })
   ] }))
 ] }) });
 var Pagination = ({ page, totalPages, baseUrl }) => {
@@ -9321,47 +9399,48 @@ var Pagination = ({ page, totalPages, baseUrl }) => {
     if (i === 1 || i === totalPages || Math.abs(i - page) <= 1) pages.push(i);
   }
   return /* @__PURE__ */ jsxDEV("nav", { class: "flex items-center justify-center gap-1.5 mt-10", children: [
-    page > 1 && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page - 1}`, class: "h-9 px-3 grid place-items-center rounded-lg bg-white border border-slate-200 hover:border-brand-400 text-sm", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left text-xs" }) }),
+    page > 1 && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page - 1}`, class: "h-9 px-3 grid place-items-center rounded-lg bg-[#0f0e26] border border-[#1f1b4b] text-[#b9b8d9] hover:border-indigo-400 hover:text-white text-sm transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left text-xs" }) }),
     pages.map((p, idx) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
-      idx > 0 && pages[idx - 1] !== p - 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-1 text-slate-400", children: "\u2026" }),
+      idx > 0 && pages[idx - 1] !== p - 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-1 text-slate-500", children: "\u2026" }),
       /* @__PURE__ */ jsxDEV(
         "a",
         {
           href: `${baseUrl}${sep}page=${p}`,
-          class: `h-9 min-w-[36px] px-2 grid place-items-center rounded-lg text-sm font-medium border transition ${p === page ? "bg-brand-600 border-brand-600 text-white" : "bg-white border-slate-200 hover:border-brand-400"}`,
+          class: `h-9 min-w-[36px] px-2 grid place-items-center rounded-lg text-sm font-medium border transition ${p === page ? "bg-indigo-600 border-indigo-600 text-white" : "bg-[#0f0e26] border-[#1f1b4b] text-[#b9b8d9] hover:border-indigo-400 hover:text-white"}`,
           children: p
         }
       )
     ] })),
-    page < totalPages && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page + 1}`, class: "h-9 px-3 grid place-items-center rounded-lg bg-white border border-slate-200 hover:border-brand-400 text-sm", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-xs" }) })
+    page < totalPages && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page + 1}`, class: "h-9 px-3 grid place-items-center rounded-lg bg-[#0f0e26] border border-[#1f1b4b] text-[#b9b8d9] hover:border-indigo-400 hover:text-white text-sm transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-xs" }) })
   ] });
 };
-var EmptyState = ({ icon = "fa-box-open", title: title2, desc, action }) => /* @__PURE__ */ jsxDEV("div", { class: "text-center py-16 px-4", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "w-16 h-16 rounded-2xl bg-slate-100 grid place-items-center text-slate-400 text-2xl mx-auto mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon}` }) }),
-  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-lg text-slate-800 mb-1.5", children: title2 }),
-  desc && /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 text-sm mb-5 max-w-md mx-auto", children: desc }),
-  action && /* @__PURE__ */ jsxDEV("a", { href: action.href, class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: action.label })
+var EmptyState = ({ icon = "fa-box-open", title: title2, desc, action }) => /* @__PURE__ */ jsxDEV("div", { class: "text-center py-16 px-4 bg-[#0f0e26] border border-[#1f1b4b] rounded-2xl", children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "w-16 h-16 rounded-2xl bg-[#16143c] border border-[#28235d] grid place-items-center text-indigo-400 text-2xl mx-auto mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon}` }) }),
+  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-lg text-white mb-1.5", children: title2 }),
+  desc && /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] text-sm mb-5 max-w-md mx-auto", children: desc }),
+  action && /* @__PURE__ */ jsxDEV("a", { href: action.href, class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition", children: action.label })
 ] });
 var StatusBadge = ({ status }) => {
   const map = {
-    pending: ["bg-amber-100 text-amber-700", "Ch\u1EDD thanh to\xE1n"],
-    paid: ["bg-emerald-100 text-emerald-700", "\u0110\xE3 thanh to\xE1n"],
-    cancelled: ["bg-slate-200 text-slate-600", "\u0110\xE3 hu\u1EF7"],
-    refunded: ["bg-rose-100 text-rose-700", "\u0110\xE3 ho\xE0n ti\u1EC1n"],
-    active: ["bg-emerald-100 text-emerald-700", "Ho\u1EA1t \u0111\u1ED9ng"],
-    banned: ["bg-rose-100 text-rose-700", "B\u1ECB kho\xE1"],
-    published: ["bg-emerald-100 text-emerald-700", "Hi\u1EC3n th\u1ECB"],
-    draft: ["bg-slate-200 text-slate-600", "Nh\xE1p"],
-    open: ["bg-blue-100 text-blue-700", "\u0110ang m\u1EDF"],
-    closed: ["bg-slate-200 text-slate-600", "\u0110\xE3 \u0111\xF3ng"]
+    pending: ["bg-amber-100 text-amber-800", "Ch\u1EDD thanh to\xE1n"],
+    paid: ["bg-emerald-100 text-emerald-800", "\u0110\xE3 thanh to\xE1n"],
+    cancelled: ["bg-slate-200 text-slate-700", "\u0110\xE3 hu\u1EF7"],
+    refunded: ["bg-rose-100 text-rose-800", "\u0110\xE3 ho\xE0n ti\u1EC1n"],
+    active: ["bg-emerald-100 text-emerald-800", "Ho\u1EA1t \u0111\u1ED9ng"],
+    banned: ["bg-rose-100 text-rose-800", "B\u1ECB kho\xE1"],
+    published: ["bg-emerald-100 text-emerald-800", "Hi\u1EC3n th\u1ECB"],
+    coming_soon: ["bg-amber-100 text-amber-800", "Ch\u01B0a m\u1EDF b\xE1n"],
+    draft: ["bg-slate-200 text-slate-700", "Nh\xE1p"],
+    open: ["bg-blue-100 text-blue-800", "\u0110ang m\u1EDF"],
+    closed: ["bg-slate-200 text-slate-700", "\u0110\xE3 \u0111\xF3ng"]
   };
-  const [cls, label] = map[status] || ["bg-slate-100 text-slate-600", status];
+  const [cls, label] = map[status] || ["bg-slate-100 text-slate-700", status];
   return /* @__PURE__ */ jsxDEV("span", { class: `inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${cls}`, children: label });
 };
-var PostCard = ({ p }) => /* @__PURE__ */ jsxDEV("article", { class: "group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition", children: [
+var PostCard = ({ p }) => /* @__PURE__ */ jsxDEV("article", { class: "group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:border-indigo-500/30 hover:shadow-xl transition", children: [
   /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, class: "block aspect-[16/9] relative", style: `background:${gradientFor(p.id + 3)}`, children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.title, loading: "lazy", class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/90 text-3xl", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-newspaper" }) }) }),
   /* @__PURE__ */ jsxDEV("div", { class: "p-4", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mb-2 flex items-center gap-3", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9f9dbb] mb-2 flex items-center gap-3", children: [
       /* @__PURE__ */ jsxDEV("span", { children: [
         /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1" }),
         formatDate(p.created_at)
@@ -9371,43 +9450,42 @@ var PostCard = ({ p }) => /* @__PURE__ */ jsxDEV("article", { class: "group bg-w
         p.view_count
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 leading-snug line-clamp-2 mb-2 group-hover:text-brand-600 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, children: p.title }) }),
-    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-slate-500 line-clamp-2 leading-relaxed", children: p.excerpt })
+    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-indigo-400 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, children: p.title }) }),
+    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#9f9dbb] line-clamp-2 leading-relaxed", children: p.excerpt })
   ] })
 ] });
 
 // src/pages/home.tsx
 var BENEFITS = [
-  { icon: "fa-bolt", title: "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7", desc: "Thanh to\xE1n xong nh\u1EADn link t\u1EA3i, link k\xEDch ho\u1EA1t ho\u1EB7c key b\u1EA3n quy\u1EC1n ngay trong t\xE0i kho\u1EA3n, kh\xF4ng c\u1EA7n ch\u1EDD admin." },
-  { icon: "fa-infinity", title: "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", desc: "Mua m\u1ED9t l\u1EA7n d\xF9ng m\xE3i m\xE3i, kh\xF4ng ph\xED \u1EA9n, kh\xF4ng gi\u1EDBi h\u1EA1n th\u1EDDi gian, nh\u1EADn m\u1ECDi b\u1EA3n c\u1EADp nh\u1EADt mi\u1EC5n ph\xED." },
-  { icon: "fa-wand-magic-sparkles", title: "Skill th\u1EF1c chi\u1EBFn, test k\u1EF9", desc: "M\u1ED7i skill, chatbot v\xE0 kh\xF3a h\u1ECDc \u0111\u1EC1u \u0111\xE3 ch\u1EA1y th\u1EF1c t\u1EBF ra video demo b\u1EA1n xem \u0111\u01B0\u1EE3c ngay tr\xEAn trang s\u1EA3n ph\u1EA9m." },
-  { icon: "fa-headset", title: "H\u1ED7 tr\u1EE3 1-1", desc: "\u0110\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 qua Zalo/Ultraview, c\u1EA7m tay ch\u1EC9 vi\u1EC7c \u0111\u1EBFn khi b\u1EA1n t\u1EF1 l\xE0m \u0111\u01B0\u1EE3c video \u0111\u1EA7u ti\xEAn." },
-  { icon: "fa-shield-halved", title: "B\u1EA3o h\xE0nh & ho\xE0n ti\u1EC1n", desc: "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y n\u1EBFu s\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 ho\u1EB7c video demo." },
-  { icon: "fa-rocket", title: "C\u1EADp nh\u1EADt theo model m\u1EDBi", desc: "Skill v\xE0 kh\xF3a h\u1ECDc \u0111\u01B0\u1EE3c n\xE2ng c\u1EA5p li\xEAn t\u1EE5c theo Muse AI, Seedance, Veo, Flow... ho\xE0n to\xE0n mi\u1EC5n ph\xED." }
+  { icon: "fa-bolt", title: "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7", desc: "Thanh to\xE1n xong nh\u1EADn ngay b\u1ED9 t\xE0i li\u1EC7u Skill, prompt chu\u1EA9n v\xE0 quy tr\xECnh chi ti\u1EBFt trong t\xE0i kho\u1EA3n, kh\xF4ng c\u1EA7n ch\u1EDD admin." },
+  { icon: "fa-infinity", title: "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", desc: "Mua m\u1ED9t l\u1EA7n d\xF9ng m\xE3i m\xE3i, kh\xF4ng ph\xED \u1EA9n, nh\u1EADn m\u1ECDi b\u1EA3n c\u1EADp nh\u1EADt prompt & quy tr\xECnh m\u1EDBi ho\xE0n to\xE0n mi\u1EC5n ph\xED." },
+  { icon: "fa-wand-magic-sparkles", title: "Skill th\u1EF1c chi\u1EBFn, test k\u1EF9", desc: "T\u1EA5t c\u1EA3 5 b\u1ED9 Skill AI \u0111ang m\u1EDF b\xE1n \u0111\u1EC1u \u0111\xE3 ch\u1EA1y th\u1EF1c t\u1EBF ra video demo xem ngay tr\xEAn trang s\u1EA3n ph\u1EA9m." },
+  { icon: "fa-headset", title: "H\u1ED7 tr\u1EE3 1-1 qua Zalo", desc: "\u0110\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 c\u1EA7m tay ch\u1EC9 vi\u1EC7c \u0111\u1EBFn khi b\u1EA1n \xE1p d\u1EE5ng Skill \u0111\u1EC3 t\u1EA1o \u0111\u01B0\u1EE3c video \u0111\u1EA7u ti\xEAn." },
+  { icon: "fa-shield-halved", title: "B\u1EA3o h\xE0nh & ho\xE0n ti\u1EC1n", desc: "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y n\u1EBFu n\u1ED9i dung Skill kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 ho\u1EB7c video demo." },
+  { icon: "fa-rocket", title: "C\u1EADp nh\u1EADt theo model m\u1EDBi", desc: "B\u1ED9 Skill \u0111\u01B0\u1EE3c tinh ch\u1EC9nh li\xEAn t\u1EE5c theo Muse AI, Seedance 2.5, Veo 3, Flow... ho\xE0n to\xE0n mi\u1EC5n ph\xED." }
 ];
 var STEPS = [
   { n: "01", icon: "fa-user-plus", title: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n", desc: "T\u1EA1o t\xE0i kho\u1EA3n mi\u1EC5n ph\xED ch\u1EC9 v\u1EDBi email trong 30 gi\xE2y." },
-  { n: "02", icon: "fa-cart-shopping", title: "Ch\u1ECDn s\u1EA3n ph\u1EA9m", desc: "Xem video demo, \u0111\u1ECDc m\xF4 t\u1EA3 chi ti\u1EBFt r\u1ED3i th\xEAm v\xE0o gi\u1ECF h\xE0ng." },
-  { n: "03", icon: "fa-qrcode", title: "Thanh to\xE1n QR", desc: "Qu\xE9t m\xE3 VietQR chuy\u1EC3n kho\u1EA3n, h\u1EC7 th\u1ED1ng x\xE1c nh\u1EADn nhanh ch\xF3ng." },
-  { n: "04", icon: "fa-download", title: "Nh\u1EADn s\u1EA3n ph\u1EA9m", desc: 'Link t\u1EA3i + license key xu\u1EA5t hi\u1EC7n ngay trong "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' }
+  { n: "02", icon: "fa-cart-shopping", title: "Ch\u1ECDn b\u1ED9 Skill AI", desc: "Xem video demo th\u1EF1c t\u1EBF, \u0111\u1ECDc chi ti\u1EBFt ng\xE1ch r\u1ED3i th\xEAm v\xE0o gi\u1ECF." },
+  { n: "03", icon: "fa-qrcode", title: "Thanh to\xE1n VietQR", desc: "Qu\xE9t m\xE3 VietQR chuy\u1EC3n kho\u1EA3n, h\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng x\xE1c nh\u1EADn 24/7." },
+  { n: "04", icon: "fa-download", title: "Nh\u1EADn link t\u1EA3i Skill", desc: 'Link t\u1EA3i + m\xE3 k\xEDch ho\u1EA1t xu\u1EA5t hi\u1EC7n ngay trong "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' }
 ];
 var FAQS = [
-  { q: "Mua kh\xF3a h\u1ECDc / skill th\xEC t\xF4i nh\u1EADn \u0111\u01B0\u1EE3c g\xEC?", a: "B\u1EA1n nh\u1EADn to\xE0n b\u1ED9 n\u1ED9i dung s\u1ED1 c\u1EE7a s\u1EA3n ph\u1EA9m: video b\xE0i gi\u1EA3ng + t\xE0i li\u1EC7u v\u1EDBi kh\xF3a h\u1ECDc; b\u1ED9 prompt, quy tr\xECnh v\xE0 file c\u1EA5u h\xECnh v\u1EDBi skill; link chatbot ri\xEAng v\u1EDBi chatbot; b\u1ED9 c\xE0i/app v\u1EDBi app. T\u1EA5t c\u1EA3 \u0111\u01B0\u1EE3c giao t\u1EF1 \u0111\u1ED9ng ngay sau khi thanh to\xE1n." },
-  { q: "T\xF4i kh\xF4ng bi\u1EBFt g\xEC v\u1EC1 AI th\xEC c\xF3 h\u1ECDc \u0111\u01B0\u1EE3c kh\xF4ng?", a: "C\xF3. M\u1ED7i kh\xF3a h\u1ECDc v\xE0 skill \u0111\u1EC1u thi\u1EBFt k\u1EBF cho ng\u01B0\u1EDDi m\u1EDBi: xem video demo tr\u01B0\u1EDBc khi mua, l\xE0m theo t\u1EEBng b\u01B0\u1EDBc c\xF3 h\xECnh \u1EA3nh minh ho\u1EA1. Ngo\xE0i ra ch\xFAng t\xF4i h\u1ED7 tr\u1EE3 1-1 qua Zalo n\u1EBFu b\u1EA1n c\u1EA7n." },
-  { q: "Skill t\u1EA1o video AI ho\u1EA1t \u0111\u1ED9ng nh\u01B0 th\u1EBF n\xE0o?", a: "Sau khi mua, b\u1EA1n nh\u1EADn b\u1ED9 skill g\u1ED3m prompt, quy tr\xECnh v\xE0 file c\u1EA5u h\xECnh cho \u0111\xFAng ng\xE1ch c\u1EE7a m\xECnh (Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Fitness...). Ch\u1EC9 c\u1EA7n l\xE0m theo l\xE0 ra video 30s \u0111\xFAng chu\u1EA9n \u0111\u1EC3 build page Reels/TikTok." },
-  { q: "Thanh to\xE1n xong bao l\xE2u th\xEC nh\u1EADn \u0111\u01B0\u1EE3c h\xE0ng?", a: 'H\u1EC7 th\u1ED1ng giao t\u1EF1 \u0111\u1ED9ng. Ngay khi \u0111\u01A1n h\xE0ng \u0111\u01B0\u1EE3c x\xE1c nh\u1EADn thanh to\xE1n, link t\u1EA3i v\xE0 license key s\u1EBD xu\u1EA5t hi\u1EC7n trong m\u1EE5c "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' },
-  { q: "C\xF3 \u0111\u01B0\u1EE3c h\u1ED7 tr\u1EE3 khi g\u1EB7p l\u1ED7i kh\xF4ng?", a: "C\xF3. M\u1ED7i s\u1EA3n ph\u1EA9m \u0111i k\xE8m h\u1ED7 tr\u1EE3 qua Zalo. V\u1EDBi g\xF3i Combo All-In-One b\u1EA1n c\xF2n \u0111\u01B0\u1EE3c \u01B0u ti\xEAn h\u1ED7 tr\u1EE3 1-1 tr\u1EF1c ti\u1EBFp." },
-  { q: "T\xF4i c\xF3 th\u1EC3 d\xF9ng skill cho nhi\u1EC1u k\xEAnh kh\xF4ng?", a: "C\xF3. Skill mua m\u1ED9t l\u1EA7n d\xF9ng kh\xF4ng gi\u1EDBi h\u1EA1n cho m\u1ECDi k\xEAnh TikTok, Reels, YouTube Shorts c\u1EE7a ch\xEDnh b\u1EA1n." }
+  { q: "Mua Skill AI th\xEC t\xF4i nh\u1EADn \u0111\u01B0\u1EE3c nh\u1EEFng g\xEC?", a: "B\u1EA1n nh\u1EADn tr\u1ECDn b\u1ED9 t\xE0i li\u1EC7u s\u1ED1 c\u1EE7a Skill: file c\u1EA5u h\xECnh/prompt chu\u1EA9n ho\xE1 theo ng\xE1ch, quy tr\xECnh t\u1EEBng b\u01B0\u1EDBc t\u1EA1o video 30s, checklist d\u1EF1ng clip & \u0111\u0103ng page, c\xF9ng link h\u01B0\u1EDBng d\u1EABn th\u1EF1c h\xE0nh. Giao t\u1EF1 \u0111\u1ED9ng ngay sau khi thanh to\xE1n." },
+  { q: "T\xF4i ch\u01B0a t\u1EEBng l\xE0m video AI th\xEC c\xF3 d\xF9ng \u0111\u01B0\u1EE3c Skill kh\xF4ng?", a: "Ho\xE0n to\xE0n \u0111\u01B0\u1EE3c. M\u1ED7i b\u1ED9 Skill \u0111\u1EC1u vi\u1EBFt s\u1EB5n c\xF4ng th\u1EE9c t\u1EEBng b\u01B0\u1EDBc cho ng\u01B0\u1EDDi m\u1EDBi, k\xE8m v\xED d\u1EE5 prompt th\u1EF1c t\u1EBF v\xE0 h\u1ED7 tr\u1EE3 qua Zalo n\u1EBFu b\u1EA1n g\u1EB7p v\u01B0\u1EDBng m\u1EAFc." },
+  { q: "C\xE1c d\u1ECBch v\u1EE5 Kh\xF3a h\u1ECDc, Chatbot, App Video AI khi n\xE0o m\u1EDF b\xE1n?", a: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng t\u1EADp trung m\u1EDF b\xE1n tr\u01B0\u1EDBc 5 b\u1ED9 Skill AI ho\xE0n thi\u1EC7n nh\u1EA5t. C\xE1c h\u1EA1ng m\u1EE5c Kh\xF3a h\u1ECDc Video AI, Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n, App l\xE0m video v\xE0 Combo \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n \u0111\u1EC3 ho\xE0n thi\u1EC7n ch\u1EA5t l\u01B0\u1EE3ng tr\u01B0\u1EDBc khi ph\xE1t h\xE0nh." },
+  { q: "Thanh to\xE1n xong bao l\xE2u th\xEC nh\u1EADn \u0111\u01B0\u1EE3c h\xE0ng?", a: 'H\u1EC7 th\u1ED1ng giao t\u1EF1 \u0111\u1ED9ng 24/7. Ngay khi chuy\u1EC3n kho\u1EA3n \u0111\xFAng m\xE3 \u0111\u01A1n h\xE0ng v\xE0 h\u1EC7 th\u1ED1ng x\xE1c nh\u1EADn th\xE0nh c\xF4ng, link t\u1EA3i xu\u1EA5t hi\u1EC7n l\u1EADp t\u1EE9c trong m\u1EE5c "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' },
+  { q: "T\xF4i c\xF3 th\u1EC3 d\xF9ng Skill cho nhi\u1EC1u k\xEAnh TikTok/Reels kh\xF4ng?", a: "C\xF3. Skill mua m\u1ED9t l\u1EA7n s\u1EED d\u1EE5ng kh\xF4ng gi\u1EDBi h\u1EA1n cho m\u1ECDi k\xEAnh c\xE1 nh\xE2n v\xE0 k\xEAnh b\xE1n h\xE0ng c\u1EE7a ch\xEDnh b\u1EA1n." }
 ];
 var R2_BASE = "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev";
 var DEMO_VIDEOS = [
   {
     id: "muse-ai",
-    title: "Kh\xF3a H\u1ECDc Video Muse AI \u2014 T\u1EEB Prompt \u0110\u1EBFn Video 10s Chu\u1EA9n Viral",
-    shortTitle: "Kh\xF3a h\u1ECDc Muse AI Pro 30s",
-    tag: "Kh\xF3a h\u1ECDc",
+    title: "Skill Video Muse AI Pro \u2014 T\u1EEB Prompt \u0110\u1EBFn Video 10s Chu\u1EA9n Viral",
+    shortTitle: "Skill Muse AI Pro 30s",
+    tag: "Skill AI",
     dur: "0:30",
-    desc: "H\u1ECDc l\xE0m video AI b\u1EB1ng Muse AI t\u1EEB A-Z: vi\u1EBFt prompt kh\xF3a nh\xE2n v\u1EADt, render clip 10s c\xF3 lip-sync ti\u1EBFng Vi\u1EC7t t\u1EF1 nhi\xEAn, gh\xE9p th\xE0nh video ho\xE0n ch\u1EC9nh.",
+    desc: "B\u1ED9 Skill l\xE0m video AI b\u1EB1ng Muse AI t\u1EEB A-Z: c\xF4ng th\u1EE9c prompt kh\xF3a nh\xE2n v\u1EADt, render clip 10s lip-sync ti\u1EBFng Vi\u1EC7t t\u1EF1 nhi\xEAn, gh\xE9p th\xE0nh video ho\xE0n ch\u1EC9nh.",
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
     slug: "khoa-hoc-video-muse-ai",
@@ -9416,11 +9494,11 @@ var DEMO_VIDEOS = [
   },
   {
     id: "seedance-25",
-    title: "Kh\xF3a H\u1ECDc Video Seedance 2.5 \u2014 One-Take 30s Build Page",
-    shortTitle: "Seedance 2.5 \xB7 One-Take 30s",
-    tag: "Kh\xF3a h\u1ECDc",
+    title: "Skill Video Seedance 2.5 \u2014 One-Take 30s Build Page",
+    shortTitle: "Skill Seedance 2.5 \xB7 30s",
+    tag: "Skill AI",
     dur: "0:30",
-    desc: "L\xE0m ch\u1EE7 Seedance 2.5: quay one-take 30 gi\xE2y nh\xE2n v\u1EADt gi\u1EEF nguy\xEAn, \xE2m thanh native \u2014 c\xF4ng th\u1EE9c build page Reels/TikTok l\xEAn nhanh.",
+    desc: "B\u1ED9 Skill l\xE0m ch\u1EE7 Seedance 2.5: quay one-take 30 gi\xE2y nh\xE2n v\u1EADt gi\u1EEF nguy\xEAn, \xE2m thanh native \u2014 c\xF4ng th\u1EE9c build page Reels/TikTok l\xEAn nhanh.",
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
     slug: "khoa-hoc-video-seedance-25-30s",
@@ -9468,7 +9546,8 @@ var DEMO_VIDEOS = [
   }
 ];
 var HomePage = (props) => {
-  const { categories, featured, hot, newest, combos, posts, reviews, stats } = props;
+  const { categories, featured, hot, newest, comingSoon, posts, reviews, stats } = props;
+  const siteName = props.settings?.site_name || "KhoSkill AI";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "home", children: [
     /* @__PURE__ */ jsxDEV("section", { id: "hero-section", class: "relative bg-slate-950 text-white overflow-hidden", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
@@ -9477,35 +9556,37 @@ var HomePage = (props) => {
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" }),
-            "\u0110\xE3 c\xF3 ",
+            "\u0110ang m\u1EDF b\xE1n ",
             /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300", children: [
-              stats.sold.toLocaleString("vi-VN"),
-              "+"
+              stats.products,
+              " Skill AI"
             ] }),
-            " l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
+            " \u2014 ",
+            stats.sold.toLocaleString("vi-VN"),
+            "+ l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
           ] }),
           /* @__PURE__ */ jsxDEV("h1", { class: "text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5", children: [
             "Kho ",
-            /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent", children: "Chatbot, Skill & App AI" }),
-            " l\xE0m video s\u1ED1 1 Vi\u1EC7t Nam"
+            /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent", children: "Skill AI L\xE0m Video" }),
+            " th\u1EF1c chi\u1EBFn s\u1ED1 1 Vi\u1EC7t Nam"
           ] }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl", children: "Kh\xF3a h\u1ECDc, skill, chatbot v\xE0 app l\xE0m video AI: Video Muse AI, Seedance 2.5 30s, Google Flow Veo \u2014 k\xE8m skill theo ng\xE1ch Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Affiliate Fitness. Mua m\u1ED9t l\u1EA7n \u2014 s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi \u2014 giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7." }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl", children: "M\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn l\xE0m video 30s chu\u1EA9n viral: Muse AI Pro, Seedance 2.5, Thu\u1EF7 Sinh, DIY L\xE0m V\u01B0\u1EDDn, Affiliate Fitness. Mua m\u1ED9t l\u1EA7n \u2014 s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi \u2014 giao link t\u1EA3i t\u1EF1 \u0111\u1ED9ng 24/7." }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-3 mb-9", children: [
-            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes" }),
-              "Xem t\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m"
+            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }),
+              "Xem 5 Skill \u0111ang m\u1EDF b\xE1n"
             ] }),
             /* @__PURE__ */ jsxDEV("a", { href: "#theater", id: "heroTrailerBtn", class: "h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg", children: [
               /* @__PURE__ */ jsxDEV("span", { class: "w-6 h-6 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5" }) }),
-              "Xem trailer 30s"
+              "Xem demo 30s"
             ] }),
-            /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-open text-amber-400" }),
-              "Combo -60%"
+            comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("a", { href: "#coming-soon-section", class: "h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400" }),
+              "D\u1ECBch v\u1EE5 s\u1EAFp m\u1EDF"
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-3 gap-4 max-w-md", children: [
-            ["fa-cube", stats.products + "+", "S\u1EA3n ph\u1EA9m"],
+            ["fa-wand-magic-sparkles", stats.products + " Skill", "\u0110ang m\u1EDF b\xE1n"],
             ["fa-users", stats.users.toLocaleString("vi-VN") + "+", "Kh\xE1ch h\xE0ng"],
             ["fa-star", "4.9/5", "\u0110\xE1nh gi\xE1"]
           ].map(([icon, num, label]) => /* @__PURE__ */ jsxDEV("div", { class: "text-center p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur", children: [
@@ -9590,7 +9671,7 @@ var HomePage = (props) => {
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { class: "short-actions", id: "shortActions", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "short-avatar-box", id: "shortAvatarBox", children: [
-                    /* @__PURE__ */ jsxDEV("img", { src: "https://api.dicebear.com/7.x/bottts/svg?seed=webskill1", alt: "Avatar", class: "short-avatar-img", id: "shortAvatarImg" }),
+                    /* @__PURE__ */ jsxDEV("img", { src: "https://api.dicebear.com/7.x/bottts/svg?seed=khoskill1", alt: "Avatar", class: "short-avatar-img", id: "shortAvatarImg" }),
                     /* @__PURE__ */ jsxDEV("button", { class: "short-follow-plus", id: "shortFollowPlus", title: "Theo d\xF5i", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plus" }) })
                   ] }),
                   /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortLikeBtn", role: "button", title: "Th\xEDch", children: [
@@ -9613,14 +9694,14 @@ var HomePage = (props) => {
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { class: "short-bottom-info", id: "shortBottomInfo", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "short-author-row", id: "shortAuthorRow", children: [
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-author-handle", id: "shortAuthorHandle", children: "@webskill.ai" }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "short-author-handle", id: "shortAuthorHandle", children: "@khoskill.ai" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "short-verified-badge", id: "shortVerifiedBadge", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-sky-400" }) }),
                     /* @__PURE__ */ jsxDEV("button", { class: "short-follow-pill", id: "shortFollowPill", children: "Theo d\xF5i" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("p", { class: "short-caption", id: "shortCaption", children: "L\xE0m video AI 30s li\u1EC1n m\u1EA1ch ch\u1EC9 v\u1EDBi 1 prompt chu\u1EA9n viral \u{1F680} Kh\xF3a nh\xE2n v\u1EADt c\u1EF1c \u0111\u1EC9nh #MuseAI #AIVideo #TikTokViral" }),
+                  /* @__PURE__ */ jsxDEV("p", { class: "short-caption", id: "shortCaption", children: "Skill l\xE0m video AI 30s li\u1EC1n m\u1EA1ch ch\u1EC9 v\u1EDBi 1 prompt chu\u1EA9n viral \u{1F680} Kh\xF3a nh\xE2n v\u1EADt c\u1EF1c \u0111\u1EC9nh #MuseAI #AIVideo #SkillAI" }),
                   /* @__PURE__ */ jsxDEV("div", { class: "short-music-track", id: "shortMusicTrack", children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-music text-[10px] animate-pulse" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-music-title", id: "shortMusicTitle", children: "\u266B WebSkill AI - \xC2m thanh g\u1ED1c" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "short-music-title", id: "shortMusicTitle", children: "\u266B KhoSkill AI - \xC2m thanh g\u1ED1c" })
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { class: "short-progress-track", id: "heroProgressTrack", children: /* @__PURE__ */ jsxDEV("div", { class: "short-progress-fill", id: "heroProgressFill" }) })
@@ -9752,45 +9833,27 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4", children: categories.map((c) => /* @__PURE__ */ jsxDEV(CategoryCard, { c })) })
     ] }),
     featured.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "featured-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { title: "S\u1EA3n ph\u1EA9m n\u1ED5i b\u1EADt", subtitle: "\u0110\u01B0\u1EE3c l\u1EF1a ch\u1ECDn nhi\u1EC1u nh\u1EA5t b\u1EDFi c\u1ED9ng \u0111\u1ED3ng l\xE0m video AI", more: { href: "/san-pham?sort=featured", label: "Xem th\xEAm" } }),
+      /* @__PURE__ */ jsxDEV(SectionTitle, { title: "5 Skill AI \u0111ang m\u1EDF b\xE1n", subtitle: "B\u1ED9 5 Skill th\u1EF1c chi\u1EBFn t\u1EA1o video 30s \u2014 \u0111\xE3 test ra demo, mua l\xE0 d\xF9ng ngay", more: { href: "/san-pham?type=skill", label: "Xem t\u1EA5t c\u1EA3" } }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) })
     ] }),
-    combos.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "combo-section", class: "max-w-7xl mx-auto px-4 py-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-br from-[#0f0e26] via-[#1a184c] to-[#080716] p-7 md:p-10 text-white relative overflow-hidden border border-[#1f1b4b]", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh opacity-40" }),
+    comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "coming-soon-section", class: "max-w-7xl mx-auto px-4 py-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-br from-[#0f0e26] via-[#1a184c]/70 to-[#080716] p-7 md:p-10 text-white relative overflow-hidden border border-[#1f1b4b]", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh opacity-30" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-end justify-between gap-4 mb-7", children: [
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500 text-xs font-bold mb-3 pulse-ring", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire" }),
-              "TI\u1EBET KI\u1EC6M \u0110\u1EBEN 60%"
+            /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold mb-3", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
+              "D\u1ECACH V\u1EE4 T\u1EA0M TH\u1EDCI CH\u01AFA M\u1EDE B\xC1N"
             ] }),
-            /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold tracking-tight", children: "Combo tr\u1ECDn b\u1ED9 \u2014 gi\xE1 c\u1EF1c h\u1EDDi" }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] mt-1.5 text-sm md:text-base", children: "Mua g\xF3i thay v\xEC mua l\u1EBB, ti\u1EBFt ki\u1EC7m h\xE0ng tri\u1EC7u \u0111\u1ED3ng" })
+            /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold tracking-tight", children: "Kh\xF3a h\u1ECDc, Chatbot, App & Combo s\u1EAFp ra m\u1EAFt" }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] mt-1.5 text-sm md:text-base", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng ch\u1EC9 m\u1EDF b\xE1n 5 b\u1ED9 Skill AI. C\xE1c d\u1ECBch v\u1EE5 kh\xE1c s\u1EBD s\u1EDBm m\u1EDF b\xE1n trong th\u1EDDi gian t\u1EDBi." })
           ] }),
-          /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition", children: [
-            "Xem t\u1EA5t c\u1EA3 combo",
+          /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "cta-white h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition", children: [
+            "Nh\u1EAFn Zalo nh\u1EADn l\u1ECBch m\u1EDF b\xE1n",
             /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs" })
           ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-3 gap-4", children: combos.slice(0, 3).map((c) => {
-          const off = c.original_price ? Math.round((c.original_price - c.price) / c.original_price * 100) : 0;
-          return /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${c.slug}`, class: "group p-5 rounded-2xl bg-[#080716]/60 backdrop-blur border border-[#1f1b4b] hover:bg-white/5 transition", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "flex items-start justify-between gap-2 mb-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-amber-400/10 text-amber-300 grid place-items-center", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-open" }) }),
-              off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-rose-500 text-[11px] font-bold", children: [
-                "-",
-                off,
-                "%"
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold leading-snug mb-2 line-clamp-2 group-hover:text-indigo-400 transition", children: c.name }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9f9dbb] line-clamp-2 mb-3.5 leading-relaxed", children: c.short_desc }),
-            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "text-base font-extrabold text-amber-400", children: formatVND(c.price) }),
-              c.original_price && /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-slate-500 line-through", children: formatVND(c.original_price) })
-            ] })
-          ] });
-        }) })
+        /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-4", children: comingSoon.slice(0, 4).map((c) => /* @__PURE__ */ jsxDEV(ProductCard, { p: c, compact: true })) })
       ] })
     ] }) }),
     /* @__PURE__ */ jsxDEV("section", { id: "hot-new-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
@@ -9808,7 +9871,7 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "tab-panel hidden", "data-tab": "new", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: newest.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) })
     ] }),
     /* @__PURE__ */ jsxDEV("section", { id: "benefits-section", class: "bg-[#0f0e26]/60 border-y border-[#1f1b4b] py-16 mt-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "L\u1EE3i \xEDch khi mua t\u1EA1i WebSkill AI", subtitle: "Tr\u1EA3i nghi\u1EC7m tuy\u1EC7t v\u1EDDi c\xF9ng nh\u1EEFng \u01B0u \u0111i\u1EC3m v\u01B0\u1EE3t tr\u1ED9i" }),
+      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: `L\u1EE3i \xEDch khi mua t\u1EA1i ${siteName}`, subtitle: "Tr\u1EA3i nghi\u1EC7m tuy\u1EC7t v\u1EDDi c\xF9ng nh\u1EEFng \u01B0u \u0111i\u1EC3m v\u01B0\u1EE3t tr\u1ED9i" }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8", children: BENEFITS.map((b) => /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl border border-[#1f1b4b] bg-[#0f0e26] hover:border-indigo-500/20 hover:shadow-lg transition group", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-lg mb-4 shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${b.icon}` }) }),
         /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1.5", children: b.title }),
@@ -9816,7 +9879,7 @@ var HomePage = (props) => {
       ] })) })
     ] }) }),
     /* @__PURE__ */ jsxDEV("section", { id: "how-section", class: "max-w-7xl mx-auto px-4 py-16 reveal", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "Mua h\xE0ng ch\u1EC9 4 b\u01B0\u1EDBc", subtitle: "\u0110\u01A1n gi\u1EA3n, nhanh ch\xF3ng, nh\u1EADn source code ngay l\u1EADp t\u1EE9c" }),
+      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "Mua h\xE0ng ch\u1EC9 4 b\u01B0\u1EDBc", subtitle: "\u0110\u01A1n gi\u1EA3n, nhanh ch\xF3ng, nh\u1EADn link t\u1EA3i & t\xE0i li\u1EC7u Skill ngay l\u1EADp t\u1EE9c" }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8 relative", children: STEPS.map((s, i) => /* @__PURE__ */ jsxDEV("div", { class: "relative p-6 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] text-center", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-slate-800 text-white text-xs font-bold", children: s.n }),
         /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 grid place-items-center text-xl mx-auto mt-2 mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${s.icon}` }) }),
@@ -9866,7 +9929,7 @@ var HomePage = (props) => {
         /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-4xl font-extrabold mb-3 tracking-tight", children: "S\u1EB5n s\xE0ng b\u1EAFt \u0111\u1EA7u ki\u1EBFm ti\u1EC1n v\u1EDBi video AI?" }),
         /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 mb-7 max-w-2xl mx-auto", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn ng\u01B0\u1EDDi \u0111ang d\xF9ng c\xF4ng c\u1EE5 c\u1EE7a ch\xFAng t\xF4i \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng m\u1ED7i ng\xE0y." }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap justify-center gap-3", children: [
-          /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white text-indigo-900 font-bold hover:bg-slate-100 transition shadow-xl", children: [
+          /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "cta-white h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white text-indigo-900 font-bold hover:bg-slate-100 transition shadow-xl", children: [
             /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-plus" }),
             "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED"
           ] }),
@@ -9891,7 +9954,11 @@ var SORTS = [
 ];
 var TYPES = [
   ["", "T\u1EA5t c\u1EA3 lo\u1EA1i"],
-  ...Object.entries(PRODUCT_TYPE_LABEL)
+  ["skill", "Skill AI (\u0110ang m\u1EDF b\xE1n)"],
+  ["course", "Kh\xF3a h\u1ECDc (S\u1EAFp m\u1EDF)"],
+  ["chatbot", "Chatbot (S\u1EAFp m\u1EDF)"],
+  ["app", "App Video AI (S\u1EAFp m\u1EDF)"],
+  ["combo", "Combo (S\u1EAFp m\u1EDF)"]
 ];
 var ProductListPage = (props) => {
   const {
@@ -10022,13 +10089,23 @@ var ProductListPage = (props) => {
                 /* @__PURE__ */ jsxDEV("b", { class: "bg-white/20 px-1.5 py-0.5 rounded font-mono", children: "WELCOME10" }),
                 " cho \u0111\u01A1n \u0111\u1EA7u ti\xEAn t\u1EEB 100k."
               ] }),
-              /* @__PURE__ */ jsxDEV("button", { "data-copy": "WELCOME10", class: "w-full h-9 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md", children: [
+              /* @__PURE__ */ jsxDEV("button", { "data-copy": "WELCOME10", class: "cta-white w-full h-9 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1" }),
                 "Sao ch\xE9p m\xE3"
               ] })
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
+            (baseUrl === "/combo" || ["course", "chatbot", "app", "combo"].includes(type) || currentCategory && currentCategory.slug !== "skill-video-ai") && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs sm:text-sm text-amber-200 leading-relaxed", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400 mr-2" }),
+                /* @__PURE__ */ jsxDEV("b", { children: "H\u1EA1ng m\u1EE5c n\xE0y t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n." }),
+                " Hi\u1EC7n t\u1EA1i c\u1EEDa h\xE0ng ch\u1EC9 m\u1EDF b\xE1n b\u1ED9 ",
+                /* @__PURE__ */ jsxDEV("b", { children: "5 Skill AI" }),
+                " l\xE0m video ho\xE0n thi\u1EC7n b\xEAn d\u01B0\u1EDBi."
+              ] }),
+              /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition shrink-0", children: "Xem 5 Skill \u0111ang b\xE1n \u2192" })
+            ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-3 mb-5", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
                 q && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold", children: [
@@ -10082,9 +10159,11 @@ var ProductDetailPage = (props) => {
   const tech = parseJSON(p.tech_stack, []);
   const gallery = parseJSON(p.gallery, []);
   const save = (p.original_price || 0) - p.price;
-  const isMp4 = !!p.demo_video_url && /\.mp4(\?|$)/i.test(p.demo_video_url);
+  const isMp4 = isDirectVideoUrl(p.demo_video_url) || !!p.demo_video_url?.includes("/videos/");
+  const embedVideoUrl = isMp4 ? p.demo_video_url : toEmbedVideoUrl(p.demo_video_url);
   const replacedPoster = isMp4 ? p.demo_video_url.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, "/videos/posters/poster-$2.jpg") : void 0;
   const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : void 0;
+  const comingSoon = p.status === "coming_soon";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "products", title: p.name, description: p.short_desc, ogImage: p.thumbnail || void 0, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] border-b border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 pt-6 pb-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [
@@ -10097,17 +10176,11 @@ var ProductDetailPage = (props) => {
           p.demo_video_url ? (
             /* Vertical Phone Mockup Player */
             /* @__PURE__ */ jsxDEV("div", { class: "vertical-player-wrapper mx-auto mb-4 border-4 border-[#1f1b4b] shadow-2xl relative", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-overlay", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-header", children: [
-                  /* @__PURE__ */ jsxDEV("span", { class: "text-xs font-semibold text-white tracking-wider bg-black/40 px-2.5 py-1 rounded", children: "VIDEO DEMO" }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-actions", children: /* @__PURE__ */ jsxDEV("button", { class: "video-mockup-btn btn-vol", title: "\xC2m thanh", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-up" }) }) })
-                ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-footer", children: /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-info", children: [
-                  /* @__PURE__ */ jsxDEV("p", { class: "text-sm font-bold text-white", children: "@webskill.ai" }),
-                  /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/90 mt-1 line-clamp-1", children: p.name })
-                ] }) })
-              ] }),
-              isMp4 ? /* @__PURE__ */ jsxDEV("video", { src: p.demo_video_url, poster: demoPoster, class: "w-full h-full border-none bg-black", controls: true, playsinline: true, preload: "metadata" }) : /* @__PURE__ */ jsxDEV("iframe", { src: p.demo_video_url, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true })
+              /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-overlay", children: /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-header", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-white tracking-wider bg-black/50 backdrop-blur px-2.5 py-1 rounded", children: "VIDEO DEMO" }),
+                isMp4 && /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-actions", children: /* @__PURE__ */ jsxDEV("button", { type: "button", class: "video-mockup-btn btn-vol", title: "B\u1EADt / t\u1EAFt \xE2m thanh", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-high" }) }) })
+              ] }) }),
+              isMp4 ? /* @__PURE__ */ jsxDEV("video", { src: p.demo_video_url, poster: demoPoster, class: "w-full h-full border-none bg-black", controls: true, playsinline: true, preload: "metadata" }) : /* @__PURE__ */ jsxDEV("iframe", { src: embedVideoUrl, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true })
             ] })
           ) : p.thumbnail ? /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] relative shadow-lg", children: /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) }) : /* @__PURE__ */ jsxDEV(
             "div",
@@ -10164,11 +10237,16 @@ var ProductDetailPage = (props) => {
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-3", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold", children: PRODUCT_TYPE_LABEL[p.product_type] }),
             p.category_name && /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${p.category_slug}`, class: "px-2.5 py-1 rounded bg-[#16143c] text-slate-300 text-xs font-medium hover:text-white hover:bg-white/5 transition", children: p.category_name }),
-            p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-orange-500/15 text-orange-400 text-xs font-bold", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire mr-1 animate-pulse" }),
-              "HOT"
-            ] }),
-            p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 text-xs font-bold", children: "M\u1EDAI" })
+            comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1" }),
+              "CH\u01AFA M\u1EDE B\xC1N"
+            ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+              p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-orange-500/15 text-orange-400 text-xs font-bold", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire mr-1 animate-pulse" }),
+                "HOT"
+              ] }),
+              p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 text-xs font-bold", children: "M\u1EDAI" })
+            ] })
           ] }),
           /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3 glow-text-brand", children: p.name }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-4 text-xs mb-4", children: [
@@ -10227,19 +10305,18 @@ var ProductDetailPage = (props) => {
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-[#16143c]/60 border border-[#1f1b4b] p-4 rounded-xl", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between text-xs mb-2", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "text-rose-400 font-bold flex items-center gap-1", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "inline-block w-2 h-2 rounded-full bg-rose-500 animate-pulse" }),
-                "\u01AFu \u0111\xE3i s\u1EAFp h\u1EBFt h\u1EA1n!"
-              ] }),
-              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-300 font-medium", children: [
-                "Ch\u1EC9 c\xF2n ",
-                /* @__PURE__ */ jsxDEV("b", { children: "7/20" }),
-                " l\u01B0\u1EE3t t\u1EA3i \u01B0u \u0111\xE3i"
-              ] })
+          comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-amber-300 flex items-center gap-2 mb-1", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
+              "S\u1EA3n ph\u1EA9m hi\u1EC7n \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n"
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "w-full h-2.5 rounded-full bg-[#080716] overflow-hidden p-0.5 border border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV("div", { class: "h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full", style: "width: 65%;" }) })
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-amber-200/80 leading-relaxed", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng \u0111ang \u01B0u ti\xEAn m\u1EDF b\xE1n 5 b\u1ED9 Skill AI ho\xE0n thi\u1EC7n nh\u1EA5t. H\xE3y nh\u1EAFn Zalo ho\u1EB7c quay l\u1EA1i sau \u0111\u1EC3 c\u1EADp nh\u1EADt ng\xE0y ph\xE1t h\xE0nh ch\xEDnh th\u1EE9c." })
+          ] }) : /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl flex items-center justify-between gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-indigo-200 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-emerald-400" }),
+              /* @__PURE__ */ jsxDEV("span", { children: "Thanh to\xE1n VietQR t\u1EF1 \u0111\u1ED9ng 24/7 \u2014 nh\u1EADn link t\u1EA3i Skill ngay l\u1EADp t\u1EE9c." })
+            ] }),
+            /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold shrink-0", children: "C\xF2n h\xE0ng" })
           ] }),
           owned ? /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 mb-4", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-emerald-400 font-bold mb-2", children: [
@@ -10250,6 +10327,37 @@ var ProductDetailPage = (props) => {
             /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition", children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download" }),
               "Truy c\u1EADp s\u1EA3n ph\u1EA9m"
+            ] })
+          ] }) : comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
+            /* @__PURE__ */ jsxDEV("button", { type: "button", disabled: true, class: "w-full h-12 rounded-xl bg-[#16143c] border border-[#28235d] text-amber-300 font-bold text-sm cursor-not-allowed", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1.5" }),
+              "T\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n"
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-2.5", children: [
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: `https://zalo.me/${settings?.zalo || ""}`,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-bold text-xs transition",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bell" }),
+                    "Nh\u1EAFn Zalo nh\u1EADn l\u1ECBch m\u1EDF b\xE1n"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: "/san-pham?type=skill",
+                  class: "flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 font-bold text-xs transition",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }),
+                    "Xem 5 Skill \u0111ang b\xE1n"
+                  ]
+                }
+              )
             ] })
           ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2.5", children: [
@@ -10432,9 +10540,9 @@ var ProductDetailPage = (props) => {
           ] }),
           /* @__PURE__ */ jsxDEV("h3", { children: "B\u1EA3n quy\u1EC1n s\u1EED d\u1EE5ng" }),
           /* @__PURE__ */ jsxDEV("ul", { children: [
-            /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c d\xF9ng cho d\u1EF1 \xE1n c\xE1 nh\xE2n v\xE0 th\u01B0\u01A1ng m\u1EA1i kh\xF4ng gi\u1EDBi h\u1EA1n" }),
-            /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c ch\u1EC9nh s\u1EEDa m\xE3 ngu\u1ED3n theo nhu c\u1EA7u" }),
-            /* @__PURE__ */ jsxDEV("li", { children: "Kh\xF4ng \u0111\u01B0\u1EE3c b\xE1n l\u1EA1i nguy\xEAn b\u1EA3n source code cho b\xEAn th\u1EE9 ba" })
+            /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c d\xF9ng cho k\xEAnh c\xE1 nh\xE2n v\xE0 k\xEAnh b\xE1n h\xE0ng c\u1EE7a b\u1EA1n kh\xF4ng gi\u1EDBi h\u1EA1n" }),
+            /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c tu\u1EF3 bi\u1EBFn prompt, k\u1ECBch b\u1EA3n v\xE0 quy tr\xECnh theo ng\xE1ch ri\xEAng" }),
+            /* @__PURE__ */ jsxDEV("li", { children: "Kh\xF4ng \u0111\u01B0\u1EE3c chia s\u1EBB c\xF4ng khai ho\u1EB7c b\xE1n l\u1EA1i nguy\xEAn b\u1EA3n b\u1ED9 Skill cho b\xEAn th\u1EE9 ba" })
           ] })
         ] }) })
       ] }),
@@ -10487,49 +10595,56 @@ var ProductDetailPage = (props) => {
 };
 
 // src/pages/auth.tsx
-var AuthShell = ({ title: title2, subtitle, children }) => /* @__PURE__ */ jsxDEV("div", { class: "min-h-[calc(100vh-64px)] grid lg:grid-cols-2", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "hidden lg:flex relative bg-slate-950 text-white p-12 flex-col justify-between overflow-hidden", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "relative", children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex items-center gap-2.5", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 grid place-items-center", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }) }),
-      /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-lg", children: "WebSkill AI" })
-    ] }) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-      /* @__PURE__ */ jsxDEV("h2", { class: "text-3xl xl:text-4xl font-extrabold leading-tight mb-4", children: [
-        "Kho ",
-        /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-brand-400 to-fuchsia-400 bg-clip-text text-transparent", children: "Source Code & Tool AI" }),
-        " t\u1EA1o video"
+var AuthShell = ({ title: title2, subtitle, settings = {}, children }) => {
+  const siteName = settings.site_name || "KhoSkill AI";
+  return /* @__PURE__ */ jsxDEV("div", { class: "min-h-[calc(100vh-64px)] grid lg:grid-cols-2 bg-[#080716]", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "hidden lg:flex relative bg-[#0b0a1f] border-r border-[#1f1b4b] text-white p-12 flex-col justify-between overflow-hidden", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex items-center gap-2.5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }) }),
+        /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-lg", children: siteName })
+      ] }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-3xl xl:text-4xl font-extrabold leading-tight mb-4", children: [
+          "Kho ",
+          /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent", children: "Skill AI T\u1EA1o Video" }),
+          " th\u1EF1c chi\u1EBFn"
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#b9b8d9] mb-8 max-w-md leading-relaxed", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn creator \u0111ang d\xF9ng b\u1ED9 Skill AI chu\u1EA9n h\xF3a \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng tri\u1EC7u view m\u1ED7i ng\xE0y." }),
+        /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3.5", children: [
+          ["fa-bolt", "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"],
+          ["fa-infinity", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, c\u1EADp nh\u1EADt mi\u1EC5n ph\xED"],
+          ["fa-headset", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
+          ["fa-shield-halved", "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"]
+        ].map(([ic, t]) => /* @__PURE__ */ jsxDEV("li", { class: "flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-white/10 border border-white/15 grid place-items-center text-indigo-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
+          /* @__PURE__ */ jsxDEV("span", { class: "text-[#e2e1f5] text-sm", children: t })
+        ] })) })
       ] }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 mb-8 max-w-md leading-relaxed", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn creator \u0111ang d\xF9ng c\xF4ng c\u1EE5 c\u1EE7a ch\xFAng t\xF4i \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng m\u1ED7i ng\xE0y." }),
-      /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3.5", children: [
-        ["fa-bolt", "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"],
-        ["fa-infinity", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, c\u1EADp nh\u1EADt mi\u1EC5n ph\xED"],
-        ["fa-headset", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
-        ["fa-shield-halved", "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"]
-      ].map(([ic, t]) => /* @__PURE__ */ jsxDEV("li", { class: "flex items-center gap-3", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-white/10 border border-white/20 grid place-items-center text-brand-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-        /* @__PURE__ */ jsxDEV("span", { class: "text-slate-200 text-sm", children: t })
-      ] })) })
+      /* @__PURE__ */ jsxDEV("div", { class: "relative text-xs text-slate-500", children: [
+        "\xA9 2026 ",
+        siteName,
+        " \u2014 Ph\xE1t tri\u1EC3n t\u1EA1i Vi\u1EC7t Nam"
+      ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "relative text-xs text-slate-500", children: "\xA9 2026 WebSkill AI \u2014 Ph\xE1t tri\u1EC3n t\u1EA1i Vi\u1EC7t Nam" })
-  ] }),
-  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-center p-6 md:p-12 bg-slate-50", children: /* @__PURE__ */ jsxDEV("div", { class: "w-full max-w-md", children: [
-    /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 mb-2 tracking-tight", children: title2 }),
-    /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 mb-7", children: subtitle }),
-    children
-  ] }) })
-] });
-var inputCls = "w-full h-12 px-4 rounded-xl bg-white border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 outline-none text-sm transition";
-var LoginPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", bodyClass: "bg-slate-50", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u0103ng nh\u1EADp", subtitle: "Ch\xE0o m\u1EEBng b\u1EA1n quay l\u1EA1i! \u0110\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp s\u1EA3n ph\u1EA9m \u0111\xE3 mua.", children: [
-  props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-center p-6 md:p-12 bg-[#080716]", children: /* @__PURE__ */ jsxDEV("div", { class: "w-full max-w-md bg-[#0f0e26] border border-[#1f1b4b] rounded-3xl p-7 md:p-8 shadow-2xl", children: [
+      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight", children: title2 }),
+      /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] text-sm mb-7", children: subtitle }),
+      children
+    ] }) })
+  ] });
+};
+var inputCls = "w-full h-12 px-4 rounded-xl bg-[#16143c] border border-[#28235d] text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none text-sm transition";
+var LoginPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u0103ng nh\u1EADp", subtitle: "Ch\xE0o m\u1EEBng b\u1EA1n quay l\u1EA1i! \u0110\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp Skill \u0111\xE3 mua.", settings: props.settings, children: [
+  props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-sm text-emerald-300", children: [
     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5" }),
     "\u0110\u0103ng k\xFD th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp."
   ] }),
   /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/login", method: "post", "data-ajax": true, class: "space-y-4", children: [
     /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "next", value: props.next || "" }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email" }),
+      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "Email" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11", id: "login-email" }),
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
@@ -10537,63 +10652,43 @@ var LoginPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
       /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700", children: "M\u1EADt kh\u1EA9u" }),
-        /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs text-brand-600 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
+        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb]", children: "M\u1EADt kh\u1EA9u" }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs text-indigo-400 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, autocomplete: "current-password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", class: inputCls + " pl-11", id: "login-password" }),
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition", children: "\u0110\u0103ng nh\u1EADp" })
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-300" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-indigo-500/25 transition", children: "\u0110\u0103ng nh\u1EADp" })
   ] }),
-  /* @__PURE__ */ jsxDEV("div", { class: "mt-5 p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-blue-900 mb-1.5", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-flask mr-1.5" }),
-      "T\xE0i kho\u1EA3n demo"
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "text-blue-800 space-y-0.5 text-xs", children: [
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        "\u{1F464} User: ",
-        /* @__PURE__ */ jsxDEV("code", { class: "bg-white px-1.5 py-0.5 rounded", children: "demo@webskill.ai" }),
-        " / ",
-        /* @__PURE__ */ jsxDEV("code", { class: "bg-white px-1.5 py-0.5 rounded", children: "123456" })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        "\u{1F6E1}\uFE0F Admin: ",
-        /* @__PURE__ */ jsxDEV("code", { class: "bg-white px-1.5 py-0.5 rounded", children: "admin@webskill.ai" }),
-        " / ",
-        /* @__PURE__ */ jsxDEV("code", { class: "bg-white px-1.5 py-0.5 rounded", children: "123456" })
-      ] })
-    ] })
-  ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-slate-600", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#9f9dbb]", children: [
     "Ch\u01B0a c\xF3 t\xE0i kho\u1EA3n? ",
-    /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "font-semibold text-brand-600 hover:underline", children: "\u0110\u0103ng k\xFD ngay" })
+    /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng k\xFD ngay" })
   ] })
 ] }) });
-var RegisterPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng k\xFD", bodyClass: "bg-slate-50", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "T\u1EA1o t\xE0i kho\u1EA3n", subtitle: "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED trong 30 gi\xE2y \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u mua s\u1EAFm.", children: [
+var RegisterPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng k\xFD", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "T\u1EA1o t\xE0i kho\u1EA3n", subtitle: "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED trong 30 gi\xE2y \u0111\u1EC3 s\u1EDF h\u1EEFu c\xE1c b\u1ED9 Skill AI m\u1EDBi nh\u1EA5t.", settings: props.settings, children: [
   /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/register", method: "post", "data-ajax": true, class: "space-y-4", children: [
     /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "ref", value: props.ref || "" }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
+      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "text", name: "full_name", required: true, placeholder: "Nguy\u1EC5n V\u0103n A", class: inputCls + " pl-11" }),
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email" }),
+      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "Email" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11" }),
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: [
+      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: [
         "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i ",
-        /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+        /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500 font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "tel", name: "phone", placeholder: "0915967790", class: inputCls + " pl-11" }),
@@ -10601,47 +10696,47 @@ var RegisterPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: 
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
+      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11" }),
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-slate-600 cursor-pointer", children: [
-      /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 accent-brand-600" }),
+    /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-[#9f9dbb] cursor-pointer", children: [
+      /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 accent-indigo-500" }),
       /* @__PURE__ */ jsxDEV("span", { children: [
         "T\xF4i \u0111\u1ED3ng \xFD v\u1EDBi ",
-        /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-brand-600 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-indigo-400 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
         " v\xE0 ",
-        /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-brand-600 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
+        /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-indigo-400 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-300" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-indigo-500/25 transition", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-slate-600", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#9f9dbb]", children: [
     "\u0110\xE3 c\xF3 t\xE0i kho\u1EA3n? ",
-    /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-brand-600 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
+    /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
   ] })
 ] }) });
-var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Qu\xEAn m\u1EADt kh\u1EA9u", bodyClass: "bg-slate-50", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "Qu\xEAn m\u1EADt kh\u1EA9u", subtitle: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng.", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-white border border-slate-200 space-y-4", children: [
-    /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-600 leading-relaxed", children: "Hi\u1EC7n t\u1EA1i vi\u1EC7c kh\xF4i ph\u1EE5c m\u1EADt kh\u1EA9u \u0111\u01B0\u1EE3c x\u1EED l\xFD th\u1EE7 c\xF4ng qua \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o an to\xE0n t\xE0i kho\u1EA3n. Vui l\xF2ng li\xEAn h\u1EC7 v\u1EDBi ch\xFAng t\xF4i k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD." }),
+var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Qu\xEAn m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "Qu\xEAn m\u1EADt kh\u1EA9u", subtitle: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng.", settings: props.settings, children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-[#16143c] border border-[#28235d] space-y-4", children: [
+    /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#b9b8d9] leading-relaxed", children: "Hi\u1EC7n t\u1EA1i vi\u1EC7c kh\xF4i ph\u1EE5c m\u1EADt kh\u1EA9u \u0111\u01B0\u1EE3c x\u1EED l\xFD th\u1EE7 c\xF4ng qua \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o an to\xE0n t\xE0i kho\u1EA3n. Vui l\xF2ng li\xEAn h\u1EC7 v\u1EDBi ch\xFAng t\xF4i k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD." }),
     /* @__PURE__ */ jsxDEV(
       "a",
       {
-        href: `https://zalo.me/${props.settings?.zalo}`,
+        href: `https://zalo.me/${props.settings?.zalo || ""}`,
         target: "_blank",
         rel: "noopener",
-        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold transition",
+        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-semibold transition",
         children: "Chat Zalo h\u1ED7 tr\u1EE3"
       }
     ),
     /* @__PURE__ */ jsxDEV(
       "a",
       {
-        href: `mailto:${props.settings?.email}`,
-        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border-2 border-slate-200 hover:border-brand-400 font-semibold text-sm transition",
+        href: `mailto:${props.settings?.email || ""}`,
+        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-[#28235d] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-sm transition",
         children: [
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope" }),
           "G\u1EEDi email h\u1ED7 tr\u1EE3"
@@ -10649,7 +10744,7 @@ var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Q
       }
     )
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-slate-600", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-brand-600 hover:underline", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#9f9dbb]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: [
     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left mr-1" }),
     "Quay l\u1EA1i \u0111\u0103ng nh\u1EADp"
   ] }) })
@@ -10661,24 +10756,24 @@ var CartPage = (props) => {
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1ECF h\xE0ng", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng" }] }),
     /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7", children: "Gi\u1ECF h\xE0ng c\u1EE7a b\u1EA1n" }),
-    items.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200", children: /* @__PURE__ */ jsxDEV(
+    items.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV(
       EmptyState,
       {
         icon: "fa-cart-shopping",
         title: "Gi\u1ECF h\xE0ng \u0111ang tr\u1ED1ng",
-        desc: "Kh\xE1m ph\xE1 kho source code v\xE0 tool AI c\u1EE7a ch\xFAng t\xF4i \u0111\u1EC3 t\xECm s\u1EA3n ph\u1EA9m ph\xF9 h\u1EE3p.",
-        action: { href: "/san-pham", label: "Xem s\u1EA3n ph\u1EA9m" }
+        desc: "Kh\xE1m ph\xE1 b\u1ED9 5 Skill AI l\xE0m video \u0111ang m\u1EDF b\xE1n c\u1EE7a ch\xFAng t\xF4i.",
+        action: { href: "/san-pham?type=skill", label: "Xem 5 Skill \u0111ang b\xE1n" }
       }
     ) }) : /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-6", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
-        items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4 flex gap-4", children: [
+        items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-4 flex gap-4", children: [
           /* @__PURE__ */ jsxDEV(
             "a",
             {
               href: `/san-pham/${p.slug}`,
               class: "w-24 sm:w-32 aspect-video rounded-xl overflow-hidden shrink-0 grid place-items-center text-white",
               style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`,
-              children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${p.product_type === "chatbot" ? "fa-robot" : p.product_type === "prompt" ? "fa-wand-magic-sparkles" : p.product_type === "combo" ? "fa-box-open" : "fa-code"} text-xl` })
+              children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${p.product_type === "skill" ? "fa-wand-magic-sparkles" : p.product_type === "chatbot" ? "fa-robot" : p.product_type === "combo" ? "fa-box-open" : "fa-code"} text-xl` })
             }
           ),
           /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
@@ -10726,18 +10821,18 @@ var CartPage = (props) => {
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock" }),
           "Ti\u1EBFn h\xE0nh thanh to\xE1n"
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-500", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-[#1f1b4b] space-y-2 text-xs text-[#9f9dbb]", children: [
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-brand-500 w-4" }),
-            "Nh\u1EADn source code ngay sau thanh to\xE1n"
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-indigo-400 w-4" }),
+            "Nh\u1EADn link t\u1EA3i Skill ngay sau thanh to\xE1n"
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-brand-500 w-4" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-indigo-400 w-4" }),
             "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset text-brand-500 w-4" }),
-            "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1"
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset text-indigo-400 w-4" }),
+            "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"
           ] })
         ] })
       ] }) })
@@ -10784,42 +10879,34 @@ var CheckoutPage = (props) => {
               )
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-credit-card mr-2 text-brand-500" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-credit-card mr-2 text-indigo-400" }),
               "Ph\u01B0\u01A1ng th\u1EE9c thanh to\xE1n"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5", children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "flex items-center gap-3.5 p-4 rounded-xl border-2 border-brand-500 bg-brand-50 cursor-pointer", children: [
-                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "bank", checked: true, class: "accent-brand-600" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-white grid place-items-center text-brand-600 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode" }) }),
+              /* @__PURE__ */ jsxDEV("label", { class: "flex items-center gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "bank", checked: true, class: "accent-indigo-500" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-[#16143c] border border-indigo-500/30 grid place-items-center text-indigo-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode" }) }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: "Chuy\u1EC3n kho\u1EA3n QR (VietQR)" }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: "Qu\xE9t m\xE3 QR b\u1EB1ng app ng\xE2n h\xE0ng \u2014 x\xE1c nh\u1EADn nhanh nh\u1EA5t" })
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: "Chuy\u1EC3n kho\u1EA3n VietQR (Ng\xE2n h\xE0ng / MoMo)" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9f9dbb]", children: "Qu\xE9t m\xE3 QR b\u1EB1ng app ng\xE2n h\xE0ng ho\u1EB7c v\xED \u0111i\u1EC7n t\u1EED \u2014 \u0111\u1ED1i so\xE1t t\u1EF1 \u0111\u1ED9ng 24/7" })
                 ] }),
-                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold", children: "KHUY\xCAN D\xD9NG" })
+                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold", children: "KHUY\xCAN D\xD9NG" })
               ] }),
-              /* @__PURE__ */ jsxDEV("label", { class: "flex items-center gap-3.5 p-4 rounded-xl border-2 border-slate-200 hover:border-slate-300 cursor-pointer transition", children: [
-                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "momo", class: "accent-brand-600" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-pink-50 grid place-items-center text-pink-600 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wallet" }) }),
+              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? "border-[#28235d] bg-[#16143c]/50 hover:border-indigo-500/40" : "border-[#1f1b4b] bg-[#080716]/40 opacity-50 cursor-not-allowed"}`, children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "balance", disabled: balance < subtotal, class: "accent-indigo-500" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-emerald-500/15 grid place-items-center text-emerald-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank" }) }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: "V\xED MoMo" }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: "Chuy\u1EC3n kho\u1EA3n qua v\xED \u0111i\u1EC7n t\u1EED MoMo" })
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? "border-slate-200 hover:border-slate-300" : "border-slate-200 opacity-50 cursor-not-allowed"}`, children: [
-                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "balance", disabled: balance < subtotal, class: "accent-brand-600" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-emerald-50 grid place-items-center text-emerald-600 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank" }) }),
-                /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: [
                     "S\u1ED1 d\u01B0 v\xED ",
-                    /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-600", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: [
                       "(",
                       formatVND(balance),
                       ")"
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: balance >= subtotal ? "Thanh to\xE1n t\u1EE9c th\xEC, nh\u1EADn source ngay" : "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho \u0111\u01A1n h\xE0ng n\xE0y" })
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9f9dbb]", children: balance >= subtotal ? "Thanh to\xE1n t\u1EE9c th\xEC, nh\u1EADn link t\u1EA3i Skill ngay" : "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho \u0111\u01A1n h\xE0ng n\xE0y" })
                 ] })
               ] })
             ] })
@@ -10956,26 +11043,33 @@ var OrderPage = (props) => {
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: `\u0110\u01A1n h\xE0ng ${order.order_code}`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "\u0110\u01A1n h\xE0ng", href: "/tai-khoan/don-hang" }, { label: order.order_code }] }),
-      order.status === "paid" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-50 border-2 border-emerald-200 p-6 mb-6 text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check" }) }),
-        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-emerald-900 mb-1.5", children: "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-700 mb-4", children: "S\u1EA3n ph\u1EA9m \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
+      order.status === "paid" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check" }) }),
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-200 mb-4", children: "B\u1ED9 Skill AI \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
         /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition", children: [
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download" }),
-          "Nh\u1EADn source code ngay"
+          "M\u1EDF & t\u1EA3i Skill ngay"
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-6", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
-          order.status === "pending" && /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border-2 border-amber-200 overflow-hidden", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-50 px-5 py-3.5 border-b border-amber-200", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-amber-900", children: [
+          order.status === "pending" && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border-2 border-amber-500/40 overflow-hidden", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-amber-300", children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode mr-2" }),
               "Qu\xE9t m\xE3 QR \u0111\u1EC3 thanh to\xE1n"
             ] }) }),
+            (!bank.bank_account || bank.bank_account === "0987654321") && /* @__PURE__ */ jsxDEV("div", { class: "mx-5 mt-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5 text-rose-400" }),
+              /* @__PURE__ */ jsxDEV("b", { children: "Th\xF4ng b\xE1o:" }),
+              " T\xE0i kho\u1EA3n ng\xE2n h\xE0ng \u0111ang \u1EDF c\u1EA5u h\xECnh m\u1EABu. Vui l\xF2ng li\xEAn h\u1EC7 Zalo ",
+              /* @__PURE__ */ jsxDEV("b", { children: props.settings?.zalo }),
+              " \u0111\u1EC3 x\xE1c nh\u1EADn STK tr\u01B0\u1EDBc khi chuy\u1EC3n kho\u1EA3n."
+            ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "p-5 grid sm:grid-cols-[220px_1fr] gap-6", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "text-center", children: [
-                /* @__PURE__ */ jsxDEV("img", { src: qr, alt: "QR thanh to\xE1n", class: "w-full max-w-[220px] mx-auto rounded-xl border border-slate-200" }),
-                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-500 mt-2", children: "M\u1EDF app ng\xE2n h\xE0ng v\xE0 qu\xE9t m\xE3" })
+                /* @__PURE__ */ jsxDEV("img", { src: qr, alt: "QR thanh to\xE1n", class: "w-full max-w-[220px] mx-auto rounded-xl border border-[#28235d] bg-white p-1.5" }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9f9dbb] mt-2", children: "M\u1EDF app ng\xE2n h\xE0ng v\xE0 qu\xE9t m\xE3" })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
                 [
@@ -10984,28 +11078,28 @@ var OrderPage = (props) => {
                   ["Ch\u1EE7 t\xE0i kho\u1EA3n", bank.bank_owner],
                   ["S\u1ED1 ti\u1EC1n", formatVND(order.total)],
                   ["N\u1ED9i dung CK", content]
-                ].map(([lb, val], i) => /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-3 pb-2.5 border-b border-slate-100", children: [
-                  /* @__PURE__ */ jsxDEV("span", { class: "text-sm text-slate-500 shrink-0", children: lb }),
+                ].map(([lb, val], i) => /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-3 pb-2.5 border-b border-[#1f1b4b]", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-sm text-[#9f9dbb] shrink-0", children: lb }),
                   /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 min-w-0", children: [
-                    /* @__PURE__ */ jsxDEV("b", { class: `text-sm truncate ${i === 3 ? "text-rose-600 text-base" : i === 4 ? "text-brand-600" : "text-slate-900"}`, children: val }),
-                    i >= 1 && /* @__PURE__ */ jsxDEV("button", { "data-copy": i === 3 ? String(order.total) : val, class: "shrink-0 w-7 h-7 rounded-md bg-slate-100 hover:bg-brand-100 hover:text-brand-600 text-slate-500 text-xs transition", children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" }) })
+                    /* @__PURE__ */ jsxDEV("b", { class: `text-sm truncate ${i === 3 ? "text-rose-400 text-base" : i === 4 ? "text-indigo-400" : "text-white"}`, children: val }),
+                    i >= 1 && /* @__PURE__ */ jsxDEV("button", { "data-copy": i === 3 ? String(order.total) : val, class: "shrink-0 w-7 h-7 rounded-md bg-[#16143c] hover:bg-indigo-600 text-slate-300 hover:text-white text-xs transition", children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" }) })
                   ] })
                 ] })),
-                /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 leading-relaxed", children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200 leading-relaxed", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1 text-rose-400" }),
                   /* @__PURE__ */ jsxDEV("b", { children: "Quan tr\u1ECDng:" }),
                   " Vui l\xF2ng chuy\u1EC3n \u0111\xFAng s\u1ED1 ti\u1EC1n v\xE0 ghi \u0111\xFAng n\u1ED9i dung ",
-                  /* @__PURE__ */ jsxDEV("b", { children: content }),
+                  /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: content }),
                   " \u0111\u1EC3 h\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng x\xE1c nh\u1EADn."
                 ] })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "px-5 pb-5", children: [
-              /* @__PURE__ */ jsxDEV("div", { id: "pay-status", class: "mb-3 p-3.5 rounded-xl bg-brand-50 border border-brand-200 flex items-center gap-3", children: [
+              /* @__PURE__ */ jsxDEV("div", { id: "pay-status", class: "mb-3 p-3.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center gap-3", children: [
                 /* @__PURE__ */ jsxDEV("span", { class: "spinner shrink-0" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-brand-900", children: "\u0110ang ch\u1EDD giao d\u1ECBch c\u1EE7a b\u1EA1n\u2026" }),
-                  /* @__PURE__ */ jsxDEV("div", { id: "pay-status-msg", class: "text-xs text-brand-700 mt-0.5", children: "H\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng ki\u1EC3m tra ng\xE2n h\xE0ng m\u1ED7i 5 gi\xE2y. Trang s\u1EBD t\u1EF1 chuy\u1EC3n khi nh\u1EADn \u0111\u01B0\u1EE3c ti\u1EC1n." })
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-white", children: "\u0110ang ch\u1EDD giao d\u1ECBch c\u1EE7a b\u1EA1n\u2026" }),
+                  /* @__PURE__ */ jsxDEV("div", { id: "pay-status-msg", class: "text-xs text-indigo-200 mt-0.5", children: "H\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng ki\u1EC3m tra ng\xE2n h\xE0ng m\u1ED7i 5 gi\xE2y. Trang s\u1EBD t\u1EF1 chuy\u1EC3n khi nh\u1EADn \u0111\u01B0\u1EE3c ti\u1EC1n." })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("button", { id: "confirm-paid-btn", class: "w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-90 shadow-lg shadow-emerald-500/25 transition", children: [
@@ -11114,10 +11208,10 @@ var OrderPage = (props) => {
 
   function onPaid(){
     if(timer) clearInterval(timer);
-    box.className='mb-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center gap-3';
-    box.innerHTML='<i class="fas fa-circle-check text-emerald-600 text-xl shrink-0"></i>'
-      +'<div><div class="text-sm font-bold text-emerald-900">\u0110\xE3 nh\u1EADn \u0111\u01B0\u1EE3c ti\u1EC1n!</div>'
-      +'<div class="text-xs text-emerald-700 mt-0.5">\u0110ang k\xEDch ho\u1EA1t s\u1EA3n ph\u1EA9m v\xE0 chuy\u1EC3n trang\u2026</div></div>';
+    box.className='mb-3 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center gap-3';
+    box.innerHTML='<i class="fas fa-circle-check text-emerald-400 text-xl shrink-0"></i>'
+      +'<div><div class="text-sm font-bold text-white">\u0110\xE3 nh\u1EADn \u0111\u01B0\u1EE3c ti\u1EC1n!</div>'
+      +'<div class="text-xs text-emerald-200 mt-0.5">\u0110ang k\xEDch ho\u1EA1t s\u1EA3n ph\u1EA9m v\xE0 chuy\u1EC3n trang\u2026</div></div>';
     btn.disabled=true;
     if(window.toast) toast('Thanh to\xE1n th\xE0nh c\xF4ng! S\u1EA3n ph\u1EA9m \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t.','success');
     setTimeout(function(){ location.reload(); },1200);
@@ -11125,10 +11219,10 @@ var OrderPage = (props) => {
 
   function stopWaiting(){
     if(timer) clearInterval(timer);
-    box.className='mb-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3';
+    box.className='mb-3 p-3.5 rounded-xl bg-[#16143c] border border-[#28235d] flex items-center gap-3';
     box.innerHTML='<i class="fas fa-clock text-slate-400 text-xl shrink-0"></i>'
-      +'<div><div class="text-sm font-bold text-slate-700">\u0110\xE3 t\u1EA1m d\u1EEBng ki\u1EC3m tra t\u1EF1 \u0111\u1ED9ng</div>'
-      +'<div class="text-xs text-slate-500 mt-0.5">T\u1EA3i l\u1EA1i trang \u0111\u1EC3 ki\u1EC3m tra ti\u1EBFp, ho\u1EB7c li\xEAn h\u1EC7 Zalo n\u1EBFu b\u1EA1n \u0111\xE3 chuy\u1EC3n kho\u1EA3n.</div></div>';
+      +'<div><div class="text-sm font-bold text-white">\u0110\xE3 t\u1EA1m d\u1EEBng ki\u1EC3m tra t\u1EF1 \u0111\u1ED9ng</div>'
+      +'<div class="text-xs text-[#9f9dbb] mt-0.5">T\u1EA3i l\u1EA1i trang \u0111\u1EC3 ki\u1EC3m tra ti\u1EBFp, ho\u1EB7c li\xEAn h\u1EC7 Zalo n\u1EBFu b\u1EA1n \u0111\xE3 chuy\u1EC3n kho\u1EA3n.</div></div>';
   }
 
   async function check(silent){
@@ -11288,7 +11382,7 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
         {
           class: "sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white",
           style: l.thumbnail ? "" : `background:${gradientFor(l.product_id)}`,
-          children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: "", class: "w-full h-full object-cover rounded-xl" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${l.product_type === "chatbot" ? "fa-robot" : l.product_type === "prompt" ? "fa-wand-magic-sparkles" : "fa-code"} text-2xl` })
+          children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: "", class: "w-full h-full object-cover rounded-xl" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-2xl` })
         }
       ),
       /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
@@ -11334,7 +11428,7 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
               class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-brand-500/20 transition",
               children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download" }),
-                l.product_type === "chatbot" ? "M\u1EDF Chatbot" : l.product_type === "prompt" ? "M\u1EDF b\u1ED9 Prompt" : "T\u1EA3i Source Code"
+                l.product_type === "skill" ? "T\u1EA3i b\u1ED9 Skill AI" : l.product_type === "chatbot" ? "M\u1EDF Chatbot" : "M\u1EDF & T\u1EA3i xu\u1ED1ng"
               ]
             }
           ) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-50 text-amber-700 font-semibold text-sm", children: [
@@ -11402,7 +11496,10 @@ var WishlistPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, a
     /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 line-clamp-2 leading-snug mb-1.5", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "hover:text-brand-600", children: p.name }) }),
     /* @__PURE__ */ jsxDEV("div", { class: "text-lg font-extrabold text-rose-600 mb-2", children: formatVND(p.price) }),
     /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
-      /* @__PURE__ */ jsxDEV("button", { class: "btn-add-cart h-9 px-3.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition", "data-id": p.id, "data-name": p.name, children: [
+      p.status === "coming_soon" ? /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "h-9 px-3.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center gap-1", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
+        "Ch\u01B0a m\u1EDF b\xE1n"
+      ] }) : /* @__PURE__ */ jsxDEV("button", { class: "btn-add-cart h-9 px-3.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition", "data-id": p.id, "data-name": p.name, children: [
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus mr-1" }),
         "Th\xEAm gi\u1ECF"
       ] }),
@@ -11443,7 +11540,7 @@ var AffiliateDashboard = (props) => {
             class: "flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur"
           }
         ),
-        /* @__PURE__ */ jsxDEV("button", { "data-copy": link2, class: "h-11 px-5 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap", children: [
+        /* @__PURE__ */ jsxDEV("button", { "data-copy": link2, class: "cta-white h-11 px-5 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap", children: [
           /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1.5" }),
           "Sao ch\xE9p link"
         ] })
@@ -11616,10 +11713,10 @@ var BlogDetailPage = (props) => {
     /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: post.content || "" } }),
     /* @__PURE__ */ jsxDEV("div", { class: "mt-10 p-6 rounded-2xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white text-center", children: [
       /* @__PURE__ */ jsxDEV("h3", { class: "text-xl font-extrabold mb-2", children: "B\u1EAFt \u0111\u1EA7u l\xE0m video AI ngay h\xF4m nay" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 text-sm mb-5", children: "Kh\xE1m ph\xE1 kho kh\xF3a h\u1ECDc, skill, chatbot v\xE0 app l\xE0m video AI \u0111\xE3 \u0111\u01B0\u1EE3c h\xE0ng ngh\xECn creator tin d\xF9ng." }),
-      /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes" }),
-        "Xem s\u1EA3n ph\u1EA9m"
+      /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 text-sm mb-5", children: "Kh\xE1m ph\xE1 b\u1ED9 5 Skill AI l\xE0m video th\u1EF1c chi\u1EBFn \u0111\xE3 \u0111\u01B0\u1EE3c ki\u1EC3m ch\u1EE9ng b\u1EB1ng video demo th\u1EADt." }),
+      /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }),
+        "Xem Skill AI \u0111ang b\xE1n"
       ] })
     ] }),
     props.related.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "mt-12", children: [
@@ -11630,45 +11727,48 @@ var BlogDetailPage = (props) => {
 };
 var PLANS = [
   {
-    name: "Starter",
-    price: 299e3,
-    tag: "Ng\u01B0\u1EDDi m\u1EDBi b\u1EAFt \u0111\u1EA7u",
+    name: "Skill Ng\xE1ch",
+    price: 399e3,
+    tag: "\u0110ang m\u1EDF b\xE1n",
     icon: "fa-seedling",
     highlight: false,
-    desc: "Ch\u1ECDn 1 skill ho\u1EB7c chatbot \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u l\xE0m video AI ngay h\xF4m nay.",
-    features: ["1 skill theo ng\xE1ch ho\u1EB7c 1 chatbot", "Video demo xem tr\u01B0\u1EDBc khi mua", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi", "C\u1EADp nh\u1EADt mi\u1EC5n ph\xED", "H\u1ED7 tr\u1EE3 qua Zalo"],
-    cta: "Xem skill",
-    href: "/danh-muc/skill-video-ai"
+    available: true,
+    desc: "Ch\u1ECDn 1 Skill theo ng\xE1ch (Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Affiliate Fitness) \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u d\u1EF1ng k\xEAnh.",
+    features: ["Tr\u1ECDn b\u1ED9 prompt & quy tr\xECnh 30s", "Video demo th\u1EADt xem tr\u01B0\u1EDBc khi mua", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi + update free", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt qua Zalo"],
+    cta: "Xem Skill ng\xE1ch",
+    href: "/san-pham?type=skill"
   },
   {
-    name: "Creator",
-    price: 899e3,
-    tag: "Ph\u1ED5 bi\u1EBFn nh\u1EA5t",
+    name: "Skill N\xE2ng Cao",
+    price: 599e3,
+    tag: "Ph\u1ED5 bi\u1EBFn \xB7 \u0110ang b\xE1n",
     icon: "fa-rocket",
     highlight: true,
-    desc: "1 kh\xF3a h\u1ECDc video AI + 1 skill theo ng\xE1ch: h\u1ECDc xong l\xE0m \u0111\u01B0\u1EE3c ngay.",
-    features: ["1 kh\xF3a h\u1ECDc (Muse AI / Seedance / Flow Veo)", "1 skill theo ng\xE1ch t\u1EF1 ch\u1ECDn", "Video demo th\u1EF1c t\u1EBF t\u1EEBng s\u1EA3n ph\u1EA9m", "H\u1ED7 tr\u1EE3 \u01B0u ti\xEAn 1-1 qua Zalo", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi", "C\u1EADp nh\u1EADt mi\u1EC5n ph\xED"],
-    cta: "Xem kh\xF3a h\u1ECDc",
-    href: "/danh-muc/khoa-hoc-video-ai"
+    available: true,
+    desc: "Skill Muse AI Pro 30s ho\u1EB7c Seedance 2.5 One-Take 30s \u2014 nh\xE2n v\u1EADt gi\u1EEF nguy\xEAn & lip-sync ti\u1EBFng Vi\u1EC7t.",
+    features: ["B\u1ED9 Skill Muse AI / Seedance 2.5 ho\xE0n ch\u1EC9nh", "C\xF4ng th\u1EE9c kh\xF3a nh\xE2n v\u1EADt 30s li\u1EC1n m\u1EA1ch", "Video demo th\u1EF1c t\u1EBF t\u1EEBng c\u1EA3nh", "H\u1ED7 tr\u1EE3 1-1 qua Zalo", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi + update free"],
+    cta: "Xem Skill \u0111ang b\xE1n",
+    href: "/san-pham?type=skill"
   },
   {
-    name: "All-In-One",
+    name: "Combo & Chatbot / App",
     price: 1999e3,
-    tag: "Ti\u1EBFt ki\u1EC7m 55%",
-    icon: "fa-crown",
+    tag: "Ch\u01B0a m\u1EDF b\xE1n",
+    icon: "fa-clock",
     highlight: false,
-    desc: "Tr\u1ECDn b\u1ED9 WebSkill AI: 3 kh\xF3a h\u1ECDc + 3 skill + chatbot + app render.",
-    features: ["3 kh\xF3a h\u1ECDc video AI", "3 skill theo ng\xE1ch", "Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n + app render", "T\u1EB7ng s\u1EA3n ph\u1EA9m m\u1EDBi trong 12 th\xE1ng", "H\u1ED7 tr\u1EE3 \u01B0u ti\xEAn 1-1", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi"],
-    cta: "Mua combo",
-    href: "/san-pham/combo-video-ai-all-in-one"
+    available: false,
+    desc: "Kh\xF3a h\u1ECDc chuy\xEAn s\xE2u, Chatbot k\u1ECBch b\u1EA3n, App render t\u1EF1 \u0111\u1ED9ng v\xE0 g\xF3i Combo All-In-One.",
+    features: ["Kh\xF3a h\u1ECDc Video AI (s\u1EAFp m\u1EDF)", "Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n + App render (s\u1EAFp m\u1EDF)", "Combo ti\u1EBFt ki\u1EC7m tr\u1ECDn b\u1ED9 (s\u1EAFp m\u1EDF)", "T\u1EA1m th\u1EDDi \u0111\xF3ng gi\u1ECF \u2014 \u01B0u ti\xEAn ho\xE0n thi\u1EC7n 5 Skill"],
+    cta: "Ch\u01B0a m\u1EDF b\xE1n",
+    href: "/combo"
   }
 ];
-var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: "B\u1EA3ng gi\xE1", description: "B\u1EA3ng gi\xE1 c\xE1c g\xF3i kh\xF3a h\u1ECDc, skill, chatbot v\xE0 app l\xE0m video AI", children: [
+var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: "B\u1EA3ng gi\xE1", description: "B\u1EA3ng gi\xE1 b\u1ED9 5 Skill AI l\xE0m video \u0111ang m\u1EDF b\xE1n v\xE0 l\u1ED9 tr\xECnh c\xE1c d\u1ECBch v\u1EE5 s\u1EAFp ra m\u1EAFt", children: [
   /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
     /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 py-16 text-center", children: [
       /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-3", children: "B\u1EA3ng gi\xE1 minh b\u1EA1ch" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 max-w-2xl mx-auto", children: "Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi. Kh\xF4ng ph\xED duy tr\xEC, kh\xF4ng ph\xED \u1EA9n, kh\xF4ng gi\u1EDBi h\u1EA1n th\u1EDDi gian s\u1EED d\u1EE5ng." })
+      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 max-w-2xl mx-auto", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng m\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn. Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, kh\xF4ng ph\xED duy tr\xEC." })
     ] })
   ] }),
   /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 -mt-8 pb-14 relative", children: [
@@ -11677,23 +11777,23 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
         "\u2B50 ",
         pl.tag
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: `w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? "bg-white/20" : "bg-brand-50 text-brand-600"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.icon}` }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: `w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? "bg-white/20" : pl.available ? "bg-brand-50 text-brand-600" : "bg-amber-500/15 text-amber-400"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.icon}` }) }),
       /* @__PURE__ */ jsxDEV("h3", { class: `text-xl font-extrabold mb-1 ${pl.highlight ? "" : "text-slate-900"}`, children: pl.name }),
-      !pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 mb-3", children: pl.tag }),
+      !pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: `text-xs font-bold mb-3 ${pl.available ? "text-emerald-400" : "text-amber-400"}`, children: pl.tag }),
       /* @__PURE__ */ jsxDEV("p", { class: `text-sm mb-5 leading-relaxed ${pl.highlight ? "text-white/85" : "text-slate-500"}`, children: pl.desc }),
       /* @__PURE__ */ jsxDEV("div", { class: "mb-6", children: [
         /* @__PURE__ */ jsxDEV("span", { class: `text-3xl font-extrabold ${pl.highlight ? "" : "text-slate-900"}`, children: formatVND(pl.price) }),
-        /* @__PURE__ */ jsxDEV("span", { class: `text-sm ml-1.5 ${pl.highlight ? "text-white/70" : "text-slate-400"}`, children: "/ tr\u1ECDn \u0111\u1EDDi" })
+        /* @__PURE__ */ jsxDEV("span", { class: `text-sm ml-1.5 ${pl.highlight ? "text-white/70" : "text-slate-400"}`, children: pl.available ? "/ tr\u1ECDn \u0111\u1EDDi" : "/ d\u1EF1 ki\u1EBFn" })
       ] }),
       /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 mb-7", children: pl.features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: `flex gap-2.5 text-sm ${pl.highlight ? "text-white/90" : "text-slate-600"}`, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas fa-circle-check mt-0.5 shrink-0 ${pl.highlight ? "text-emerald-300" : "text-emerald-500"}` }),
+        /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.available ? "fa-circle-check" : "fa-clock"} mt-0.5 shrink-0 ${pl.highlight ? "text-emerald-300" : pl.available ? "text-emerald-500" : "text-amber-400"}` }),
         f
       ] })) }),
       /* @__PURE__ */ jsxDEV(
         "a",
         {
           href: pl.href,
-          class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? "bg-white text-brand-700 hover:bg-slate-100" : "bg-brand-600 hover:bg-brand-700 text-white"}`,
+          class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? "cta-white bg-white text-brand-700 hover:bg-slate-100" : pl.available ? "bg-brand-600 hover:bg-brand-700 text-white" : "bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25"}`,
           children: [
             pl.cta,
             /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs" })
@@ -11709,259 +11809,263 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
           PLANS.map((p) => /* @__PURE__ */ jsxDEV("th", { class: "py-3 px-3 font-bold text-slate-900 text-center", children: p.name }))
         ] }) }),
         /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: [
-          ["S\u1ED1 s\u1EA3n ph\u1EA9m", "1", "2", "8"],
+          ["Tr\u1EA1ng th\xE1i", "\u0110ang m\u1EDF b\xE1n", "\u0110ang m\u1EDF b\xE1n", "Ch\u01B0a m\u1EDF b\xE1n"],
           ["S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", true, true, true],
           ["C\u1EADp nh\u1EADt mi\u1EC5n ph\xED", true, true, true],
           ["H\u1ED7 tr\u1EE3 Zalo", true, true, true],
           ["H\u1ED7 tr\u1EE3 \u01B0u ti\xEAn 1-1", false, true, true],
-          ["Video demo xem tr\u01B0\u1EDBc", true, true, true],
-          ["Kh\xF3a h\u1ECDc video AI", false, true, true],
-          ["Skill theo ng\xE1ch", true, true, true],
-          ["Chatbot + App render", false, false, true]
+          ["Video demo xem tr\u01B0\u1EDBc", true, true, false],
+          ["Skill AI theo ng\xE1ch / model", true, true, true],
+          ["Kh\xF3a h\u1ECDc + Chatbot + App", false, false, "S\u1EAFp m\u1EDF"]
         ].map(([label, ...vals]) => /* @__PURE__ */ jsxDEV("tr", { children: [
           /* @__PURE__ */ jsxDEV("td", { class: "py-3 text-slate-600 font-medium", children: label }),
-          vals.map((v) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-3 text-center", children: typeof v === "boolean" ? v ? /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-minus text-slate-300" }) : /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-slate-800", children: v }) }))
+          vals.map((v) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-3 text-center", children: typeof v === "boolean" ? v ? /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-minus text-slate-500" }) : /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-slate-800", children: v }) }))
         ] })) })
       ] }) })
     ] })
   ] })
 ] });
-var AboutPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1EDBi thi\u1EC7u", description: "V\u1EC1 WebSkill AI \u2014 kho chatbot, skill v\xE0 app AI l\xE0m video h\xE0ng \u0111\u1EA7u Vi\u1EC7t Nam", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-4", children: "V\u1EC1 WebSkill AI" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 leading-relaxed", children: "Ch\xFAng t\xF4i gi\xFAp ng\u01B0\u1EDDi Vi\u1EC7t l\xE0m video AI b\xE1n h\xE0ng m\u1ED9t c\xE1ch d\u1EC5 d\xE0ng nh\u1EA5t \u2014 th\xF4ng qua kh\xF3a h\u1ECDc th\u1EF1c chi\u1EBFn, skill theo ng\xE1ch, chatbot k\u1ECBch b\u1EA3n th\xF4ng minh v\xE0 app t\u1EA1o video t\u1EF1 \u0111\u1ED9ng." })
-    ] })
-  ] }),
-  /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-14", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-5 mb-14", children: [
-      ["fa-cube", props.stats.products + "+", "S\u1EA3n ph\u1EA9m"],
-      ["fa-users", props.stats.users.toLocaleString("vi-VN") + "+", "Kh\xE1ch h\xE0ng"],
-      ["fa-cart-shopping", props.stats.sold.toLocaleString("vi-VN") + "+", "L\u01B0\u1EE3t mua"]
-    ].map(([ic, num, lb]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center mx-auto mb-3.5 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-slate-900", children: num }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-slate-500 mt-1", children: lb })
-    ] })) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none bg-white rounded-2xl border border-slate-200 p-7 md:p-10", children: [
-      /* @__PURE__ */ jsxDEV("h2", { children: "C\xE2u chuy\u1EC7n c\u1EE7a ch\xFAng t\xF4i" }),
-      /* @__PURE__ */ jsxDEV("p", { children: "WebSkill AI ra \u0111\u1EDDi t\u1EEB nhu c\u1EA7u th\u1EF1c t\u1EBF: r\u1EA5t nhi\u1EC1u ng\u01B0\u1EDDi mu\u1ED1n l\xE0m video b\xE1n h\xE0ng b\u1EB1ng AI nh\u01B0ng kh\xF4ng bi\u1EBFt vi\u1EBFt prompt, kh\xF4ng bi\u1EBFt quay d\u1EF1ng v\xE0 c\u0169ng kh\xF4ng \u0111\u1EE7 ng\xE2n s\xE1ch thu\xEA agency." }),
-      /* @__PURE__ */ jsxDEV("p", { children: [
-        "Ch\xFAng t\xF4i b\u1EAFt \u0111\u1EA7u b\u1EB1ng vi\u1EC7c x\xE2y d\u1EF1ng nh\u1EEFng chatbot vi\u1EBFt k\u1ECBch b\u1EA3n chuy\xEAn ng\xE0nh, sau \u0111\xF3 ph\xE1t tri\u1EC3n c\xE1c ",
-        /* @__PURE__ */ jsxDEV("b", { children: "skill t\u1EA1o video AI theo ng\xE1ch" }),
-        " (Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Fitness...) v\xE0 c\xE1c ",
-        /* @__PURE__ */ jsxDEV("b", { children: "kh\xF3a h\u1ECDc th\u1EF1c chi\u1EBFn" }),
-        " tr\xEAn Muse AI, Seedance 2.5, Google Flow Veo \u2014 t\u1EA5t c\u1EA3 \u0111\u1EC1u c\xF3 video demo th\u1EADt \u0111\u1EC3 b\u1EA1n xem tr\u01B0\u1EDBc khi mua."
-      ] }),
-      /* @__PURE__ */ jsxDEV("h2", { children: "Ch\xFAng t\xF4i cung c\u1EA5p g\xEC?" }),
-      /* @__PURE__ */ jsxDEV("ul", { children: [
-        /* @__PURE__ */ jsxDEV("li", { children: [
-          /* @__PURE__ */ jsxDEV("b", { children: "Kh\xF3a h\u1ECDc video AI:" }),
-          " h\u1ECDc theo l\u1ED9 tr\xECnh t\u1EEB c\u01A1 b\u1EA3n \u0111\u1EBFn n\xE2ng cao tr\xEAn Muse AI, Seedance 2.5 30s, Google Flow Veo"
+var AboutPage = (props) => {
+  const siteName = props.settings?.site_name || "KhoSkill AI";
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1EDBi thi\u1EC7u", description: `V\u1EC1 ${siteName} \u2014 kho Skill AI l\xE0m video th\u1EF1c chi\u1EBFn h\xE0ng \u0111\u1EA7u Vi\u1EC7t Nam`, children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
+        /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-4", children: [
+          "V\u1EC1 ",
+          siteName
         ] }),
-        /* @__PURE__ */ jsxDEV("li", { children: [
-          /* @__PURE__ */ jsxDEV("b", { children: "Skill t\u1EA1o video AI:" }),
-          " b\u1ED9 skill \u0111\xF3ng g\xF3i theo ng\xE1ch \u2014 Thu\u1EF7 Sinh 30s, DIY L\xE0m V\u01B0\u1EDDn 30s, Affiliate Fitness \u2014 l\xE0m theo l\xE0 ra video chu\u1EA9n build page Reels/TikTok"
+        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 leading-relaxed", children: "Ch\xFAng t\xF4i gi\xFAp ng\u01B0\u1EDDi Vi\u1EC7t l\xE0m video AI b\xE1n h\xE0ng m\u1ED9t c\xE1ch d\u1EC5 d\xE0ng nh\u1EA5t \u2014 b\u1EAFt \u0111\u1EA7u t\u1EEB b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn \u0111ang m\u1EDF b\xE1n, c\xF9ng h\u1EC7 sinh th\xE1i Kh\xF3a h\u1ECDc, Chatbot v\xE0 App s\u1EAFp ra m\u1EAFt." })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-14", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-5 mb-14", children: [
+        ["fa-wand-magic-sparkles", props.stats.products + " Skill", "\u0110ang m\u1EDF b\xE1n"],
+        ["fa-users", props.stats.users.toLocaleString("vi-VN") + "+", "Kh\xE1ch h\xE0ng"],
+        ["fa-cart-shopping", props.stats.sold.toLocaleString("vi-VN") + "+", "L\u01B0\u1EE3t mua"]
+      ].map(([ic, num, lb]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center mx-auto mb-3.5 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-slate-900", children: num }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-slate-500 mt-1", children: lb })
+      ] })) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none bg-white rounded-2xl border border-slate-200 p-7 md:p-10", children: [
+        /* @__PURE__ */ jsxDEV("h2", { children: "C\xE2u chuy\u1EC7n c\u1EE7a ch\xFAng t\xF4i" }),
+        /* @__PURE__ */ jsxDEV("p", { children: [
+          siteName,
+          " ra \u0111\u1EDDi t\u1EEB nhu c\u1EA7u th\u1EF1c t\u1EBF: r\u1EA5t nhi\u1EC1u ng\u01B0\u1EDDi mu\u1ED1n l\xE0m video b\xE1n h\xE0ng b\u1EB1ng AI nh\u01B0ng kh\xF4ng bi\u1EBFt vi\u1EBFt prompt chu\u1EA9n, kh\xF4ng gi\u1EEF \u0111\u01B0\u1EE3c nh\xE2n v\u1EADt xuy\xEAn su\u1ED1t 30 gi\xE2y v\xE0 t\u1ED1n nhi\u1EC1u th\u1EDDi gian th\u1EED sai."
         ] }),
-        /* @__PURE__ */ jsxDEV("li", { children: [
-          /* @__PURE__ */ jsxDEV("b", { children: "Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n:" }),
-          " sinh s\u1EB5n prompt \u1EA3nh v\xE0 prompt video theo t\u1EEBng ng\xE0nh h\xE0ng"
+        /* @__PURE__ */ jsxDEV("p", { children: [
+          "Ch\xFAng t\xF4i \u0111\xF3ng g\xF3i s\u1EB5n t\u1EEBng ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Skill t\u1EA1o video AI theo ng\xE1ch & c\xF4ng c\u1EE5" }),
+          " (Muse AI Pro, Seedance 2.5, Thu\u1EF7 Sinh 30s, DIY L\xE0m V\u01B0\u1EDDn, Affiliate Fitness) \u2014 t\u1EA5t c\u1EA3 \u0111\u1EC1u \u0111\xE3 ch\u1EA1y th\u1EF1c t\u1EBF ra video demo \u0111\u1EC3 b\u1EA1n ki\u1EC3m ch\u1EE9ng tr\u01B0\u1EDBc khi mua."
         ] }),
-        /* @__PURE__ */ jsxDEV("li", { children: [
-          /* @__PURE__ */ jsxDEV("b", { children: "App l\xE0m video AI:" }),
-          " ph\u1EA7n m\u1EC1m render h\xE0ng lo\u1EA1t, t\u1EF1 \u0111\u1ED9ng gh\xE9p voice - sub - nh\u1EA1c"
+        /* @__PURE__ */ jsxDEV("h2", { children: "Tr\u1EA1ng th\xE1i d\u1ECBch v\u1EE5 hi\u1EC7n t\u1EA1i" }),
+        /* @__PURE__ */ jsxDEV("ul", { children: [
+          /* @__PURE__ */ jsxDEV("li", { children: [
+            /* @__PURE__ */ jsxDEV("b", { children: "Skill t\u1EA1o video AI (5 b\u1ED9 \u0111ang m\u1EDF b\xE1n):" }),
+            " mua v\xE0 nh\u1EADn link t\u1EA3i t\u1EF1 \u0111\u1ED9ng 24/7 ngay tr\xEAn h\u1EC7 th\u1ED1ng."
+          ] }),
+          /* @__PURE__ */ jsxDEV("li", { children: [
+            /* @__PURE__ */ jsxDEV("b", { children: "Kh\xF3a h\u1ECDc, Chatbot, App Video AI & Combo (Ch\u01B0a m\u1EDF b\xE1n):" }),
+            " \u0111ang trong giai \u0111o\u1EA1n ho\xE0n thi\u1EC7n v\xE0 n\xE2ng c\u1EA5p, s\u1EBD s\u1EDBm c\xF4ng b\u1ED1 m\u1EDF b\xE1n."
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("h2", { children: "Cam k\u1EBFt" }),
+        /* @__PURE__ */ jsxDEV("ul", { children: [
+          /* @__PURE__ */ jsxDEV("li", { children: "Giao t\xE0i li\u1EC7u Skill t\u1EF1 \u0111\u1ED9ng ngay sau khi thanh to\xE1n, kh\xF4ng ph\u1EA3i ch\u1EDD \u0111\u1EE3i" }),
+          /* @__PURE__ */ jsxDEV("li", { children: "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo cho \u0111\u1EBFn khi b\u1EA1n t\u1EF1 render \u0111\u01B0\u1EE3c video" }),
+          /* @__PURE__ */ jsxDEV("li", { children: "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y n\u1EBFu s\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng m\xF4 t\u1EA3" }),
+          /* @__PURE__ */ jsxDEV("li", { children: "C\u1EADp nh\u1EADt mi\u1EC5n ph\xED tr\u1ECDn \u0111\u1EDDi theo c\xE1c b\u1EA3n n\xE2ng c\u1EA5p AI m\u1EDBi" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("h2", { children: "Gi\xE1 tr\u1ECB c\u1ED1t l\xF5i" }),
+        /* @__PURE__ */ jsxDEV("p", { children: [
+          /* @__PURE__ */ jsxDEV("b", { children: "Th\u1EF1c chi\u1EBFn:" }),
+          " M\u1ECDi s\u1EA3n ph\u1EA9m \u0111\u1EC1u \u0111\u01B0\u1EE3c ch\xFAng t\xF4i t\u1EF1 d\xF9ng tr\u01B0\u1EDBc khi b\xE1n. ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Minh b\u1EA1ch:" }),
+          " Gi\xE1 c\xF4ng khai, kh\xF4ng ph\xED \u1EA9n. ",
+          /* @__PURE__ */ jsxDEV("b", { children: "\u0110\u1ED3ng h\xE0nh:" }),
+          " Ch\xFAng t\xF4i h\u1ED7 tr\u1EE3 b\u1EA1n \u0111\u1EBFn khi th\xE0nh c\xF4ng, kh\xF4ng ch\u1EC9 b\xE1n xong l\xE0 h\u1EBFt."
         ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("h2", { children: "Cam k\u1EBFt" }),
-      /* @__PURE__ */ jsxDEV("ul", { children: [
-        /* @__PURE__ */ jsxDEV("li", { children: "Giao s\u1EA3n ph\u1EA9m t\u1EF1 \u0111\u1ED9ng ngay sau khi thanh to\xE1n, kh\xF4ng ph\u1EA3i ch\u1EDD \u0111\u1EE3i" }),
-        /* @__PURE__ */ jsxDEV("li", { children: "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 cho \u0111\u1EBFn khi b\u1EA1n s\u1EED d\u1EE5ng \u0111\u01B0\u1EE3c" }),
-        /* @__PURE__ */ jsxDEV("li", { children: "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y n\u1EBFu s\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng m\xF4 t\u1EA3" }),
-        /* @__PURE__ */ jsxDEV("li", { children: "C\u1EADp nh\u1EADt mi\u1EC5n ph\xED tr\u1ECDn \u0111\u1EDDi theo API m\u1EDBi c\u1EE7a c\xE1c n\u1EC1n t\u1EA3ng AI" })
-      ] }),
-      /* @__PURE__ */ jsxDEV("h2", { children: "Gi\xE1 tr\u1ECB c\u1ED1t l\xF5i" }),
-      /* @__PURE__ */ jsxDEV("p", { children: [
-        /* @__PURE__ */ jsxDEV("b", { children: "Th\u1EF1c chi\u1EBFn:" }),
-        " M\u1ECDi s\u1EA3n ph\u1EA9m \u0111\u1EC1u \u0111\u01B0\u1EE3c ch\xFAng t\xF4i t\u1EF1 d\xF9ng tr\u01B0\u1EDBc khi b\xE1n. ",
-        /* @__PURE__ */ jsxDEV("b", { children: "Minh b\u1EA1ch:" }),
-        " Gi\xE1 c\xF4ng khai, kh\xF4ng ph\xED \u1EA9n. ",
-        /* @__PURE__ */ jsxDEV("b", { children: "\u0110\u1ED3ng h\xE0nh:" }),
-        " Ch\xFAng t\xF4i h\u1ED7 tr\u1EE3 b\u1EA1n \u0111\u1EBFn khi th\xE0nh c\xF4ng, kh\xF4ng ch\u1EC9 b\xE1n xong l\xE0 h\u1EBFt."
       ] })
     ] })
-  ] })
-] });
-var ContactPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "contact", title: "Li\xEAn h\u1EC7", description: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 WebSkill AI", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-6xl mx-auto px-4 py-10", children: [
-  /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Li\xEAn h\u1EC7" }] }),
-  /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-7", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-6 md:p-8", children: [
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-slate-900 mb-2 tracking-tight", children: "G\u1EEDi y\xEAu c\u1EA7u h\u1ED7 tr\u1EE3" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 text-sm mb-6", children: "\u0110i\u1EC1n form b\xEAn d\u01B0\u1EDBi, ch\xFAng t\xF4i s\u1EBD ph\u1EA3n h\u1ED3i trong v\xF2ng 24 gi\u1EDD l\xE0m vi\u1EC7c." }),
-      /* @__PURE__ */ jsxDEV("form", { action: "/api/tickets", method: "post", "data-ajax": true, class: "space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
+  ] });
+};
+var ContactPage = (props) => {
+  const siteName = props.settings?.site_name || "KhoSkill AI";
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "contact", title: "Li\xEAn h\u1EC7", description: `Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 ${siteName}`, children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-6xl mx-auto px-4 py-10", children: [
+    /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Li\xEAn h\u1EC7" }] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-7", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-6 md:p-8", children: [
+        /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-slate-900 mb-2 tracking-tight", children: "G\u1EEDi y\xEAu c\u1EA7u h\u1ED7 tr\u1EE3" }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 text-sm mb-6", children: "\u0110i\u1EC1n form b\xEAn d\u01B0\u1EDBi, ch\xFAng t\xF4i s\u1EBD ph\u1EA3n h\u1ED3i trong v\xF2ng 24 gi\u1EDD l\xE0m vi\u1EC7c." }),
+        /* @__PURE__ */ jsxDEV("form", { action: "/api/tickets", method: "post", "data-ajax": true, class: "space-y-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "H\u1ECD t\xEAn *" }),
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  type: "text",
+                  name: "name",
+                  required: true,
+                  value: props.user?.full_name || "",
+                  class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email *" }),
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  type: "email",
+                  name: "email",
+                  required: true,
+                  value: props.user?.email || "",
+                  class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                }
+              )
+            ] })
+          ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "H\u1ECD t\xEAn *" }),
+            /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Ti\xEAu \u0111\u1EC1 *" }),
             /* @__PURE__ */ jsxDEV(
               "input",
               {
                 type: "text",
-                name: "name",
+                name: "subject",
                 required: true,
-                value: props.user?.full_name || "",
+                placeholder: "V\u1EA5n \u0111\u1EC1 b\u1EA1n g\u1EB7p ph\u1EA3i",
                 class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
               }
             )
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email *" }),
+            /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "N\u1ED9i dung *" }),
             /* @__PURE__ */ jsxDEV(
-              "input",
+              "textarea",
               {
-                type: "email",
-                name: "email",
+                name: "message",
+                rows: 6,
                 required: true,
-                value: props.user?.email || "",
-                class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                placeholder: "M\xF4 t\u1EA3 chi ti\u1EBFt v\u1EA5n \u0111\u1EC1 c\u1EE7a b\u1EA1n...",
+                class: "w-full p-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"
               }
             )
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-12 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-1.5" }),
+            "G\u1EEDi y\xEAu c\u1EA7u"
           ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("aside", { class: "space-y-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Th\xF4ng tin li\xEAn h\u1EC7" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
+            ["fa-phone-volume", "Hotline", props.settings?.hotline, `tel:${(props.settings?.hotline || "").replace(/\s/g, "")}`],
+            ["fa-envelope", "Email", props.settings?.email, `mailto:${props.settings?.email}`],
+            ["fa-comment-dots", "Zalo", props.settings?.zalo, `https://zalo.me/${props.settings?.zalo}`],
+            ["fa-clock", "Gi\u1EDD l\xE0m vi\u1EC7c", "8:00 \u2013 22:00 (T2\u2013CN)", ""]
+          ].map(([ic, lb, val, href]) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-brand-50 text-brand-600 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: lb }),
+              href ? /* @__PURE__ */ jsxDEV("a", { href, target: "_blank", rel: "noopener", class: "font-semibold text-slate-900 text-sm hover:text-brand-600 break-all", children: val }) : /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: val })
+            ] })
+          ] })) })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Ti\xEAu \u0111\u1EC1 *" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-brand-600 to-fuchsia-600 rounded-2xl p-5 text-white", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-2xl mb-2.5" }),
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5", children: "C\u1EA7n h\u1ED7 tr\u1EE3 g\u1EA5p?" }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/85 mb-4 leading-relaxed", children: "Chat Zalo l\xE0 k\xEAnh ph\u1EA3n h\u1ED3i nhanh nh\u1EA5t, th\u01B0\u1EDDng d\u01B0\u1EDBi 5 ph\xFAt trong gi\u1EDD l\xE0m vi\u1EC7c." }),
           /* @__PURE__ */ jsxDEV(
-            "input",
+            "a",
             {
-              type: "text",
-              name: "subject",
-              required: true,
-              placeholder: "V\u1EA5n \u0111\u1EC1 b\u1EA1n g\u1EB7p ph\u1EA3i",
-              class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+              href: `https://zalo.me/${props.settings?.zalo}`,
+              target: "_blank",
+              rel: "noopener",
+              class: "cta-white flex items-center justify-center w-full h-11 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition",
+              children: "Chat Zalo ngay"
             }
           )
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "N\u1ED9i dung *" }),
-          /* @__PURE__ */ jsxDEV(
-            "textarea",
-            {
-              name: "message",
-              rows: 6,
-              required: true,
-              placeholder: "M\xF4 t\u1EA3 chi ti\u1EBFt v\u1EA5n \u0111\u1EC1 c\u1EE7a b\u1EA1n...",
-              class: "w-full p-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-        /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-12 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-1.5" }),
-          "G\u1EEDi y\xEAu c\u1EA7u"
         ] })
       ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("aside", { class: "space-y-4", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Th\xF4ng tin li\xEAn h\u1EC7" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
-          ["fa-phone-volume", "Hotline", props.settings?.hotline, `tel:${(props.settings?.hotline || "").replace(/\s/g, "")}`],
-          ["fa-envelope", "Email", props.settings?.email, `mailto:${props.settings?.email}`],
-          ["fa-comment-dots", "Zalo", props.settings?.zalo, `https://zalo.me/${props.settings?.zalo}`],
-          ["fa-clock", "Gi\u1EDD l\xE0m vi\u1EC7c", "8:00 \u2013 22:00 (T2\u2013CN)", ""]
-        ].map(([ic, lb, val, href]) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-brand-50 text-brand-600 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-          /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: lb }),
-            href ? /* @__PURE__ */ jsxDEV("a", { href, target: "_blank", rel: "noopener", class: "font-semibold text-slate-900 text-sm hover:text-brand-600 break-all", children: val }) : /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: val })
-          ] })
-        ] })) })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-brand-600 to-fuchsia-600 rounded-2xl p-5 text-white", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-2xl mb-2.5" }),
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5", children: "C\u1EA7n h\u1ED7 tr\u1EE3 g\u1EA5p?" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/85 mb-4 leading-relaxed", children: "Chat Zalo l\xE0 k\xEAnh ph\u1EA3n h\u1ED3i nhanh nh\u1EA5t, th\u01B0\u1EDDng d\u01B0\u1EDBi 5 ph\xFAt trong gi\u1EDD l\xE0m vi\u1EC7c." }),
+    ] })
+  ] }) });
+};
+var AffiliateLandingPage = (props) => {
+  const siteName = props.settings?.site_name || "KhoSkill AI";
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "affiliate", title: "Ch\u01B0\u01A1ng tr\xECnh Affiliate", description: `Ki\u1EBFm hoa h\u1ED3ng khi gi\u1EDBi thi\u1EC7u s\u1EA3n ph\u1EA9m ${siteName}`, children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold mb-5", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake text-amber-400" }),
+          "Ch\u01B0\u01A1ng tr\xECnh \u0111\u1ED1i t\xE1c"
+        ] }),
+        /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-5xl font-extrabold tracking-tight mb-4", children: [
+          "Nh\u1EADn ",
+          /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent", children: [
+            props.percent,
+            "% hoa h\u1ED3ng"
+          ] }),
+          " m\u1ED7i \u0111\u01A1n h\xE0ng"
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 max-w-2xl mx-auto mb-8", children: "Chia s\u1EBB link gi\u1EDBi thi\u1EC7u, ki\u1EBFm thu nh\u1EADp th\u1EE5 \u0111\u1ED9ng kh\xF4ng gi\u1EDBi h\u1EA1n. Kh\xF4ng c\u1EA7n v\u1ED1n, kh\xF4ng c\u1EA7n kho h\xE0ng." }),
         /* @__PURE__ */ jsxDEV(
           "a",
           {
-            href: `https://zalo.me/${props.settings?.zalo}`,
-            target: "_blank",
-            rel: "noopener",
-            class: "flex items-center justify-center w-full h-11 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition",
-            children: "Chat Zalo ngay"
+            href: props.user ? "/tai-khoan/affiliate" : "/dang-ky",
+            class: "inline-flex h-12 px-7 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-bold hover:opacity-90 shadow-xl transition",
+            children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket" }),
+              props.user ? "V\xE0o trang Affiliate" : "Tham gia ngay \u2014 Mi\u1EC5n ph\xED"
+            ]
           }
         )
       ] })
-    ] })
-  ] })
-] }) });
-var AffiliateLandingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "affiliate", title: "Ch\u01B0\u01A1ng tr\xECnh Affiliate", description: "Ki\u1EBFm hoa h\u1ED3ng khi gi\u1EDBi thi\u1EC7u s\u1EA3n ph\u1EA9m WebSkill AI", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold mb-5", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake text-amber-400" }),
-        "Ch\u01B0\u01A1ng tr\xECnh \u0111\u1ED1i t\xE1c"
-      ] }),
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-5xl font-extrabold tracking-tight mb-4", children: [
-        "Nh\u1EADn ",
-        /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent", children: [
-          props.percent,
-          "% hoa h\u1ED3ng"
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "max-w-6xl mx-auto px-4 py-14", children: [
+      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "C\xE1ch ho\u1EA1t \u0111\u1ED9ng", subtitle: "Ch\u1EC9 3 b\u01B0\u1EDBc \u0111\u01A1n gi\u1EA3n \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u ki\u1EBFm ti\u1EC1n" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-3 gap-5 mt-8 mb-14", children: [
+        ["fa-user-plus", "1. \u0110\u0103ng k\xFD t\xE0i kho\u1EA3n", "T\u1EA1o t\xE0i kho\u1EA3n mi\u1EC5n ph\xED v\xE0 nh\u1EADn ngay m\xE3 gi\u1EDBi thi\u1EC7u ri\xEAng c\u1EE7a b\u1EA1n."],
+        ["fa-share-nodes", "2. Chia s\u1EBB link", "\u0110\u0103ng link l\xEAn Facebook, TikTok, Zalo, group ho\u1EB7c g\u1EEDi tr\u1EF1c ti\u1EBFp cho b\u1EA1n b\xE8."],
+        ["fa-coins", "3. Nh\u1EADn hoa h\u1ED3ng", `Nh\u1EADn ${props.percent}% gi\xE1 tr\u1ECB m\u1ED7i \u0111\u01A1n h\xE0ng ph\xE1t sinh t\u1EEB link c\u1EE7a b\u1EA1n.`]
+      ].map(([ic, t, d]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center text-xl mx-auto mb-4 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-2", children: t }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-500 leading-relaxed", children: d })
+      ] })) }),
+      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "Thu nh\u1EADp tham kh\u1EA3o", subtitle: "\u01AF\u1EDBc t\xEDnh d\u1EF1a tr\xEAn s\u1ED1 \u0111\u01A1n gi\u1EDBi thi\u1EC7u m\u1ED7i th\xE1ng" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-5 mt-8", children: [[5, 89e4], [20, 89e4], [50, 89e4]].map(([n, avg]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-slate-500 mb-1", children: [
+          n,
+          " \u0111\u01A1n / th\xE1ng"
         ] }),
-        " m\u1ED7i \u0111\u01A1n h\xE0ng"
-      ] }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 max-w-2xl mx-auto mb-8", children: "Chia s\u1EBB link gi\u1EDBi thi\u1EC7u, ki\u1EBFm thu nh\u1EADp th\u1EE5 \u0111\u1ED9ng kh\xF4ng gi\u1EDBi h\u1EA1n. Kh\xF4ng c\u1EA7n v\u1ED1n, kh\xF4ng c\u1EA7n kho h\xE0ng." }),
-      /* @__PURE__ */ jsxDEV(
-        "a",
-        {
-          href: props.user ? "/tai-khoan/affiliate" : "/dang-ky",
-          class: "inline-flex h-12 px-7 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-bold hover:opacity-90 shadow-xl transition",
-          children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket" }),
-            props.user ? "V\xE0o trang Affiliate" : "Tham gia ngay \u2014 Mi\u1EC5n ph\xED"
-          ]
-        }
-      )
-    ] })
-  ] }),
-  /* @__PURE__ */ jsxDEV("div", { class: "max-w-6xl mx-auto px-4 py-14", children: [
-    /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "C\xE1ch ho\u1EA1t \u0111\u1ED9ng", subtitle: "Ch\u1EC9 3 b\u01B0\u1EDBc \u0111\u01A1n gi\u1EA3n \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u ki\u1EBFm ti\u1EC1n" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-3 gap-5 mt-8 mb-14", children: [
-      ["fa-user-plus", "1. \u0110\u0103ng k\xFD t\xE0i kho\u1EA3n", "T\u1EA1o t\xE0i kho\u1EA3n mi\u1EC5n ph\xED v\xE0 nh\u1EADn ngay m\xE3 gi\u1EDBi thi\u1EC7u ri\xEAng c\u1EE7a b\u1EA1n."],
-      ["fa-share-nodes", "2. Chia s\u1EBB link", "\u0110\u0103ng link l\xEAn Facebook, TikTok, Zalo, group ho\u1EB7c g\u1EEDi tr\u1EF1c ti\u1EBFp cho b\u1EA1n b\xE8."],
-      ["fa-coins", "3. Nh\u1EADn hoa h\u1ED3ng", `Nh\u1EADn ${props.percent}% gi\xE1 tr\u1ECB m\u1ED7i \u0111\u01A1n h\xE0ng ph\xE1t sinh t\u1EEB link c\u1EE7a b\u1EA1n.`]
-    ].map(([ic, t, d]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center text-xl mx-auto mb-4 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-      /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-2", children: t }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-500 leading-relaxed", children: d })
-    ] })) }),
-    /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "Thu nh\u1EADp tham kh\u1EA3o", subtitle: "\u01AF\u1EDBc t\xEDnh d\u1EF1a tr\xEAn s\u1ED1 \u0111\u01A1n gi\u1EDBi thi\u1EC7u m\u1ED7i th\xE1ng" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-5 mt-8", children: [[5, 89e4], [20, 89e4], [50, 89e4]].map(([n, avg]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-slate-500 mb-1", children: [
-        n,
-        " \u0111\u01A1n / th\xE1ng"
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-emerald-600", children: formatVND(Math.round(n * avg * props.percent / 100)) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-400 mt-1.5", children: [
-        "Gi\xE1 tr\u1ECB \u0111\u01A1n TB ",
-        formatVND(avg)
+        /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-emerald-600", children: formatVND(Math.round(n * avg * props.percent / 100)) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-400 mt-1.5", children: [
+          "Gi\xE1 tr\u1ECB \u0111\u01A1n TB ",
+          formatVND(avg)
+        ] })
+      ] })) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "mt-14 bg-white rounded-2xl border border-slate-200 p-7 md:p-10", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-slate-900 mb-5", children: "\u0110i\u1EC1u kho\u1EA3n ch\u01B0\u01A1ng tr\xECnh" }),
+        /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-sm text-slate-600", children: [
+          `Hoa h\u1ED3ng ${props.percent}% tr\xEAn gi\xE1 tr\u1ECB \u0111\u01A1n h\xE0ng th\u1EF1c thu (sau gi\u1EA3m gi\xE1)`,
+          'Hoa h\u1ED3ng \u0111\u01B0\u1EE3c ghi nh\u1EADn khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n"',
+          "R\xFAt hoa h\u1ED3ng t\u1ED1i thi\u1EC3u 200.000\u0111, x\u1EED l\xFD trong 1-3 ng\xE0y l\xE0m vi\u1EC7c",
+          "Kh\xF4ng \xE1p d\u1EE5ng cho \u0111\u01A1n h\xE0ng t\u1EF1 mua b\u1EB1ng m\xE3 c\u1EE7a ch\xEDnh m\xECnh",
+          `Nghi\xEAm c\u1EA5m spam, ch\u1EA1y qu\u1EA3ng c\xE1o tr\xEAn th\u01B0\u01A1ng hi\u1EC7u ${siteName}`
+        ].map((t) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500 mt-0.5 shrink-0" }),
+          t
+        ] })) })
       ] })
-    ] })) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "mt-14 bg-white rounded-2xl border border-slate-200 p-7 md:p-10", children: [
-      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-slate-900 mb-5", children: "\u0110i\u1EC1u kho\u1EA3n ch\u01B0\u01A1ng tr\xECnh" }),
-      /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-sm text-slate-600", children: [
-        `Hoa h\u1ED3ng ${props.percent}% tr\xEAn gi\xE1 tr\u1ECB \u0111\u01A1n h\xE0ng th\u1EF1c thu (sau gi\u1EA3m gi\xE1)`,
-        'Hoa h\u1ED3ng \u0111\u01B0\u1EE3c ghi nh\u1EADn khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n"',
-        "R\xFAt hoa h\u1ED3ng t\u1ED1i thi\u1EC3u 200.000\u0111, x\u1EED l\xFD trong 1-3 ng\xE0y l\xE0m vi\u1EC7c",
-        "Kh\xF4ng \xE1p d\u1EE5ng cho \u0111\u01A1n h\xE0ng t\u1EF1 mua b\u1EB1ng m\xE3 c\u1EE7a ch\xEDnh m\xECnh",
-        "Nghi\xEAm c\u1EA5m spam, ch\u1EA1y qu\u1EA3ng c\xE1o tr\xEAn th\u01B0\u01A1ng hi\u1EC7u WebSkill AI"
-      ].map((t) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500 mt-0.5 shrink-0" }),
-        t
-      ] })) })
     ] })
-  ] })
-] });
+  ] });
+};
 var DocPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: props.heading, children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-4xl mx-auto px-4 py-10", children: [
   /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: props.heading }] }),
   /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7", children: props.heading }),
@@ -12003,7 +12107,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     /* @__PURE__ */ jsxDEV("meta", { name: "viewport", content: "width=device-width, initial-scale=1.0" }),
     /* @__PURE__ */ jsxDEV("title", { children: [
       props.heading,
-      " | Qu\u1EA3n tr\u1ECB WebSkill AI"
+      " | Qu\u1EA3n tr\u1ECB KhoSkill AI"
     ] }),
     /* @__PURE__ */ jsxDEV("meta", { name: "robots", content: "noindex,nofollow" }),
     /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
@@ -12022,7 +12126,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
           /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 grid place-items-center text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-sm" }) }),
           /* @__PURE__ */ jsxDEV("div", { class: "leading-none", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-white text-sm", children: "Admin Panel" }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-slate-500 mt-0.5", children: "WebSkill AI" })
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-slate-500 mt-0.5", children: "KhoSkill AI" })
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("nav", { class: "flex-1 overflow-y-auto p-3 space-y-0.5", children: MENU2.map((m) => /* @__PURE__ */ jsxDEV("a", { href: m.href, class: `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? "bg-brand-600 text-white" : "hover:bg-slate-800 hover:text-white"}`, children: [
@@ -12073,6 +12177,22 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
 var AdminDashboard = (props) => {
   const max = Math.max(...props.chart.map((c) => c.value), 1);
   return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "dash", heading: "Dashboard", sub: "T\u1ED5ng quan ho\u1EA1t \u0111\u1ED9ng h\u1EC7 th\u1ED1ng", children: [
+    (props.setupWarnings?.length || 0) > 0 && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-amber-900 text-sm mb-2 flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation text-amber-600" }),
+        "Checklist c\u1EA5u h\xECnh tr\u01B0\u1EDBc khi nh\u1EADn \u0111\u01A1n h\xE0ng th\u1EADt"
+      ] }),
+      /* @__PURE__ */ jsxDEV("ul", { class: "space-y-1.5 text-xs text-amber-800", children: props.setupWarnings.map((w) => /* @__PURE__ */ jsxDEV("li", { class: "flex items-center justify-between gap-3 flex-wrap", children: [
+        /* @__PURE__ */ jsxDEV("span", { children: [
+          "\u2022 ",
+          w.text
+        ] }),
+        /* @__PURE__ */ jsxDEV("a", { href: w.href, class: "px-2.5 py-1 rounded-lg bg-amber-200/70 hover:bg-amber-200 font-semibold text-amber-900 whitespace-nowrap", children: [
+          w.action,
+          " \u2192"
+        ] })
+      ] })) })
+    ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5", children: [
       ["fa-sack-dollar", "Doanh thu", formatVND(props.stats.revenue), "from-emerald-500 to-teal-600", `${props.stats.paidOrders} \u0111\u01A1n \u0111\xE3 thanh to\xE1n`],
       ["fa-receipt", "T\u1ED5ng \u0111\u01A1n h\xE0ng", String(props.stats.orders), "from-brand-500 to-brand-600", `${props.stats.pendingOrders} \u0111\u01A1n ch\u1EDD x\u1EED l\xFD`],
@@ -12251,15 +12371,16 @@ var AdminProductForm = (props) => {
             /* @__PURE__ */ jsxDEV("input", { type: "url", name: "thumbnail", value: p.thumbnail || "", placeholder: "https://...", class: fieldCls })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Video Demo s\u1EA3n ph\u1EA9m (YouTube embed URL)" }),
-            /* @__PURE__ */ jsxDEV("input", { type: "url", name: "demo_video_url", value: p.demo_video_url || "", placeholder: "Link YouTube embed ho\u1EB7c link R2 MP4: https://pub-...r2.dev/videos/demo-xxx.mp4", class: fieldCls })
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Video Demo s\u1EA3n ph\u1EA9m (YouTube ho\u1EB7c link R2 MP4)" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "url", name: "demo_video_url", value: p.demo_video_url || "", placeholder: "https://youtu.be/... ho\u1EB7c https://pub-...r2.dev/videos/demo.mp4", class: fieldCls }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-slate-400 mt-1", children: "H\u1ED7 tr\u1EE3 link YouTube (th\u01B0\u1EDDng, Shorts, embed) ho\u1EB7c file MP4 tr\u1EF1c ti\u1EBFp t\u1EEB Cloudflare R2." })
           ] })
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
         /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "N\u1ED9i dung b\xE0n giao" }),
         /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "\u{1F517} Link source code (ch\u1EC9 hi\u1EC7n sau khi mua) *" }),
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "\u{1F517} Link t\u1EA3i Skill / T\xE0i li\u1EC7u b\xE0n giao (ch\u1EC9 hi\u1EC7n sau khi mua) *" }),
           /* @__PURE__ */ jsxDEV("input", { type: "url", name: "download_url", value: p.download_url || "", placeholder: "https://drive.google.com/...", class: fieldCls })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
@@ -12326,8 +12447,9 @@ var AdminProductForm = (props) => {
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Tr\u1EA1ng th\xE1i" }),
           /* @__PURE__ */ jsxDEV("select", { name: "status", class: fieldCls, children: [
-            /* @__PURE__ */ jsxDEV("option", { value: "published", selected: p.status !== "draft", children: "Hi\u1EC3n th\u1ECB" }),
-            /* @__PURE__ */ jsxDEV("option", { value: "draft", selected: p.status === "draft", children: "Nh\xE1p" })
+            /* @__PURE__ */ jsxDEV("option", { value: "published", selected: !p.status || p.status === "published", children: "\u0110ang m\u1EDF b\xE1n" }),
+            /* @__PURE__ */ jsxDEV("option", { value: "coming_soon", selected: p.status === "coming_soon", children: "Ch\u01B0a m\u1EDF b\xE1n" }),
+            /* @__PURE__ */ jsxDEV("option", { value: "draft", selected: p.status === "draft", children: "Nh\xE1p (\u1EA9n)" })
           ] })
         ] })
       ] }),
@@ -12584,57 +12706,66 @@ var AdminUsers = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activ
   ] }) }) }),
   /* @__PURE__ */ jsxDEV(Pagination, { page: props.page, totalPages: props.totalPages, baseUrl: "/admin/thanh-vien" })
 ] });
-var AdminCategories = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "categories", heading: "Qu\u1EA3n l\xFD danh m\u1EE5c", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
-    /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Danh m\u1EE5c" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Slug" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "SP" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
-    ] }) }),
-    /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.categories.map((c) => /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-lg bg-brand-50 text-brand-600 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon} text-xs` }) }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900", children: c.name }),
-          /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 line-clamp-1 max-w-xs", children: c.description })
-        ] })
+var AdminCategories = (props) => {
+  const ed = props.editing;
+  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "categories", heading: "Qu\u1EA3n l\xFD danh m\u1EE5c", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
+      /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+        /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Danh m\u1EE5c" }),
+        /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Slug" }),
+        /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "SP" }),
+        /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 font-mono text-xs", children: c.slug }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold", children: c.product_count || 0 }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-right", children: /* @__PURE__ */ jsxDEV(
-        "button",
-        {
-          class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
-          "data-url": `/api/admin/categories/${c.id}`,
-          "data-name": c.name,
-          children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
-        }
-      ) })
-    ] })) })
-  ] }) }),
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/admin/categories", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start", children: [
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Th\xEAm danh m\u1EE5c" }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "T\xEAn *" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "name", required: true, class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Slug *" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "slug", required: true, placeholder: "ten-danh-muc", class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "M\xF4 t\u1EA3" }),
-      /* @__PURE__ */ jsxDEV("textarea", { name: "description", rows: 3, class: "w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm" })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Icon (FontAwesome)" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "icon", value: "fa-cube", class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: "Th\xEAm danh m\u1EE5c" })
-  ] })
-] }) });
+      /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.categories.map((c) => /* @__PURE__ */ jsxDEV("tr", { children: [
+        /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-lg bg-brand-50 text-brand-600 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon} text-xs` }) }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900", children: c.name }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 line-clamp-1 max-w-xs", children: c.description })
+          ] })
+        ] }) }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 font-mono text-xs", children: c.slug }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold", children: c.product_count || 0 }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("a", { href: `/admin/danh-muc?edit=${c.id}`, class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600", title: "S\u1EEDa", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-pen text-xs" }) }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
+              "data-url": `/api/admin/categories/${c.id}`,
+              "data-name": c.name,
+              children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
+            }
+          )
+        ] })
+      ] })) })
+    ] }) }),
+    /* @__PURE__ */ jsxDEV("form", { action: ed ? `/api/admin/categories/${ed.id}/update` : "/api/admin/categories", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between", children: [
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: ed ? `S\u1EEDa: ${ed.name}` : "Th\xEAm danh m\u1EE5c" }),
+        ed && /* @__PURE__ */ jsxDEV("a", { href: "/admin/danh-muc", class: "text-xs text-slate-500 hover:underline", children: "Hu\u1EF7 s\u1EEDa" })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "T\xEAn *" }),
+        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "name", value: ed?.name || "", required: true, class: fieldCls })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Slug *" }),
+        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "slug", value: ed?.slug || "", required: true, placeholder: "ten-danh-muc", class: fieldCls })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "M\xF4 t\u1EA3" }),
+        /* @__PURE__ */ jsxDEV("textarea", { name: "description", rows: 3, class: "w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm", children: ed?.description || "" })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Icon (FontAwesome)" }),
+        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "icon", value: ed?.icon || "fa-cube", class: fieldCls })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: ed ? "L\u01B0u thay \u0111\u1ED5i" : "Th\xEAm danh m\u1EE5c" })
+    ] })
+  ] }) });
+};
 var AdminCoupons = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "coupons", heading: "M\xE3 gi\u1EA3m gi\xE1", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5", children: [
   /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
     /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
@@ -12698,61 +12829,68 @@ var AdminCoupons = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, act
     /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: "T\u1EA1o m\xE3 gi\u1EA3m gi\xE1" })
   ] })
 ] }) });
-var AdminPosts = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "posts", heading: "Qu\u1EA3n l\xFD b\xE0i vi\u1EBFt", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_400px] gap-5", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
-    /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ti\xEAu \u0111\u1EC1" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "L\u01B0\u1EE3t xem" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ng\xE0y" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
+var AdminPosts = (props) => {
+  const ed = props.editing;
+  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "posts", heading: "Qu\u1EA3n l\xFD b\xE0i vi\u1EBFt", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_400px] gap-5", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
+      /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+        /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ti\xEAu \u0111\u1EC1" }),
+        /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "L\u01B0\u1EE3t xem" }),
+        /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ng\xE0y" }),
+        /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
+      ] }) }),
+      /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.posts.map((p) => /* @__PURE__ */ jsxDEV("tr", { children: [
+        /* @__PURE__ */ jsxDEV("td", { children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 line-clamp-1 max-w-sm", children: p.title }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 font-mono", children: p.slug })
+        ] }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: p.view_count }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 text-xs whitespace-nowrap", children: formatDate(p.created_at) }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, target: "_blank", class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500", title: "Xem", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs" }) }),
+          /* @__PURE__ */ jsxDEV("a", { href: `/admin/bai-viet?edit=${p.id}`, class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600", title: "S\u1EEDa", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-pen text-xs" }) }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
+              "data-url": `/api/admin/posts/${p.id}`,
+              "data-name": p.title,
+              children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
+            }
+          )
+        ] })
+      ] })) })
     ] }) }),
-    /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.posts.map((p) => /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("td", { children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 line-clamp-1 max-w-sm", children: p.title }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 font-mono", children: p.slug })
+    /* @__PURE__ */ jsxDEV("form", { action: ed ? `/api/admin/posts/${ed.id}/update` : "/api/admin/posts", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between", children: [
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: ed ? "Ch\u1EC9nh s\u1EEDa b\xE0i vi\u1EBFt" : "Vi\u1EBFt b\xE0i m\u1EDBi" }),
+        ed && /* @__PURE__ */ jsxDEV("a", { href: "/admin/bai-viet", class: "text-xs text-slate-500 hover:underline", children: "Hu\u1EF7 s\u1EEDa" })
       ] }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: p.view_count }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 text-xs whitespace-nowrap", children: formatDate(p.created_at) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
-        /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, target: "_blank", class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs" }) }),
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
-            "data-url": `/api/admin/posts/${p.id}`,
-            "data-name": p.title,
-            children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
-          }
-        )
-      ] })
-    ] })) })
-  ] }) }),
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/admin/posts", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start", children: [
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Vi\u1EBFt b\xE0i m\u1EDBi" }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ti\xEAu \u0111\u1EC1 *" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "title", required: true, class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Slug *" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "slug", required: true, class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "M\xF4 t\u1EA3 ng\u1EAFn" }),
-      /* @__PURE__ */ jsxDEV("textarea", { name: "excerpt", rows: 2, class: "w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm" })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "N\u1ED9i dung (HTML)" }),
-      /* @__PURE__ */ jsxDEV("textarea", { name: "content", rows: 10, class: "w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm font-mono" })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Tags (ph\xE2n c\xE1ch d\u1EA5u ph\u1EA9y)" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "tags", placeholder: "veo3,huong-dan", class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: "\u0110\u0103ng b\xE0i" })
-  ] })
-] }) });
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ti\xEAu \u0111\u1EC1 *" }),
+        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "title", value: ed?.title || "", required: true, class: fieldCls })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Slug *" }),
+        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "slug", value: ed?.slug || "", required: true, class: fieldCls })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "M\xF4 t\u1EA3 ng\u1EAFn" }),
+        /* @__PURE__ */ jsxDEV("textarea", { name: "excerpt", rows: 2, class: "w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm", children: ed?.excerpt || "" })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "N\u1ED9i dung (HTML)" }),
+        /* @__PURE__ */ jsxDEV("textarea", { name: "content", rows: 10, class: "w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm font-mono", children: ed?.content || "" })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Tags (ph\xE2n c\xE1ch d\u1EA5u ph\u1EA9y)" }),
+        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "tags", value: ed?.tags || "", placeholder: "veo3,huong-dan", class: fieldCls })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: ed ? "L\u01B0u thay \u0111\u1ED5i" : "\u0110\u0103ng b\xE0i" })
+    ] })
+  ] }) });
+};
 var AdminReviews = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "reviews", heading: "Qu\u1EA3n l\xFD \u0111\xE1nh gi\xE1", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
   /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
     /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ng\u01B0\u1EDDi \u0111\xE1nh gi\xE1" }),
@@ -12835,7 +12973,9 @@ var AdminSettings = (props) => {
         ["hotline", "Hotline"],
         ["email", "Email h\u1ED7 tr\u1EE3"],
         ["zalo", "S\u1ED1 Zalo"],
-        ["facebook", "Link Facebook"]
+        ["facebook", "Link Facebook"],
+        ["youtube", "Link k\xEAnh YouTube"],
+        ["tiktok", "Link TikTok"]
       ].map(([k, l]) => /* @__PURE__ */ jsxDEV("div", { children: [
         /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: l }),
         /* @__PURE__ */ jsxDEV("input", { type: "text", name: k, value: s[k] || "", class: fieldCls })
@@ -12862,9 +13002,12 @@ var AdminSettings = (props) => {
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-amber-500" }),
-          "Webhook ng\xE2n h\xE0ng"
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-amber-500" }),
+            "Webhook ng\xE2n h\xE0ng"
+          ] }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/admin/giao-dich#webhook-config", class: "text-xs font-semibold text-brand-600 hover:underline", children: "L\u1EA5y URL & API Key \u2192" })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Nh\xE0 cung c\u1EA5p" }),
@@ -12880,6 +13023,7 @@ var AdminSettings = (props) => {
           /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-slate-500 mt-1", children: "\u0110\u1EB7t 0 n\u1EBFu mu\u1ED1n kh\u1EDBp s\u1ED1 ti\u1EC1n tuy\u1EC7t \u0111\u1ED1i." })
         ] }),
         /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer", children: [
+          /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "auto_confirm_manual", value: "0" }),
           /* @__PURE__ */ jsxDEV("input", { type: "checkbox", name: "auto_confirm_manual", value: "1", checked: s.auto_confirm_manual === "1", class: "mt-0.5" }),
           /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-amber-800 leading-relaxed", children: [
             /* @__PURE__ */ jsxDEV("b", { children: "B\u1EADt ch\u1EBF \u0111\u1ED9 DEMO" }),
@@ -12917,7 +13061,7 @@ var AdminBankTx = (props) => {
       ...props,
       activeKey: "banktx",
       heading: "Giao d\u1ECBch ng\xE2n h\xE0ng",
-      sub: "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED1i so\xE1t chuy\u1EC3n kho\u1EA3n v\xE0 c\u1EA5p quy\u1EC1n t\u1EA3i source code",
+      sub: "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED1i so\xE1t chuy\u1EC3n kho\u1EA3n v\xE0 c\u1EA5p quy\u1EC1n t\u1EA3i Skill AI",
       children: [
         /* @__PURE__ */ jsxDEV("section", { id: "webhook-config", class: "bg-white rounded-2xl border border-slate-200 p-5 mb-5", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex items-start justify-between gap-4 flex-wrap mb-4", children: [
@@ -13170,8 +13314,8 @@ var POLICY_DOCS = {
 <h2>Quy tr\xECnh mua h\xE0ng 4 b\u01B0\u1EDBc</h2>
 <p><b>B\u01B0\u1EDBc 1 \u2014 \u0110\u0103ng k\xFD t\xE0i kho\u1EA3n.</b> Truy c\u1EADp trang <a href="/dang-ky">\u0110\u0103ng k\xFD</a>, \u0111i\u1EC1n h\u1ECD t\xEAn, email v\xE0 m\u1EADt kh\u1EA9u. Qu\xE1 tr\xECnh ch\u1EC9 m\u1EA5t kho\u1EA3ng 30 gi\xE2y.</p>
 <p><b>B\u01B0\u1EDBc 2 \u2014 Ch\u1ECDn s\u1EA3n ph\u1EA9m.</b> Duy\u1EC7t qua <a href="/san-pham">danh s\xE1ch s\u1EA3n ph\u1EA9m</a>, xem video demo v\xE0 \u0111\u1ECDc m\xF4 t\u1EA3 chi ti\u1EBFt. B\u1EA5m "Th\xEAm v\xE0o gi\u1ECF" ho\u1EB7c "Mua ngay".</p>
-<p><b>B\u01B0\u1EDBc 3 \u2014 Thanh to\xE1n.</b> T\u1EA1i trang thanh to\xE1n, ch\u1ECDn ph\u01B0\u01A1ng th\u1EE9c (VietQR / MoMo / s\u1ED1 d\u01B0 v\xED), nh\u1EADp m\xE3 gi\u1EA3m gi\xE1 n\u1EBFu c\xF3 r\u1ED3i b\u1EA5m "\u0110\u1EB7t h\xE0ng ngay".</p>
-<p><b>B\u01B0\u1EDBc 4 \u2014 Nh\u1EADn s\u1EA3n ph\u1EA9m.</b> Qu\xE9t m\xE3 QR chuy\u1EC3n kho\u1EA3n theo \u0111\xFAng s\u1ED1 ti\u1EC1n v\xE0 n\u1ED9i dung hi\u1EC3n th\u1ECB. Sau khi x\xE1c nh\u1EADn, link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 license key s\u1EBD xu\u1EA5t hi\u1EC7n trong m\u1EE5c <a href="/tai-khoan/san-pham">S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</a>.</p>
+<p><b>B\u01B0\u1EDBc 3 \u2014 Thanh to\xE1n.</b> T\u1EA1i trang thanh to\xE1n, ch\u1ECDn ph\u01B0\u01A1ng th\u1EE9c (VietQR qua app Ng\xE2n h\xE0ng / MoMo ho\u1EB7c s\u1ED1 d\u01B0 v\xED), nh\u1EADp m\xE3 gi\u1EA3m gi\xE1 n\u1EBFu c\xF3 r\u1ED3i b\u1EA5m "\u0110\u1EB7t h\xE0ng ngay".</p>
+<p><b>B\u01B0\u1EDBc 4 \u2014 Nh\u1EADn s\u1EA3n ph\u1EA9m.</b> Qu\xE9t m\xE3 QR chuy\u1EC3n kho\u1EA3n theo \u0111\xFAng s\u1ED1 ti\u1EC1n v\xE0 n\u1ED9i dung hi\u1EC3n th\u1ECB. Sau khi x\xE1c nh\u1EADn, link t\u1EA3i Skill v\xE0 license key s\u1EBD xu\u1EA5t hi\u1EC7n trong m\u1EE5c <a href="/tai-khoan/san-pham">S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</a>.</p>
 
 <h2>L\u01B0u \xFD khi chuy\u1EC3n kho\u1EA3n</h2>
 <ul>
@@ -13183,10 +13327,9 @@ var POLICY_DOCS = {
 <h2>C\xE1ch nh\u1EADn s\u1EA3n ph\u1EA9m</h2>
 <p>Tu\u1EF3 lo\u1EA1i s\u1EA3n ph\u1EA9m, b\u1EA1n s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c:</p>
 <ul>
-<li><b>Source code:</b> link Google Drive ch\u1EE9a file .zip m\xE3 ngu\u1ED3n + t\xE0i li\u1EC7u c\xE0i \u0111\u1EB7t</li>
-<li><b>Chatbot:</b> link truy c\u1EADp chatbot GPT/Gemini ri\xEAng</li>
-<li><b>B\u1ED9 prompt:</b> link Google Sheet ho\u1EB7c Google Doc ch\u1EE9a to\xE0n b\u1ED9 prompt</li>
-<li><b>Combo:</b> t\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m con \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t c\xF9ng l\xFAc</li>
+<li><b>Skill t\u1EA1o video AI:</b> link Google Drive / t\xE0i li\u1EC7u ch\u1EE9a tr\u1ECDn b\u1ED9 prompt, quy tr\xECnh v\xE0 file c\u1EA5u h\xECnh theo ng\xE1ch</li>
+<li><b>Chatbot / App (khi m\u1EDF b\xE1n):</b> link k\xEDch ho\u1EA1t ho\u1EB7c b\u1ED9 c\xE0i ri\xEAng theo h\u01B0\u1EDBng d\u1EABn</li>
+<li><b>Combo (khi m\u1EDF b\xE1n):</b> to\xE0n b\u1ED9 s\u1EA3n ph\u1EA9m con \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t c\xF9ng l\xFAc</li>
 </ul>
 
 <h2>G\u1EB7p v\u1EA5n \u0111\u1EC1?</h2>
@@ -13197,24 +13340,23 @@ var POLICY_DOCS = {
     heading: "Ch\xEDnh s\xE1ch b\u1EA3o h\xE0nh & ho\xE0n ti\u1EC1n",
     html: `
 <h2>Ch\xEDnh s\xE1ch giao h\xE0ng</h2>
-<p>To\xE0n b\u1ED9 s\u1EA3n ph\u1EA9m tr\xEAn WebSkill AI l\xE0 s\u1EA3n ph\u1EA9m s\u1ED1, \u0111\u01B0\u1EE3c giao <b>t\u1EF1 \u0111\u1ED9ng 100%</b>. Ngay khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n", link truy c\u1EADp v\xE0 license key s\u1EBD hi\u1EC3n th\u1ECB trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n. Kh\xF4ng c\u1EA7n ch\u1EDD admin duy\u1EC7t th\u1EE7 c\xF4ng.</p>
+<p>To\xE0n b\u1ED9 s\u1EA3n ph\u1EA9m tr\xEAn KhoSkill AI l\xE0 s\u1EA3n ph\u1EA9m s\u1ED1, \u0111\u01B0\u1EE3c giao <b>t\u1EF1 \u0111\u1ED9ng 100%</b>. Ngay khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n", link truy c\u1EADp v\xE0 license key s\u1EBD hi\u1EC3n th\u1ECB trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n. Kh\xF4ng c\u1EA7n ch\u1EDD admin duy\u1EC7t th\u1EE7 c\xF4ng.</p>
 
 <h2>Ch\xEDnh s\xE1ch b\u1EA3o h\xE0nh</h2>
 <ul>
 <li>H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt mi\u1EC5n ph\xED <b>6\u201312 th\xE1ng</b> tu\u1EF3 t\u1EEBng s\u1EA3n ph\u1EA9m</li>
 <li>Nh\u1EADn b\u1EA3n c\u1EADp nh\u1EADt mi\u1EC5n ph\xED <b>tr\u1ECDn \u0111\u1EDDi</b></li>
 <li>H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t qua Zalo ho\u1EB7c Ultraview khi b\u1EA1n g\u1EB7p kh\xF3 kh\u0103n</li>
-<li>V\u1EDBi g\xF3i Combo All-In-One: t\u1EB7ng th\xEAm 2 bu\u1ED5i setup 1-1 tr\u1EF1c ti\u1EBFp</li>
 </ul>
 
 <h2>Ch\xEDnh s\xE1ch ho\xE0n ti\u1EC1n</h2>
 <p>Ch\xFAng t\xF4i ho\xE0n ti\u1EC1n <b>100%</b> trong v\xF2ng <b>7 ng\xE0y</b> k\u1EC3 t\u1EEB ng\xE0y mua n\u1EBFu:</p>
 <ul>
-<li>S\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 tr\xEAn website</li>
-<li>Source code kh\xF4ng th\u1EC3 c\xE0i \u0111\u1EB7t \u0111\u01B0\u1EE3c do l\u1ED7i t\u1EEB ph\xEDa ch\xFAng t\xF4i</li>
+<li>S\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 ho\u1EB7c video demo tr\xEAn website</li>
+<li>T\xE0i li\u1EC7u/b\u1ED9 Skill b\u1ECB l\u1ED7i quy tr\xECnh m\xE0 kh\xF4ng th\u1EC3 kh\u1EAFc ph\u1EE5c sau khi h\u1ED7 tr\u1EE3</li>
 <li>Link truy c\u1EADp b\u1ECB l\u1ED7i v\xE0 kh\xF4ng \u0111\u01B0\u1EE3c kh\u1EAFc ph\u1EE5c trong 48 gi\u1EDD</li>
 </ul>
-<p><b>Kh\xF4ng \xE1p d\u1EE5ng ho\xE0n ti\u1EC1n</b> trong c\xE1c tr\u01B0\u1EDDng h\u1EE3p: b\u1EA1n \u0111\u1ED5i \xFD sau khi \u0111\xE3 t\u1EA3i source code, thi\u1EBFt b\u1ECB/m\xF4i tr\u01B0\u1EDDng c\u1EE7a b\u1EA1n kh\xF4ng \u0111\xE1p \u1EE9ng y\xEAu c\u1EA7u t\u1ED1i thi\u1EC3u, ho\u1EB7c b\u1EA1n t\u1EF1 \xFD ch\u1EC9nh s\u1EEDa code g\xE2y l\u1ED7i.</p>
+<p><b>Kh\xF4ng \xE1p d\u1EE5ng ho\xE0n ti\u1EC1n</b> trong c\xE1c tr\u01B0\u1EDDng h\u1EE3p: b\u1EA1n \u0111\u1ED5i \xFD sau khi \u0111\xE3 t\u1EA3i b\u1ED9 Skill, thi\u1EBFt b\u1ECB/m\xF4i tr\u01B0\u1EDDng c\u1EE7a b\u1EA1n kh\xF4ng \u0111\xE1p \u1EE9ng y\xEAu c\u1EA7u t\u1ED1i thi\u1EC3u, ho\u1EB7c b\u1EA1n t\u1EF1 \xFD thay \u0111\u1ED5i c\u1EA5u h\xECnh g\xE2y l\u1ED7i.</p>
 
 <h2>Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt</h2>
 <ul>
@@ -13229,7 +13371,7 @@ var POLICY_DOCS = {
     heading: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng",
     html: `
 <h2>1. Ch\u1EA5p nh\u1EADn \u0111i\u1EC1u kho\u1EA3n</h2>
-<p>Khi truy c\u1EADp v\xE0 s\u1EED d\u1EE5ng website WebSkill AI, b\u1EA1n \u0111\u1ED3ng \xFD tu\xE2n th\u1EE7 c\xE1c \u0111i\u1EC1u kho\u1EA3n d\u01B0\u1EDBi \u0111\xE2y. N\u1EBFu kh\xF4ng \u0111\u1ED3ng \xFD, vui l\xF2ng ng\u1EEBng s\u1EED d\u1EE5ng d\u1ECBch v\u1EE5.</p>
+<p>Khi truy c\u1EADp v\xE0 s\u1EED d\u1EE5ng website KhoSkill AI (khoskill.site), b\u1EA1n \u0111\u1ED3ng \xFD tu\xE2n th\u1EE7 c\xE1c \u0111i\u1EC1u kho\u1EA3n d\u01B0\u1EDBi \u0111\xE2y. N\u1EBFu kh\xF4ng \u0111\u1ED3ng \xFD, vui l\xF2ng ng\u1EEBng s\u1EED d\u1EE5ng d\u1ECBch v\u1EE5.</p>
 
 <h2>2. T\xE0i kho\u1EA3n ng\u01B0\u1EDDi d\xF9ng</h2>
 <ul>
@@ -13242,28 +13384,28 @@ var POLICY_DOCS = {
 <h2>3. B\u1EA3n quy\u1EC1n s\u1EA3n ph\u1EA9m</h2>
 <p>Khi mua s\u1EA3n ph\u1EA9m, b\u1EA1n <b>\u0111\u01B0\u1EE3c ph\xE9p</b>:</p>
 <ul>
-<li>S\u1EED d\u1EE5ng cho d\u1EF1 \xE1n c\xE1 nh\xE2n v\xE0 th\u01B0\u01A1ng m\u1EA1i kh\xF4ng gi\u1EDBi h\u1EA1n</li>
-<li>Ch\u1EC9nh s\u1EEDa m\xE3 ngu\u1ED3n theo nhu c\u1EA7u ri\xEAng</li>
-<li>C\xE0i \u0111\u1EB7t tr\xEAn kh\xF4ng gi\u1EDBi h\u1EA1n s\u1ED1 domain c\u1EE7a ch\xEDnh b\u1EA1n</li>
+<li>S\u1EED d\u1EE5ng cho c\xE1c k\xEAnh c\xE1 nh\xE2n v\xE0 k\xEAnh th\u01B0\u01A1ng m\u1EA1i kh\xF4ng gi\u1EDBi h\u1EA1n</li>
+<li>Tu\u1EF3 bi\u1EBFn prompt, k\u1ECBch b\u1EA3n v\xE0 quy tr\xECnh theo nhu c\u1EA7u ri\xEAng</li>
+<li>\xC1p d\u1EE5ng cho kh\xF4ng gi\u1EDBi h\u1EA1n s\u1ED1 k\xEAnh c\u1EE7a ch\xEDnh b\u1EA1n</li>
 </ul>
 <p>B\u1EA1n <b>kh\xF4ng \u0111\u01B0\u1EE3c ph\xE9p</b>:</p>
 <ul>
-<li>B\xE1n l\u1EA1i nguy\xEAn b\u1EA3n source code cho b\xEAn th\u1EE9 ba</li>
+<li>B\xE1n l\u1EA1i nguy\xEAn b\u1EA3n b\u1ED9 Skill ho\u1EB7c t\xE0i li\u1EC7u cho b\xEAn th\u1EE9 ba</li>
 <li>Chia s\u1EBB c\xF4ng khai link t\u1EA3i ho\u1EB7c license key</li>
-<li>\u0110\u0103ng t\u1EA3i source code l\xEAn c\xE1c di\u1EC5n \u0111\xE0n chia s\u1EBB mi\u1EC5n ph\xED</li>
-<li>S\u1EED d\u1EE5ng th\u01B0\u01A1ng hi\u1EC7u WebSkill AI khi b\xE1n l\u1EA1i s\u1EA3n ph\u1EA9m \u0111\xE3 ch\u1EC9nh s\u1EEDa</li>
+<li>\u0110\u0103ng t\u1EA3i n\u1ED9i dung b\u1ED9 Skill l\xEAn c\xE1c di\u1EC5n \u0111\xE0n chia s\u1EBB mi\u1EC5n ph\xED</li>
+<li>S\u1EED d\u1EE5ng th\u01B0\u01A1ng hi\u1EC7u KhoSkill AI khi ph\xE2n ph\u1ED1i s\u1EA3n ph\u1EA9m kh\xE1c</li>
 </ul>
 <p>Vi ph\u1EA1m b\u1EA3n quy\u1EC1n s\u1EBD d\u1EABn \u0111\u1EBFn vi\u1EC7c <b>hu\u1EF7 license v\u0129nh vi\u1EC5n</b> m\xE0 kh\xF4ng ho\xE0n ti\u1EC1n.</p>
 
 <h2>4. Gi\u1EDBi h\u1EA1n tr\xE1ch nhi\u1EC7m</h2>
-<p>Ch\xFAng t\xF4i cung c\u1EA5p s\u1EA3n ph\u1EA9m "nguy\xEAn tr\u1EA1ng". WebSkill AI kh\xF4ng ch\u1ECBu tr\xE1ch nhi\u1EC7m cho c\xE1c thi\u1EC7t h\u1EA1i gi\xE1n ti\u1EBFp ph\xE1t sinh t\u1EEB vi\u1EC7c s\u1EED d\u1EE5ng s\u1EA3n ph\u1EA9m, bao g\u1ED3m nh\u01B0ng kh\xF4ng gi\u1EDBi h\u1EA1n \u1EDF m\u1EA5t d\u1EEF li\u1EC7u, m\u1EA5t doanh thu ho\u1EB7c gi\xE1n \u0111o\u1EA1n kinh doanh.</p>
-<p>C\xE1c s\u1EA3n ph\u1EA9m ph\u1EE5 thu\u1ED9c v\xE0o API b\xEAn th\u1EE9 ba (Veo 3, ChatGPT, Kling...). Ch\xFAng t\xF4i kh\xF4ng ch\u1ECBu tr\xE1ch nhi\u1EC7m n\u1EBFu c\xE1c n\u1EC1n t\u1EA3ng n\xE0y thay \u0111\u1ED5i ch\xEDnh s\xE1ch, t\u0103ng gi\xE1 ho\u1EB7c ng\u1EEBng d\u1ECBch v\u1EE5, tuy nhi\xEAn s\u1EBD c\u1EADp nh\u1EADt s\u1EA3n ph\u1EA9m mi\u1EC5n ph\xED trong kh\u1EA3 n\u0103ng c\xF3 th\u1EC3.</p>
+<p>Ch\xFAng t\xF4i cung c\u1EA5p s\u1EA3n ph\u1EA9m "nguy\xEAn tr\u1EA1ng". KhoSkill AI kh\xF4ng ch\u1ECBu tr\xE1ch nhi\u1EC7m cho c\xE1c thi\u1EC7t h\u1EA1i gi\xE1n ti\u1EBFp ph\xE1t sinh t\u1EEB vi\u1EC7c s\u1EED d\u1EE5ng s\u1EA3n ph\u1EA9m, bao g\u1ED3m nh\u01B0ng kh\xF4ng gi\u1EDBi h\u1EA1n \u1EDF m\u1EA5t d\u1EEF li\u1EC7u, m\u1EA5t doanh thu ho\u1EB7c gi\xE1n \u0111o\u1EA1n kinh doanh.</p>
+<p>C\xE1c s\u1EA3n ph\u1EA9m ph\u1EE5 thu\u1ED9c v\xE0o n\u1EC1n t\u1EA3ng AI b\xEAn th\u1EE9 ba (Muse AI, Seedance, Veo 3, ChatGPT, Kling...). Ch\xFAng t\xF4i kh\xF4ng ch\u1ECBu tr\xE1ch nhi\u1EC7m n\u1EBFu c\xE1c n\u1EC1n t\u1EA3ng n\xE0y thay \u0111\u1ED5i ch\xEDnh s\xE1ch, t\u0103ng gi\xE1 ho\u1EB7c ng\u1EEBng d\u1ECBch v\u1EE5, tuy nhi\xEAn s\u1EBD c\u1EADp nh\u1EADt Skill mi\u1EC5n ph\xED trong kh\u1EA3 n\u0103ng c\xF3 th\u1EC3.</p>
 
 <h2>5. Ch\u01B0\u01A1ng tr\xECnh Affiliate</h2>
 <ul>
 <li>Hoa h\u1ED3ng \u0111\u01B0\u1EE3c t\xEDnh tr\xEAn gi\xE1 tr\u1ECB \u0111\u01A1n h\xE0ng th\u1EF1c thu sau gi\u1EA3m gi\xE1</li>
 <li>Kh\xF4ng \xE1p d\u1EE5ng cho \u0111\u01A1n t\u1EF1 mua b\u1EB1ng m\xE3 c\u1EE7a ch\xEDnh m\xECnh</li>
-<li>Nghi\xEAm c\u1EA5m spam ho\u1EB7c ch\u1EA1y qu\u1EA3ng c\xE1o tr\xEAn th\u01B0\u01A1ng hi\u1EC7u WebSkill AI</li>
+<li>Nghi\xEAm c\u1EA5m spam ho\u1EB7c ch\u1EA1y qu\u1EA3ng c\xE1o tr\xEAn th\u01B0\u01A1ng hi\u1EC7u KhoSkill AI</li>
 <li>Ch\xFAng t\xF4i c\xF3 quy\u1EC1n thu h\u1ED3i hoa h\u1ED3ng n\u1EBFu ph\xE1t hi\u1EC7n gian l\u1EADn</li>
 </ul>
 
@@ -13436,7 +13578,7 @@ async function requireAdmin(c, next) {
 }
 app.get("/", async (c) => {
   const db = c.env.DB;
-  const [cats, featured, hot, newest, combos, posts, reviews, stats] = await Promise.all([
+  const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
     db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                 FROM categories c ORDER BY c.sort_order`).all(),
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -13445,7 +13587,8 @@ app.get("/", async (c) => {
                 WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                 WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
-    db.prepare(`SELECT * FROM products WHERE status='published' AND product_type='combo' ORDER BY sold_count DESC LIMIT 3`).all(),
+    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
     db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
     db.prepare(`SELECT r.*, u.full_name, p.name product_name, p.slug product_slug
                 FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
@@ -13462,7 +13605,7 @@ app.get("/", async (c) => {
       featured: featured.results,
       hot: hot.results,
       newest: newest.results,
-      combos: combos.results,
+      comingSoon: comingSoon.results,
       posts: posts.results,
       reviews: reviews.results,
       stats
@@ -13479,7 +13622,8 @@ async function renderProductList(c, opts) {
   const maxPrice = c.req.query("max") || "";
   const page = Math.max(1, parseInt(c.req.query("page") || "1"));
   const perPage = 12;
-  const where = [`p.status='published'`];
+  const includeComingSoon = opts.comboOnly || ["course", "chatbot", "app", "combo"].includes(type) || !!cat && cat !== "skill-video-ai";
+  const where = [includeComingSoon ? `p.status IN ('published','coming_soon')` : `p.status='published'`];
   const binds = [];
   if (q) {
     where.push(`(p.name LIKE ? OR p.short_desc LIKE ?)`);
@@ -13521,7 +13665,7 @@ async function renderProductList(c, opts) {
   ]);
   const total = cntRow?.n || 0;
   const heading = opts.comboOnly ? "Combo Tr\u1ECDn B\u1ED9" : currentCat ? currentCat.name : q ? `K\u1EBFt qu\u1EA3 cho "${q}"` : "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m";
-  const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m" : currentCat ? currentCat.description : "Kh\xE1m ph\xE1 to\xE0n b\u1ED9 kh\xF3a h\u1ECDc, skill, chatbot v\xE0 app l\xE0m video AI c\u1EE7a ch\xFAng t\xF4i";
+  const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m \u2014 Hi\u1EC7n \u0111ang t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" : currentCat ? currentCat.description : "Kh\xE1m ph\xE1 5 b\u1ED9 Skill AI t\u1EA1o video chuy\xEAn nghi\u1EC7p \u0111ang m\u1EDF b\xE1n c\xF9ng c\xE1c d\u1ECBch v\u1EE5 s\u1EAFp ra m\u1EAFt";
   const baseUrl = opts.comboOnly ? "/combo" : opts.catSlug ? `/danh-muc/${opts.catSlug}` : "/san-pham";
   return c.html(/* @__PURE__ */ jsxDEV(
     ProductListPage,
@@ -13553,12 +13697,12 @@ app.get("/san-pham/:slug", async (c) => {
   const slug = c.req.param("slug");
   const user = c.get("user");
   const p = await db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug
-    FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status='published'`).bind(slug).first();
+    FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first();
   if (!p) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
   await db.prepare("UPDATE products SET view_count=view_count+1 WHERE id=?").bind(p.id).run();
   const [related, comboItems, reviews, ownedRow, wishRow, breakdown] = await Promise.all([
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' AND p.id!=? AND p.category_id=? ORDER BY p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
+                WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
     p.product_type === "combo" ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all() : Promise.resolve({ results: [] }),
     db.prepare(`SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id=r.user_id
                 WHERE r.product_id=? AND r.status='approved' ORDER BY r.id DESC LIMIT 20`).bind(p.id).all(),
@@ -13682,14 +13826,15 @@ app.post("/api/auth/login", async (c) => {
   const ok = await verifyPassword(b.password || "", u.password_hash);
   if (!ok) return c.json({ error: "Email ho\u1EB7c m\u1EADt kh\u1EA9u kh\xF4ng \u0111\xFAng" }, 400);
   await setSession(c, { id: u.id, email: u.email, full_name: u.full_name, role: u.role, avatar_url: u.avatar_url });
-  const next = b.next && String(b.next).startsWith("/") ? b.next : u.role === "admin" ? "/admin" : "/tai-khoan";
+  const next = b.next && String(b.next).startsWith("/") && !String(b.next).startsWith("//") ? b.next : u.role === "admin" ? "/admin" : "/tai-khoan";
   return c.json({ ok: true, redirect: next });
 });
 app.post("/api/cart/add", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
   const { product_id } = await c.req.json();
-  const p = await db.prepare(`SELECT id FROM products WHERE id=? AND status='published'`).bind(product_id).first();
-  if (!p) return c.json({ error: "S\u1EA3n ph\u1EA9m kh\xF4ng t\u1ED3n t\u1EA1i" }, 404);
+  const p = await db.prepare(`SELECT id, status FROM products WHERE id=?`).bind(product_id).first();
+  if (!p || p.status === "draft") return c.json({ error: "S\u1EA3n ph\u1EA9m kh\xF4ng t\u1ED3n t\u1EA1i" }, 404);
+  if (p.status !== "published") return c.json({ error: "S\u1EA3n ph\u1EA9m n\xE0y t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" }, 400);
   const owned = await db.prepare("SELECT 1 x FROM licenses WHERE user_id=? AND product_id=?").bind(u.id, product_id).first();
   if (owned) {
     const cnt2 = await db.prepare("SELECT COUNT(*) c FROM cart_items WHERE user_id=?").bind(u.id).first();
@@ -13721,7 +13866,7 @@ app.post("/api/wishlist/toggle", requireAuth, async (c) => {
 app.get("/gio-hang", requireAuth, async (c) => {
   const u = c.get("user");
   const rows = await c.env.DB.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? ORDER BY ci.id DESC`
+    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published' ORDER BY ci.id DESC`
   ).bind(u.id).all();
   const items = rows.results;
   return c.html(/* @__PURE__ */ jsxDEV(CartPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0) }));
@@ -13729,7 +13874,7 @@ app.get("/gio-hang", requireAuth, async (c) => {
 app.get("/thanh-toan", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
   const rows = await db.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=?`
+    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published'`
   ).bind(u.id).all();
   const items = rows.results;
   if (items.length === 0) return c.redirect("/gio-hang");
@@ -13772,6 +13917,9 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   ).bind(u.id).all();
   const items = rows.results;
   if (items.length === 0) return c.json({ error: "Gi\u1ECF h\xE0ng tr\u1ED1ng" }, 400);
+  if (items.some((i) => i.status !== "published")) {
+    return c.json({ error: "Gi\u1ECF h\xE0ng c\xF3 s\u1EA3n ph\u1EA9m ch\u01B0a m\u1EDF b\xE1n. Vui l\xF2ng x\xF3a kh\u1ECFi gi\u1ECF h\xE0ng tr\u01B0\u1EDBc khi thanh to\xE1n." }, 400);
+  }
   const subtotal = items.reduce((s, i) => s + i.price, 0);
   let discount = 0, couponCode = null;
   if (b.coupon_code) {
@@ -14165,7 +14313,9 @@ app.post("/api/tickets", async (c) => {
 });
 app.get("/admin", requireAdmin, async (c) => {
   const db = c.env.DB;
-  const [stats, recentOrders, topProducts, chartRows] = await Promise.all([
+  const u = c.get("user");
+  const s = c.get("settings") || {};
+  const [stats, recentOrders, topProducts, chartRows, adminRow] = await Promise.all([
     db.prepare(`SELECT
       (SELECT COALESCE(SUM(total),0) FROM orders WHERE status='paid') revenue,
       (SELECT COUNT(*) FROM orders) orders,
@@ -14173,13 +14323,27 @@ app.get("/admin", requireAdmin, async (c) => {
       (SELECT COUNT(*) FROM orders WHERE status='pending') pendingOrders,
       (SELECT COUNT(*) FROM users) users,
       (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '30 days') newUsers,
-      (SELECT COUNT(*) FROM products) products,
+      (SELECT COUNT(*) FROM products WHERE status='published') products,
       (SELECT COALESCE(SUM(sold_count),0) FROM products) totalSold`).first(),
     db.prepare(`SELECT o.*, u.full_name, u.email FROM orders o JOIN users u ON u.id=o.user_id ORDER BY o.id DESC LIMIT 8`).all(),
     db.prepare(`SELECT name, price, sold_count FROM products ORDER BY sold_count DESC LIMIT 6`).all(),
     db.prepare(`SELECT created_at::date d, COALESCE(SUM(total),0) v FROM orders
-                WHERE status='paid' AND created_at >= NOW() - INTERVAL '7 days' GROUP BY created_at::date`).all()
+                WHERE status='paid' AND created_at >= NOW() - INTERVAL '7 days' GROUP BY created_at::date`).all(),
+    db.prepare(`SELECT password_hash FROM users WHERE id=?`).bind(u.id).first()
   ]);
+  const setupWarnings = [];
+  if (!s.bank_account || s.bank_account === "0987654321" || !s.bank_owner || s.bank_owner === "NGUYEN VAN A") {
+    setupWarnings.push({ text: "S\u1ED1 t\xE0i kho\u1EA3n / Ch\u1EE7 t\xE0i kho\u1EA3n VietQR v\u1EABn \u0111ang \u0111\u1EC3 m\u1EABu (0987654321 / NGUYEN VAN A).", href: "/admin/cai-dat", action: "C\u1EADp nh\u1EADt ng\xE2n h\xE0ng" });
+  }
+  if (s.auto_confirm_manual === "1") {
+    setupWarnings.push({ text: "Ch\u1EBF \u0111\u1ED9 DEMO thanh to\xE1n \u0111ang B\u1EACT (kh\xE1ch t\u1EF1 b\u1EA5m x\xE1c nh\u1EADn kh\xF4ng c\u1EA7n ti\u1EC1n v\xE0o).", href: "/admin/cai-dat", action: "T\u1EAFt ch\u1EBF \u0111\u1ED9 DEMO" });
+  }
+  if (!s.webhook_api_key || s.webhook_api_key === "CHANGE_ME_SECRET") {
+    setupWarnings.push({ text: "Ch\u01B0a thi\u1EBFt l\u1EADp Webhook API Key \u0111\u1EC3 SePay/Casso \u0111\u1ED1i so\xE1t t\u1EF1 \u0111\u1ED9ng.", href: "/admin/giao-dich#webhook-config", action: "Xem c\u1EA5u h\xECnh Webhook" });
+  }
+  if (adminRow?.password_hash === "SEED$123456") {
+    setupWarnings.push({ text: "T\xE0i kho\u1EA3n Admin v\u1EABn \u0111ang d\xF9ng m\u1EADt kh\u1EA9u m\u1EB7c \u0111\u1ECBnh ban \u0111\u1EA7u. H\xE3y \u0111\u1ED5i m\u1EADt kh\u1EA9u ngay.", href: "/tai-khoan/ho-so", action: "\u0110\u1ED5i m\u1EADt kh\u1EA9u" });
+  }
   const map = {};
   for (const r of chartRows.results) map[r.d] = r.v;
   const chart = [];
@@ -14191,13 +14355,14 @@ app.get("/admin", requireAdmin, async (c) => {
   return c.html(/* @__PURE__ */ jsxDEV(
     AdminDashboard,
     {
-      user: c.get("user"),
+      user: u,
       activeKey: "dash",
       heading: "Dashboard",
       stats,
       recentOrders: recentOrders.results,
       topProducts: topProducts.results,
-      chart
+      chart,
+      setupWarnings
     }
   ));
 });
@@ -14276,11 +14441,11 @@ function productFields(b) {
     download_url: b.download_url || null,
     doc_url: b.doc_url || null,
     file_size: b.file_size || null,
-    product_type: b.product_type || "source",
+    product_type: ["course", "skill", "chatbot", "app", "combo", "source"].includes(b.product_type) ? b.product_type : "skill",
     is_featured: b.is_featured ? 1 : 0,
     is_hot: b.is_hot ? 1 : 0,
     is_new: b.is_new ? 1 : 0,
-    status: b.status || "published"
+    status: ["published", "coming_soon", "draft"].includes(b.status) ? b.status : "published"
   };
 }
 app.post("/api/admin/products", requireAdmin, async (c) => {
@@ -14317,7 +14482,11 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
   return c.json({ ok: true, redirect: "/admin/san-pham" });
 });
 app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
+  const id = c.req.param("id");
   const f = productFields(await c.req.json());
+  if (!f.name || !f.slug) return c.json({ error: "Thi\u1EBFu t\xEAn ho\u1EB7c slug" }, 400);
+  const dup = await c.env.DB.prepare("SELECT 1 x FROM products WHERE slug=? AND id!=?").bind(f.slug, id).first();
+  if (dup) return c.json({ error: "Slug \u0111\xE3 \u0111\u01B0\u1EE3c d\xF9ng cho s\u1EA3n ph\u1EA9m kh\xE1c" }, 400);
   await c.env.DB.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
     doc_url=?,file_size=?,product_type=?,is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(
@@ -14342,13 +14511,21 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
     f.is_hot,
     f.is_new,
     f.status,
-    c.req.param("id")
+    id
   ).run();
   return c.json({ ok: true, message: "\u0110\xE3 l\u01B0u thay \u0111\u1ED5i!", redirect: "/admin/san-pham" });
 });
 app.delete("/api/admin/products/:id", requireAdmin, async (c) => {
   const id = c.req.param("id");
   const db = c.env.DB;
+  const [usedOrder, usedLic] = await Promise.all([
+    db.prepare("SELECT COUNT(*) n FROM order_items WHERE product_id=?").bind(id).first(),
+    db.prepare("SELECT COUNT(*) n FROM licenses WHERE product_id=?").bind(id).first()
+  ]);
+  if ((usedOrder?.n || 0) > 0 || (usedLic?.n || 0) > 0) {
+    return c.json({ error: 'S\u1EA3n ph\u1EA9m \u0111\xE3 ph\xE1t sinh \u0111\u01A1n h\xE0ng/license. H\xE3y chuy\u1EC3n tr\u1EA1ng th\xE1i sang "Nh\xE1p" ho\u1EB7c "Ch\u01B0a m\u1EDF b\xE1n" thay v\xEC xo\xE1.' }, 400);
+  }
+  await db.prepare("DELETE FROM reviews WHERE product_id=?").bind(id).run();
   await db.prepare("DELETE FROM cart_items WHERE product_id=?").bind(id).run();
   await db.prepare("DELETE FROM wishlists WHERE product_id=?").bind(id).run();
   await db.prepare("DELETE FROM combo_items WHERE combo_id=? OR product_id=?").bind(id, id).run();
@@ -14533,7 +14710,9 @@ app.post("/api/admin/users/:id/action", requireAdmin, async (c) => {
 app.get("/admin/danh-muc", requireAdmin, async (c) => {
   const rows = await c.env.DB.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products WHERE category_id=c.id) product_count
     FROM categories c ORDER BY c.sort_order`).all();
-  return c.html(/* @__PURE__ */ jsxDEV(AdminCategories, { user: c.get("user"), activeKey: "categories", heading: "Qu\u1EA3n l\xFD danh m\u1EE5c", categories: rows.results }));
+  const editId = c.req.query("edit");
+  const editing = editId ? rows.results.find((x) => String(x.id) === editId) : null;
+  return c.html(/* @__PURE__ */ jsxDEV(AdminCategories, { user: c.get("user"), activeKey: "categories", heading: "Qu\u1EA3n l\xFD danh m\u1EE5c", categories: rows.results, editing }));
 });
 app.post("/api/admin/categories", requireAdmin, async (c) => {
   const b = await c.req.json();
@@ -14543,6 +14722,16 @@ app.post("/api/admin/categories", requireAdmin, async (c) => {
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare("INSERT INTO categories (slug,name,description,icon) VALUES (?,?,?,?)").bind(slug, b.name.trim(), b.description || "", b.icon || "fa-cube").run();
   return c.json({ ok: true, message: "\u0110\xE3 th\xEAm danh m\u1EE5c!" });
+});
+app.post("/api/admin/categories/:id/update", requireAdmin, async (c) => {
+  const id = c.req.param("id");
+  const b = await c.req.json();
+  const slug = (b.slug || slugify(b.name || "")).trim();
+  if (!b.name?.trim() || !slug) return c.json({ error: "Thi\u1EBFu t\xEAn ho\u1EB7c slug" }, 400);
+  const dup = await c.env.DB.prepare("SELECT 1 x FROM categories WHERE slug=? AND id!=?").bind(slug, id).first();
+  if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
+  await c.env.DB.prepare("UPDATE categories SET slug=?,name=?,description=?,icon=? WHERE id=?").bind(slug, b.name.trim(), b.description || "", b.icon || "fa-cube", id).run();
+  return c.json({ ok: true, message: "\u0110\xE3 c\u1EADp nh\u1EADt danh m\u1EE5c!", redirect: "/admin/danh-muc" });
 });
 app.delete("/api/admin/categories/:id", requireAdmin, async (c) => {
   const n = await c.env.DB.prepare("SELECT COUNT(*) n FROM products WHERE category_id=?").bind(c.req.param("id")).first();
@@ -14569,7 +14758,9 @@ app.delete("/api/admin/coupons/:id", requireAdmin, async (c) => {
 });
 app.get("/admin/bai-viet", requireAdmin, async (c) => {
   const rows = await c.env.DB.prepare("SELECT * FROM posts ORDER BY id DESC").all();
-  return c.html(/* @__PURE__ */ jsxDEV(AdminPosts, { user: c.get("user"), activeKey: "posts", heading: "Qu\u1EA3n l\xFD b\xE0i vi\u1EBFt", posts: rows.results }));
+  const editId = c.req.query("edit");
+  const editing = editId ? rows.results.find((x) => String(x.id) === editId) : null;
+  return c.html(/* @__PURE__ */ jsxDEV(AdminPosts, { user: c.get("user"), activeKey: "posts", heading: "Qu\u1EA3n l\xFD b\xE0i vi\u1EBFt", posts: rows.results, editing }));
 });
 app.post("/api/admin/posts", requireAdmin, async (c) => {
   const b = await c.req.json();
@@ -14579,6 +14770,16 @@ app.post("/api/admin/posts", requireAdmin, async (c) => {
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare("INSERT INTO posts (slug,title,excerpt,content,tags) VALUES (?,?,?,?,?)").bind(slug, b.title.trim(), b.excerpt || "", b.content || "", b.tags || "").run();
   return c.json({ ok: true, message: "\u0110\xE3 \u0111\u0103ng b\xE0i!" });
+});
+app.post("/api/admin/posts/:id/update", requireAdmin, async (c) => {
+  const id = c.req.param("id");
+  const b = await c.req.json();
+  const slug = (b.slug || slugify(b.title || "")).trim();
+  if (!b.title?.trim() || !slug) return c.json({ error: "Thi\u1EBFu ti\xEAu \u0111\u1EC1 ho\u1EB7c slug" }, 400);
+  const dup = await c.env.DB.prepare("SELECT 1 x FROM posts WHERE slug=? AND id!=?").bind(slug, id).first();
+  if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
+  await c.env.DB.prepare("UPDATE posts SET slug=?,title=?,excerpt=?,content=?,tags=? WHERE id=?").bind(slug, b.title.trim(), b.excerpt || "", b.content || "", b.tags || "", id).run();
+  return c.json({ ok: true, message: "\u0110\xE3 c\u1EADp nh\u1EADt b\xE0i vi\u1EBFt!", redirect: "/admin/bai-viet" });
 });
 app.delete("/api/admin/posts/:id", requireAdmin, async (c) => {
   await c.env.DB.prepare("DELETE FROM posts WHERE id=?").bind(c.req.param("id")).run();
@@ -14629,7 +14830,7 @@ app.get("/sitemap.xml", async (c) => {
   const origin = new URL(c.req.url).origin;
   const db = c.env.DB;
   const [prods, cats, posts] = await Promise.all([
-    db.prepare(`SELECT slug, updated_at FROM products WHERE status='published'`).all(),
+    db.prepare(`SELECT slug, updated_at FROM products WHERE status IN ('published','coming_soon')`).all(),
     db.prepare("SELECT slug FROM categories").all(),
     db.prepare(`SELECT slug, created_at FROM posts WHERE status='published'`).all()
   ]);

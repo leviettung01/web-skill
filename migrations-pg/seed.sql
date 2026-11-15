@@ -23,30 +23,35 @@ DELETE FROM settings;
 
 -- ---------- SETTINGS ----------
 INSERT INTO settings (key, value) VALUES
-  ('site_name', 'WebSkill AI'),
-  ('site_tagline', 'Chatbot • Skill • App làm video AI'),
+  ('site_name', 'KhoSkill AI'),
+  ('site_tagline', 'Kho Skill AI tạo video chuyên nghiệp'),
   ('hotline', '0915967790'),
   ('zalo', '0915967790'),
-  ('email', 'support@webskill.ai'),
-  ('facebook', 'https://facebook.com/webskillai'),
+  ('email', 'support@khoskill.site'),
+  ('facebook', 'https://facebook.com/khoskillai'),
   ('bank_name', 'MB Bank'),
   ('bank_code', 'MB'),
   ('bank_account', '0987654321'),
   ('bank_owner', 'NGUYEN VAN A'),
-  ('affiliate_percent', '20');
+  ('affiliate_percent', '20'),
+  ('payment_provider', 'sepay'),
+  ('auto_confirm_manual', '0'),
+  ('payment_timeout_minutes', '60'),
+  ('amount_tolerance', '0'),
+  ('webhook_api_key', 'CHANGE_ME_SECRET');
 
 -- ---------- CATEGORIES ----------
 INSERT INTO categories (id, slug, name, description, icon, color, sort_order) VALUES
-  (1, 'khoa-hoc-video-ai', 'Khóa học Video AI', 'Lộ trình học làm video AI từ cơ bản đến nâng cao: Video Muse AI, Seedance 2.5 30s, Google Flow Veo', 'fa-graduation-cap', 'indigo', 1),
-  (2, 'skill-video-ai', 'Skill Tạo Video AI', 'Skill đóng gói theo ngách: Video Thuỷ Sinh 30s, DIY Làm Vườn 30s, Affiliate Fitness — làm theo là ra video build page Reels', 'fa-wand-magic-sparkles', 'fuchsia', 2),
-  (3, 'chatbot-ai', 'Chatbot AI', 'Chatbot viết kịch bản, sinh prompt tạo video theo ngành hàng', 'fa-robot', 'violet', 3),
-  (4, 'app-video-ai', 'App Làm Video AI', 'Phần mềm render video hàng loạt, tự động ghép voice - phụ đề - nhạc nền', 'fa-mobile-screen-button', 'cyan', 4),
-  (5, 'combo', 'Combo Trọn Bộ', 'Gói combo tiết kiệm tới 60% so với mua lẻ', 'fa-box-open', 'amber', 5);
+  (1, 'khoa-hoc-video-ai', 'Khóa học Video AI', 'Lộ trình học làm video AI từ cơ bản đến nâng cao (Chưa mở bán)', 'fa-graduation-cap', 'indigo', 1),
+  (2, 'skill-video-ai', 'Skill Tạo Video AI', 'Bộ Skill đóng gói theo công cụ & ngách: Muse AI, Seedance 2.5, Thuỷ Sinh, Làm Vườn, Affiliate Fitness — làm theo là ra video ngay', 'fa-wand-magic-sparkles', 'fuchsia', 2),
+  (3, 'chatbot-ai', 'Chatbot AI', 'Chatbot viết kịch bản, sinh prompt tạo video theo ngành hàng (Chưa mở bán)', 'fa-robot', 'violet', 3),
+  (4, 'app-video-ai', 'App Làm Video AI', 'Phần mềm render video hàng loạt, tự động ghép voice - phụ đề - nhạc nền (Chưa mở bán)', 'fa-mobile-screen-button', 'cyan', 4),
+  (5, 'combo', 'Combo Trọn Bộ', 'Gói combo tiết kiệm tới 60% so với mua lẻ (Chưa mở bán)', 'fa-box-open', 'amber', 5);
 
 -- ---------- USERS (password: 123456) ----------
 INSERT INTO users (id, email, password_hash, full_name, phone, role, balance, affiliate_code, status) VALUES
   (1, 'admin@webskill.ai', 'SEED$123456', 'Quản Trị Viên', '0987654321', 'admin', 0, 'ADMIN01', 'active'),
-  (2, 'demo@webskill.ai',  'SEED$123456', 'Nguyễn Văn Demo', '0912345678', 'user', 500000, 'DEMO01', 'active'),
+  (2, 'demo@webskill.ai',  'SEED$123456', 'Tài khoản Demo (Đã tắt)', '0912345678', 'user', 0, 'DEMO01', 'banned'),
   (3, 'minhduc@gmail.com','SEED$123456', 'Minh Đức', '0901111222', 'user', 0, 'MD2024', 'active'),
   (4, 'thuhang@gmail.com','SEED$123456', 'Thu Hằng', '0902222333', 'user', 0, 'TH2024', 'active'),
   (5, 'quocbao@gmail.com','SEED$123456', 'Quốc Bảo', '0903333444', 'user', 0, 'QB2024', 'active');
@@ -54,19 +59,19 @@ INSERT INTO users (id, email, password_hash, full_name, phone, role, balance, af
 -- ---------- PRODUCTS ----------
 INSERT INTO products (slug, name, category_id, short_desc, description, features, tech_stack, version, price, original_price, thumbnail, demo_video_url, demo_url, download_url, doc_url, file_size, product_type, is_featured, is_hot, is_new, sold_count, view_count, rating, rating_count) VALUES
 
-('khoa-hoc-video-muse-ai', 'Khóa Học Video Muse AI — Từ Prompt Đến Video 10s Chuẩn Viral', 1,
- 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
- '<h3>Giới thiệu</h3><p>Khóa học cầm tay chỉ việc giúp bạn làm chủ <b>Muse AI</b> — công cụ tạo video AI đang hot nhất hiện nay. Học xong bạn tự sản xuất được video 10s có người nói tiếng Việt với khẩu hình khớp tự nhiên, đủ chất lượng đăng TikTok/Reels bán hàng ngay.</p><h3>Lộ trình học</h3><p><b>Phần 1:</b> Tổng quan Muse AI, cách truy cập và tối ưu credit.<br><b>Phần 2:</b> Viết prompt khóa nhân vật: trang phục, bối cảnh, góc máy.<br><b>Phần 3:</b> Render clip 10s có lip-sync tiếng Việt tự nhiên.<br><b>Phần 4:</b> Kỹ thuật giữ nhân vật đồng nhất qua nhiều cảnh.<br><b>Phần 5:</b> Ghép cảnh, thêm phụ đề, nhạc nền và xuất bản 9:16.<br><b>Phần 6:</b> Case study: video bán hàng affiliate thực tế.</p><h3>Phù hợp với ai?</h3><p>Người mới bắt đầu, chủ shop online, KOC/KOL muốn tự làm video bán hàng mà không cần thuê quay dựng.</p>',
- '["25+ video bài giảng HD, xem trọn đời","Bộ 120 prompt Muse AI đã test thực tế","Quy trình khóa nhân vật đồng nhất qua nhiều cảnh","Kỹ thuật render clip 10s lip-sync tiếng Việt tự nhiên","Bài tập thực hành + file mẫu kèm theo","Hỗ trợ 1-1 qua Zalo đến khi ra video đầu tiên"]',
+('khoa-hoc-video-muse-ai', 'Skill Video Muse AI 10s — Bộ Prompt & Quy Trình Lip-Sync Viral', 2,
+ 'Bộ Skill làm video AI bằng Muse AI từ A-Z: bộ prompt khóa nhân vật, quy trình render clip 10s lip-sync tiếng Việt tự nhiên và file mẫu.',
+ '<h3>Giới thiệu</h3><p><b>Bộ Skill đóng gói sẵn</b> giúp bạn làm chủ <b>Muse AI</b> — tạo ngay video 10s có người nói tiếng Việt với khẩu hình khớp tự nhiên, đủ chất lượng đăng TikTok/Reels bán hàng ngay.</p><h3>Skill bao gồm</h3><p><b>Bước 1:</b> Thiết lập Muse AI và tối ưu credit.<br><b>Bước 2:</b> Dùng bộ 120 prompt khóa nhân vật: trang phục, bối cảnh, góc máy.<br><b>Bước 3:</b> Render clip 10s có lip-sync tiếng Việt tự nhiên.<br><b>Bước 4:</b> Kỹ thuật giữ nhân vật đồng nhất qua nhiều cảnh.<br><b>Bước 5:</b> Ghép cảnh, thêm phụ đề, nhạc nền và xuất bản 9:16.</p><h3>Phù hợp với ai?</h3><p>Người mới bắt đầu, chủ shop online, KOC/KOL muốn tự làm video bán hàng bằng AI nhanh chóng.</p>',
+ '["Bộ 120 prompt Muse AI đã test thực tế","Quy trình render & khóa nhân vật từng bước","Kỹ thuật render clip 10s lip-sync tiếng Việt tự nhiên","File mẫu thực hành + checklist kiểm tra","Video demo kết quả thực tế từ Skill","Update Skill miễn phí trọn đời"]',
  '["Muse AI","CapCut"]',
- 'v1.0', 599000, 1299000, 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/posters/poster-khoa-hoc-muse-ai.jpg', 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-khoa-hoc-muse-ai.mp4', '', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-muse-ai', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-muse-ai', '25+ video bài giảng', 'course', 1, 1, 1, 186, 12400, 4.9, 87),
+ 'v1.0', 599000, 1299000, 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/posters/poster-khoa-hoc-muse-ai.jpg', 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-khoa-hoc-muse-ai.mp4', '', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-muse-ai', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-muse-ai', 'Bộ Skill + Prompt', 'skill', 1, 1, 1, 186, 12400, 4.9, 87),
 
-('khoa-hoc-video-seedance-25-30s', 'Khóa Học Video Seedance 2.5 — One-Take 30s Build Page', 1,
- 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
- '<h3>Giới thiệu</h3><p><b>Seedance 2.5</b> cho phép tạo video one-take dài tới 30 giây với nhân vật giữ nguyên và âm thanh native — vũ khí hoàn hảo để build page Reels/TikTok số lượng lớn. Khóa học này dạy bạn toàn bộ quy trình từ prompt đến lịch đăng.</p><h3>Lộ trình học</h3><p><b>Phần 1:</b> Seedance 2.5 là gì, điểm mạnh so với các model khác.<br><b>Phần 2:</b> Công thức one-take 30s: 1 prompt duy nhất, nhân vật không đổi.<br><b>Phần 3:</b> Kỹ thuật giữ màu sắc - ánh sáng đồng nhất giữa các video.<br><b>Phần 4:</b> Tận dụng âm thanh native cho video có người nói.<br><b>Phần 5:</b> Quy trình build page Reels từ 0: lịch đăng + checklist 30 ngày đầu.</p><h3>Phù hợp với ai?</h3><p>Người muốn build nhiều page/kênh TikTok, Reels bằng video AI với chi phí thấp nhất.</p>',
- '["20+ video bài giảng HD","Công thức one-take 30s giữ nhân vật tuyệt đối","Kỹ thuật giữ màu sắc - ánh sáng đồng nhất","Quy trình build page Reels từ con số 0","Lịch đăng + checklist 30 ngày đầu","Cập nhật miễn phí khi Seedance ra bản mới"]',
+('khoa-hoc-video-seedance-25-30s', 'Skill Video Seedance 2.5 — One-Take 30s Build Page', 2,
+ 'Bộ Skill làm video Seedance 2.5: công thức one-take 30 giây nhân vật giữ nguyên, âm thanh native — build page Reels/TikTok cực nhanh.',
+ '<h3>Giới thiệu</h3><p><b>Bộ Skill Seedance 2.5</b> đóng gói sẵn công thức tạo video one-take dài tới 30 giây với nhân vật giữ nguyên và âm thanh native — vũ khí hoàn hảo để build page Reels/TikTok số lượng lớn.</p><h3>Skill bao gồm</h3><p><b>Bước 1:</b> Cấu hình Seedance 2.5 chuẩn cho người mới.<br><b>Bước 2:</b> Bộ prompt one-take 30s: 1 prompt duy nhất, nhân vật không đổi.<br><b>Bước 3:</b> Công thức giữ màu sắc - ánh sáng đồng nhất giữa các video.<br><b>Bước 4:</b> Tận dụng âm thanh native cho video có người nói.<br><b>Bước 5:</b> Checklist 30 ngày build page Reels từ con số 0.</p><h3>Phù hợp với ai?</h3><p>Người muốn build nhiều page/kênh TikTok, Reels bằng video AI với chi phí thấp nhất.</p>',
+ '["Bộ prompt one-take 30s giữ nhân vật tuyệt đối","Công thức giữ màu sắc - ánh sáng đồng nhất","Quy trình build page Reels từ con số 0","Lịch đăng + checklist 30 ngày đầu","Video demo thực tế của Skill","Cập nhật miễn phí khi Seedance ra bản mới"]',
  '["Seedance 2.5","CapCut"]',
- 'v1.0', 699000, 1399000, 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/posters/poster-khoa-hoc-seedance.jpg', 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-khoa-hoc-seedance.mp4', '', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-seedance-25', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-seedance-25', '20+ video bài giảng', 'course', 1, 1, 0, 142, 9800, 4.8, 64),
+ 'v1.0', 699000, 1399000, 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/posters/poster-khoa-hoc-seedance.jpg', 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-khoa-hoc-seedance.mp4', '', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-seedance-25', 'https://drive.google.com/drive/folders/WEBSKILL-khoa-hoc-video-seedance-25', 'Bộ Skill + Prompt', 'skill', 1, 1, 0, 142, 9800, 4.8, 64),
 
 ('khoa-hoc-video-google-flow-veo', 'Khóa Học Video Google Flow Veo — Từ Newbie Đến Pro', 1,
  'Toàn tập Google Flow + Veo: dùng Ingredients khóa outfit/bối cảnh, sinh từng cảnh 10s dọc 9:16, QC và ghép video hoàn chỉnh.',
@@ -110,12 +115,20 @@ INSERT INTO products (slug, name, category_id, short_desc, description, features
  '["Electron","FFmpeg","TTS AI"]',
  'v1.0', 899000, 1799000, 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/posters/thumb-app-video-ai.jpg', '', '', 'https://drive.google.com/drive/folders/WEBSKILL-app-lam-video-ai-hang-loat', 'https://drive.google.com/drive/folders/WEBSKILL-app-lam-video-ai-hang-loat', 'Windows + macOS', 'app', 0, 1, 0, 129, 8400, 4.7, 52),
 
-('combo-video-ai-all-in-one', 'COMBO All-In-One: 3 Khóa Học + 3 Skill + Chatbot + App', 5,
- 'Trọn bộ WebSkill AI trong 1 gói: 3 khóa học, 3 skill theo ngách, chatbot kịch bản và app render — tiết kiệm 55%.',
- '<h3>Giới thiệu</h3><p>Gói cao cấp nhất của WebSkill AI: sở hữu <b>toàn bộ</b> 3 khóa học (Muse AI, Seedance 2.5, Google Flow Veo), 3 skill theo ngách (Thuỷ Sinh, Làm Vườn, Affiliate Fitness), chatbot viết kịch bản và app render hàng loạt — với giá chỉ bằng một nửa mua lẻ.</p><h3>Quyền lợi</h3><p>Truy cập trọn đời, nhận mọi khóa học và skill mới ra mắt trong 12 tháng, hỗ trợ ưu tiên 1-1 qua Zalo.</p>',
- '["3 khóa học video AI trị giá 2.1 triệu","3 skill theo ngách trị giá 1.2 triệu","Chatbot kịch bản + app render","Tặng mọi sản phẩm mới trong 12 tháng","Truy cập trọn đời, update miễn phí","Hỗ trợ ưu tiên 1-1 qua Zalo"]',
+('combo-video-ai-all-in-one', 'COMBO All-In-One: Toàn Bộ Skill + Khóa Học + Chatbot + App', 5,
+ 'Trọn bộ KhoSkill AI trong 1 gói: 5 bộ Skill, Khóa học, Chatbot kịch bản và App render — đang chuẩn bị mở bán.',
+ '<h3>Giới thiệu</h3><p>Gói cao cấp nhất của KhoSkill AI: sở hữu <b>toàn bộ</b> 5 bộ Skill Video AI, Khóa học chuyên sâu, Chatbot viết kịch bản và App render hàng loạt — với giá ưu đãi khi mở bán.</p><h3>Quyền lợi</h3><p>Truy cập trọn đời, nhận mọi Skill mới ra mắt trong 12 tháng, hỗ trợ ưu tiên 1-1 qua Zalo.</p>',
+ '["5 bộ Skill Video AI thực chiến","Khóa học Video AI chuyên sâu","Chatbot kịch bản + app render","Tặng mọi sản phẩm mới trong 12 tháng","Truy cập trọn đời, update miễn phí","Hỗ trợ ưu tiên 1-1 qua Zalo"]',
  '["Muse AI","Seedance 2.5","Google Flow","Veo"]',
  'v1.0', 1999000, 4599000, 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/posters/thumb-combo-all-in-one.jpg', '', '', 'https://drive.google.com/drive/folders/WEBSKILL-combo-all-in-one', '', '—', 'combo', 1, 1, 0, 87, 14300, 5.0, 42);
+
+-- Đặt 4 dịch vụ chưa mở bán sang trạng thái coming_soon (chỉ mở bán 5 Skill AI)
+UPDATE products SET status='coming_soon' WHERE slug IN (
+  'khoa-hoc-video-google-flow-veo',
+  'chatbot-viet-kich-ban-video-ai',
+  'app-lam-video-ai-hang-loat',
+  'combo-video-ai-all-in-one'
+);
 
 -- Gán sản phẩm con cho combo (tất cả sản phẩm trừ chính combo)
 INSERT INTO combo_items (combo_id, product_id)

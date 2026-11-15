@@ -98,7 +98,7 @@ async function requireAdmin(c: any, next: any) {
 
 app.get('/', async (c) => {
   const db = c.env.DB
-  const [cats, featured, hot, newest, combos, posts, reviews, stats] = await Promise.all([
+  const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
     db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                 FROM categories c ORDER BY c.sort_order`).all(),
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -107,7 +107,8 @@ app.get('/', async (c) => {
                 WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                 WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
-    db.prepare(`SELECT * FROM products WHERE status='published' AND product_type='combo' ORDER BY sold_count DESC LIMIT 3`).all(),
+    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
     db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
     db.prepare(`SELECT r.*, u.full_name, p.name product_name, p.slug product_slug
                 FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
@@ -118,7 +119,7 @@ app.get('/', async (c) => {
   ])
   return c.html(<HomePage {...base(c)}
     categories={cats.results as any} featured={featured.results as any} hot={hot.results as any}
-    newest={newest.results as any} combos={combos.results as any} posts={posts.results as any}
+    newest={newest.results as any} comingSoon={comingSoon.results as any} posts={posts.results as any}
     reviews={reviews.results as any} stats={stats as any} />)
 })
 
@@ -134,7 +135,8 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   const page = Math.max(1, parseInt(c.req.query('page') || '1'))
   const perPage = 12
 
-  const where: string[] = [`p.status='published'`]
+  const includeComingSoon = opts.comboOnly || ['course', 'chatbot', 'app', 'combo'].includes(type) || (!!cat && cat !== 'skill-video-ai')
+  const where: string[] = [includeComingSoon ? `p.status IN ('published','coming_soon')` : `p.status='published'`]
   const binds: any[] = []
   if (q) { where.push(`(p.name LIKE ? OR p.short_desc LIKE ?)`); binds.push(`%${q}%`, `%${q}%`) }
   if (cat) { where.push(`c.slug = ?`); binds.push(cat) }
@@ -160,9 +162,9 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
 
   const total = cntRow?.n || 0
   const heading = opts.comboOnly ? 'Combo Trọn Bộ' : currentCat ? currentCat.name : q ? `Kết quả cho "${q}"` : 'Tất cả sản phẩm'
-  const headingDesc = opts.comboOnly ? 'Gói combo tiết kiệm tới 60% so với mua lẻ từng sản phẩm'
+  const headingDesc = opts.comboOnly ? 'Gói combo tiết kiệm tới 60% so với mua lẻ từng sản phẩm — Hiện đang tạm thời chưa mở bán'
     : currentCat ? currentCat.description
-      : 'Khám phá toàn bộ khóa học, skill, chatbot và app làm video AI của chúng tôi'
+      : 'Khám phá 5 bộ Skill AI tạo video chuyên nghiệp đang mở bán cùng các dịch vụ sắp ra mắt'
   const baseUrl = opts.comboOnly ? '/combo' : opts.catSlug ? `/danh-muc/${opts.catSlug}` : '/san-pham'
 
   return c.html(<ProductListPage {...base(c)}
@@ -183,14 +185,14 @@ app.get('/san-pham/:slug', async (c) => {
   const user = c.get('user')
 
   const p = await db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug
-    FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status='published'`).bind(slug).first<any>()
+    FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first<any>()
   if (!p) return c.html(<NotFoundPage {...base(c)} />, 404)
 
   await db.prepare('UPDATE products SET view_count=view_count+1 WHERE id=?').bind(p.id).run()
 
   const [related, comboItems, reviews, ownedRow, wishRow, breakdown] = await Promise.all([
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' AND p.id!=? AND p.category_id=? ORDER BY p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
+                WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
     p.product_type === 'combo'
       ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all()
       : Promise.resolve({ results: [] }),
@@ -312,7 +314,8 @@ app.post('/api/auth/login', async (c) => {
   if (!ok) return c.json({ error: 'Email hoặc mật khẩu không đúng' }, 400)
 
   await setSession(c, { id: u.id, email: u.email, full_name: u.full_name, role: u.role, avatar_url: u.avatar_url })
-  const next = b.next && String(b.next).startsWith('/') ? b.next : (u.role === 'admin' ? '/admin' : '/tai-khoan')
+  const next = b.next && String(b.next).startsWith('/') && !String(b.next).startsWith('//')
+    ? b.next : (u.role === 'admin' ? '/admin' : '/tai-khoan')
   return c.json({ ok: true, redirect: next })
 })
 
@@ -322,8 +325,9 @@ app.post('/api/auth/login', async (c) => {
 app.post('/api/cart/add', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
   const { product_id } = await c.req.json<any>()
-  const p = await db.prepare(`SELECT id FROM products WHERE id=? AND status='published'`).bind(product_id).first<any>()
-  if (!p) return c.json({ error: 'Sản phẩm không tồn tại' }, 404)
+  const p = await db.prepare(`SELECT id, status FROM products WHERE id=?`).bind(product_id).first<any>()
+  if (!p || p.status === 'draft') return c.json({ error: 'Sản phẩm không tồn tại' }, 404)
+  if (p.status !== 'published') return c.json({ error: 'Sản phẩm này tạm thời chưa mở bán' }, 400)
 
   const owned = await db.prepare('SELECT 1 x FROM licenses WHERE user_id=? AND product_id=?').bind(u.id, product_id).first<any>()
   if (owned) {
@@ -356,7 +360,7 @@ app.post('/api/wishlist/toggle', requireAuth, async (c) => {
 app.get('/gio-hang', requireAuth, async (c) => {
   const u = c.get('user')!
   const rows = await c.env.DB.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? ORDER BY ci.id DESC`
+    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published' ORDER BY ci.id DESC`
   ).bind(u.id).all()
   const items = rows.results as any[]
   return c.html(<CartPage {...base(c)} items={items} subtotal={items.reduce((s, i) => s + i.price, 0)} />)
@@ -368,7 +372,7 @@ app.get('/gio-hang', requireAuth, async (c) => {
 app.get('/thanh-toan', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
   const rows = await db.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=?`
+    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published'`
   ).bind(u.id).all()
   const items = rows.results as any[]
   if (items.length === 0) return c.redirect('/gio-hang')
@@ -417,6 +421,9 @@ app.post('/api/orders/create', requireAuth, async (c) => {
   ).bind(u.id).all()
   const items = rows.results as any[]
   if (items.length === 0) return c.json({ error: 'Giỏ hàng trống' }, 400)
+  if (items.some(i => i.status !== 'published')) {
+    return c.json({ error: 'Giỏ hàng có sản phẩm chưa mở bán. Vui lòng xóa khỏi giỏ hàng trước khi thanh toán.' }, 400)
+  }
 
   const subtotal = items.reduce((s, i) => s + i.price, 0)
   let discount = 0, couponCode: string | null = null
@@ -852,7 +859,9 @@ app.post('/api/tickets', async (c) => {
    ============================================================ */
 app.get('/admin', requireAdmin, async (c) => {
   const db = c.env.DB
-  const [stats, recentOrders, topProducts, chartRows] = await Promise.all([
+  const u = c.get('user')!
+  const s = c.get('settings') || {}
+  const [stats, recentOrders, topProducts, chartRows, adminRow] = await Promise.all([
     db.prepare(`SELECT
       (SELECT COALESCE(SUM(total),0) FROM orders WHERE status='paid') revenue,
       (SELECT COUNT(*) FROM orders) orders,
@@ -860,13 +869,27 @@ app.get('/admin', requireAdmin, async (c) => {
       (SELECT COUNT(*) FROM orders WHERE status='pending') pendingOrders,
       (SELECT COUNT(*) FROM users) users,
       (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '30 days') newUsers,
-      (SELECT COUNT(*) FROM products) products,
+      (SELECT COUNT(*) FROM products WHERE status='published') products,
       (SELECT COALESCE(SUM(sold_count),0) FROM products) totalSold`).first<any>(),
     db.prepare(`SELECT o.*, u.full_name, u.email FROM orders o JOIN users u ON u.id=o.user_id ORDER BY o.id DESC LIMIT 8`).all(),
     db.prepare(`SELECT name, price, sold_count FROM products ORDER BY sold_count DESC LIMIT 6`).all(),
     db.prepare(`SELECT created_at::date d, COALESCE(SUM(total),0) v FROM orders
-                WHERE status='paid' AND created_at >= NOW() - INTERVAL '7 days' GROUP BY created_at::date`).all()
+                WHERE status='paid' AND created_at >= NOW() - INTERVAL '7 days' GROUP BY created_at::date`).all(),
+    db.prepare(`SELECT password_hash FROM users WHERE id=?`).bind(u.id).first<any>()
   ])
+  const setupWarnings: { text: string; href: string; action: string }[] = []
+  if (!s.bank_account || s.bank_account === '0987654321' || !s.bank_owner || s.bank_owner === 'NGUYEN VAN A') {
+    setupWarnings.push({ text: 'Số tài khoản / Chủ tài khoản VietQR vẫn đang để mẫu (0987654321 / NGUYEN VAN A).', href: '/admin/cai-dat', action: 'Cập nhật ngân hàng' })
+  }
+  if (s.auto_confirm_manual === '1') {
+    setupWarnings.push({ text: 'Chế độ DEMO thanh toán đang BẬT (khách tự bấm xác nhận không cần tiền vào).', href: '/admin/cai-dat', action: 'Tắt chế độ DEMO' })
+  }
+  if (!s.webhook_api_key || s.webhook_api_key === 'CHANGE_ME_SECRET') {
+    setupWarnings.push({ text: 'Chưa thiết lập Webhook API Key để SePay/Casso đối soát tự động.', href: '/admin/giao-dich#webhook-config', action: 'Xem cấu hình Webhook' })
+  }
+  if (adminRow?.password_hash === 'SEED$123456') {
+    setupWarnings.push({ text: 'Tài khoản Admin vẫn đang dùng mật khẩu mặc định ban đầu. Hãy đổi mật khẩu ngay.', href: '/tai-khoan/ho-so', action: 'Đổi mật khẩu' })
+  }
   const map: Record<string, number> = {}
   for (const r of chartRows.results as any[]) map[r.d] = r.v
   const chart: { label: string; value: number }[] = []
@@ -875,8 +898,8 @@ app.get('/admin', requireAdmin, async (c) => {
     const key = d.toISOString().slice(0, 10)
     chart.push({ label: `${d.getDate()}/${d.getMonth() + 1}`, value: map[key] || 0 })
   }
-  return c.html(<AdminDashboard user={c.get('user')!} activeKey="dash" heading="Dashboard"
-    stats={stats} recentOrders={recentOrders.results as any} topProducts={topProducts.results as any} chart={chart} />)
+  return c.html(<AdminDashboard user={u} activeKey="dash" heading="Dashboard"
+    stats={stats} recentOrders={recentOrders.results as any} topProducts={topProducts.results as any} chart={chart} setupWarnings={setupWarnings} />)
 })
 
 app.get('/admin/san-pham', requireAdmin, async (c) => {
@@ -929,11 +952,11 @@ function productFields(b: any) {
     download_url: b.download_url || null,
     doc_url: b.doc_url || null,
     file_size: b.file_size || null,
-    product_type: b.product_type || 'source',
+    product_type: ['course', 'skill', 'chatbot', 'app', 'combo', 'source'].includes(b.product_type) ? b.product_type : 'skill',
     is_featured: b.is_featured ? 1 : 0,
     is_hot: b.is_hot ? 1 : 0,
     is_new: b.is_new ? 1 : 0,
-    status: b.status || 'published'
+    status: ['published', 'coming_soon', 'draft'].includes(b.status) ? b.status : 'published'
   }
 }
 
@@ -953,19 +976,31 @@ app.post('/api/admin/products', requireAdmin, async (c) => {
 })
 
 app.post('/api/admin/products/:id/update', requireAdmin, async (c) => {
+  const id = c.req.param('id')
   const f = productFields(await c.req.json<any>())
+  if (!f.name || !f.slug) return c.json({ error: 'Thiếu tên hoặc slug' }, 400)
+  const dup = await c.env.DB.prepare('SELECT 1 x FROM products WHERE slug=? AND id!=?').bind(f.slug, id).first<any>()
+  if (dup) return c.json({ error: 'Slug đã được dùng cho sản phẩm khác' }, 400)
   await c.env.DB.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
     doc_url=?,file_size=?,product_type=?,is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
-      f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status, c.req.param('id')).run()
+      f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status, id).run()
   return c.json({ ok: true, message: 'Đã lưu thay đổi!', redirect: '/admin/san-pham' })
 })
 
 app.delete('/api/admin/products/:id', requireAdmin, async (c) => {
   const id = c.req.param('id')
   const db = c.env.DB
+  const [usedOrder, usedLic] = await Promise.all([
+    db.prepare('SELECT COUNT(*) n FROM order_items WHERE product_id=?').bind(id).first<any>(),
+    db.prepare('SELECT COUNT(*) n FROM licenses WHERE product_id=?').bind(id).first<any>()
+  ])
+  if ((usedOrder?.n || 0) > 0 || (usedLic?.n || 0) > 0) {
+    return c.json({ error: 'Sản phẩm đã phát sinh đơn hàng/license. Hãy chuyển trạng thái sang "Nháp" hoặc "Chưa mở bán" thay vì xoá.' }, 400)
+  }
+  await db.prepare('DELETE FROM reviews WHERE product_id=?').bind(id).run()
   await db.prepare('DELETE FROM cart_items WHERE product_id=?').bind(id).run()
   await db.prepare('DELETE FROM wishlists WHERE product_id=?').bind(id).run()
   await db.prepare('DELETE FROM combo_items WHERE combo_id=? OR product_id=?').bind(id, id).run()
@@ -1124,7 +1159,9 @@ app.post('/api/admin/users/:id/action', requireAdmin, async (c) => {
 app.get('/admin/danh-muc', requireAdmin, async (c) => {
   const rows = await c.env.DB.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products WHERE category_id=c.id) product_count
     FROM categories c ORDER BY c.sort_order`).all()
-  return c.html(<AdminCategories user={c.get('user')!} activeKey="categories" heading="Quản lý danh mục" categories={rows.results as any} />)
+  const editId = c.req.query('edit')
+  const editing = editId ? (rows.results as any[]).find(x => String(x.id) === editId) : null
+  return c.html(<AdminCategories user={c.get('user')!} activeKey="categories" heading="Quản lý danh mục" categories={rows.results as any} editing={editing} />)
 })
 
 app.post('/api/admin/categories', requireAdmin, async (c) => {
@@ -1136,6 +1173,18 @@ app.post('/api/admin/categories', requireAdmin, async (c) => {
   await c.env.DB.prepare('INSERT INTO categories (slug,name,description,icon) VALUES (?,?,?,?)')
     .bind(slug, b.name.trim(), b.description || '', b.icon || 'fa-cube').run()
   return c.json({ ok: true, message: 'Đã thêm danh mục!' })
+})
+
+app.post('/api/admin/categories/:id/update', requireAdmin, async (c) => {
+  const id = c.req.param('id')
+  const b = await c.req.json<any>()
+  const slug = (b.slug || slugify(b.name || '')).trim()
+  if (!b.name?.trim() || !slug) return c.json({ error: 'Thiếu tên hoặc slug' }, 400)
+  const dup = await c.env.DB.prepare('SELECT 1 x FROM categories WHERE slug=? AND id!=?').bind(slug, id).first<any>()
+  if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
+  await c.env.DB.prepare('UPDATE categories SET slug=?,name=?,description=?,icon=? WHERE id=?')
+    .bind(slug, b.name.trim(), b.description || '', b.icon || 'fa-cube', id).run()
+  return c.json({ ok: true, message: 'Đã cập nhật danh mục!', redirect: '/admin/danh-muc' })
 })
 
 app.delete('/api/admin/categories/:id', requireAdmin, async (c) => {
@@ -1168,7 +1217,9 @@ app.delete('/api/admin/coupons/:id', requireAdmin, async (c) => {
 
 app.get('/admin/bai-viet', requireAdmin, async (c) => {
   const rows = await c.env.DB.prepare('SELECT * FROM posts ORDER BY id DESC').all()
-  return c.html(<AdminPosts user={c.get('user')!} activeKey="posts" heading="Quản lý bài viết" posts={rows.results as any} />)
+  const editId = c.req.query('edit')
+  const editing = editId ? (rows.results as any[]).find(x => String(x.id) === editId) : null
+  return c.html(<AdminPosts user={c.get('user')!} activeKey="posts" heading="Quản lý bài viết" posts={rows.results as any} editing={editing} />)
 })
 
 app.post('/api/admin/posts', requireAdmin, async (c) => {
@@ -1180,6 +1231,18 @@ app.post('/api/admin/posts', requireAdmin, async (c) => {
   await c.env.DB.prepare('INSERT INTO posts (slug,title,excerpt,content,tags) VALUES (?,?,?,?,?)')
     .bind(slug, b.title.trim(), b.excerpt || '', b.content || '', b.tags || '').run()
   return c.json({ ok: true, message: 'Đã đăng bài!' })
+})
+
+app.post('/api/admin/posts/:id/update', requireAdmin, async (c) => {
+  const id = c.req.param('id')
+  const b = await c.req.json<any>()
+  const slug = (b.slug || slugify(b.title || '')).trim()
+  if (!b.title?.trim() || !slug) return c.json({ error: 'Thiếu tiêu đề hoặc slug' }, 400)
+  const dup = await c.env.DB.prepare('SELECT 1 x FROM posts WHERE slug=? AND id!=?').bind(slug, id).first<any>()
+  if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
+  await c.env.DB.prepare('UPDATE posts SET slug=?,title=?,excerpt=?,content=?,tags=? WHERE id=?')
+    .bind(slug, b.title.trim(), b.excerpt || '', b.content || '', b.tags || '', id).run()
+  return c.json({ ok: true, message: 'Đã cập nhật bài viết!', redirect: '/admin/bai-viet' })
 })
 
 app.delete('/api/admin/posts/:id', requireAdmin, async (c) => {
@@ -1239,7 +1302,7 @@ app.get('/sitemap.xml', async (c) => {
   const origin = new URL(c.req.url).origin
   const db = c.env.DB
   const [prods, cats, posts] = await Promise.all([
-    db.prepare(`SELECT slug, updated_at FROM products WHERE status='published'`).all(),
+    db.prepare(`SELECT slug, updated_at FROM products WHERE status IN ('published','coming_soon')`).all(),
     db.prepare('SELECT slug FROM categories').all(),
     db.prepare(`SELECT slug, created_at FROM posts WHERE status='published'`).all()
   ])

@@ -30,7 +30,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>{props.heading} | Quản trị WebSkill AI</title>
+      <title>{props.heading} | Quản trị KhoSkill AI</title>
       <meta name="robots" content="noindex,nofollow" />
       <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
       <script src="https://cdn.tailwindcss.com"></script>
@@ -51,7 +51,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
             </div>
             <div class="leading-none">
               <div class="font-extrabold text-white text-sm">Admin Panel</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">WebSkill AI</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">KhoSkill AI</div>
             </div>
           </a>
           <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
@@ -107,11 +107,27 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
 
 /* ---------------- DASHBOARD ---------------- */
 export const AdminDashboard: FC<AdminProps & {
-  stats: any; recentOrders: any[]; topProducts: any[]; chart: { label: string; value: number }[]
+  stats: any; recentOrders: any[]; topProducts: any[]; chart: { label: string; value: number }[]; setupWarnings?: { text: string; href: string; action: string }[]
 }> = (props) => {
   const max = Math.max(...props.chart.map(c => c.value), 1)
   return (
     <AdminShell {...props} activeKey="dash" heading="Dashboard" sub="Tổng quan hoạt động hệ thống">
+      {(props.setupWarnings?.length || 0) > 0 && (
+        <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+          <div class="font-bold text-amber-900 text-sm mb-2 flex items-center gap-2">
+            <i class="fas fa-triangle-exclamation text-amber-600"></i>
+            Checklist cấu hình trước khi nhận đơn hàng thật
+          </div>
+          <ul class="space-y-1.5 text-xs text-amber-800">
+            {props.setupWarnings!.map(w => (
+              <li class="flex items-center justify-between gap-3 flex-wrap">
+                <span>• {w.text}</span>
+                <a href={w.href} class="px-2.5 py-1 rounded-lg bg-amber-200/70 hover:bg-amber-200 font-semibold text-amber-900 whitespace-nowrap">{w.action} →</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
         {[
           ['fa-sack-dollar', 'Doanh thu', formatVND(props.stats.revenue), 'from-emerald-500 to-teal-600', `${props.stats.paidOrders} đơn đã thanh toán`],
@@ -294,8 +310,9 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
                 <input type="url" name="thumbnail" value={p.thumbnail || ''} placeholder="https://..." class={fieldCls} />
               </div>
               <div>
-                <label class={labelCls}>Video Demo sản phẩm (YouTube embed URL)</label>
-                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="Link YouTube embed hoặc link R2 MP4: https://pub-...r2.dev/videos/demo-xxx.mp4" class={fieldCls} />
+                <label class={labelCls}>Video Demo sản phẩm (YouTube hoặc link R2 MP4)</label>
+                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="https://youtu.be/... hoặc https://pub-...r2.dev/videos/demo.mp4" class={fieldCls} />
+                <p class="text-[11px] text-slate-400 mt-1">Hỗ trợ link YouTube (thường, Shorts, embed) hoặc file MP4 trực tiếp từ Cloudflare R2.</p>
               </div>
             </div>
           </div>
@@ -303,7 +320,7 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
           <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
             <h3 class="font-bold text-slate-900">Nội dung bàn giao</h3>
             <div>
-              <label class={labelCls}>🔗 Link source code (chỉ hiện sau khi mua) *</label>
+              <label class={labelCls}>🔗 Link tải Skill / Tài liệu bàn giao (chỉ hiện sau khi mua) *</label>
               <input type="url" name="download_url" value={p.download_url || ''} placeholder="https://drive.google.com/..." class={fieldCls} />
             </div>
             <div class="grid sm:grid-cols-2 gap-4">
@@ -326,15 +343,11 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
             <h3 class="font-bold text-slate-900">Tính năng &amp; Công nghệ</h3>
             <div>
               <label class={labelCls}>Danh sách tính năng (mỗi dòng 1 mục)</label>
-              <textarea name="features_text" rows={6} class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y">
-                {(() => { try { return JSON.parse(p.features || '[]').join('\n') } catch { return '' } })()}
-              </textarea>
+              <textarea name="features_text" rows={6} class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y">{(() => { try { return JSON.parse(p.features || '[]').join('\n') } catch { return '' } })()}</textarea>
             </div>
             <div>
               <label class={labelCls}>Công nghệ (mỗi dòng 1 mục)</label>
-              <textarea name="tech_text" rows={4} class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y">
-                {(() => { try { return JSON.parse(p.tech_stack || '[]').join('\n') } catch { return '' } })()}
-              </textarea>
+              <textarea name="tech_text" rows={4} class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y">{(() => { try { return JSON.parse(p.tech_stack || '[]').join('\n') } catch { return '' } })()}</textarea>
             </div>
           </div>
         </div>
@@ -369,8 +382,9 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
             <div>
               <label class={labelCls}>Trạng thái</label>
               <select name="status" class={fieldCls}>
-                <option value="published" selected={p.status !== 'draft'}>Hiển thị</option>
-                <option value="draft" selected={p.status === 'draft'}>Nháp</option>
+                <option value="published" selected={!p.status || p.status === 'published'}>Đang mở bán</option>
+                <option value="coming_soon" selected={p.status === 'coming_soon'}>Chưa mở bán</option>
+                <option value="draft" selected={p.status === 'draft'}>Nháp (ẩn)</option>
               </select>
             </div>
           </div>
@@ -568,46 +582,53 @@ export const AdminUsers: FC<AdminProps & { users: any[]; page: number; totalPage
 )
 
 /* ---------------- GENERIC LIST PAGES ---------------- */
-export const AdminCategories: FC<AdminProps & { categories: any[] }> = (props) => (
-  <AdminShell {...props} activeKey="categories" heading="Quản lý danh mục">
-    <div class="grid lg:grid-cols-[1fr_340px] gap-5">
-      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table class="w-full admin-table text-sm">
-          <thead class="bg-slate-50 border-b border-slate-200">
-            <tr><th class="text-left">Danh mục</th><th class="text-left">Slug</th><th class="text-center">SP</th><th class="text-right"></th></tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            {props.categories.map(c => (
-              <tr>
-                <td>
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 grid place-items-center shrink-0"><i class={`fas ${c.icon} text-xs`}></i></div>
-                    <div><div class="font-semibold text-slate-900">{c.name}</div><div class="text-xs text-slate-500 line-clamp-1 max-w-xs">{c.description}</div></div>
-                  </div>
-                </td>
-                <td class="text-slate-500 font-mono text-xs">{c.slug}</td>
-                <td class="text-center font-semibold">{c.product_count || 0}</td>
-                <td class="text-right">
-                  <button class="btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500"
-                    data-url={`/api/admin/categories/${c.id}`} data-name={c.name}><i class="fas fa-trash-can text-xs"></i></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+export const AdminCategories: FC<AdminProps & { categories: any[]; editing?: any }> = (props) => {
+  const ed = props.editing
+  return (
+    <AdminShell {...props} activeKey="categories" heading="Quản lý danh mục">
+      <div class="grid lg:grid-cols-[1fr_340px] gap-5">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <table class="w-full admin-table text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+              <tr><th class="text-left">Danh mục</th><th class="text-left">Slug</th><th class="text-center">SP</th><th class="text-right"></th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {props.categories.map(c => (
+                <tr>
+                  <td>
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 grid place-items-center shrink-0"><i class={`fas ${c.icon} text-xs`}></i></div>
+                      <div><div class="font-semibold text-slate-900">{c.name}</div><div class="text-xs text-slate-500 line-clamp-1 max-w-xs">{c.description}</div></div>
+                    </div>
+                  </td>
+                  <td class="text-slate-500 font-mono text-xs">{c.slug}</td>
+                  <td class="text-center font-semibold">{c.product_count || 0}</td>
+                  <td class="text-right whitespace-nowrap">
+                    <a href={`/admin/danh-muc?edit=${c.id}`} class="inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600" title="Sửa"><i class="fas fa-pen text-xs"></i></a>
+                    <button class="btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500"
+                      data-url={`/api/admin/categories/${c.id}`} data-name={c.name}><i class="fas fa-trash-can text-xs"></i></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <form action={ed ? `/api/admin/categories/${ed.id}/update` : '/api/admin/categories'} method="post" data-ajax data-reload="true" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900">{ed ? `Sửa: ${ed.name}` : 'Thêm danh mục'}</h3>
+            {ed && <a href="/admin/danh-muc" class="text-xs text-slate-500 hover:underline">Huỷ sửa</a>}
+          </div>
+          <div><label class={labelCls}>Tên *</label><input type="text" name="name" value={ed?.name || ''} required class={fieldCls} /></div>
+          <div><label class={labelCls}>Slug *</label><input type="text" name="slug" value={ed?.slug || ''} required placeholder="ten-danh-muc" class={fieldCls} /></div>
+          <div><label class={labelCls}>Mô tả</label><textarea name="description" rows={3} class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm">{ed?.description || ''}</textarea></div>
+          <div><label class={labelCls}>Icon (FontAwesome)</label><input type="text" name="icon" value={ed?.icon || 'fa-cube'} class={fieldCls} /></div>
+          <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
+          <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition">{ed ? 'Lưu thay đổi' : 'Thêm danh mục'}</button>
+        </form>
       </div>
-      <form action="/api/admin/categories" method="post" data-ajax data-reload="true" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start">
-        <h3 class="font-bold text-slate-900">Thêm danh mục</h3>
-        <div><label class={labelCls}>Tên *</label><input type="text" name="name" required class={fieldCls} /></div>
-        <div><label class={labelCls}>Slug *</label><input type="text" name="slug" required placeholder="ten-danh-muc" class={fieldCls} /></div>
-        <div><label class={labelCls}>Mô tả</label><textarea name="description" rows={3} class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"></textarea></div>
-        <div><label class={labelCls}>Icon (FontAwesome)</label><input type="text" name="icon" value="fa-cube" class={fieldCls} /></div>
-        <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
-        <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition">Thêm danh mục</button>
-      </form>
-    </div>
-  </AdminShell>
-)
+    </AdminShell>
+  )
+}
 
 export const AdminCoupons: FC<AdminProps & { coupons: any[] }> = (props) => (
   <AdminShell {...props} activeKey="coupons" heading="Mã giảm giá">
@@ -651,43 +672,50 @@ export const AdminCoupons: FC<AdminProps & { coupons: any[] }> = (props) => (
   </AdminShell>
 )
 
-export const AdminPosts: FC<AdminProps & { posts: any[]; editing?: any }> = (props) => (
-  <AdminShell {...props} activeKey="posts" heading="Quản lý bài viết">
-    <div class="grid lg:grid-cols-[1fr_400px] gap-5">
-      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table class="w-full admin-table text-sm">
-          <thead class="bg-slate-50 border-b border-slate-200">
-            <tr><th class="text-left">Tiêu đề</th><th class="text-center">Lượt xem</th><th class="text-left">Ngày</th><th class="text-right"></th></tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            {props.posts.map(p => (
-              <tr>
-                <td><div class="font-semibold text-slate-900 line-clamp-1 max-w-sm">{p.title}</div><div class="text-xs text-slate-500 font-mono">{p.slug}</div></td>
-                <td class="text-center">{p.view_count}</td>
-                <td class="text-slate-500 text-xs whitespace-nowrap">{formatDate(p.created_at)}</td>
-                <td class="text-right whitespace-nowrap">
-                  <a href={`/blog/${p.slug}`} target="_blank" class="inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500"><i class="fas fa-eye text-xs"></i></a>
-                  <button class="btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500"
-                    data-url={`/api/admin/posts/${p.id}`} data-name={p.title}><i class="fas fa-trash-can text-xs"></i></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+export const AdminPosts: FC<AdminProps & { posts: any[]; editing?: any }> = (props) => {
+  const ed = props.editing
+  return (
+    <AdminShell {...props} activeKey="posts" heading="Quản lý bài viết">
+      <div class="grid lg:grid-cols-[1fr_400px] gap-5">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <table class="w-full admin-table text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+              <tr><th class="text-left">Tiêu đề</th><th class="text-center">Lượt xem</th><th class="text-left">Ngày</th><th class="text-right"></th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {props.posts.map(p => (
+                <tr>
+                  <td><div class="font-semibold text-slate-900 line-clamp-1 max-w-sm">{p.title}</div><div class="text-xs text-slate-500 font-mono">{p.slug}</div></td>
+                  <td class="text-center">{p.view_count}</td>
+                  <td class="text-slate-500 text-xs whitespace-nowrap">{formatDate(p.created_at)}</td>
+                  <td class="text-right whitespace-nowrap">
+                    <a href={`/blog/${p.slug}`} target="_blank" class="inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500" title="Xem"><i class="fas fa-eye text-xs"></i></a>
+                    <a href={`/admin/bai-viet?edit=${p.id}`} class="inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600" title="Sửa"><i class="fas fa-pen text-xs"></i></a>
+                    <button class="btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500"
+                      data-url={`/api/admin/posts/${p.id}`} data-name={p.title}><i class="fas fa-trash-can text-xs"></i></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <form action={ed ? `/api/admin/posts/${ed.id}/update` : '/api/admin/posts'} method="post" data-ajax data-reload="true" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900">{ed ? 'Chỉnh sửa bài viết' : 'Viết bài mới'}</h3>
+            {ed && <a href="/admin/bai-viet" class="text-xs text-slate-500 hover:underline">Huỷ sửa</a>}
+          </div>
+          <div><label class={labelCls}>Tiêu đề *</label><input type="text" name="title" value={ed?.title || ''} required class={fieldCls} /></div>
+          <div><label class={labelCls}>Slug *</label><input type="text" name="slug" value={ed?.slug || ''} required class={fieldCls} /></div>
+          <div><label class={labelCls}>Mô tả ngắn</label><textarea name="excerpt" rows={2} class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm">{ed?.excerpt || ''}</textarea></div>
+          <div><label class={labelCls}>Nội dung (HTML)</label><textarea name="content" rows={10} class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm font-mono">{ed?.content || ''}</textarea></div>
+          <div><label class={labelCls}>Tags (phân cách dấu phẩy)</label><input type="text" name="tags" value={ed?.tags || ''} placeholder="veo3,huong-dan" class={fieldCls} /></div>
+          <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
+          <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition">{ed ? 'Lưu thay đổi' : 'Đăng bài'}</button>
+        </form>
       </div>
-      <form action="/api/admin/posts" method="post" data-ajax data-reload="true" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start">
-        <h3 class="font-bold text-slate-900">Viết bài mới</h3>
-        <div><label class={labelCls}>Tiêu đề *</label><input type="text" name="title" required class={fieldCls} /></div>
-        <div><label class={labelCls}>Slug *</label><input type="text" name="slug" required class={fieldCls} /></div>
-        <div><label class={labelCls}>Mô tả ngắn</label><textarea name="excerpt" rows={2} class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm"></textarea></div>
-        <div><label class={labelCls}>Nội dung (HTML)</label><textarea name="content" rows={10} class="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-brand-400 text-sm font-mono"></textarea></div>
-        <div><label class={labelCls}>Tags (phân cách dấu phẩy)</label><input type="text" name="tags" placeholder="veo3,huong-dan" class={fieldCls} /></div>
-        <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
-        <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition">Đăng bài</button>
-      </form>
-    </div>
-  </AdminShell>
-)
+    </AdminShell>
+  )
+}
 
 export const AdminReviews: FC<AdminProps & { reviews: any[] }> = (props) => (
   <AdminShell {...props} activeKey="reviews" heading="Quản lý đánh giá">
@@ -764,7 +792,8 @@ export const AdminSettings: FC<AdminProps & { settings: Record<string, string> }
           {[
             ['site_name', 'Tên website'], ['site_tagline', 'Slogan'],
             ['hotline', 'Hotline'], ['email', 'Email hỗ trợ'],
-            ['zalo', 'Số Zalo'], ['facebook', 'Link Facebook']
+            ['zalo', 'Số Zalo'], ['facebook', 'Link Facebook'],
+            ['youtube', 'Link kênh YouTube'], ['tiktok', 'Link TikTok']
           ].map(([k, l]) => (
             <div><label class={labelCls}>{l}</label><input type="text" name={k} value={s[k] || ''} class={fieldCls} /></div>
           ))}
@@ -785,9 +814,12 @@ export const AdminSettings: FC<AdminProps & { settings: Record<string, string> }
           </div>
 
           <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
-            <h3 class="font-bold text-slate-900 flex items-center gap-2">
-              <i class="fas fa-bolt text-amber-500"></i>Webhook ngân hàng
-            </h3>
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                <i class="fas fa-bolt text-amber-500"></i>Webhook ngân hàng
+              </h3>
+              <a href="/admin/giao-dich#webhook-config" class="text-xs font-semibold text-brand-600 hover:underline">Lấy URL &amp; API Key →</a>
+            </div>
             <div>
               <label class={labelCls}>Nhà cung cấp</label>
               <select name="payment_provider" class={fieldCls}>
@@ -806,6 +838,7 @@ export const AdminSettings: FC<AdminProps & { settings: Record<string, string> }
               <p class="text-[11px] text-slate-500 mt-1">Đặt 0 nếu muốn khớp số tiền tuyệt đối.</p>
             </div>
             <label class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer">
+              <input type="hidden" name="auto_confirm_manual" value="0" />
               <input type="checkbox" name="auto_confirm_manual" value="1" checked={s.auto_confirm_manual === '1'} class="mt-0.5" />
               <span class="text-xs text-amber-800 leading-relaxed">
                 <b>Bật chế độ DEMO</b> — cho khách tự xác nhận đã chuyển khoản mà không cần webhook.
@@ -847,7 +880,7 @@ export const AdminBankTx: FC<AdminProps & {
 
   return (
     <AdminShell {...props} activeKey="banktx" heading="Giao dịch ngân hàng"
-      sub="Tự động đối soát chuyển khoản và cấp quyền tải source code">
+      sub="Tự động đối soát chuyển khoản và cấp quyền tải Skill AI">
 
       {/* Hướng dẫn cấu hình webhook */}
       <section id="webhook-config" class="bg-white rounded-2xl border border-slate-200 p-5 mb-5">

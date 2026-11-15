@@ -9,35 +9,34 @@ interface Props extends LayoutProps {
   featured: Product[]
   hot: Product[]
   newest: Product[]
-  combos: Product[]
+  comingSoon: Product[]
   posts: any[]
   reviews: any[]
   stats: { products: number; users: number; sold: number }
 }
 
 const BENEFITS = [
-  { icon: 'fa-bolt', title: 'Giao hàng tự động 24/7', desc: 'Thanh toán xong nhận link tải, link kích hoạt hoặc key bản quyền ngay trong tài khoản, không cần chờ admin.' },
-  { icon: 'fa-infinity', title: 'Sở hữu trọn đời', desc: 'Mua một lần dùng mãi mãi, không phí ẩn, không giới hạn thời gian, nhận mọi bản cập nhật miễn phí.' },
-  { icon: 'fa-wand-magic-sparkles', title: 'Skill thực chiến, test kỹ', desc: 'Mỗi skill, chatbot và khóa học đều đã chạy thực tế ra video demo bạn xem được ngay trên trang sản phẩm.' },
-  { icon: 'fa-headset', title: 'Hỗ trợ 1-1', desc: 'Đội ngũ hỗ trợ qua Zalo/Ultraview, cầm tay chỉ việc đến khi bạn tự làm được video đầu tiên.' },
-  { icon: 'fa-shield-halved', title: 'Bảo hành & hoàn tiền', desc: 'Hoàn tiền 100% trong 7 ngày nếu sản phẩm không đúng như mô tả hoặc video demo.' },
-  { icon: 'fa-rocket', title: 'Cập nhật theo model mới', desc: 'Skill và khóa học được nâng cấp liên tục theo Muse AI, Seedance, Veo, Flow... hoàn toàn miễn phí.' }
+  { icon: 'fa-bolt', title: 'Giao hàng tự động 24/7', desc: 'Thanh toán xong nhận ngay bộ tài liệu Skill, prompt chuẩn và quy trình chi tiết trong tài khoản, không cần chờ admin.' },
+  { icon: 'fa-infinity', title: 'Sở hữu trọn đời', desc: 'Mua một lần dùng mãi mãi, không phí ẩn, nhận mọi bản cập nhật prompt & quy trình mới hoàn toàn miễn phí.' },
+  { icon: 'fa-wand-magic-sparkles', title: 'Skill thực chiến, test kỹ', desc: 'Tất cả 5 bộ Skill AI đang mở bán đều đã chạy thực tế ra video demo xem ngay trên trang sản phẩm.' },
+  { icon: 'fa-headset', title: 'Hỗ trợ 1-1 qua Zalo', desc: 'Đội ngũ hỗ trợ cầm tay chỉ việc đến khi bạn áp dụng Skill để tạo được video đầu tiên.' },
+  { icon: 'fa-shield-halved', title: 'Bảo hành & hoàn tiền', desc: 'Hoàn tiền 100% trong 7 ngày nếu nội dung Skill không đúng như mô tả hoặc video demo.' },
+  { icon: 'fa-rocket', title: 'Cập nhật theo model mới', desc: 'Bộ Skill được tinh chỉnh liên tục theo Muse AI, Seedance 2.5, Veo 3, Flow... hoàn toàn miễn phí.' }
 ]
 
 const STEPS = [
   { n: '01', icon: 'fa-user-plus', title: 'Đăng ký tài khoản', desc: 'Tạo tài khoản miễn phí chỉ với email trong 30 giây.' },
-  { n: '02', icon: 'fa-cart-shopping', title: 'Chọn sản phẩm', desc: 'Xem video demo, đọc mô tả chi tiết rồi thêm vào giỏ hàng.' },
-  { n: '03', icon: 'fa-qrcode', title: 'Thanh toán QR', desc: 'Quét mã VietQR chuyển khoản, hệ thống xác nhận nhanh chóng.' },
-  { n: '04', icon: 'fa-download', title: 'Nhận sản phẩm', desc: 'Link tải + license key xuất hiện ngay trong "Sản phẩm của tôi".' }
+  { n: '02', icon: 'fa-cart-shopping', title: 'Chọn bộ Skill AI', desc: 'Xem video demo thực tế, đọc chi tiết ngách rồi thêm vào giỏ.' },
+  { n: '03', icon: 'fa-qrcode', title: 'Thanh toán VietQR', desc: 'Quét mã VietQR chuyển khoản, hệ thống tự động xác nhận 24/7.' },
+  { n: '04', icon: 'fa-download', title: 'Nhận link tải Skill', desc: 'Link tải + mã kích hoạt xuất hiện ngay trong "Sản phẩm của tôi".' }
 ]
 
 const FAQS = [
-  { q: 'Mua khóa học / skill thì tôi nhận được gì?', a: 'Bạn nhận toàn bộ nội dung số của sản phẩm: video bài giảng + tài liệu với khóa học; bộ prompt, quy trình và file cấu hình với skill; link chatbot riêng với chatbot; bộ cài/app với app. Tất cả được giao tự động ngay sau khi thanh toán.' },
-  { q: 'Tôi không biết gì về AI thì có học được không?', a: 'Có. Mỗi khóa học và skill đều thiết kế cho người mới: xem video demo trước khi mua, làm theo từng bước có hình ảnh minh hoạ. Ngoài ra chúng tôi hỗ trợ 1-1 qua Zalo nếu bạn cần.' },
-  { q: 'Skill tạo video AI hoạt động như thế nào?', a: 'Sau khi mua, bạn nhận bộ skill gồm prompt, quy trình và file cấu hình cho đúng ngách của mình (Thuỷ Sinh, Làm Vườn, Fitness...). Chỉ cần làm theo là ra video 30s đúng chuẩn để build page Reels/TikTok.' },
-  { q: 'Thanh toán xong bao lâu thì nhận được hàng?', a: 'Hệ thống giao tự động. Ngay khi đơn hàng được xác nhận thanh toán, link tải và license key sẽ xuất hiện trong mục "Sản phẩm của tôi".' },
-  { q: 'Có được hỗ trợ khi gặp lỗi không?', a: 'Có. Mỗi sản phẩm đi kèm hỗ trợ qua Zalo. Với gói Combo All-In-One bạn còn được ưu tiên hỗ trợ 1-1 trực tiếp.' },
-  { q: 'Tôi có thể dùng skill cho nhiều kênh không?', a: 'Có. Skill mua một lần dùng không giới hạn cho mọi kênh TikTok, Reels, YouTube Shorts của chính bạn.' }
+  { q: 'Mua Skill AI thì tôi nhận được những gì?', a: 'Bạn nhận trọn bộ tài liệu số của Skill: file cấu hình/prompt chuẩn hoá theo ngách, quy trình từng bước tạo video 30s, checklist dựng clip & đăng page, cùng link hướng dẫn thực hành. Giao tự động ngay sau khi thanh toán.' },
+  { q: 'Tôi chưa từng làm video AI thì có dùng được Skill không?', a: 'Hoàn toàn được. Mỗi bộ Skill đều viết sẵn công thức từng bước cho người mới, kèm ví dụ prompt thực tế và hỗ trợ qua Zalo nếu bạn gặp vướng mắc.' },
+  { q: 'Các dịch vụ Khóa học, Chatbot, App Video AI khi nào mở bán?', a: 'Hiện tại hệ thống tập trung mở bán trước 5 bộ Skill AI hoàn thiện nhất. Các hạng mục Khóa học Video AI, Chatbot viết kịch bản, App làm video và Combo đang ở trạng thái Chưa mở bán để hoàn thiện chất lượng trước khi phát hành.' },
+  { q: 'Thanh toán xong bao lâu thì nhận được hàng?', a: 'Hệ thống giao tự động 24/7. Ngay khi chuyển khoản đúng mã đơn hàng và hệ thống xác nhận thành công, link tải xuất hiện lập tức trong mục "Sản phẩm của tôi".' },
+  { q: 'Tôi có thể dùng Skill cho nhiều kênh TikTok/Reels không?', a: 'Có. Skill mua một lần sử dụng không giới hạn cho mọi kênh cá nhân và kênh bán hàng của chính bạn.' }
 ]
 
 const R2_BASE = 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev'
@@ -45,11 +44,11 @@ const R2_BASE = 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev'
 const DEMO_VIDEOS = [
   {
     id: 'muse-ai',
-    title: 'Khóa Học Video Muse AI — Từ Prompt Đến Video 10s Chuẩn Viral',
-    shortTitle: 'Khóa học Muse AI Pro 30s',
-    tag: 'Khóa học',
+    title: 'Skill Video Muse AI Pro — Từ Prompt Đến Video 10s Chuẩn Viral',
+    shortTitle: 'Skill Muse AI Pro 30s',
+    tag: 'Skill AI',
     dur: '0:30',
-    desc: 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
+    desc: 'Bộ Skill làm video AI bằng Muse AI từ A-Z: công thức prompt khóa nhân vật, render clip 10s lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
     slug: 'khoa-hoc-video-muse-ai',
@@ -58,11 +57,11 @@ const DEMO_VIDEOS = [
   },
   {
     id: 'seedance-25',
-    title: 'Khóa Học Video Seedance 2.5 — One-Take 30s Build Page',
-    shortTitle: 'Seedance 2.5 · One-Take 30s',
-    tag: 'Khóa học',
+    title: 'Skill Video Seedance 2.5 — One-Take 30s Build Page',
+    shortTitle: 'Skill Seedance 2.5 · 30s',
+    tag: 'Skill AI',
     dur: '0:30',
-    desc: 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
+    desc: 'Bộ Skill làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
     slug: 'khoa-hoc-video-seedance-25-30s',
@@ -111,7 +110,8 @@ const DEMO_VIDEOS = [
 ]
 
 export const HomePage: FC<Props> = (props) => {
-  const { categories, featured, hot, newest, combos, posts, reviews, stats } = props
+  const { categories, featured, hot, newest, comingSoon, posts, reviews, stats } = props
+  const siteName = props.settings?.site_name || 'KhoSkill AI'
   return (
     <Layout {...props} active="home">
       {/* ============ HERO ============ */}
@@ -123,31 +123,32 @@ export const HomePage: FC<Props> = (props) => {
             <div>
               <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Đã có <b class="text-emerald-300">{stats.sold.toLocaleString('vi-VN')}+</b> lượt mua thành công
+                Đang mở bán <b class="text-emerald-300">{stats.products} Skill AI</b> — {stats.sold.toLocaleString('vi-VN')}+ lượt mua thành công
               </div>
               <h1 class="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5">
-                Kho <span class="bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Chatbot, Skill &amp; App AI</span> làm video số 1 Việt Nam
+                Kho <span class="bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Skill AI Làm Video</span> thực chiến số 1 Việt Nam
               </h1>
               <p class="text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl">
-                Khóa học, skill, chatbot và app làm video AI: Video Muse AI, Seedance 2.5 30s, Google Flow Veo —
-                kèm skill theo ngách Thuỷ Sinh, Làm Vườn, Affiliate Fitness.
-                Mua một lần — sở hữu trọn đời — giao hàng tự động 24/7.
+                Mở bán trọn bộ 5 Skill AI thực chiến làm video 30s chuẩn viral: Muse AI Pro, Seedance 2.5, Thuỷ Sinh, DIY Làm Vườn, Affiliate Fitness.
+                Mua một lần — sở hữu trọn đời — giao link tải tự động 24/7.
               </p>
               <div class="flex flex-wrap items-center gap-3 mb-9">
-                <a href="/san-pham" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition">
-                  <i class="fas fa-cubes"></i>Xem tất cả sản phẩm
+                <a href="/san-pham?type=skill" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition">
+                  <i class="fas fa-wand-magic-sparkles"></i>Xem 5 Skill đang mở bán
                 </a>
                 <a href="#theater" id="heroTrailerBtn" class="h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg">
                   <span class="w-6 h-6 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow"><i class="fas fa-play ml-0.5"></i></span>
-                  Xem trailer 30s
+                  Xem demo 30s
                 </a>
-                <a href="/combo" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition">
-                  <i class="fas fa-box-open text-amber-400"></i>Combo -60%
-                </a>
+                {comingSoon.length > 0 && (
+                  <a href="#coming-soon-section" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition">
+                    <i class="fas fa-clock text-amber-400"></i>Dịch vụ sắp mở
+                  </a>
+                )}
               </div>
               <div class="grid grid-cols-3 gap-4 max-w-md">
                 {[
-                  ['fa-cube', stats.products + '+', 'Sản phẩm'],
+                  ['fa-wand-magic-sparkles', stats.products + ' Skill', 'Đang mở bán'],
                   ['fa-users', stats.users.toLocaleString('vi-VN') + '+', 'Khách hàng'],
                   ['fa-star', '4.9/5', 'Đánh giá']
                 ].map(([icon, num, label]) => (
@@ -248,7 +249,7 @@ export const HomePage: FC<Props> = (props) => {
                     <div class="short-actions" id="shortActions">
                       {/* Avatar */}
                       <div class="short-avatar-box" id="shortAvatarBox">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=webskill1" alt="Avatar" class="short-avatar-img" id="shortAvatarImg" />
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=khoskill1" alt="Avatar" class="short-avatar-img" id="shortAvatarImg" />
                         <button class="short-follow-plus" id="shortFollowPlus" title="Theo dõi"><i class="fas fa-plus"></i></button>
                       </div>
 
@@ -287,16 +288,16 @@ export const HomePage: FC<Props> = (props) => {
                     {/* Bottom Info Overlay */}
                     <div class="short-bottom-info" id="shortBottomInfo">
                       <div class="short-author-row" id="shortAuthorRow">
-                        <span class="short-author-handle" id="shortAuthorHandle">@webskill.ai</span>
+                        <span class="short-author-handle" id="shortAuthorHandle">@khoskill.ai</span>
                         <span class="short-verified-badge" id="shortVerifiedBadge"><i class="fas fa-circle-check text-sky-400"></i></span>
                         <button class="short-follow-pill" id="shortFollowPill">Theo dõi</button>
                       </div>
                       <p class="short-caption" id="shortCaption">
-                        Làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #TikTokViral
+                        Skill làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #SkillAI
                       </p>
                       <div class="short-music-track" id="shortMusicTrack">
                         <i class="fas fa-music text-[10px] animate-pulse"></i>
-                        <span class="short-music-title" id="shortMusicTitle">♫ WebSkill AI - Âm thanh gốc</span>
+                        <span class="short-music-title" id="shortMusicTitle">♫ KhoSkill AI - Âm thanh gốc</span>
                       </div>
                     </div>
 
@@ -490,49 +491,33 @@ export const HomePage: FC<Props> = (props) => {
       {/* ============ FEATURED ============ */}
       {featured.length > 0 && (
         <section id="featured-section" class="max-w-7xl mx-auto px-4 py-8 reveal">
-          <SectionTitle title="Sản phẩm nổi bật" subtitle="Được lựa chọn nhiều nhất bởi cộng đồng làm video AI" more={{ href: '/san-pham?sort=featured', label: 'Xem thêm' }} />
+          <SectionTitle title="5 Skill AI đang mở bán" subtitle="Bộ 5 Skill thực chiến tạo video 30s — đã test ra demo, mua là dùng ngay" more={{ href: '/san-pham?type=skill', label: 'Xem tất cả' }} />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {featured.slice(0, 8).map(p => <ProductCard p={p} />)}
           </div>
         </section>
       )}
 
-      {/* ============ COMBO BANNER ============ */}
-      {combos.length > 0 && (
-        <section id="combo-section" class="max-w-7xl mx-auto px-4 py-10 reveal">
-          <div class="rounded-3xl bg-gradient-to-br from-[#0f0e26] via-[#1a184c] to-[#080716] p-7 md:p-10 text-white relative overflow-hidden border border-[#1f1b4b]">
-            <div class="absolute inset-0 hero-mesh opacity-40"></div>
+      {/* ============ COMING SOON SERVICES ============ */}
+      {comingSoon.length > 0 && (
+        <section id="coming-soon-section" class="max-w-7xl mx-auto px-4 py-10 reveal">
+          <div class="rounded-3xl bg-gradient-to-br from-[#0f0e26] via-[#1a184c]/70 to-[#080716] p-7 md:p-10 text-white relative overflow-hidden border border-[#1f1b4b]">
+            <div class="absolute inset-0 hero-mesh opacity-30"></div>
             <div class="relative">
               <div class="flex flex-wrap items-end justify-between gap-4 mb-7">
                 <div>
-                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500 text-xs font-bold mb-3 pulse-ring">
-                    <i class="fas fa-fire"></i>TIẾT KIỆM ĐẾN 60%
+                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold mb-3">
+                    <i class="fas fa-clock"></i>DỊCH VỤ TẠM THỜI CHƯA MỞ BÁN
                   </div>
-                  <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Combo trọn bộ — giá cực hời</h2>
-                  <p class="text-[#9f9dbb] mt-1.5 text-sm md:text-base">Mua gói thay vì mua lẻ, tiết kiệm hàng triệu đồng</p>
+                  <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Khóa học, Chatbot, App &amp; Combo sắp ra mắt</h2>
+                  <p class="text-[#9f9dbb] mt-1.5 text-sm md:text-base">Hiện tại hệ thống chỉ mở bán 5 bộ Skill AI. Các dịch vụ khác sẽ sớm mở bán trong thời gian tới.</p>
                 </div>
-                <a href="/combo" class="h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition">
-                  Xem tất cả combo<i class="fas fa-arrow-right text-xs"></i>
+                <a href="/lien-he" class="cta-white h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition">
+                  Nhắn Zalo nhận lịch mở bán<i class="fas fa-arrow-right text-xs"></i>
                 </a>
               </div>
-              <div class="grid md:grid-cols-3 gap-4">
-                {combos.slice(0, 3).map(c => {
-                  const off = c.original_price ? Math.round(((c.original_price - c.price) / c.original_price) * 100) : 0
-                  return (
-                    <a href={`/san-pham/${c.slug}`} class="group p-5 rounded-2xl bg-[#080716]/60 backdrop-blur border border-[#1f1b4b] hover:bg-white/5 transition">
-                      <div class="flex items-start justify-between gap-2 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-400/10 text-amber-300 grid place-items-center"><i class="fas fa-box-open"></i></div>
-                        {off > 0 && <span class="px-2 py-0.5 rounded bg-rose-500 text-[11px] font-bold">-{off}%</span>}
-                      </div>
-                      <h3 class="font-bold leading-snug mb-2 line-clamp-2 group-hover:text-indigo-400 transition">{c.name}</h3>
-                      <p class="text-xs text-[#9f9dbb] line-clamp-2 mb-3.5 leading-relaxed">{c.short_desc}</p>
-                      <div class="flex items-center gap-2">
-                        <span class="text-base font-extrabold text-amber-400">{formatVND(c.price)}</span>
-                        {c.original_price && <span class="text-xs text-slate-500 line-through">{formatVND(c.original_price)}</span>}
-                      </div>
-                    </a>
-                  )
-                })}
+              <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {comingSoon.slice(0, 4).map(c => <ProductCard p={c} compact />)}
               </div>
             </div>
           </div>
@@ -564,7 +549,7 @@ export const HomePage: FC<Props> = (props) => {
       {/* ============ BENEFITS ============ */}
       <section id="benefits-section" class="bg-[#0f0e26]/60 border-y border-[#1f1b4b] py-16 mt-10 reveal">
         <div class="max-w-7xl mx-auto px-4">
-          <SectionTitle center title="Lợi ích khi mua tại WebSkill AI" subtitle="Trải nghiệm tuyệt vời cùng những ưu điểm vượt trội" />
+          <SectionTitle center title={`Lợi ích khi mua tại ${siteName}`} subtitle="Trải nghiệm tuyệt vời cùng những ưu điểm vượt trội" />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
             {BENEFITS.map(b => (
               <div class="p-6 rounded-2xl border border-[#1f1b4b] bg-[#0f0e26] hover:border-indigo-500/20 hover:shadow-lg transition group">
@@ -581,7 +566,7 @@ export const HomePage: FC<Props> = (props) => {
 
       {/* ============ HOW IT WORKS ============ */}
       <section id="how-section" class="max-w-7xl mx-auto px-4 py-16 reveal">
-        <SectionTitle center title="Mua hàng chỉ 4 bước" subtitle="Đơn giản, nhanh chóng, nhận source code ngay lập tức" />
+        <SectionTitle center title="Mua hàng chỉ 4 bước" subtitle="Đơn giản, nhanh chóng, nhận link tải & tài liệu Skill ngay lập tức" />
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8 relative">
           {STEPS.map((s, i) => (
             <div class="relative p-6 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] text-center">
@@ -664,7 +649,7 @@ export const HomePage: FC<Props> = (props) => {
             <h2 class="text-2xl md:text-4xl font-extrabold mb-3 tracking-tight">Sẵn sàng bắt đầu kiếm tiền với video AI?</h2>
             <p class="text-white/85 mb-7 max-w-2xl mx-auto">Tham gia cùng hàng nghìn người đang dùng công cụ của chúng tôi để sản xuất video bán hàng mỗi ngày.</p>
             <div class="flex flex-wrap justify-center gap-3">
-              <a href="/dang-ky" class="h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white text-indigo-900 font-bold hover:bg-slate-100 transition shadow-xl">
+              <a href="/dang-ky" class="cta-white h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white text-indigo-900 font-bold hover:bg-slate-100 transition shadow-xl">
                 <i class="fas fa-user-plus"></i>Đăng ký miễn phí
               </a>
               <a href="/san-pham" class="h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/30 backdrop-blur font-semibold hover:bg-white/25 transition">
