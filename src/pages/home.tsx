@@ -40,6 +40,8 @@ const FAQS = [
   { q: 'Tôi có thể dùng skill cho nhiều kênh không?', a: 'Có. Skill mua một lần dùng không giới hạn cho mọi kênh TikTok, Reels, YouTube Shorts của chính bạn.' }
 ]
 
+const R2_BASE = 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev'
+
 const DEMO_VIDEOS = [
   {
     id: 'muse-ai',
@@ -48,8 +50,8 @@ const DEMO_VIDEOS = [
     tag: 'Khóa học',
     dur: '0:30',
     desc: 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
-    videoUrl: '/videos/demo-khoa-hoc-muse-ai.mp4',
-    posterUrl: '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
+    videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
     slug: 'khoa-hoc-video-muse-ai',
     price: 599000,
     originalPrice: 1299000
@@ -61,8 +63,8 @@ const DEMO_VIDEOS = [
     tag: 'Khóa học',
     dur: '0:30',
     desc: 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
-    videoUrl: '/videos/demo-khoa-hoc-seedance.mp4',
-    posterUrl: '/videos/posters/poster-khoa-hoc-seedance.jpg',
+    videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
     slug: 'khoa-hoc-video-seedance-25-30s',
     price: 699000,
     originalPrice: 1399000
@@ -74,8 +76,8 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:15',
     desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
-    videoUrl: '/videos/demo-skill-thuy-sinh.mp4',
-    posterUrl: '/videos/posters/poster-skill-thuy-sinh.jpg',
+    videoUrl: `${R2_BASE}/videos/demo-skill-thuy-sinh.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-skill-thuy-sinh.jpg`,
     slug: 'skill-video-thuy-sinh-30s',
     price: 399000,
     originalPrice: 799000
@@ -87,8 +89,8 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:25',
     desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
-    videoUrl: '/videos/demo-skill-lam-vuon.mp4',
-    posterUrl: '/videos/posters/poster-skill-lam-vuon.jpg',
+    videoUrl: `${R2_BASE}/videos/demo-skill-lam-vuon.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-skill-lam-vuon.jpg`,
     slug: 'skill-video-diy-lam-vuon-30s',
     price: 399000,
     originalPrice: 799000
@@ -100,8 +102,8 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:20',
     desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
-    videoUrl: '/videos/demo-skill-fitness.mp4',
-    posterUrl: '/videos/posters/poster-skill-fitness.jpg',
+    videoUrl: `${R2_BASE}/videos/demo-skill-fitness.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-skill-fitness.jpg`,
     slug: 'skill-video-affiliate-fitness',
     price: 449000,
     originalPrice: 899000
@@ -174,8 +176,8 @@ export const HomePage: FC<Props> = (props) => {
                   <div class="phone-notch"></div>
                   <video
                     id="heroLeftVideo"
-                    src="/videos/demo-skill-thuy-sinh.mp4"
-                    poster="/videos/posters/poster-skill-thuy-sinh.jpg"
+                    src={DEMO_VIDEOS[2].videoUrl}
+                    poster={DEMO_VIDEOS[2].posterUrl}
                     playsinline
                     muted
                     loop
@@ -192,8 +194,8 @@ export const HomePage: FC<Props> = (props) => {
                   <div class="phone-notch"></div>
                   <video
                     id="heroRightVideo"
-                    src="/videos/demo-khoa-hoc-seedance.mp4"
-                    poster="/videos/posters/poster-khoa-hoc-seedance.jpg"
+                    src={DEMO_VIDEOS[1].videoUrl}
+                    poster={DEMO_VIDEOS[1].posterUrl}
                     playsinline
                     muted
                     loop
@@ -213,8 +215,8 @@ export const HomePage: FC<Props> = (props) => {
                   {/* Main video: giữ nguyên tỉ lệ gốc (object-fit: contain), không crop */}
                   <video
                     id="heroFrontVideo"
-                    src="/videos/demo-khoa-hoc-muse-ai.mp4"
-                    poster="/videos/posters/poster-khoa-hoc-muse-ai.jpg"
+                    src={DEMO_VIDEOS[0].videoUrl}
+                    poster={DEMO_VIDEOS[0].posterUrl}
                     playsinline
                     muted
                     loop
@@ -381,7 +383,7 @@ export const HomePage: FC<Props> = (props) => {
             {/* Cinema Main Player */}
             <div class="cinema-box" id="cinemaScreenBox">
               <div class="player-frame" id="theaterPlayerFrame">
-                <div class="video-ambient-bg" id="theaterAmbientBg" style="background-image: url('/videos/posters/poster-khoa-hoc-muse-ai.jpg')"></div>
+                <div class="video-ambient-bg" id="theaterAmbientBg" style={`background-image: url('${DEMO_VIDEOS[0].posterUrl}')`}></div>
                 <video
                   id="theaterVideoElement"
                   class="main-video"

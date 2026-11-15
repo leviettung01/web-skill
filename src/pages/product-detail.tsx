@@ -24,7 +24,8 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const save = (p.original_price || 0) - p.price
 
   const isMp4 = !!p.demo_video_url && /\.mp4(\?|$)/i.test(p.demo_video_url)
-  const demoPoster = isMp4 ? p.demo_video_url!.replace(/\/videos\/demo-(.+)\.mp4/i, '/videos/posters/poster-$1.jpg') : undefined
+  const replacedPoster = isMp4 ? p.demo_video_url!.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, '/videos/posters/poster-$2.jpg') : undefined
+  const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : undefined
 
   return (
     <Layout {...props} active="products" title={p.name} description={p.short_desc} ogImage={p.thumbnail || undefined}>

@@ -9399,6 +9399,7 @@ var FAQS = [
   { q: "C\xF3 \u0111\u01B0\u1EE3c h\u1ED7 tr\u1EE3 khi g\u1EB7p l\u1ED7i kh\xF4ng?", a: "C\xF3. M\u1ED7i s\u1EA3n ph\u1EA9m \u0111i k\xE8m h\u1ED7 tr\u1EE3 qua Zalo. V\u1EDBi g\xF3i Combo All-In-One b\u1EA1n c\xF2n \u0111\u01B0\u1EE3c \u01B0u ti\xEAn h\u1ED7 tr\u1EE3 1-1 tr\u1EF1c ti\u1EBFp." },
   { q: "T\xF4i c\xF3 th\u1EC3 d\xF9ng skill cho nhi\u1EC1u k\xEAnh kh\xF4ng?", a: "C\xF3. Skill mua m\u1ED9t l\u1EA7n d\xF9ng kh\xF4ng gi\u1EDBi h\u1EA1n cho m\u1ECDi k\xEAnh TikTok, Reels, YouTube Shorts c\u1EE7a ch\xEDnh b\u1EA1n." }
 ];
+var R2_BASE = "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev";
 var DEMO_VIDEOS = [
   {
     id: "muse-ai",
@@ -9407,8 +9408,8 @@ var DEMO_VIDEOS = [
     tag: "Kh\xF3a h\u1ECDc",
     dur: "0:30",
     desc: "H\u1ECDc l\xE0m video AI b\u1EB1ng Muse AI t\u1EEB A-Z: vi\u1EBFt prompt kh\xF3a nh\xE2n v\u1EADt, render clip 10s c\xF3 lip-sync ti\u1EBFng Vi\u1EC7t t\u1EF1 nhi\xEAn, gh\xE9p th\xE0nh video ho\xE0n ch\u1EC9nh.",
-    videoUrl: "/videos/demo-khoa-hoc-muse-ai.mp4",
-    posterUrl: "/videos/posters/poster-khoa-hoc-muse-ai.jpg",
+    videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
     slug: "khoa-hoc-video-muse-ai",
     price: 599e3,
     originalPrice: 1299e3
@@ -9420,8 +9421,8 @@ var DEMO_VIDEOS = [
     tag: "Kh\xF3a h\u1ECDc",
     dur: "0:30",
     desc: "L\xE0m ch\u1EE7 Seedance 2.5: quay one-take 30 gi\xE2y nh\xE2n v\u1EADt gi\u1EEF nguy\xEAn, \xE2m thanh native \u2014 c\xF4ng th\u1EE9c build page Reels/TikTok l\xEAn nhanh.",
-    videoUrl: "/videos/demo-khoa-hoc-seedance.mp4",
-    posterUrl: "/videos/posters/poster-khoa-hoc-seedance.jpg",
+    videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
     slug: "khoa-hoc-video-seedance-25-30s",
     price: 699e3,
     originalPrice: 1399e3
@@ -9433,8 +9434,8 @@ var DEMO_VIDEOS = [
     tag: "Skill AI",
     dur: "0:15",
     desc: "B\u1ED9 skill l\xE0m video thu\u1EF7 sinh 30s: prompt, quy tr\xECnh render v\xE0 checklist \u0111\u0103ng b\xE0i \u0111\u1EC3 build page Reels ng\xE1ch thu\u1EF7 sinh.",
-    videoUrl: "/videos/demo-skill-thuy-sinh.mp4",
-    posterUrl: "/videos/posters/poster-skill-thuy-sinh.jpg",
+    videoUrl: `${R2_BASE}/videos/demo-skill-thuy-sinh.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-skill-thuy-sinh.jpg`,
     slug: "skill-video-thuy-sinh-30s",
     price: 399e3,
     originalPrice: 799e3
@@ -9446,8 +9447,8 @@ var DEMO_VIDEOS = [
     tag: "Skill AI",
     dur: "0:25",
     desc: "Skill l\xE0m video DIY l\xE0m v\u01B0\u1EDDn 30s: c\xF4ng th\u1EE9c c\u1EA3nh quay, prompt m\u1EABu v\xE0 l\u1ECBch \u0111\u0103ng \u0111\u1EC3 build page Reels ng\xE1ch l\xE0m v\u01B0\u1EDDn.",
-    videoUrl: "/videos/demo-skill-lam-vuon.mp4",
-    posterUrl: "/videos/posters/poster-skill-lam-vuon.jpg",
+    videoUrl: `${R2_BASE}/videos/demo-skill-lam-vuon.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-skill-lam-vuon.jpg`,
     slug: "skill-video-diy-lam-vuon-30s",
     price: 399e3,
     originalPrice: 799e3
@@ -9459,8 +9460,8 @@ var DEMO_VIDEOS = [
     tag: "Skill AI",
     dur: "0:20",
     desc: "Skill l\xE0m video fitness 30s b\xE1n h\xE0ng affiliate: k\u1ECBch b\u1EA3n chuy\u1EC3n \u0111\u1ED5i cao, prompt v\xE0 quy tr\xECnh edit tay chi ti\u1EBFt.",
-    videoUrl: "/videos/demo-skill-fitness.mp4",
-    posterUrl: "/videos/posters/poster-skill-fitness.jpg",
+    videoUrl: `${R2_BASE}/videos/demo-skill-fitness.mp4`,
+    posterUrl: `${R2_BASE}/videos/posters/poster-skill-fitness.jpg`,
     slug: "skill-video-affiliate-fitness",
     price: 449e3,
     originalPrice: 899e3
@@ -9523,8 +9524,8 @@ var HomePage = (props) => {
                 "video",
                 {
                   id: "heroLeftVideo",
-                  src: "/videos/demo-skill-thuy-sinh.mp4",
-                  poster: "/videos/posters/poster-skill-thuy-sinh.jpg",
+                  src: DEMO_VIDEOS[2].videoUrl,
+                  poster: DEMO_VIDEOS[2].posterUrl,
                   playsinline: true,
                   muted: true,
                   loop: true,
@@ -9543,8 +9544,8 @@ var HomePage = (props) => {
                 "video",
                 {
                   id: "heroRightVideo",
-                  src: "/videos/demo-khoa-hoc-seedance.mp4",
-                  poster: "/videos/posters/poster-khoa-hoc-seedance.jpg",
+                  src: DEMO_VIDEOS[1].videoUrl,
+                  poster: DEMO_VIDEOS[1].posterUrl,
                   playsinline: true,
                   muted: true,
                   loop: true,
@@ -9563,8 +9564,8 @@ var HomePage = (props) => {
                 "video",
                 {
                   id: "heroFrontVideo",
-                  src: "/videos/demo-khoa-hoc-muse-ai.mp4",
-                  poster: "/videos/posters/poster-khoa-hoc-muse-ai.jpg",
+                  src: DEMO_VIDEOS[0].videoUrl,
+                  poster: DEMO_VIDEOS[0].posterUrl,
                   playsinline: true,
                   muted: true,
                   loop: true,
@@ -9678,7 +9679,7 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "theater-layout", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "cinema-box", id: "cinemaScreenBox", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "player-frame", id: "theaterPlayerFrame", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", id: "theaterAmbientBg", style: "background-image: url('/videos/posters/poster-khoa-hoc-muse-ai.jpg')" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", id: "theaterAmbientBg", style: `background-image: url('${DEMO_VIDEOS[0].posterUrl}')` }),
             /* @__PURE__ */ jsxDEV(
               "video",
               {
@@ -10082,7 +10083,8 @@ var ProductDetailPage = (props) => {
   const gallery = parseJSON(p.gallery, []);
   const save = (p.original_price || 0) - p.price;
   const isMp4 = !!p.demo_video_url && /\.mp4(\?|$)/i.test(p.demo_video_url);
-  const demoPoster = isMp4 ? p.demo_video_url.replace(/\/videos\/demo-(.+)\.mp4/i, "/videos/posters/poster-$1.jpg") : void 0;
+  const replacedPoster = isMp4 ? p.demo_video_url.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, "/videos/posters/poster-$2.jpg") : void 0;
+  const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : void 0;
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "products", title: p.name, description: p.short_desc, ogImage: p.thumbnail || void 0, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] border-b border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 pt-6 pb-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [
@@ -12250,7 +12252,7 @@ var AdminProductForm = (props) => {
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
             /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Video Demo s\u1EA3n ph\u1EA9m (YouTube embed URL)" }),
-            /* @__PURE__ */ jsxDEV("input", { type: "url", name: "demo_video_url", value: p.demo_video_url || "", placeholder: "Link YouTube embed ho\u1EB7c file MP4: /videos/demo-xxx.mp4", class: fieldCls })
+            /* @__PURE__ */ jsxDEV("input", { type: "url", name: "demo_video_url", value: p.demo_video_url || "", placeholder: "Link YouTube embed ho\u1EB7c link R2 MP4: https://pub-...r2.dev/videos/demo-xxx.mp4", class: fieldCls })
           ] })
         ] })
       ] }),
@@ -14652,6 +14654,10 @@ ${urls.join("\n")}
     200,
     { "Content-Type": "application/xml; charset=utf-8" }
   );
+});
+app.get("/videos/*", (c) => {
+  const pathname = new URL(c.req.url).pathname;
+  return c.redirect(`https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev${pathname}`, 301);
 });
 app.notFound((c) => c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404));
 app.onError((err, c) => {

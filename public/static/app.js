@@ -253,7 +253,7 @@
   /* ---------- Gallery lightbox ---------- */
   window.openVideoModal = function (url, aspect) {
     const isVertical = aspect === 'vertical' || url.includes('aspect=vertical');
-    const isMp4 = url.endsWith('.mp4') || url.includes('/videos/');
+    const isMp4 = /\.mp4(\?|$)/i.test(url) || url.includes('/videos/');
     const m = document.createElement('div');
     m.className = 'fixed inset-0 z-[200] bg-black/90 grid place-items-center p-4 backdrop-blur-md';
     
@@ -301,13 +301,15 @@
      1CLICKVN-STYLE VIDEO HERO, WALL MARQUEE & CINEMA THEATER
      ========================================================================= */
   
+  const R2_BASE = 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev';
+
   // 1. HERO 3D PHONE CAROUSEL & SHORT VIDEO GUI (TikTok / Reels / Instagram)
   const HERO_VIDEOS = [
     {
       platform: 'tiktok',
       title: 'Khoá học Video Muse AI Pro · 30s',
-      videoUrl: '/videos/demo-khoa-hoc-muse-ai.mp4',
-      posterUrl: '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
+      videoUrl: R2_BASE + '/videos/demo-khoa-hoc-muse-ai.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
       author: '@webskill.ai',
       authorName: 'WebSkill AI',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=webskill1',
@@ -321,8 +323,8 @@
     {
       platform: 'reels',
       title: 'Khóa Học Video Seedance 2.5 · 30s',
-      videoUrl: '/videos/demo-khoa-hoc-seedance.mp4',
-      posterUrl: '/videos/posters/poster-khoa-hoc-seedance.jpg',
+      videoUrl: R2_BASE + '/videos/demo-khoa-hoc-seedance.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-seedance.jpg',
       author: 'WebSkill AI Video',
       authorName: 'WebSkill AI Video',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=seedance',
@@ -336,8 +338,8 @@
     {
       platform: 'instagram',
       title: 'Skill Video Affiliate Fitness · 30s',
-      videoUrl: '/videos/demo-skill-fitness.mp4',
-      posterUrl: '/videos/posters/poster-skill-fitness.jpg',
+      videoUrl: R2_BASE + '/videos/demo-skill-fitness.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-skill-fitness.jpg',
       author: 'webskill_fitness',
       authorName: 'WebSkill Fitness',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=fitness',
@@ -351,8 +353,8 @@
     {
       platform: 'tiktok',
       title: 'Skill Video DIY Làm Vườn · 30s',
-      videoUrl: '/videos/demo-skill-lam-vuon.mp4',
-      posterUrl: '/videos/posters/poster-skill-lam-vuon.jpg',
+      videoUrl: R2_BASE + '/videos/demo-skill-lam-vuon.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-skill-lam-vuon.jpg',
       author: '@webskill.garden',
       authorName: 'WebSkill Làm Vườn',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=garden',
@@ -366,8 +368,8 @@
     {
       platform: 'reels',
       title: 'Skill Video Thuỷ Sinh 30s',
-      videoUrl: '/videos/demo-skill-thuy-sinh.mp4',
-      posterUrl: '/videos/posters/poster-skill-thuy-sinh.jpg',
+      videoUrl: R2_BASE + '/videos/demo-skill-thuy-sinh.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-skill-thuy-sinh.jpg',
       author: 'Thuỷ Sinh AI Page',
       authorName: 'Thuỷ Sinh AI Page',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=aquarium',
@@ -706,8 +708,8 @@
       tag: 'Khóa học',
       dur: '0:30',
       desc: 'Học làm video AI bằng Muse AI từ A-Z: viết prompt khóa nhân vật, render clip 10s có lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
-      videoUrl: '/videos/demo-khoa-hoc-muse-ai.mp4',
-      posterUrl: '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
+      videoUrl: R2_BASE + '/videos/demo-khoa-hoc-muse-ai.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
       slug: 'khoa-hoc-video-muse-ai',
       price: '599.000đ',
       origPrice: '1.299.000đ'
@@ -718,8 +720,8 @@
       tag: 'Khóa học',
       dur: '0:30',
       desc: 'Làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
-      videoUrl: '/videos/demo-khoa-hoc-seedance.mp4',
-      posterUrl: '/videos/posters/poster-khoa-hoc-seedance.jpg',
+      videoUrl: R2_BASE + '/videos/demo-khoa-hoc-seedance.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-seedance.jpg',
       slug: 'khoa-hoc-video-seedance-25-30s',
       price: '699.000đ',
       origPrice: '1.399.000đ'
@@ -730,8 +732,8 @@
       tag: 'Skill AI',
       dur: '0:15',
       desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
-      videoUrl: '/videos/demo-skill-thuy-sinh.mp4',
-      posterUrl: '/videos/posters/poster-skill-thuy-sinh.jpg',
+      videoUrl: R2_BASE + '/videos/demo-skill-thuy-sinh.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-skill-thuy-sinh.jpg',
       slug: 'skill-video-thuy-sinh-30s',
       price: '399.000đ',
       origPrice: '799.000đ'
@@ -742,8 +744,8 @@
       tag: 'Skill AI',
       dur: '0:25',
       desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
-      videoUrl: '/videos/demo-skill-lam-vuon.mp4',
-      posterUrl: '/videos/posters/poster-skill-lam-vuon.jpg',
+      videoUrl: R2_BASE + '/videos/demo-skill-lam-vuon.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-skill-lam-vuon.jpg',
       slug: 'skill-video-diy-lam-vuon-30s',
       price: '399.000đ',
       origPrice: '799.000đ'
@@ -754,8 +756,8 @@
       tag: 'Skill AI',
       dur: '0:20',
       desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
-      videoUrl: '/videos/demo-skill-fitness.mp4',
-      posterUrl: '/videos/posters/poster-skill-fitness.jpg',
+      videoUrl: R2_BASE + '/videos/demo-skill-fitness.mp4',
+      posterUrl: R2_BASE + '/videos/posters/poster-skill-fitness.jpg',
       slug: 'skill-video-affiliate-fitness',
       price: '449.000đ',
       origPrice: '899.000đ'

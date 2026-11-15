@@ -295,7 +295,7 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
               </div>
               <div>
                 <label class={labelCls}>Video Demo sản phẩm (YouTube embed URL)</label>
-                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="Link YouTube embed hoặc file MP4: /videos/demo-xxx.mp4" class={fieldCls} />
+                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="Link YouTube embed hoặc link R2 MP4: https://pub-...r2.dev/videos/demo-xxx.mp4" class={fieldCls} />
               </div>
             </div>
           </div>

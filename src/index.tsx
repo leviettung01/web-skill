@@ -1255,6 +1255,11 @@ app.get('/sitemap.xml', async (c) => {
     200, { 'Content-Type': 'application/xml; charset=utf-8' })
 })
 
+app.get('/videos/*', (c) => {
+  const pathname = new URL(c.req.url).pathname
+  return c.redirect(`https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev${pathname}`, 301)
+})
+
 app.notFound((c) => c.html(<NotFoundPage {...base(c)} />, 404))
 
 app.onError((err, c) => {
