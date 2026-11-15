@@ -48,6 +48,7 @@ const DEMO_VIDEOS = [
     shortTitle: 'Skill Muse AI Pro 30s',
     tag: 'Skill AI',
     dur: '0:30',
+    orient: 'landscape' as const,
     desc: 'Bộ Skill làm video AI bằng Muse AI từ A-Z: công thức prompt khóa nhân vật, render clip 10s lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
@@ -61,6 +62,7 @@ const DEMO_VIDEOS = [
     shortTitle: 'Skill Seedance 2.5 · 30s',
     tag: 'Skill AI',
     dur: '0:30',
+    orient: 'portrait' as const,
     desc: 'Bộ Skill làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
@@ -74,6 +76,7 @@ const DEMO_VIDEOS = [
     shortTitle: 'Skill Video Thuỷ Sinh 30s',
     tag: 'Skill AI',
     dur: '0:15',
+    orient: 'landscape' as const,
     desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
     videoUrl: `${R2_BASE}/videos/demo-skill-thuy-sinh.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-thuy-sinh.jpg`,
@@ -87,6 +90,7 @@ const DEMO_VIDEOS = [
     shortTitle: 'Skill Làm Vườn DIY 30s',
     tag: 'Skill AI',
     dur: '0:25',
+    orient: 'landscape' as const,
     desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
     videoUrl: `${R2_BASE}/videos/demo-skill-lam-vuon.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-lam-vuon.jpg`,
@@ -100,6 +104,7 @@ const DEMO_VIDEOS = [
     shortTitle: 'Skill Affiliate Fitness 30s',
     tag: 'Skill AI',
     dur: '0:20',
+    orient: 'landscape' as const,
     desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
     videoUrl: `${R2_BASE}/videos/demo-skill-fitness.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-fitness.jpg`,
@@ -171,47 +176,41 @@ export const HomePage: FC<Props> = (props) => {
                 <i class="fas fa-chevron-right"></i>
               </button>
 
-              <div class="hero-stage" id="heroStage">
-                {/* Back Left Phone */}
+              <div class="hero-stage frame-landscape" id="heroStage">
+                {/* Back Left Preview Card (Poster-first for fast initial load) */}
                 <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
                   <div class="phone-notch"></div>
-                  <video
-                    id="heroLeftVideo"
-                    src={DEMO_VIDEOS[2].videoUrl}
-                    poster={DEMO_VIDEOS[2].posterUrl}
-                    playsinline
-                    muted
-                    loop
-                    autoplay
-                    preload="metadata"
-                  ></video>
+                  <img
+                    id="heroLeftImg"
+                    src={DEMO_VIDEOS[4].posterUrl}
+                    alt={DEMO_VIDEOS[4].shortTitle}
+                    class="w-full h-full object-cover"
+                    decoding="async"
+                  />
                   <div class="phone-side-hint phone-side-hint-left">
-                    <i class="fas fa-arrow-right mr-1"></i> Bấm để xem
+                    <i class="fas fa-arrow-right mr-1"></i> Xem tiếp
                   </div>
                 </div>
 
-                {/* Back Right Phone */}
+                {/* Back Right Preview Card */}
                 <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
                   <div class="phone-notch"></div>
-                  <video
-                    id="heroRightVideo"
-                    src={DEMO_VIDEOS[1].videoUrl}
-                    poster={DEMO_VIDEOS[1].posterUrl}
-                    playsinline
-                    muted
-                    loop
-                    autoplay
-                    preload="metadata"
-                  ></video>
+                  <img
+                    id="heroRightImg"
+                    src={DEMO_VIDEOS[1].posterUrl}
+                    alt={DEMO_VIDEOS[1].shortTitle}
+                    class="w-full h-full object-cover"
+                    decoding="async"
+                  />
                   <div class="phone-side-hint phone-side-hint-right">
-                    Bấm để xem <i class="fas fa-arrow-left ml-1"></i>
+                    Xem tiếp <i class="fas fa-arrow-left ml-1"></i>
                   </div>
                 </div>
 
-                {/* Main Front Phone (Phone dọc 9:16) */}
-                <div class="phone phone-front" id="heroFrontPhone">
-                  {/* Smartphone dynamic notch */}
+                {/* Main Front Showcase Frame (Auto morphs 16:9 Landscape <-> 9:16 Portrait) */}
+                <div class="phone phone-front frame-landscape" id="heroFrontPhone">
                   <div class="phone-notch"></div>
+                  <div class="video-ambient-bg" id="heroFrontAmbient" style={`background-image:url('${DEMO_VIDEOS[0].posterUrl}')`}></div>
 
                   {/* Main video: giữ nguyên tỉ lệ gốc (object-fit: contain), không crop */}
                   <video
@@ -222,7 +221,7 @@ export const HomePage: FC<Props> = (props) => {
                     muted
                     loop
                     autoplay
-                    preload="auto"
+                    preload="metadata"
                   ></video>
 
                   {/* Center play/pause overlay */}
@@ -347,9 +346,11 @@ export const HomePage: FC<Props> = (props) => {
         </div>
         <div class="wall-track-wrapper">
           <div class="wall-track" id="wallTrack">
-            {[...DEMO_VIDEOS, ...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => (
-              <div class="wall-card" data-video-index={idx % DEMO_VIDEOS.length} data-src={v.videoUrl} data-title={v.title} data-slug={v.slug} data-desc={v.desc} data-poster={v.posterUrl}>
-                <video src={v.videoUrl} poster={v.posterUrl} playsinline muted loop preload="none"></video>
+            {[...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => (
+              <div class={`wall-card ${v.orient === 'portrait' ? 'wall-card-portrait' : 'wall-card-landscape'}`}
+                data-video-index={idx % DEMO_VIDEOS.length} data-src={v.videoUrl} data-title={v.title}
+                data-slug={v.slug} data-desc={v.desc} data-poster={v.posterUrl} data-orient={v.orient}>
+                <img src={v.posterUrl} alt={v.shortTitle} loading="lazy" decoding="async" class="wall-card-thumb" />
                 <span class="card-tag">{v.tag}</span>
                 <span class="card-dur">{v.dur}</span>
                 <div class="wall-card-play">

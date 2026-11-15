@@ -39,7 +39,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
       }}></script>
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
-      <link href="/static/style.css" rel="stylesheet" />
+      <link href="/static/style.css?v=20261115" rel="stylesheet" />
     </head>
     <body class="bg-slate-100 text-slate-800 antialiased">
       <div class="flex min-h-screen">
@@ -99,8 +99,8 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
 
       <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
       <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-      <script src="/static/app.js"></script>
-      <script src="/static/admin.js"></script>
+      <script src="/static/app.js?v=20261115"></script>
+      <script src="/static/admin.js?v=20261115"></script>
     </body>
   </html>
 )

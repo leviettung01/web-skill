@@ -8176,31 +8176,31 @@ var warnIfStorelessAccess = () => {
     );
   }
 };
-var getContextValuesIn = (store, context) => {
-  if (!store) {
+var getContextValuesIn = (store2, context) => {
+  if (!store2) {
     warnIfStorelessAccess();
     return context.values;
   }
-  let values = store.get(context);
+  let values = store2.get(context);
   if (!values) {
     values = [context.values[0]];
-    store.set(context, values);
+    store2.set(context, values);
   }
   return values;
 };
-var readContextValueIn = (store, context) => {
-  if (!store) {
+var readContextValueIn = (store2, context) => {
+  if (!store2) {
     warnIfStorelessAccess();
     return context.values.at(-1);
   }
-  const values = store.get(context);
+  const values = store2.get(context);
   return values?.length ? values.at(-1) : context.values[0];
 };
-var captureContextValues = (store) => (store ? globalContexts.filter((c) => store.has(c)) : globalContexts).map((c) => [
+var captureContextValues = (store2) => (store2 ? globalContexts.filter((c) => store2.has(c)) : globalContexts).map((c) => [
   c,
-  readContextValueIn(store, c)
+  readContextValueIn(store2, c)
 ]);
-var resumeWithContextValues = (callback, store, contexts) => runWithRenderContext(() => {
+var resumeWithContextValues = (callback, store2, contexts) => runWithRenderContext(() => {
   const currentStore = getCurrentStore();
   const valuesPerContext = contexts.map(([context, value]) => {
     const values = getContextValuesIn(currentStore, context);
@@ -8223,17 +8223,17 @@ var resumeWithContextValues = (callback, store, contexts) => runWithRenderContex
     popContextValues();
     throw e;
   }
-}, store);
+}, store2);
 var runWithRenderContext = (callback, resumeStore) => {
   if (getCurrentStore()) {
     return callback();
   }
-  const store = resumeStore ?? /* @__PURE__ */ new WeakMap();
+  const store2 = resumeStore ?? /* @__PURE__ */ new WeakMap();
   const storage = loadAsyncLocalStorage();
   if (storage) {
-    return storage.run(store, callback);
+    return storage.run(store2, callback);
   }
-  fallbackStore = store;
+  fallbackStore = store2;
   let result;
   try {
     result = callback();
@@ -8249,9 +8249,9 @@ var runWithRenderContext = (callback, resumeStore) => {
   return result;
 };
 var captureRenderContext = () => {
-  const store = getCurrentStore();
-  const contexts = captureContextValues(store);
-  return (callback) => resumeWithContextValues(callback, store, contexts);
+  const store2 = getCurrentStore();
+  const contexts = captureContextValues(store2);
+  return (callback) => resumeWithContextValues(callback, store2, contexts);
 };
 var createContext = (defaultValue) => {
   const values = [defaultValue];
@@ -8903,21 +8903,39 @@ var Layout = (props) => {
     settings = {},
     cartCount = 0,
     active = "",
+    currentPath = "",
+    currentQueryType = "",
+    currentQuerySort = "",
     canonical,
     children
   } = props;
   const siteName = settings.site_name || "KhoSkill AI";
   const fullTitle = title2 ? `${title2} | ${siteName}` : `${siteName} \u2014 ${settings.site_tagline || ""}`;
   const desc = description || settings.site_tagline || "Kho Skill AI t\u1EA1o video chuy\xEAn nghi\u1EC7p";
+  const path = currentPath || "/";
+  const isHome = active === "home" || currentPath === "/" && !active;
+  const isProductsAll = path === "/san-pham" && !currentQueryType && !currentQuerySort || active === "products";
+  const isBestseller = path === "/san-pham" && (currentQuerySort === "bestseller" || currentQuerySort === "hot");
+  const isSkill = path === "/san-pham" && currentQueryType === "skill" || path === "/danh-muc/skill-video-ai" || active === "skill";
+  const isCourse = path === "/san-pham" && currentQueryType === "course" || path === "/danh-muc/khoa-hoc-video-ai" || active === "course";
+  const isChatbot = path === "/san-pham" && currentQueryType === "chatbot" || path === "/danh-muc/chatbot-kich-ban" || active === "chatbot";
+  const isApp = path === "/san-pham" && currentQueryType === "app" || path === "/danh-muc/app-video-ai" || active === "app";
+  const isCombo = path === "/combo" || currentQueryType === "combo" || path === "/danh-muc/combo-tiet-kiem" || active === "combo";
+  const isPricing = path === "/bang-gia" || active === "pricing";
+  const isBlog = path.startsWith("/blog") || active === "blog";
+  const isAffiliate = path === "/affiliate" || active === "affiliate";
+  const isAbout = path === "/gioi-thieu" || active === "about";
+  const isContact = (path === "/lien-he" || active === "contact") && !currentQueryType;
   const nav = [
-    { href: "/", label: "Trang ch\u1EE7", key: "home", icon: "fa-house" },
-    { href: "/san-pham", label: "S\u1EA3n ph\u1EA9m", key: "products", icon: "fa-cubes" },
-    { href: "/combo", label: "Combo", key: "combo", icon: "fa-box-open" },
-    { href: "/bang-gia", label: "B\u1EA3ng gi\xE1", key: "pricing", icon: "fa-tags" },
-    { href: "/blog", label: "Blog", key: "blog", icon: "fa-newspaper" },
-    { href: "/affiliate", label: "Affiliate", key: "affiliate", icon: "fa-handshake" },
-    { href: "/lien-he", label: "Li\xEAn h\u1EC7", key: "contact", icon: "fa-headset" }
+    { href: "/", label: "Trang ch\u1EE7", key: "home", icon: "fa-house", on: isHome },
+    { href: "/san-pham", label: "S\u1EA3n ph\u1EA9m", key: "products", icon: "fa-cubes", on: path.startsWith("/san-pham") || path.startsWith("/danh-muc") || active === "products" },
+    { href: "/combo", label: "Combo", key: "combo", icon: "fa-box-open", on: isCombo },
+    { href: "/bang-gia", label: "B\u1EA3ng gi\xE1", key: "pricing", icon: "fa-tags", on: isPricing },
+    { href: "/blog", label: "Blog", key: "blog", icon: "fa-newspaper", on: isBlog },
+    { href: "/affiliate", label: "Affiliate", key: "affiliate", icon: "fa-handshake", on: isAffiliate },
+    { href: "/lien-he", label: "Li\xEAn h\u1EC7", key: "contact", icon: "fa-headset", on: isContact }
   ];
+  const sbCls = (on) => `sidebar-menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${on ? "is-active text-white bg-indigo-500/15 border border-indigo-500/30 shadow-sm shadow-indigo-500/10" : "text-[#b9b8d9] border border-transparent hover:text-white hover:bg-white/5"}`;
   return /* @__PURE__ */ jsxDEV("html", { lang: "vi", class: "scroll-smooth", children: [
     /* @__PURE__ */ jsxDEV("head", { children: [
       /* @__PURE__ */ jsxDEV("meta", { charset: "UTF-8" }),
@@ -8930,113 +8948,141 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261115", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css", rel: "stylesheet" })
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261115", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+        __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
+      } })
     ] }),
     /* @__PURE__ */ jsxDEV("body", { class: "bg-[#080716] text-[#e2e1f5] antialiased " + (props.bodyClass || ""), children: [
+      /* @__PURE__ */ jsxDEV("div", { id: "nav-progress", "aria-hidden": "true" }),
+      /* @__PURE__ */ jsxDEV("div", { id: "sidebar-backdrop", class: "fixed inset-0 z-40 bg-black/60 backdrop-blur-xs hidden lg:hidden", "aria-hidden": "true" }),
       /* @__PURE__ */ jsxDEV("div", { class: "flex min-h-screen", children: [
-        /* @__PURE__ */ jsxDEV("aside", { id: "sidebar", class: "fixed inset-y-0 left-0 z-50 w-64 bg-[#0f0e26] border-r border-[#1f1b4b] flex flex-col justify-between transition-all duration-300 transform -translate-x-full lg:translate-x-0", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col overflow-y-auto", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "h-16 flex items-center gap-3 px-6 border-b border-[#1f1b4b]", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm" }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "leading-none sidebar-header-text", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-sm tracking-tight text-white", children: siteName }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-[#9f9dbb] mt-0.5", children: "Kho Skill Video AI" })
+        /* @__PURE__ */ jsxDEV("aside", { id: "sidebar", class: "fixed inset-y-0 left-0 z-50 w-64 lg:w-[72px] bg-[#0f0e26]/95 backdrop-blur-md border-r border-[#1f1b4b] flex flex-col justify-between transition-all duration-200 transform -translate-x-full lg:translate-x-0", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col flex-1 overflow-y-auto overflow-x-hidden", children: [
+            /* @__PURE__ */ jsxDEV("a", { href: "/", class: "h-16 shrink-0 flex items-center gap-3 px-[18px] border-b border-[#1f1b4b] hover:bg-white/[0.02] transition-colors", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm" }) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "leading-none sidebar-header-text min-w-0", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-sm tracking-tight text-white whitespace-nowrap", children: siteName }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9f9dbb] mt-0.5 whitespace-nowrap", children: "Kho Skill Video AI" })
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "px-3 py-5 flex flex-col gap-6", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "px-3 py-4 flex flex-col gap-5", children: [
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text", children: "Kh\xE1m ph\xE1" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text", children: "Kh\xE1m ph\xE1" }),
                 /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/", class: `sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === "home" ? "text-indigo-400 bg-indigo-500/10" : "text-[#b9b8d9] hover:text-white hover:bg-white/5"}`, children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Trang ch\u1EE7" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/", title: "Trang ch\u1EE7", "data-nav": "home", class: sbCls(isHome), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-house w-5 shrink-0 text-center ${isHome ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Trang ch\u1EE7" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?sort=hot", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "B\xE1n ch\u1EA1y nh\u1EA5t" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", title: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m", "data-nav": "all", class: sbCls(isProductsAll), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-grid-2 fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?sort=bestseller", title: "B\xE1n ch\u1EA1y nh\u1EA5t", "data-nav": "bestseller", class: sbCls(isBestseller), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-fire w-5 shrink-0 text-center ${isBestseller ? "text-orange-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "B\xE1n ch\u1EA1y nh\u1EA5t" })
                   ] })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text", children: "S\u1EA3n ph\u1EA9m" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text", children: "Danh m\u1EE5c" }),
                 /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-white bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles w-5 text-center text-indigo-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "Skill AI" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none", children: "\u0110ang b\xE1n" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", title: "Skill AI (\u0110ang b\xE1n)", "data-nav": "skill", class: sbCls(isSkill), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-wand-magic-sparkles w-5 shrink-0 text-center ${isSkill ? "text-indigo-400" : "text-indigo-400/80"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Skill AI" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none shrink-0", children: "\u0110ang b\xE1n" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-graduation-cap w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "Kh\xF3a h\u1ECDc" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", title: "Kh\xF3a h\u1ECDc Video AI (S\u1EAFp m\u1EDF)", "data-nav": "course", class: sbCls(isCourse), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-graduation-cap w-5 shrink-0 text-center ${isCourse ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Kh\xF3a h\u1ECDc" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: `sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === "chatbot" ? "text-indigo-400 bg-indigo-500/10" : "text-[#b9b8d9] hover:text-white hover:bg-white/5"}`, children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-robot w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "Chatbot" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", title: "Chatbot (S\u1EAFp m\u1EDF)", "data-nav": "chatbot", class: sbCls(isChatbot), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-robot w-5 shrink-0 text-center ${isChatbot ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Chatbot" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-mobile-screen-button w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "App Video AI" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", title: "App Video AI (S\u1EAFp m\u1EDF)", "data-nav": "app", class: sbCls(isApp), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-mobile-screen-button w-5 shrink-0 text-center ${isApp ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "App Video AI" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-open w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "Combo ti\u1EBFt ki\u1EC7m" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-video w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "Y\xEAu c\u1EA7u Video AI" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/combo", title: "Combo ti\u1EBFt ki\u1EC7m (S\u1EAFp m\u1EDF)", "data-nav": "combo", class: sbCls(isCombo), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-box-open w-5 shrink-0 text-center ${isCombo ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Combo ti\u1EBFt ki\u1EC7m" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text", children: "Kh\xE1c" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text", children: "Th\xF4ng tin" }),
                 /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-gear w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxDEV("span", { children: "Custom Chatbot" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none", children: "S\u1EAFp m\u1EDF" })
-                    ] })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", title: "B\u1EA3ng gi\xE1", "data-nav": "pricing", class: sbCls(isPricing), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-tags w-5 shrink-0 text-center ${isPricing ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "B\u1EA3ng gi\xE1" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: `sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === "pricing" ? "text-indigo-400 bg-indigo-500/10" : "text-[#b9b8d9] hover:text-white hover:bg-white/5"}`, children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-tags w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "B\u1EA3ng gi\xE1" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/blog", title: "Blog ki\u1EBFn th\u1EE9c", "data-nav": "blog", class: sbCls(isBlog), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-newspaper w-5 shrink-0 text-center ${isBlog ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Blog" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/gioi-thieu", class: "sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-info-circle w-5 text-center text-slate-400" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Gi\u1EDBi thi\u1EC7u" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/affiliate", title: "Affiliate", "data-nav": "affiliate", class: sbCls(isAffiliate), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-handshake w-5 shrink-0 text-center ${isAffiliate ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Affiliate" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/gioi-thieu", title: "Gi\u1EDBi thi\u1EC7u", "data-nav": "about", class: sbCls(isAbout), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-circle-info w-5 shrink-0 text-center ${isAbout ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Gi\u1EDBi thi\u1EC7u" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", title: "Li\xEAn h\u1EC7 & Y\xEAu c\u1EA7u ri\xEAng", "data-nav": "contact", class: sbCls(isContact), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-headset w-5 shrink-0 text-center ${isContact ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3" })
                   ] })
                 ] })
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "p-3 border-t border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV("button", { id: "sidebar-toggle-btn", class: "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-angles-left w-5 text-center" }),
-            /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text", children: "Thu nh\u1ECF" })
-          ] }) })
+          /* @__PURE__ */ jsxDEV("div", { class: "p-3 border-t border-[#1f1b4b] flex items-center gap-1.5 shrink-0", children: [
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                id: "sidebar-toggle-btn",
+                title: "Thu g\u1ECDn thanh b\xEAn",
+                class: "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer",
+                children: [
+                  /* @__PURE__ */ jsxDEV("i", { id: "sidebar-toggle-icon", class: "fas fa-angles-left w-5 shrink-0 text-center" }),
+                  /* @__PURE__ */ jsxDEV("span", { id: "sidebar-toggle-label", class: "sidebar-text whitespace-nowrap", children: "Thu g\u1ECDn" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                id: "sidebar-pin-btn",
+                title: "Ghim c\u1ED1 \u0111\u1ECBnh m\u1EDF r\u1ED9ng",
+                class: "sidebar-badge w-9 h-9 shrink-0 grid place-items-center rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer",
+                children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-thumbtack" })
+              }
+            )
+          ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { id: "main-content-wrap", class: "flex-1 lg:ml-64 flex flex-col min-h-screen transition-all duration-300 overflow-hidden", children: [
+        /* @__PURE__ */ jsxDEV("div", { id: "main-content-wrap", class: "flex-1 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip", children: [
           /* @__PURE__ */ jsxDEV("header", { id: "site-header", class: "sticky top-0 z-40 bg-[#0f0e26]/85 backdrop-blur border-b border-[#1f1b4b]", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 sm:px-6", children: /* @__PURE__ */ jsxDEV("div", { class: "h-16 flex items-center justify-between gap-4", children: [
               /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex lg:hidden items-center gap-2 shrink-0 group", children: [
@@ -9047,7 +9093,8 @@ var Layout = (props) => {
                 "a",
                 {
                   href: n.href,
-                  class: `px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ${active === n.key ? "text-indigo-400 bg-indigo-500/10" : "text-[#9f9dbb] hover:text-white"}`,
+                  "data-top-nav": n.key,
+                  class: `px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ${n.on ? "is-active text-indigo-400 bg-indigo-500/10" : "text-[#9f9dbb] hover:text-white hover:bg-white/5"}`,
                   children: n.label
                 }
               )) }),
@@ -9129,10 +9176,19 @@ var Layout = (props) => {
                 ),
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" })
               ] }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1.5", children: nav.map((n) => /* @__PURE__ */ jsxDEV("a", { href: n.href, class: `flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ${active === n.key ? "bg-indigo-500/10 text-indigo-400" : "text-[#b9b8d9] hover:bg-white/5"}`, children: [
-                /* @__PURE__ */ jsxDEV("i", { class: `fas ${n.icon} w-4 text-center text-slate-400` }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1.5", children: nav.map((n) => /* @__PURE__ */ jsxDEV("a", { href: n.href, "data-mob-nav": n.key, class: `flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ${n.on ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25" : "text-[#b9b8d9] hover:bg-white/5"}`, children: [
+                /* @__PURE__ */ jsxDEV("i", { class: `fas ${n.icon} w-4 text-center ${n.on ? "text-indigo-400" : "text-slate-400"}` }),
                 n.label
-              ] })) })
+              ] })) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "pt-2 border-t border-[#1f1b4b] flex flex-wrap gap-1.5", children: [
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1" }),
+                  "Skill AI (\u0110ang b\xE1n)"
+                ] }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium", children: "Kh\xF3a h\u1ECDc (S\u1EAFp m\u1EDF)" }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium", children: "Chatbot (S\u1EAFp m\u1EDF)" }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium", children: "App Video AI (S\u1EAFp m\u1EDF)" })
+              ] })
             ] }) })
           ] }),
           /* @__PURE__ */ jsxDEV("main", { id: "main-content", class: "flex-1", children }),
@@ -9258,12 +9314,30 @@ var ProductCard = ({ p, compact }) => {
   const off = discountPercent(p.price, p.original_price);
   const comingSoon = p.status === "coming_soon";
   return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-300 flex flex-col ${comingSoon ? "opacity-90" : ""}`, children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "relative aspect-[10/16] overflow-hidden bg-[#080716]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
-      p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, loading: "lazy", class: `w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? "opacity-75 grayscale-[20%]" : ""}` }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "product-card-media relative aspect-video overflow-hidden bg-[#080716]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
+      p.thumbnail ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        /* @__PURE__ */ jsxDEV(
+          "div",
+          {
+            class: "product-card-ambient absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-0 transition-opacity duration-200 pointer-events-none",
+            style: `background-image:url('${p.thumbnail}')`
+          }
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "img",
+          {
+            src: p.thumbnail,
+            alt: p.name,
+            loading: "lazy",
+            decoding: "async",
+            class: `product-card-img relative z-[1] w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? "opacity-80 grayscale-[15%]" : ""}`
+          }
+        )
+      ] }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
         /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-4xl mb-2 opacity-95` }),
         /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold uppercase tracking-widest opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-col gap-1.5 z-10", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-amber-500 text-slate-950 text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-amber-500 text-slate-950 text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md", children: [
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[8px]" }),
         "Ch\u01B0a m\u1EDF b\xE1n"
       ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
@@ -9278,20 +9352,22 @@ var ProductCard = ({ p, compact }) => {
           "%"
         ] })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 right-3 z-10", children: /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-[#0068ff] text-white text-[9px] font-black tracking-wider uppercase shadow-md", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" }) }),
-      p.demo_video_url && /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-300 z-20 pointer-events-none", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 right-3 z-10 pointer-events-none", children: /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-[#0068ff] text-white text-[9px] font-black tracking-wider uppercase shadow-md", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" }) }),
+      p.demo_video_url && /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-200 z-20 pointer-events-none", children: [
         /* @__PURE__ */ jsxDEV(
           "button",
           {
             type: "button",
-            class: "pointer-events-auto w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition duration-300 cursor-pointer",
+            class: "pointer-events-auto w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition duration-200 cursor-pointer",
             "data-video": p.demo_video_url,
-            "data-aspect": "vertical",
+            "data-poster": p.thumbnail || "",
+            "data-title": p.name,
+            "data-aspect": "auto",
             title: "Xem Demo",
             children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-sm ml-0.5" })
           }
         ),
-        /* @__PURE__ */ jsxDEV("span", { class: "text-white text-xs font-semibold tracking-wide", children: "Xem Demo" })
+        /* @__PURE__ */ jsxDEV("span", { class: "text-white text-xs font-semibold tracking-wide drop-shadow", children: "Xem Demo" })
       ] }),
       /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "absolute inset-0 z-10", "aria-label": `Xem chi ti\u1EBFt ${p.name}` })
     ] }),
@@ -9485,6 +9561,7 @@ var DEMO_VIDEOS = [
     shortTitle: "Skill Muse AI Pro 30s",
     tag: "Skill AI",
     dur: "0:30",
+    orient: "landscape",
     desc: "B\u1ED9 Skill l\xE0m video AI b\u1EB1ng Muse AI t\u1EEB A-Z: c\xF4ng th\u1EE9c prompt kh\xF3a nh\xE2n v\u1EADt, render clip 10s lip-sync ti\u1EBFng Vi\u1EC7t t\u1EF1 nhi\xEAn, gh\xE9p th\xE0nh video ho\xE0n ch\u1EC9nh.",
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
@@ -9498,6 +9575,7 @@ var DEMO_VIDEOS = [
     shortTitle: "Skill Seedance 2.5 \xB7 30s",
     tag: "Skill AI",
     dur: "0:30",
+    orient: "portrait",
     desc: "B\u1ED9 Skill l\xE0m ch\u1EE7 Seedance 2.5: quay one-take 30 gi\xE2y nh\xE2n v\u1EADt gi\u1EEF nguy\xEAn, \xE2m thanh native \u2014 c\xF4ng th\u1EE9c build page Reels/TikTok l\xEAn nhanh.",
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
@@ -9511,6 +9589,7 @@ var DEMO_VIDEOS = [
     shortTitle: "Skill Video Thu\u1EF7 Sinh 30s",
     tag: "Skill AI",
     dur: "0:15",
+    orient: "landscape",
     desc: "B\u1ED9 skill l\xE0m video thu\u1EF7 sinh 30s: prompt, quy tr\xECnh render v\xE0 checklist \u0111\u0103ng b\xE0i \u0111\u1EC3 build page Reels ng\xE1ch thu\u1EF7 sinh.",
     videoUrl: `${R2_BASE}/videos/demo-skill-thuy-sinh.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-thuy-sinh.jpg`,
@@ -9524,6 +9603,7 @@ var DEMO_VIDEOS = [
     shortTitle: "Skill L\xE0m V\u01B0\u1EDDn DIY 30s",
     tag: "Skill AI",
     dur: "0:25",
+    orient: "landscape",
     desc: "Skill l\xE0m video DIY l\xE0m v\u01B0\u1EDDn 30s: c\xF4ng th\u1EE9c c\u1EA3nh quay, prompt m\u1EABu v\xE0 l\u1ECBch \u0111\u0103ng \u0111\u1EC3 build page Reels ng\xE1ch l\xE0m v\u01B0\u1EDDn.",
     videoUrl: `${R2_BASE}/videos/demo-skill-lam-vuon.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-lam-vuon.jpg`,
@@ -9537,6 +9617,7 @@ var DEMO_VIDEOS = [
     shortTitle: "Skill Affiliate Fitness 30s",
     tag: "Skill AI",
     dur: "0:20",
+    orient: "landscape",
     desc: "Skill l\xE0m video fitness 30s b\xE1n h\xE0ng affiliate: k\u1ECBch b\u1EA3n chuy\u1EC3n \u0111\u1ED5i cao, prompt v\xE0 quy tr\xECnh edit tay chi ti\u1EBFt.",
     videoUrl: `${R2_BASE}/videos/demo-skill-fitness.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-fitness.jpg`,
@@ -9598,49 +9679,44 @@ var HomePage = (props) => {
         /* @__PURE__ */ jsxDEV("div", { class: "hero-stage-wrapper relative", children: [
           /* @__PURE__ */ jsxDEV("button", { id: "heroPrevPhoneBtn", class: "phone-nav-arrow phone-nav-prev", "aria-label": "Xem video tr\u01B0\u1EDBc", title: "Chuy\u1EC3n video tr\u01B0\u1EDBc (Tr\xE1i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left" }) }),
           /* @__PURE__ */ jsxDEV("button", { id: "heroNextPhoneBtn", class: "phone-nav-arrow phone-nav-next", "aria-label": "Xem video ti\u1EBFp theo", title: "Chuy\u1EC3n video k\u1EBF ti\u1EBFp (Ph\u1EA3i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right" }) }),
-          /* @__PURE__ */ jsxDEV("div", { class: "hero-stage", id: "heroStage", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "hero-stage frame-landscape", id: "heroStage", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-left", id: "heroLeftPhone", role: "button", tabindex: "0", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
-                "video",
+                "img",
                 {
-                  id: "heroLeftVideo",
-                  src: DEMO_VIDEOS[2].videoUrl,
-                  poster: DEMO_VIDEOS[2].posterUrl,
-                  playsinline: true,
-                  muted: true,
-                  loop: true,
-                  autoplay: true,
-                  preload: "metadata"
+                  id: "heroLeftImg",
+                  src: DEMO_VIDEOS[4].posterUrl,
+                  alt: DEMO_VIDEOS[4].shortTitle,
+                  class: "w-full h-full object-cover",
+                  decoding: "async"
                 }
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "phone-side-hint phone-side-hint-left", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right mr-1" }),
-                " B\u1EA5m \u0111\u1EC3 xem"
+                " Xem ti\u1EBFp"
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-right", id: "heroRightPhone", role: "button", tabindex: "0", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
-                "video",
+                "img",
                 {
-                  id: "heroRightVideo",
-                  src: DEMO_VIDEOS[1].videoUrl,
-                  poster: DEMO_VIDEOS[1].posterUrl,
-                  playsinline: true,
-                  muted: true,
-                  loop: true,
-                  autoplay: true,
-                  preload: "metadata"
+                  id: "heroRightImg",
+                  src: DEMO_VIDEOS[1].posterUrl,
+                  alt: DEMO_VIDEOS[1].shortTitle,
+                  class: "w-full h-full object-cover",
+                  decoding: "async"
                 }
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "phone-side-hint phone-side-hint-right", children: [
-                "B\u1EA5m \u0111\u1EC3 xem ",
+                "Xem ti\u1EBFp ",
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left ml-1" })
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "phone phone-front", id: "heroFrontPhone", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "phone phone-front frame-landscape", id: "heroFrontPhone", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", id: "heroFrontAmbient", style: `background-image:url('${DEMO_VIDEOS[0].posterUrl}')` }),
               /* @__PURE__ */ jsxDEV(
                 "video",
                 {
@@ -9651,7 +9727,7 @@ var HomePage = (props) => {
                   muted: true,
                   loop: true,
                   autoplay: true,
-                  preload: "auto"
+                  preload: "metadata"
                 }
               ),
               /* @__PURE__ */ jsxDEV("button", { id: "heroPlayCenterBtn", class: "phone-play-btn", "aria-label": "Ph\xE1t / t\u1EA1m d\u1EEBng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-white ml-0.5", id: "heroPlayCenterIcon" }) }),
@@ -9734,19 +9810,32 @@ var HomePage = (props) => {
           "Clip th\u1EADt t\u1EEB repo, kh\xF4ng d\u1EF1ng l\u1EA1i. R\xEA chu\u1ED9t \u0111\u1EC3 d\u1EEBng \xB7 B\u1EA5m \u0111\u1EC3 xem l\u1EDBn."
         ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "wall-track-wrapper", children: /* @__PURE__ */ jsxDEV("div", { class: "wall-track", id: "wallTrack", children: [...DEMO_VIDEOS, ...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => /* @__PURE__ */ jsxDEV("div", { class: "wall-card", "data-video-index": idx % DEMO_VIDEOS.length, "data-src": v.videoUrl, "data-title": v.title, "data-slug": v.slug, "data-desc": v.desc, "data-poster": v.posterUrl, children: [
-        /* @__PURE__ */ jsxDEV("video", { src: v.videoUrl, poster: v.posterUrl, playsinline: true, muted: true, loop: true, preload: "none" }),
-        /* @__PURE__ */ jsxDEV("span", { class: "card-tag", children: v.tag }),
-        /* @__PURE__ */ jsxDEV("span", { class: "card-dur", children: v.dur }),
-        /* @__PURE__ */ jsxDEV("div", { class: "wall-card-play", children: /* @__PURE__ */ jsxDEV("div", { class: "wall-card-play-icon", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5" }) }) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "card-info", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "card-title", children: v.shortTitle }),
-          /* @__PURE__ */ jsxDEV("div", { class: "card-action", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-play text-[10px]" }),
-            "B\u1EA5m \u0111\u1EC3 xem video"
-          ] })
-        ] })
-      ] })) }) })
+      /* @__PURE__ */ jsxDEV("div", { class: "wall-track-wrapper", children: /* @__PURE__ */ jsxDEV("div", { class: "wall-track", id: "wallTrack", children: [...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => /* @__PURE__ */ jsxDEV(
+        "div",
+        {
+          class: `wall-card ${v.orient === "portrait" ? "wall-card-portrait" : "wall-card-landscape"}`,
+          "data-video-index": idx % DEMO_VIDEOS.length,
+          "data-src": v.videoUrl,
+          "data-title": v.title,
+          "data-slug": v.slug,
+          "data-desc": v.desc,
+          "data-poster": v.posterUrl,
+          "data-orient": v.orient,
+          children: [
+            /* @__PURE__ */ jsxDEV("img", { src: v.posterUrl, alt: v.shortTitle, loading: "lazy", decoding: "async", class: "wall-card-thumb" }),
+            /* @__PURE__ */ jsxDEV("span", { class: "card-tag", children: v.tag }),
+            /* @__PURE__ */ jsxDEV("span", { class: "card-dur", children: v.dur }),
+            /* @__PURE__ */ jsxDEV("div", { class: "wall-card-play", children: /* @__PURE__ */ jsxDEV("div", { class: "wall-card-play-icon", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5" }) }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "card-info", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "card-title", children: v.shortTitle }),
+              /* @__PURE__ */ jsxDEV("div", { class: "card-action", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-play text-[10px]" }),
+                "B\u1EA5m \u0111\u1EC3 xem video"
+              ] })
+            ] })
+          ]
+        }
+      )) }) })
     ] }),
     /* @__PURE__ */ jsxDEV("section", { class: "theater-section reveal", id: "theater", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "text-center max-w-3xl mx-auto mb-10", children: [
@@ -10171,21 +10260,55 @@ var ProductDetailPage = (props) => {
         ...p.category_slug ? [{ label: p.category_name, href: `/danh-muc/${p.category_slug}` }] : [],
         { label: p.name }
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_1.1fr] gap-8 mt-4", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[minmax(0,520px)_1fr] gap-8 mt-4 items-start", children: [
         /* @__PURE__ */ jsxDEV("div", { children: [
-          p.demo_video_url ? (
-            /* Vertical Phone Mockup Player */
-            /* @__PURE__ */ jsxDEV("div", { class: "vertical-player-wrapper mx-auto mb-4 border-4 border-[#1f1b4b] shadow-2xl relative", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-overlay", children: /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-header", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-white tracking-wider bg-black/50 backdrop-blur px-2.5 py-1 rounded", children: "VIDEO DEMO" }),
-                isMp4 && /* @__PURE__ */ jsxDEV("div", { class: "video-mockup-actions", children: /* @__PURE__ */ jsxDEV("button", { type: "button", class: "video-mockup-btn btn-vol", title: "B\u1EADt / t\u1EAFt \xE2m thanh", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-high" }) }) })
-              ] }) }),
-              isMp4 ? /* @__PURE__ */ jsxDEV("video", { src: p.demo_video_url, poster: demoPoster, class: "w-full h-full border-none bg-black", controls: true, playsinline: true, preload: "metadata" }) : /* @__PURE__ */ jsxDEV("iframe", { src: embedVideoUrl, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true })
-            ] })
-          ) : p.thumbnail ? /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] relative shadow-lg", children: /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) }) : /* @__PURE__ */ jsxDEV(
+          p.demo_video_url ? /* @__PURE__ */ jsxDEV(
             "div",
             {
-              class: "rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] grid place-items-center text-white/95 relative shadow-lg",
+              class: "adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#1f1b4b] bg-[#080716] shadow-2xl relative aspect-video w-full",
+              "data-poster": demoPoster || p.thumbnail || "",
+              "data-url": p.demo_video_url,
+              children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", style: demoPoster || p.thumbnail ? `background-image:url('${demoPoster || p.thumbnail}')` : "" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "relative z-[2] w-full h-full flex items-center justify-center", children: isMp4 ? /* @__PURE__ */ jsxDEV(
+                  "video",
+                  {
+                    src: p.demo_video_url,
+                    poster: demoPoster || p.thumbnail || void 0,
+                    class: "adaptive-demo-video w-full h-full object-contain bg-transparent",
+                    controls: true,
+                    playsinline: true,
+                    preload: "metadata"
+                  }
+                ) : /* @__PURE__ */ jsxDEV("iframe", { src: embedVideoUrl, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] font-bold text-white tracking-wider bg-black/65 backdrop-blur px-2.5 py-1 rounded-md border border-white/10", children: "VIDEO DEMO" }),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      "data-video": p.demo_video_url,
+                      "data-poster": demoPoster || p.thumbnail || "",
+                      "data-title": p.name,
+                      "data-aspect": "auto",
+                      class: "pointer-events-auto text-[10px] font-bold text-indigo-300 hover:text-white bg-black/65 hover:bg-indigo-600/90 backdrop-blur px-2.5 py-1 rounded-md border border-white/10 transition cursor-pointer",
+                      title: "M\u1EDF tr\xECnh ph\xE1t l\u1EDBn",
+                      children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand mr-1" }),
+                        "Ph\xF3ng to"
+                      ]
+                    }
+                  )
+                ] })
+              ]
+            }
+          ) : p.thumbnail ? /* @__PURE__ */ jsxDEV("div", { class: "adaptive-thumb-wrapper mx-auto rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video relative shadow-lg", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", style: `background-image:url('${p.thumbnail}')` }),
+            /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "relative z-[2] w-full h-full object-contain" })
+          ] }) : /* @__PURE__ */ jsxDEV(
+            "div",
+            {
+              class: "rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video grid place-items-center text-white/95 relative shadow-lg",
               style: `background:${gradientFor(p.id)}`,
               children: /* @__PURE__ */ jsxDEV("div", { class: "text-center p-4", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-6xl mb-3 opacity-90` }),
@@ -11239,6 +11362,7 @@ var OrderPage = (props) => {
 
   // T\u1EF1 \u0111\u1ED9ng polling m\u1ED7i 5 gi\xE2y
   timer=setInterval(async function(){
+    if(!document.getElementById('confirm-paid-btn')){ clearInterval(timer); return; }
     ticks++;
     if(ticks>MAX){ stopWaiting(); return; }
     await check(true);
@@ -12117,7 +12241,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     } }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap", rel: "stylesheet" }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css", rel: "stylesheet" })
+    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261115", rel: "stylesheet" })
   ] }),
   /* @__PURE__ */ jsxDEV("body", { class: "bg-slate-100 text-slate-800 antialiased", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "flex min-h-screen", children: [
@@ -12170,8 +12294,8 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     ] }),
     /* @__PURE__ */ jsxDEV("div", { id: "toast-container", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
     /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js" })
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261115" }),
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261115" })
   ] })
 ] });
 var AdminDashboard = (props) => {
@@ -13524,6 +13648,43 @@ var pgDb = {
   prepare: (sql) => new PgStmt(sql)
 };
 
+// src/lib/cache.ts
+var store = /* @__PURE__ */ new Map();
+var inflight = /* @__PURE__ */ new Map();
+async function cached(key, ttlMs, loader) {
+  const now = Date.now();
+  const hit = store.get(key);
+  if (hit && hit.expiresAt > now) {
+    return hit.value;
+  }
+  const pending = inflight.get(key);
+  if (pending) {
+    return pending;
+  }
+  const promise = loader().then((value) => {
+    store.set(key, { value, expiresAt: Date.now() + ttlMs });
+    inflight.delete(key);
+    return value;
+  }).catch((err) => {
+    inflight.delete(key);
+    if (hit) return hit.value;
+    throw err;
+  });
+  inflight.set(key, promise);
+  return promise;
+}
+function invalidateCache(prefix) {
+  if (!prefix) {
+    store.clear();
+    return;
+  }
+  for (const key of store.keys()) {
+    if (key.startsWith(prefix)) {
+      store.delete(key);
+    }
+  }
+}
+
 // src/index.tsx
 var app = new Hono2();
 app.use("*", async (c, next) => {
@@ -13536,15 +13697,22 @@ app.use("*", async (c, next) => {
 app.use("/api/*", cors());
 app.use("*", async (c, next) => {
   const url = new URL(c.req.url);
-  if (url.pathname.startsWith("/static/")) return next();
-  const user = await getSession(c);
-  c.set("user", user);
-  let settings = {};
-  try {
-    const rs = await c.env.DB.prepare("SELECT key, value FROM settings").all();
-    for (const r of rs.results) settings[r.key] = r.value;
-  } catch {
+  if (url.pathname.startsWith("/static/") || url.pathname === "/favicon.ico" || url.pathname === "/robots.txt" || url.pathname.startsWith("/videos/")) {
+    return next();
   }
+  const [user, settings] = await Promise.all([
+    getSession(c),
+    cached("settings:all", 3e4, async () => {
+      const map = {};
+      try {
+        const rs = await c.env.DB.prepare("SELECT key, value FROM settings").all();
+        for (const r of rs.results) map[r.key] = r.value;
+      } catch {
+      }
+      return map;
+    })
+  ]);
+  c.set("user", user);
   c.set("settings", settings);
   let cartCount = 0;
   if (user) {
@@ -13558,7 +13726,15 @@ app.use("*", async (c, next) => {
   await next();
 });
 function base(c) {
-  return { user: c.get("user"), settings: c.get("settings"), cartCount: c.get("cartCount") };
+  const u = new URL(c.req.url);
+  return {
+    user: c.get("user"),
+    settings: c.get("settings"),
+    cartCount: c.get("cartCount"),
+    currentPath: u.pathname,
+    currentQueryType: u.searchParams.get("type") || "",
+    currentQuerySort: u.searchParams.get("sort") || ""
+  };
 }
 async function requireAuth(c, next) {
   const u = c.get("user");
@@ -13578,37 +13754,40 @@ async function requireAdmin(c, next) {
 }
 app.get("/", async (c) => {
   const db = c.env.DB;
-  const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
-    db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
-                FROM categories c ORDER BY c.sort_order`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' AND p.is_featured=1 ORDER BY p.sold_count DESC LIMIT 8`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
-    db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
-    db.prepare(`SELECT r.*, u.full_name, p.name product_name, p.slug product_slug
-                FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
-                WHERE r.rating>=4 ORDER BY r.id DESC LIMIT 6`).all(),
-    db.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
-                       (SELECT COUNT(*) FROM users) users,
-                       (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first()
-  ]);
+  const data = await cached("home:bundle", 3e4, async () => {
+    const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
+      db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
+                  FROM categories c ORDER BY c.sort_order`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY p.sold_count DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
+      db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
+      db.prepare(`SELECT r.*, u.full_name, p.name product_name, p.slug product_slug
+                  FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
+                  WHERE r.rating>=4 ORDER BY r.id DESC LIMIT 6`).all(),
+      db.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
+                         (SELECT COUNT(*) FROM users) users,
+                         (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first()
+    ]);
+    return { cats, featured, hot, newest, comingSoon, posts, reviews, stats };
+  });
   return c.html(/* @__PURE__ */ jsxDEV(
     HomePage,
     {
       ...base(c),
-      categories: cats.results,
-      featured: featured.results,
-      hot: hot.results,
-      newest: newest.results,
-      comingSoon: comingSoon.results,
-      posts: posts.results,
-      reviews: reviews.results,
-      stats
+      categories: data.cats.results,
+      featured: data.featured.results,
+      hot: data.hot.results,
+      newest: data.newest.results,
+      comingSoon: data.comingSoon.results,
+      posts: data.posts.results,
+      reviews: data.reviews.results,
+      stats: data.stats
     }
   ));
 });
@@ -13648,6 +13827,7 @@ async function renderProductList(c, opts) {
   const orderMap = {
     newest: "p.id DESC",
     bestseller: "p.sold_count DESC",
+    hot: "p.sold_count DESC",
     price_asc: "p.price ASC",
     price_desc: "p.price DESC",
     rating: "p.rating DESC, p.rating_count DESC",
@@ -13655,14 +13835,16 @@ async function renderProductList(c, opts) {
   };
   const orderBy = orderMap[sort] || orderMap.newest;
   const w = where.join(" AND ");
-  const [cntRow, rows, cats, currentCat] = await Promise.all([
+  const fetchList = () => Promise.all([
     db.prepare(`SELECT COUNT(*) n FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE ${w}`).bind(...binds).first(),
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                 WHERE ${w} ORDER BY ${orderBy} LIMIT ? OFFSET ?`).bind(...binds, perPage, (page - 1) * perPage).all(),
-    db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
-                FROM categories c ORDER BY c.sort_order`).all(),
-    opts.catSlug ? db.prepare("SELECT * FROM categories WHERE slug=?").bind(opts.catSlug).first() : Promise.resolve(null)
+    cached("categories:list", 3e4, () => db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
+                FROM categories c ORDER BY c.sort_order`).all()),
+    opts.catSlug ? cached(`cat:slug:${opts.catSlug}`, 3e4, () => db.prepare("SELECT * FROM categories WHERE slug=?").bind(opts.catSlug).first()) : Promise.resolve(null)
   ]);
+  const cacheKey = q ? "" : `plist:${opts.comboOnly ? "1" : "0"}:${cat}:${type}:${sort}:${minPrice}:${maxPrice}:${page}`;
+  const [cntRow, rows, cats, currentCat] = cacheKey ? await cached(cacheKey, 2e4, fetchList) : await fetchList();
   const total = cntRow?.n || 0;
   const heading = opts.comboOnly ? "Combo Tr\u1ECDn B\u1ED9" : currentCat ? currentCat.name : q ? `K\u1EBFt qu\u1EA3 cho "${q}"` : "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m";
   const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m \u2014 Hi\u1EC7n \u0111ang t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" : currentCat ? currentCat.description : "Kh\xE1m ph\xE1 5 b\u1ED9 Skill AI t\u1EA1o video chuy\xEAn nghi\u1EC7p \u0111ang m\u1EDF b\xE1n c\xF9ng c\xE1c d\u1ECBch v\u1EE5 s\u1EAFp ra m\u1EAFt";
@@ -13696,22 +13878,31 @@ app.get("/san-pham/:slug", async (c) => {
   const db = c.env.DB;
   const slug = c.req.param("slug");
   const user = c.get("user");
-  const p = await db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug
-    FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first();
+  const p = await cached(
+    `product:row:${slug}`,
+    2e4,
+    () => db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug
+      FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first()
+  );
   if (!p) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
-  await db.prepare("UPDATE products SET view_count=view_count+1 WHERE id=?").bind(p.id).run();
-  const [related, comboItems, reviews, ownedRow, wishRow, breakdown] = await Promise.all([
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
-    p.product_type === "combo" ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all() : Promise.resolve({ results: [] }),
-    db.prepare(`SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id=r.user_id
-                WHERE r.product_id=? AND r.status='approved' ORDER BY r.id DESC LIMIT 20`).bind(p.id).all(),
+  const [bundle, ownedRow, wishRow] = await Promise.all([
+    cached(`product:extra:${p.id}`, 2e4, async () => {
+      const [related, comboItems, reviews, breakdown] = await Promise.all([
+        db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                    WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
+        p.product_type === "combo" ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all() : Promise.resolve({ results: [] }),
+        db.prepare(`SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id=r.user_id
+                    WHERE r.product_id=? AND r.status='approved' ORDER BY r.id DESC LIMIT 20`).bind(p.id).all(),
+        db.prepare("SELECT rating, COUNT(*) n FROM reviews WHERE product_id=? GROUP BY rating").bind(p.id).all()
+      ]);
+      return { related, comboItems, reviews, breakdown };
+    }),
     user ? db.prepare("SELECT 1 x FROM licenses WHERE user_id=? AND product_id=?").bind(user.id, p.id).first() : Promise.resolve(null),
     user ? db.prepare("SELECT 1 x FROM wishlists WHERE user_id=? AND product_id=?").bind(user.id, p.id).first() : Promise.resolve(null),
-    db.prepare("SELECT rating, COUNT(*) n FROM reviews WHERE product_id=? GROUP BY rating").bind(p.id).all()
+    db.prepare("UPDATE products SET view_count=view_count+1 WHERE id=?").bind(p.id).run().catch(() => null)
   ]);
   const rb = {};
-  for (const r of breakdown.results) rb[r.rating] = r.n;
+  for (const r of bundle.breakdown.results) rb[r.rating] = r.n;
   const owned = !!ownedRow;
   let canReview = false;
   if (owned && user) {
@@ -13723,9 +13914,9 @@ app.get("/san-pham/:slug", async (c) => {
     {
       ...base(c),
       product: p,
-      related: related.results,
-      comboItems: comboItems.results,
-      reviews: reviews.results,
+      related: bundle.related.results,
+      comboItems: bundle.comboItems.results,
+      reviews: bundle.reviews.results,
       owned,
       inWishlist: !!wishRow,
       canReview,
@@ -13740,8 +13931,11 @@ app.get("/blog", async (c) => {
   const perPage = 9;
   const where = q ? `status='published' AND (title LIKE ? OR excerpt LIKE ?)` : `status='published'`;
   const binds = q ? [`%${q}%`, `%${q}%`] : [];
-  const cnt = await db.prepare(`SELECT COUNT(*) n FROM posts WHERE ${where}`).bind(...binds).first();
-  const rows = await db.prepare(`SELECT * FROM posts WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`).bind(...binds, perPage, (page - 1) * perPage).all();
+  const runQuery = () => Promise.all([
+    db.prepare(`SELECT COUNT(*) n FROM posts WHERE ${where}`).bind(...binds).first(),
+    db.prepare(`SELECT * FROM posts WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`).bind(...binds, perPage, (page - 1) * perPage).all()
+  ]);
+  const [cnt, rows] = q ? await runQuery() : await cached(`blog:list:${page}`, 3e4, runQuery);
   return c.html(/* @__PURE__ */ jsxDEV(
     BlogListPage,
     {
@@ -13755,10 +13949,21 @@ app.get("/blog", async (c) => {
 });
 app.get("/blog/:slug", async (c) => {
   const db = c.env.DB;
-  const post = await db.prepare(`SELECT * FROM posts WHERE slug=? AND status='published'`).bind(c.req.param("slug")).first();
+  const slug = c.req.param("slug");
+  const post = await cached(
+    `post:row:${slug}`,
+    3e4,
+    () => db.prepare(`SELECT * FROM posts WHERE slug=? AND status='published'`).bind(slug).first()
+  );
   if (!post) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
-  await db.prepare("UPDATE posts SET view_count=view_count+1 WHERE id=?").bind(post.id).run();
-  const related = await db.prepare(`SELECT * FROM posts WHERE status='published' AND id!=? ORDER BY id DESC LIMIT 3`).bind(post.id).all();
+  const [related] = await Promise.all([
+    cached(
+      `post:rel:${post.id}`,
+      3e4,
+      () => db.prepare(`SELECT * FROM posts WHERE status='published' AND id!=? ORDER BY id DESC LIMIT 3`).bind(post.id).all()
+    ),
+    db.prepare("UPDATE posts SET view_count=view_count+1 WHERE id=?").bind(post.id).run().catch(() => null)
+  ]);
   return c.html(/* @__PURE__ */ jsxDEV(BlogDetailPage, { ...base(c), post, related: related.results }));
 });
 app.get("/bang-gia", (c) => c.html(/* @__PURE__ */ jsxDEV(PricingPage, { ...base(c) })));
@@ -13771,8 +13976,12 @@ app.get("/affiliate", (c) => c.html(/* @__PURE__ */ jsxDEV(
   }
 )));
 app.get("/gioi-thieu", async (c) => {
-  const stats = await c.env.DB.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
-    (SELECT COUNT(*) FROM users) users, (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first();
+  const stats = await cached(
+    "about:stats",
+    6e4,
+    () => c.env.DB.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
+      (SELECT COUNT(*) FROM users) users, (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first()
+  );
   return c.html(/* @__PURE__ */ jsxDEV(AboutPage, { ...base(c), stats }));
 });
 for (const [path, doc] of Object.entries(POLICY_DOCS)) {
@@ -14301,6 +14510,7 @@ app.post("/api/reviews", requireAuth, async (c) => {
   await db.prepare("INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?,?,?,?)").bind(pid, u.id, rating, b.comment.trim()).run();
   const agg = await db.prepare(`SELECT AVG(rating) a, COUNT(*) n FROM reviews WHERE product_id=? AND status='approved'`).bind(pid).first();
   await db.prepare("UPDATE products SET rating=?, rating_count=? WHERE id=?").bind(Math.round((agg?.a || 5) * 10) / 10, agg?.n || 0, pid).run();
+  invalidateCache();
   return c.json({ ok: true, message: "C\u1EA3m \u01A1n b\u1EA1n \u0111\xE3 \u0111\xE1nh gi\xE1!" });
 });
 app.post("/api/tickets", async (c) => {
@@ -14479,6 +14689,7 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
     f.is_new,
     f.status
   ).run();
+  invalidateCache();
   return c.json({ ok: true, redirect: "/admin/san-pham" });
 });
 app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
@@ -14513,6 +14724,7 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
     f.status,
     id
   ).run();
+  invalidateCache();
   return c.json({ ok: true, message: "\u0110\xE3 l\u01B0u thay \u0111\u1ED5i!", redirect: "/admin/san-pham" });
 });
 app.delete("/api/admin/products/:id", requireAdmin, async (c) => {
@@ -14530,6 +14742,7 @@ app.delete("/api/admin/products/:id", requireAdmin, async (c) => {
   await db.prepare("DELETE FROM wishlists WHERE product_id=?").bind(id).run();
   await db.prepare("DELETE FROM combo_items WHERE combo_id=? OR product_id=?").bind(id, id).run();
   await db.prepare("DELETE FROM products WHERE id=?").bind(id).run();
+  invalidateCache();
   return c.json({ ok: true });
 });
 app.get("/admin/don-hang", requireAdmin, async (c) => {
@@ -14721,6 +14934,7 @@ app.post("/api/admin/categories", requireAdmin, async (c) => {
   const dup = await c.env.DB.prepare("SELECT 1 x FROM categories WHERE slug=?").bind(slug).first();
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare("INSERT INTO categories (slug,name,description,icon) VALUES (?,?,?,?)").bind(slug, b.name.trim(), b.description || "", b.icon || "fa-cube").run();
+  invalidateCache();
   return c.json({ ok: true, message: "\u0110\xE3 th\xEAm danh m\u1EE5c!" });
 });
 app.post("/api/admin/categories/:id/update", requireAdmin, async (c) => {
@@ -14731,12 +14945,14 @@ app.post("/api/admin/categories/:id/update", requireAdmin, async (c) => {
   const dup = await c.env.DB.prepare("SELECT 1 x FROM categories WHERE slug=? AND id!=?").bind(slug, id).first();
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare("UPDATE categories SET slug=?,name=?,description=?,icon=? WHERE id=?").bind(slug, b.name.trim(), b.description || "", b.icon || "fa-cube", id).run();
+  invalidateCache();
   return c.json({ ok: true, message: "\u0110\xE3 c\u1EADp nh\u1EADt danh m\u1EE5c!", redirect: "/admin/danh-muc" });
 });
 app.delete("/api/admin/categories/:id", requireAdmin, async (c) => {
   const n = await c.env.DB.prepare("SELECT COUNT(*) n FROM products WHERE category_id=?").bind(c.req.param("id")).first();
   if (n?.n > 0) return c.json({ error: `C\xF2n ${n.n} s\u1EA3n ph\u1EA9m trong danh m\u1EE5c n\xE0y` }, 400);
   await c.env.DB.prepare("DELETE FROM categories WHERE id=?").bind(c.req.param("id")).run();
+  invalidateCache();
   return c.json({ ok: true });
 });
 app.get("/admin/ma-giam-gia", requireAdmin, async (c) => {
@@ -14769,6 +14985,7 @@ app.post("/api/admin/posts", requireAdmin, async (c) => {
   const dup = await c.env.DB.prepare("SELECT 1 x FROM posts WHERE slug=?").bind(slug).first();
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare("INSERT INTO posts (slug,title,excerpt,content,tags) VALUES (?,?,?,?,?)").bind(slug, b.title.trim(), b.excerpt || "", b.content || "", b.tags || "").run();
+  invalidateCache();
   return c.json({ ok: true, message: "\u0110\xE3 \u0111\u0103ng b\xE0i!" });
 });
 app.post("/api/admin/posts/:id/update", requireAdmin, async (c) => {
@@ -14779,10 +14996,12 @@ app.post("/api/admin/posts/:id/update", requireAdmin, async (c) => {
   const dup = await c.env.DB.prepare("SELECT 1 x FROM posts WHERE slug=? AND id!=?").bind(slug, id).first();
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare("UPDATE posts SET slug=?,title=?,excerpt=?,content=?,tags=? WHERE id=?").bind(slug, b.title.trim(), b.excerpt || "", b.content || "", b.tags || "", id).run();
+  invalidateCache();
   return c.json({ ok: true, message: "\u0110\xE3 c\u1EADp nh\u1EADt b\xE0i vi\u1EBFt!", redirect: "/admin/bai-viet" });
 });
 app.delete("/api/admin/posts/:id", requireAdmin, async (c) => {
   await c.env.DB.prepare("DELETE FROM posts WHERE id=?").bind(c.req.param("id")).run();
+  invalidateCache();
   return c.json({ ok: true });
 });
 app.get("/admin/danh-gia", requireAdmin, async (c) => {
@@ -14798,6 +15017,7 @@ app.delete("/api/admin/reviews/:id", requireAdmin, async (c) => {
     const agg = await db.prepare(`SELECT AVG(rating) a, COUNT(*) n FROM reviews WHERE product_id=?`).bind(r.product_id).first();
     await db.prepare("UPDATE products SET rating=?, rating_count=? WHERE id=?").bind(Math.round((agg?.a || 5) * 10) / 10, agg?.n || 0, r.product_id).run();
   }
+  invalidateCache();
   return c.json({ ok: true });
 });
 app.get("/admin/ho-tro", requireAdmin, async (c) => {
@@ -14814,6 +15034,7 @@ app.post("/api/admin/settings", requireAdmin, async (c) => {
   for (const [k, v] of Object.entries(b)) {
     await c.env.DB.prepare("INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?").bind(k, String(v), String(v)).run();
   }
+  invalidateCache("settings");
   return c.json({ ok: true, message: "\u0110\xE3 l\u01B0u c\xE0i \u0111\u1EB7t!" });
 });
 app.get("/robots.txt", (c) => {
@@ -14829,32 +15050,34 @@ Sitemap: ${origin}/sitemap.xml`);
 app.get("/sitemap.xml", async (c) => {
   const origin = new URL(c.req.url).origin;
   const db = c.env.DB;
-  const [prods, cats, posts] = await Promise.all([
-    db.prepare(`SELECT slug, updated_at FROM products WHERE status IN ('published','coming_soon')`).all(),
-    db.prepare("SELECT slug FROM categories").all(),
-    db.prepare(`SELECT slug, created_at FROM posts WHERE status='published'`).all()
-  ]);
-  const urls = [
-    ["", "1.0", "daily"],
-    ["/san-pham", "0.9", "daily"],
-    ["/combo", "0.8", "weekly"],
-    ["/bang-gia", "0.8", "weekly"],
-    ["/blog", "0.8", "daily"],
-    ["/affiliate", "0.6", "monthly"],
-    ["/gioi-thieu", "0.6", "monthly"],
-    ["/lien-he", "0.5", "monthly"]
-  ].map(([p, pr, cf]) => `<url><loc>${origin}${p}/</loc><priority>${pr}</priority><changefreq>${cf}</changefreq></url>`);
-  for (const x of cats.results) urls.push(`<url><loc>${origin}/danh-muc/${x.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>`);
-  for (const x of prods.results) urls.push(`<url><loc>${origin}/san-pham/${x.slug}</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>`);
-  for (const x of posts.results) urls.push(`<url><loc>${origin}/blog/${x.slug}</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>`);
-  return c.body(
-    `<?xml version="1.0" encoding="UTF-8"?>
+  const xml = await cached(`sitemap:${origin}`, 3e5, async () => {
+    const [prods, cats, posts] = await Promise.all([
+      db.prepare(`SELECT slug, updated_at FROM products WHERE status IN ('published','coming_soon')`).all(),
+      db.prepare("SELECT slug FROM categories").all(),
+      db.prepare(`SELECT slug, created_at FROM posts WHERE status='published'`).all()
+    ]);
+    const urls = [
+      ["", "1.0", "daily"],
+      ["/san-pham", "0.9", "daily"],
+      ["/combo", "0.8", "weekly"],
+      ["/bang-gia", "0.8", "weekly"],
+      ["/blog", "0.8", "daily"],
+      ["/affiliate", "0.6", "monthly"],
+      ["/gioi-thieu", "0.6", "monthly"],
+      ["/lien-he", "0.5", "monthly"]
+    ].map(([p, pr, cf]) => `<url><loc>${origin}${p}/</loc><priority>${pr}</priority><changefreq>${cf}</changefreq></url>`);
+    for (const x of cats.results) urls.push(`<url><loc>${origin}/danh-muc/${x.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>`);
+    for (const x of prods.results) urls.push(`<url><loc>${origin}/san-pham/${x.slug}</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>`);
+    for (const x of posts.results) urls.push(`<url><loc>${origin}/blog/${x.slug}</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>`);
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join("\n")}
-</urlset>`,
-    200,
-    { "Content-Type": "application/xml; charset=utf-8" }
-  );
+</urlset>`;
+  });
+  return c.body(xml, 200, {
+    "Content-Type": "application/xml; charset=utf-8",
+    "Cache-Control": "public, max-age=300, s-maxage=300"
+  });
 });
 app.get("/videos/*", (c) => {
   const pathname = new URL(c.req.url).pathname;

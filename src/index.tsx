@@ -26,6 +26,7 @@ import {
 } from './pages/admin'
 import { POLICY_DOCS } from './lib/docs'
 import { pgDb, pgConnectionString } from './lib/pg'
+import { cached, invalidateCache } from './lib/cache'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -44,20 +45,24 @@ app.use('/api/*', cors())
 /* ============ GLOBAL MIDDLEWARE ============ */
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url)
-  if (url.pathname.startsWith('/static/')) return next()
+  if (url.pathname.startsWith('/static/') || url.pathname === '/favicon.ico' || url.pathname === '/robots.txt' || url.pathname.startsWith('/videos/')) {
+    return next()
+  }
 
-  const user = await getSession(c)
+  const [user, settings] = await Promise.all([
+    getSession(c),
+    cached('settings:all', 30000, async () => {
+      const map: Record<string, string> = {}
+      try {
+        const rs = await c.env.DB.prepare('SELECT key, value FROM settings').all()
+        for (const r of rs.results as any[]) map[r.key] = r.value
+      } catch { }
+      return map
+    })
+  ])
   c.set('user', user)
-
-  // settings
-  let settings: Record<string, string> = {}
-  try {
-    const rs = await c.env.DB.prepare('SELECT key, value FROM settings').all()
-    for (const r of rs.results as any[]) settings[r.key] = r.value
-  } catch { }
   c.set('settings', settings)
 
-  // cart count
   let cartCount = 0
   if (user) {
     try {
@@ -71,7 +76,15 @@ app.use('*', async (c, next) => {
 })
 
 function base(c: any) {
-  return { user: c.get('user'), settings: c.get('settings'), cartCount: c.get('cartCount') }
+  const u = new URL(c.req.url)
+  return {
+    user: c.get('user'),
+    settings: c.get('settings'),
+    cartCount: c.get('cartCount'),
+    currentPath: u.pathname,
+    currentQueryType: u.searchParams.get('type') || '',
+    currentQuerySort: u.searchParams.get('sort') || ''
+  }
 }
 
 async function requireAuth(c: any, next: any) {
@@ -98,29 +111,32 @@ async function requireAdmin(c: any, next: any) {
 
 app.get('/', async (c) => {
   const db = c.env.DB
-  const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
-    db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
-                FROM categories c ORDER BY c.sort_order`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' AND p.is_featured=1 ORDER BY p.sold_count DESC LIMIT 8`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
-    db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
-    db.prepare(`SELECT r.*, u.full_name, p.name product_name, p.slug product_slug
-                FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
-                WHERE r.rating>=4 ORDER BY r.id DESC LIMIT 6`).all(),
-    db.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
-                       (SELECT COUNT(*) FROM users) users,
-                       (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first<any>()
-  ])
+  const data = await cached('home:bundle', 30000, async () => {
+    const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
+      db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
+                  FROM categories c ORDER BY c.sort_order`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY p.sold_count DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
+      db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
+      db.prepare(`SELECT r.*, u.full_name, p.name product_name, p.slug product_slug
+                  FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
+                  WHERE r.rating>=4 ORDER BY r.id DESC LIMIT 6`).all(),
+      db.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
+                         (SELECT COUNT(*) FROM users) users,
+                         (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first<any>()
+    ])
+    return { cats, featured, hot, newest, comingSoon, posts, reviews, stats }
+  })
   return c.html(<HomePage {...base(c)}
-    categories={cats.results as any} featured={featured.results as any} hot={hot.results as any}
-    newest={newest.results as any} comingSoon={comingSoon.results as any} posts={posts.results as any}
-    reviews={reviews.results as any} stats={stats as any} />)
+    categories={data.cats.results as any} featured={data.featured.results as any} hot={data.hot.results as any}
+    newest={data.newest.results as any} comingSoon={data.comingSoon.results as any} posts={data.posts.results as any}
+    reviews={data.reviews.results as any} stats={data.stats as any} />)
 })
 
 /* -------- Product list / category / combo -------- */
@@ -145,20 +161,25 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   if (maxPrice) { where.push(`p.price <= ?`); binds.push(+maxPrice) }
 
   const orderMap: Record<string, string> = {
-    newest: 'p.id DESC', bestseller: 'p.sold_count DESC', price_asc: 'p.price ASC',
+    newest: 'p.id DESC', bestseller: 'p.sold_count DESC', hot: 'p.sold_count DESC', price_asc: 'p.price ASC',
     price_desc: 'p.price DESC', rating: 'p.rating DESC, p.rating_count DESC', featured: 'p.is_featured DESC, p.sold_count DESC'
   }
   const orderBy = orderMap[sort] || orderMap.newest
   const w = where.join(' AND ')
 
-  const [cntRow, rows, cats, currentCat] = await Promise.all([
+  const fetchList = () => Promise.all([
     db.prepare(`SELECT COUNT(*) n FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE ${w}`).bind(...binds).first<any>(),
     db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                 WHERE ${w} ORDER BY ${orderBy} LIMIT ? OFFSET ?`).bind(...binds, perPage, (page - 1) * perPage).all(),
-    db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
-                FROM categories c ORDER BY c.sort_order`).all(),
-    opts.catSlug ? db.prepare('SELECT * FROM categories WHERE slug=?').bind(opts.catSlug).first<any>() : Promise.resolve(null)
+    cached('categories:list', 30000, () => db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
+                FROM categories c ORDER BY c.sort_order`).all()),
+    opts.catSlug ? cached(`cat:slug:${opts.catSlug}`, 30000, () => db.prepare('SELECT * FROM categories WHERE slug=?').bind(opts.catSlug).first<any>()) : Promise.resolve(null)
   ])
+
+  const cacheKey = q ? '' : `plist:${opts.comboOnly ? '1' : '0'}:${cat}:${type}:${sort}:${minPrice}:${maxPrice}:${page}`
+  const [cntRow, rows, cats, currentCat] = cacheKey
+    ? await cached(cacheKey, 20000, fetchList)
+    : await fetchList()
 
   const total = cntRow?.n || 0
   const heading = opts.comboOnly ? 'Combo Trọn Bộ' : currentCat ? currentCat.name : q ? `Kết quả cho "${q}"` : 'Tất cả sản phẩm'
@@ -184,27 +205,33 @@ app.get('/san-pham/:slug', async (c) => {
   const slug = c.req.param('slug')
   const user = c.get('user')
 
-  const p = await db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug
-    FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first<any>()
+  const p = await cached(`product:row:${slug}`, 20000, () =>
+    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug
+      FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first<any>()
+  )
   if (!p) return c.html(<NotFoundPage {...base(c)} />, 404)
 
-  await db.prepare('UPDATE products SET view_count=view_count+1 WHERE id=?').bind(p.id).run()
-
-  const [related, comboItems, reviews, ownedRow, wishRow, breakdown] = await Promise.all([
-    db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
-    p.product_type === 'combo'
-      ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all()
-      : Promise.resolve({ results: [] }),
-    db.prepare(`SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id=r.user_id
-                WHERE r.product_id=? AND r.status='approved' ORDER BY r.id DESC LIMIT 20`).bind(p.id).all(),
+  const [bundle, ownedRow, wishRow] = await Promise.all([
+    cached(`product:extra:${p.id}`, 20000, async () => {
+      const [related, comboItems, reviews, breakdown] = await Promise.all([
+        db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                    WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
+        p.product_type === 'combo'
+          ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all()
+          : Promise.resolve({ results: [] }),
+        db.prepare(`SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id=r.user_id
+                    WHERE r.product_id=? AND r.status='approved' ORDER BY r.id DESC LIMIT 20`).bind(p.id).all(),
+        db.prepare('SELECT rating, COUNT(*) n FROM reviews WHERE product_id=? GROUP BY rating').bind(p.id).all()
+      ])
+      return { related, comboItems, reviews, breakdown }
+    }),
     user ? db.prepare('SELECT 1 x FROM licenses WHERE user_id=? AND product_id=?').bind(user.id, p.id).first<any>() : Promise.resolve(null),
     user ? db.prepare('SELECT 1 x FROM wishlists WHERE user_id=? AND product_id=?').bind(user.id, p.id).first<any>() : Promise.resolve(null),
-    db.prepare('SELECT rating, COUNT(*) n FROM reviews WHERE product_id=? GROUP BY rating').bind(p.id).all()
+    db.prepare('UPDATE products SET view_count=view_count+1 WHERE id=?').bind(p.id).run().catch(() => null)
   ])
 
   const rb: Record<number, number> = {}
-  for (const r of breakdown.results as any[]) rb[r.rating] = r.n
+  for (const r of bundle.breakdown.results as any[]) rb[r.rating] = r.n
 
   const owned = !!ownedRow
   let canReview = false
@@ -213,8 +240,8 @@ app.get('/san-pham/:slug', async (c) => {
     canReview = !has
   }
 
-  return c.html(<ProductDetailPage {...base(c)} product={p} related={related.results as any}
-    comboItems={comboItems.results as any} reviews={reviews.results as any}
+  return c.html(<ProductDetailPage {...base(c)} product={p} related={bundle.related.results as any}
+    comboItems={bundle.comboItems.results as any} reviews={bundle.reviews.results as any}
     owned={owned} inWishlist={!!wishRow} canReview={canReview} ratingBreakdown={rb} />)
 })
 
@@ -226,19 +253,29 @@ app.get('/blog', async (c) => {
   const perPage = 9
   const where = q ? `status='published' AND (title LIKE ? OR excerpt LIKE ?)` : `status='published'`
   const binds = q ? [`%${q}%`, `%${q}%`] : []
-  const cnt = await db.prepare(`SELECT COUNT(*) n FROM posts WHERE ${where}`).bind(...binds).first<any>()
-  const rows = await db.prepare(`SELECT * FROM posts WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`)
-    .bind(...binds, perPage, (page - 1) * perPage).all()
+  const runQuery = () => Promise.all([
+    db.prepare(`SELECT COUNT(*) n FROM posts WHERE ${where}`).bind(...binds).first<any>(),
+    db.prepare(`SELECT * FROM posts WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`)
+      .bind(...binds, perPage, (page - 1) * perPage).all()
+  ])
+  const [cnt, rows] = q ? await runQuery() : await cached(`blog:list:${page}`, 30000, runQuery)
   return c.html(<BlogListPage {...base(c)} posts={rows.results as any} page={page}
     totalPages={Math.ceil((cnt?.n || 0) / perPage)} q={q} />)
 })
 
 app.get('/blog/:slug', async (c) => {
   const db = c.env.DB
-  const post = await db.prepare(`SELECT * FROM posts WHERE slug=? AND status='published'`).bind(c.req.param('slug')).first<any>()
+  const slug = c.req.param('slug')
+  const post = await cached(`post:row:${slug}`, 30000, () =>
+    db.prepare(`SELECT * FROM posts WHERE slug=? AND status='published'`).bind(slug).first<any>()
+  )
   if (!post) return c.html(<NotFoundPage {...base(c)} />, 404)
-  await db.prepare('UPDATE posts SET view_count=view_count+1 WHERE id=?').bind(post.id).run()
-  const related = await db.prepare(`SELECT * FROM posts WHERE status='published' AND id!=? ORDER BY id DESC LIMIT 3`).bind(post.id).all()
+  const [related] = await Promise.all([
+    cached(`post:rel:${post.id}`, 30000, () =>
+      db.prepare(`SELECT * FROM posts WHERE status='published' AND id!=? ORDER BY id DESC LIMIT 3`).bind(post.id).all()
+    ),
+    db.prepare('UPDATE posts SET view_count=view_count+1 WHERE id=?').bind(post.id).run().catch(() => null)
+  ])
   return c.html(<BlogDetailPage {...base(c)} post={post} related={related.results as any} />)
 })
 
@@ -249,8 +286,10 @@ app.get('/affiliate', (c) => c.html(<AffiliateLandingPage {...base(c)}
   percent={+(c.get('settings').affiliate_percent || 20)} />))
 
 app.get('/gioi-thieu', async (c) => {
-  const stats = await c.env.DB.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
-    (SELECT COUNT(*) FROM users) users, (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first<any>()
+  const stats = await cached('about:stats', 60000, () =>
+    c.env.DB.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
+      (SELECT COUNT(*) FROM users) users, (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first<any>()
+  )
   return c.html(<AboutPage {...base(c)} stats={stats} />)
 })
 
@@ -841,6 +880,7 @@ app.post('/api/reviews', requireAuth, async (c) => {
   const agg = await db.prepare(`SELECT AVG(rating) a, COUNT(*) n FROM reviews WHERE product_id=? AND status='approved'`).bind(pid).first<any>()
   await db.prepare('UPDATE products SET rating=?, rating_count=? WHERE id=?')
     .bind(Math.round((agg?.a || 5) * 10) / 10, agg?.n || 0, pid).run()
+  invalidateCache()
   return c.json({ ok: true, message: 'Cảm ơn bạn đã đánh giá!' })
 })
 
@@ -972,6 +1012,7 @@ app.post('/api/admin/products', requireAdmin, async (c) => {
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
       f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status).run()
+  invalidateCache()
   return c.json({ ok: true, redirect: '/admin/san-pham' })
 })
 
@@ -987,6 +1028,7 @@ app.post('/api/admin/products/:id/update', requireAdmin, async (c) => {
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
       f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status, id).run()
+  invalidateCache()
   return c.json({ ok: true, message: 'Đã lưu thay đổi!', redirect: '/admin/san-pham' })
 })
 
@@ -1005,6 +1047,7 @@ app.delete('/api/admin/products/:id', requireAdmin, async (c) => {
   await db.prepare('DELETE FROM wishlists WHERE product_id=?').bind(id).run()
   await db.prepare('DELETE FROM combo_items WHERE combo_id=? OR product_id=?').bind(id, id).run()
   await db.prepare('DELETE FROM products WHERE id=?').bind(id).run()
+  invalidateCache()
   return c.json({ ok: true })
 })
 
@@ -1172,6 +1215,7 @@ app.post('/api/admin/categories', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare('INSERT INTO categories (slug,name,description,icon) VALUES (?,?,?,?)')
     .bind(slug, b.name.trim(), b.description || '', b.icon || 'fa-cube').run()
+  invalidateCache()
   return c.json({ ok: true, message: 'Đã thêm danh mục!' })
 })
 
@@ -1184,6 +1228,7 @@ app.post('/api/admin/categories/:id/update', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare('UPDATE categories SET slug=?,name=?,description=?,icon=? WHERE id=?')
     .bind(slug, b.name.trim(), b.description || '', b.icon || 'fa-cube', id).run()
+  invalidateCache()
   return c.json({ ok: true, message: 'Đã cập nhật danh mục!', redirect: '/admin/danh-muc' })
 })
 
@@ -1191,6 +1236,7 @@ app.delete('/api/admin/categories/:id', requireAdmin, async (c) => {
   const n = await c.env.DB.prepare('SELECT COUNT(*) n FROM products WHERE category_id=?').bind(c.req.param('id')).first<any>()
   if (n?.n > 0) return c.json({ error: `Còn ${n.n} sản phẩm trong danh mục này` }, 400)
   await c.env.DB.prepare('DELETE FROM categories WHERE id=?').bind(c.req.param('id')).run()
+  invalidateCache()
   return c.json({ ok: true })
 })
 
@@ -1230,6 +1276,7 @@ app.post('/api/admin/posts', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare('INSERT INTO posts (slug,title,excerpt,content,tags) VALUES (?,?,?,?,?)')
     .bind(slug, b.title.trim(), b.excerpt || '', b.content || '', b.tags || '').run()
+  invalidateCache()
   return c.json({ ok: true, message: 'Đã đăng bài!' })
 })
 
@@ -1242,11 +1289,13 @@ app.post('/api/admin/posts/:id/update', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare('UPDATE posts SET slug=?,title=?,excerpt=?,content=?,tags=? WHERE id=?')
     .bind(slug, b.title.trim(), b.excerpt || '', b.content || '', b.tags || '', id).run()
+  invalidateCache()
   return c.json({ ok: true, message: 'Đã cập nhật bài viết!', redirect: '/admin/bai-viet' })
 })
 
 app.delete('/api/admin/posts/:id', requireAdmin, async (c) => {
   await c.env.DB.prepare('DELETE FROM posts WHERE id=?').bind(c.req.param('id')).run()
+  invalidateCache()
   return c.json({ ok: true })
 })
 
@@ -1265,6 +1314,7 @@ app.delete('/api/admin/reviews/:id', requireAdmin, async (c) => {
     await db.prepare('UPDATE products SET rating=?, rating_count=? WHERE id=?')
       .bind(Math.round((agg?.a || 5) * 10) / 10, agg?.n || 0, r.product_id).run()
   }
+  invalidateCache()
   return c.json({ ok: true })
 })
 
@@ -1287,6 +1337,7 @@ app.post('/api/admin/settings', requireAdmin, async (c) => {
     await c.env.DB.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?')
       .bind(k, String(v), String(v)).run()
   }
+  invalidateCache('settings')
   return c.json({ ok: true, message: 'Đã lưu cài đặt!' })
 })
 
@@ -1301,21 +1352,26 @@ app.get('/robots.txt', (c) => {
 app.get('/sitemap.xml', async (c) => {
   const origin = new URL(c.req.url).origin
   const db = c.env.DB
-  const [prods, cats, posts] = await Promise.all([
-    db.prepare(`SELECT slug, updated_at FROM products WHERE status IN ('published','coming_soon')`).all(),
-    db.prepare('SELECT slug FROM categories').all(),
-    db.prepare(`SELECT slug, created_at FROM posts WHERE status='published'`).all()
-  ])
-  const urls = [
-    ['', '1.0', 'daily'], ['/san-pham', '0.9', 'daily'], ['/combo', '0.8', 'weekly'],
-    ['/bang-gia', '0.8', 'weekly'], ['/blog', '0.8', 'daily'], ['/affiliate', '0.6', 'monthly'],
-    ['/gioi-thieu', '0.6', 'monthly'], ['/lien-he', '0.5', 'monthly']
-  ].map(([p, pr, cf]) => `<url><loc>${origin}${p}/</loc><priority>${pr}</priority><changefreq>${cf}</changefreq></url>`)
-  for (const x of cats.results as any[]) urls.push(`<url><loc>${origin}/danh-muc/${x.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>`)
-  for (const x of prods.results as any[]) urls.push(`<url><loc>${origin}/san-pham/${x.slug}</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>`)
-  for (const x of posts.results as any[]) urls.push(`<url><loc>${origin}/blog/${x.slug}</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>`)
-  return c.body(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`,
-    200, { 'Content-Type': 'application/xml; charset=utf-8' })
+  const xml = await cached(`sitemap:${origin}`, 300000, async () => {
+    const [prods, cats, posts] = await Promise.all([
+      db.prepare(`SELECT slug, updated_at FROM products WHERE status IN ('published','coming_soon')`).all(),
+      db.prepare('SELECT slug FROM categories').all(),
+      db.prepare(`SELECT slug, created_at FROM posts WHERE status='published'`).all()
+    ])
+    const urls = [
+      ['', '1.0', 'daily'], ['/san-pham', '0.9', 'daily'], ['/combo', '0.8', 'weekly'],
+      ['/bang-gia', '0.8', 'weekly'], ['/blog', '0.8', 'daily'], ['/affiliate', '0.6', 'monthly'],
+      ['/gioi-thieu', '0.6', 'monthly'], ['/lien-he', '0.5', 'monthly']
+    ].map(([p, pr, cf]) => `<url><loc>${origin}${p}/</loc><priority>${pr}</priority><changefreq>${cf}</changefreq></url>`)
+    for (const x of cats.results as any[]) urls.push(`<url><loc>${origin}/danh-muc/${x.slug}</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>`)
+    for (const x of prods.results as any[]) urls.push(`<url><loc>${origin}/san-pham/${x.slug}</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>`)
+    for (const x of posts.results as any[]) urls.push(`<url><loc>${origin}/blog/${x.slug}</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>`)
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`
+  })
+  return c.body(xml, 200, {
+    'Content-Type': 'application/xml; charset=utf-8',
+    'Cache-Control': 'public, max-age=300, s-maxage=300'
+  })
 })
 
 app.get('/videos/*', (c) => {

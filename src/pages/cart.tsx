@@ -435,6 +435,7 @@ export const OrderPage: FC<LayoutProps & {
 
   // Tự động polling mỗi 5 giây
   timer=setInterval(async function(){
+    if(!document.getElementById('confirm-paid-btn')){ clearInterval(timer); return; }
     ticks++;
     if(ticks>MAX){ stopWaiting(); return; }
     await check(true);

@@ -39,34 +39,37 @@ export const ProductDetailPage: FC<Props> = (props) => {
             { label: p.name }
           ]} />
 
-          <div class="grid lg:grid-cols-[1fr_1.1fr] gap-8 mt-4">
-            {/* COLUMN 1: Vertical Video Player / Media & Specs Grid */}
+          <div class="grid lg:grid-cols-[minmax(0,520px)_1fr] gap-8 mt-4 items-start">
+            {/* COLUMN 1: Adaptive Video Player (Auto 16:9 Landscape / 9:16 Portrait) & Specs Grid */}
             <div>
               {p.demo_video_url ? (
-                /* Vertical Phone Mockup Player */
-                <div class="vertical-player-wrapper mx-auto mb-4 border-4 border-[#1f1b4b] shadow-2xl relative">
-                  <div class="video-mockup-overlay">
-                    <div class="video-mockup-header">
-                      <span class="text-[11px] font-semibold text-white tracking-wider bg-black/50 backdrop-blur px-2.5 py-1 rounded">VIDEO DEMO</span>
-                      {isMp4 && (
-                        <div class="video-mockup-actions">
-                          <button type="button" class="video-mockup-btn btn-vol" title="Bật / tắt âm thanh"><i class="fas fa-volume-high"></i></button>
-                        </div>
-                      )}
-                    </div>
+                <div class="adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#1f1b4b] bg-[#080716] shadow-2xl relative aspect-video w-full"
+                  data-poster={demoPoster || p.thumbnail || ''}
+                  data-url={p.demo_video_url}>
+                  <div class="video-ambient-bg" style={demoPoster || p.thumbnail ? `background-image:url('${demoPoster || p.thumbnail}')` : ''}></div>
+                  <div class="relative z-[2] w-full h-full flex items-center justify-center">
+                    {isMp4 ? (
+                      <video src={p.demo_video_url} poster={demoPoster || p.thumbnail || undefined}
+                        class="adaptive-demo-video w-full h-full object-contain bg-transparent" controls playsinline preload="metadata"></video>
+                    ) : (
+                      <iframe src={embedVideoUrl} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    )}
                   </div>
-                  {isMp4 ? (
-                    <video src={p.demo_video_url} poster={demoPoster} class="w-full h-full border-none bg-black" controls playsinline preload="metadata"></video>
-                  ) : (
-                    <iframe src={embedVideoUrl} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                  )}
+                  <div class="absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5">
+                    <span class="text-[10px] font-bold text-white tracking-wider bg-black/65 backdrop-blur px-2.5 py-1 rounded-md border border-white/10">VIDEO DEMO</span>
+                    <button type="button" data-video={p.demo_video_url} data-poster={demoPoster || p.thumbnail || ''} data-title={p.name} data-aspect="auto"
+                      class="pointer-events-auto text-[10px] font-bold text-indigo-300 hover:text-white bg-black/65 hover:bg-indigo-600/90 backdrop-blur px-2.5 py-1 rounded-md border border-white/10 transition cursor-pointer" title="Mở trình phát lớn">
+                      <i class="fas fa-expand mr-1"></i>Phóng to
+                    </button>
+                  </div>
                 </div>
               ) : p.thumbnail ? (
-                <div class="rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] relative shadow-lg">
-                  <img src={p.thumbnail} alt={p.name} class="w-full h-full object-cover" />
+                <div class="adaptive-thumb-wrapper mx-auto rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video relative shadow-lg">
+                  <div class="video-ambient-bg" style={`background-image:url('${p.thumbnail}')`}></div>
+                  <img src={p.thumbnail} alt={p.name} class="relative z-[2] w-full h-full object-contain" />
                 </div>
               ) : (
-                <div class="rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-[10/16] grid place-items-center text-white/95 relative shadow-lg"
+                <div class="rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video grid place-items-center text-white/95 relative shadow-lg"
                   style={`background:${gradientFor(p.id)}`}>
                   <div class="text-center p-4">
                     <i class={`fas ${PRODUCT_TYPE_ICON[p.product_type] || 'fa-cube'} text-6xl mb-3 opacity-90`}></i>

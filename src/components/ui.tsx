@@ -15,10 +15,17 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
   const comingSoon = p.status === 'coming_soon'
   return (
     <article class={`product-card group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-300 flex flex-col ${comingSoon ? 'opacity-90' : ''}`}>
-      {/* Media area - 10/16 aspect ratio (vertical mockup) */}
-      <div class="relative aspect-[10/16] overflow-hidden bg-[#080716]" style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
+      {/* Media area - adaptive 16:9 frame (shows landscape edge-to-edge, auto-fits portrait cleanly without cropping) */}
+      <div class="product-card-media relative aspect-video overflow-hidden bg-[#080716]" style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
         {p.thumbnail
-          ? <img src={p.thumbnail} alt={p.name} loading="lazy" class={`w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? 'opacity-75 grayscale-[20%]' : ''}`} />
+          ? (
+            <>
+              <div class="product-card-ambient absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-0 transition-opacity duration-200 pointer-events-none"
+                style={`background-image:url('${p.thumbnail}')`}></div>
+              <img src={p.thumbnail} alt={p.name} loading="lazy" decoding="async"
+                class={`product-card-img relative z-[1] w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? 'opacity-80 grayscale-[15%]' : ''}`} />
+            </>
+          )
           : (
             <div class="w-full h-full grid place-items-center text-white/95 p-4 text-center">
               <div>
@@ -29,7 +36,7 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
           )}
 
         {/* Top badges */}
-        <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+        <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
           {comingSoon ? (
             <span class="px-2 py-1 rounded bg-amber-500 text-slate-950 text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md">
               <i class="fas fa-clock text-[8px]"></i>Chưa mở bán
@@ -42,7 +49,7 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
             </>
           )}
         </div>
-        <div class="absolute top-3 right-3 z-10">
+        <div class="absolute top-3 right-3 z-10 pointer-events-none">
           <span class="px-2 py-1 rounded bg-[#0068ff] text-white text-[9px] font-black tracking-wider uppercase shadow-md">
             {PRODUCT_TYPE_LABEL[p.product_type] || 'Sản phẩm'}
           </span>
@@ -50,12 +57,12 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
 
         {/* Hover video play demo trigger */}
         {p.demo_video_url && (
-          <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-300 z-20 pointer-events-none">
-            <button type="button" class="pointer-events-auto w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition duration-300 cursor-pointer"
-              data-video={p.demo_video_url} data-aspect="vertical" title="Xem Demo">
+          <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-200 z-20 pointer-events-none">
+            <button type="button" class="pointer-events-auto w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition duration-200 cursor-pointer"
+              data-video={p.demo_video_url} data-poster={p.thumbnail || ''} data-title={p.name} data-aspect="auto" title="Xem Demo">
               <i class="fas fa-play text-sm ml-0.5"></i>
             </button>
-            <span class="text-white text-xs font-semibold tracking-wide">Xem Demo</span>
+            <span class="text-white text-xs font-semibold tracking-wide drop-shadow">Xem Demo</span>
           </div>
         )}
 

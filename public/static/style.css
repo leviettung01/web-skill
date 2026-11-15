@@ -24,21 +24,91 @@ body {
 .line-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 2; }
 .line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 3; }
 
-/* Custom layouts */
-.sidebar-minimized {
-  width: 4.5rem !important;
+/* Navigation progress bar */
+#nav-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 2.5px;
+  z-index: 9999;
+  pointer-events: none;
+  background: linear-gradient(90deg, #6366f1, #d946ef, #06b6d4);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.85);
+  opacity: 0;
+  transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
 }
-.sidebar-minimized .sidebar-text,
-.sidebar-minimized .sidebar-header-text,
-.sidebar-minimized .sidebar-badge {
-  display: none !important;
+
+/* Smooth collapsible auto-hover vertical sidebar (Desktop lg >= 1024px) */
+#sidebar .sidebar-text,
+#sidebar .sidebar-header-text,
+#sidebar .sidebar-badge {
+  transition: opacity 0.18s ease, max-width 0.22s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s ease;
 }
-.sidebar-minimized .sidebar-menu-item {
-  justify-content: center;
-  padding: 0.75rem 0 !important;
+#sidebar .sidebar-group-label {
+  transition: opacity 0.16s ease, max-height 0.2s ease, margin 0.2s ease;
+  overflow: hidden;
+  max-height: 20px;
 }
-.content-expanded {
-  margin-left: 4.5rem !important;
+
+@media (min-width: 1024px) {
+  /* Default collapsed 72px rail */
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) {
+    width: 4.5rem !important;
+  }
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) .sidebar-text,
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) .sidebar-header-text,
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) .sidebar-badge {
+    opacity: 0 !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    transform: translateX(-4px);
+  }
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) .sidebar-group-label {
+    max-height: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) .sidebar-menu-item,
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) #sidebar-toggle-btn {
+    justify-content: center;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 0 !important;
+  }
+
+  /* Hover expanded overlay (zero content reflow!) */
+  html:not(.sb-pinned) #sidebar.sb-hover-open {
+    width: 16rem !important;
+    box-shadow: 18px 0 50px rgba(4, 3, 18, 0.78);
+    border-right-color: rgba(99, 102, 241, 0.35);
+  }
+
+  /* Active icon highlight for PJAX */
+  #sidebar .sidebar-menu-item.is-active > i:first-child {
+    color: #818cf8 !important;
+  }
+
+  /* Pinned expanded mode */
+  html.sb-pinned #sidebar {
+    width: 16rem !important;
+  }
+  html.sb-pinned #main-content-wrap {
+    margin-left: 16rem !important;
+  }
+  html.sb-pinned #sidebar-pin-btn {
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.16);
+  }
+}
+
+/* Mobile drawer open state */
+@media (max-width: 1023px) {
+  #sidebar.sb-mobile-open {
+    transform: translateX(0) !important;
+  }
 }
 
 /* Hero animated background */
@@ -85,6 +155,43 @@ body {
 .prose-vn i { color: var(--text-secondary); }
 
 /* Custom Video Demo Modal (Vertical player like Shorts/TikTok) */
+.adaptive-player-wrapper,
+.adaptive-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  background-color: #080716;
+  transition: max-width 0.3s cubic-bezier(0.22, 1, 0.36, 1), aspect-ratio 0.3s ease;
+}
+.adaptive-player-wrapper.is-portrait,
+.adaptive-thumb-wrapper.is-portrait {
+  max-width: 370px;
+  max-height: 76vh;
+  margin-inline: auto;
+}
+.adaptive-player-wrapper.is-landscape,
+.adaptive-thumb-wrapper.is-landscape {
+  max-width: 540px;
+  width: 100%;
+}
+.adaptive-player-wrapper.is-square,
+.adaptive-thumb-wrapper.is-square {
+  max-width: 440px;
+  margin-inline: auto;
+}
+.adaptive-player-wrapper .video-ambient-bg,
+.adaptive-thumb-wrapper .video-ambient-bg,
+.phone-front .video-ambient-bg {
+  position: absolute;
+  inset: -24px;
+  filter: blur(26px) brightness(0.45);
+  opacity: 0.65;
+  pointer-events: none;
+  z-index: 1;
+  background-size: cover;
+  background-position: center;
+}
 .vertical-player-wrapper {
   position: relative;
   width: 100%;
@@ -850,8 +957,9 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
   display: flex;
   gap: 16px;
   width: max-content;
-  animation: wall-marquee 50s linear infinite;
+  animation: wall-marquee 42s linear infinite;
   padding: 6px 0;
+  will-change: transform;
 }
 .wall:hover .wall-track {
   animation-play-state: paused;
@@ -862,23 +970,30 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
 }
 .wall-card {
   position: relative;
-  width: 260px;
-  aspect-ratio: 16 / 9;
+  height: 208px;
+  width: 356px;
   border-radius: 16px;
   overflow: hidden;
-  background: #0f0e26;
+  background: #080716;
   border: 1px solid rgba(31, 27, 75, 0.9);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   flex: none;
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s, box-shadow 0.25s;
 }
+.wall-card-landscape {
+  width: 356px;
+}
+.wall-card-portrait {
+  width: 146px;
+}
 .wall-card:hover {
   transform: translateY(-6px) scale(1.02);
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(99, 102, 241, 0.65);
   box-shadow: 0 20px 45px rgba(99, 102, 241, 0.25);
   z-index: 10;
 }
+.wall-card img.wall-card-thumb,
 .wall-card video {
   width: 100%;
   height: 100%;
@@ -1183,6 +1298,9 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
   .hero-stage {
     height: 480px;
   }
+  .hero-stage.frame-landscape {
+    height: 260px;
+  }
   .phone-back {
     display: none;
   }
@@ -1192,15 +1310,109 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
     width: 250px;
     transform: translateX(-50%);
   }
+  .phone-front.frame-landscape {
+    width: 96%;
+    height: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
   .phone-nav-prev {
     left: 2px;
   }
   .phone-nav-next {
     right: 2px;
   }
-  .wall-card {
-    width: 165px;
+  .wall-card.wall-card-landscape {
+    width: 280px;
+    height: 165px;
+  }
+  .wall-card.wall-card-portrait {
+    width: 118px;
+    height: 165px;
   }
 }
 
+/* Hero Adaptive Showcase Frame (16:9 Landscape <-> 9:16 Portrait) */
+.phone-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+.phone-front {
+  transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1), height 0.32s cubic-bezier(0.22, 1, 0.36, 1), top 0.32s ease, transform 0.32s ease, border-radius 0.25s ease;
+}
+.phone-front video {
+  position: relative;
+  z-index: 2;
+  object-fit: contain;
+  background: transparent;
+}
+.phone-front.frame-landscape {
+  width: min(465px, 92%);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 22px;
+  padding: 6px;
+}
+.phone-front.frame-landscape .phone-notch {
+  display: none;
+}
+.phone-front.frame-landscape video {
+  border-radius: 16px;
+}
+.phone-front.frame-landscape .short-gui-overlay {
+  inset: 6px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, transparent 28%, transparent 62%, rgba(0, 0, 0, 0.72) 100%);
+}
+.phone-front.frame-landscape .short-top-bar {
+  padding: 10px 12px 6px;
+}
+.phone-front.frame-landscape .short-actions {
+  right: 10px;
+  bottom: 12px;
+  flex-direction: row;
+  gap: 8px;
+}
+.phone-front.frame-landscape .short-avatar-box,
+.phone-front.frame-landscape .short-disc-box {
+  display: none;
+}
+.phone-front.frame-landscape .short-action-btn .action-icon-circle {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+.phone-front.frame-landscape .short-bottom-info {
+  left: 12px;
+  right: 168px;
+  bottom: 12px;
+}
+@media (max-width: 640px) {
+  .phone-front.frame-landscape .short-bottom-info {
+    right: 138px;
+  }
+}
+
+/* Crisp active tab & smooth reveal */
+.tab-btn.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  color: #ffffff !important;
+  border-color: rgba(129, 140, 248, 0.65) !important;
+  box-shadow: 0 8px 22px -6px rgba(99, 102, 241, 0.5);
+}
+.tab-panel:not(.hidden) {
+  animation: tabPanelIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes tabPanelIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  transition: opacity 0.28s ease-out, transform 0.28s ease-out !important;
+}
 

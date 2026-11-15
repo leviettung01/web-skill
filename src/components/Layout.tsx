@@ -8,6 +8,9 @@ export interface LayoutProps {
   settings?: Record<string, string>
   cartCount?: number
   active?: string
+  currentPath?: string
+  currentQueryType?: string
+  currentQuerySort?: string
   ogImage?: string
   canonical?: string
   bodyClass?: string
@@ -16,21 +19,42 @@ export interface LayoutProps {
 export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
   const {
     title, description, user, settings = {}, cartCount = 0,
-    active = '', canonical, children
+    active = '', currentPath = '', currentQueryType = '', currentQuerySort = '',
+    canonical, children
   } = props
   const siteName = settings.site_name || 'KhoSkill AI'
   const fullTitle = title ? `${title} | ${siteName}` : `${siteName} — ${settings.site_tagline || ''}`
   const desc = description || settings.site_tagline || 'Kho Skill AI tạo video chuyên nghiệp'
 
+  const path = currentPath || '/'
+  const isHome = active === 'home' || (currentPath === '/' && !active)
+  const isProductsAll = (path === '/san-pham' && !currentQueryType && !currentQuerySort) || active === 'products'
+  const isBestseller = path === '/san-pham' && (currentQuerySort === 'bestseller' || currentQuerySort === 'hot')
+  const isSkill = (path === '/san-pham' && currentQueryType === 'skill') || path === '/danh-muc/skill-video-ai' || active === 'skill'
+  const isCourse = (path === '/san-pham' && currentQueryType === 'course') || path === '/danh-muc/khoa-hoc-video-ai' || active === 'course'
+  const isChatbot = (path === '/san-pham' && currentQueryType === 'chatbot') || path === '/danh-muc/chatbot-kich-ban' || active === 'chatbot'
+  const isApp = (path === '/san-pham' && currentQueryType === 'app') || path === '/danh-muc/app-video-ai' || active === 'app'
+  const isCombo = path === '/combo' || currentQueryType === 'combo' || path === '/danh-muc/combo-tiet-kiem' || active === 'combo'
+  const isPricing = path === '/bang-gia' || active === 'pricing'
+  const isBlog = path.startsWith('/blog') || active === 'blog'
+  const isAffiliate = path === '/affiliate' || active === 'affiliate'
+  const isAbout = path === '/gioi-thieu' || active === 'about'
+  const isContact = (path === '/lien-he' || active === 'contact') && !currentQueryType
+
   const nav = [
-    { href: '/', label: 'Trang chủ', key: 'home', icon: 'fa-house' },
-    { href: '/san-pham', label: 'Sản phẩm', key: 'products', icon: 'fa-cubes' },
-    { href: '/combo', label: 'Combo', key: 'combo', icon: 'fa-box-open' },
-    { href: '/bang-gia', label: 'Bảng giá', key: 'pricing', icon: 'fa-tags' },
-    { href: '/blog', label: 'Blog', key: 'blog', icon: 'fa-newspaper' },
-    { href: '/affiliate', label: 'Affiliate', key: 'affiliate', icon: 'fa-handshake' },
-    { href: '/lien-he', label: 'Liên hệ', key: 'contact', icon: 'fa-headset' }
+    { href: '/', label: 'Trang chủ', key: 'home', icon: 'fa-house', on: isHome },
+    { href: '/san-pham', label: 'Sản phẩm', key: 'products', icon: 'fa-cubes', on: path.startsWith('/san-pham') || path.startsWith('/danh-muc') || active === 'products' },
+    { href: '/combo', label: 'Combo', key: 'combo', icon: 'fa-box-open', on: isCombo },
+    { href: '/bang-gia', label: 'Bảng giá', key: 'pricing', icon: 'fa-tags', on: isPricing },
+    { href: '/blog', label: 'Blog', key: 'blog', icon: 'fa-newspaper', on: isBlog },
+    { href: '/affiliate', label: 'Affiliate', key: 'affiliate', icon: 'fa-handshake', on: isAffiliate },
+    { href: '/lien-he', label: 'Liên hệ', key: 'contact', icon: 'fa-headset', on: isContact }
   ]
+
+  const sbCls = (on: boolean) =>
+    `sidebar-menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${on
+      ? 'is-active text-white bg-indigo-500/15 border border-indigo-500/30 shadow-sm shadow-indigo-500/10'
+      : 'text-[#b9b8d9] border border-transparent hover:text-white hover:bg-white/5'}`
 
   return (
     <html lang="vi" class="scroll-smooth">
@@ -45,127 +69,139 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         {props.ogImage && <meta property="og:image" content={props.ogImage} />}
         {canonical && <link rel="canonical" href={canonical} />}
         <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
-        <link href="/static/tailwind.css" rel="stylesheet" />
+        <link href="/static/tailwind.css?v=20261115" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
-        <link href="/static/style.css" rel="stylesheet" />
+        <link href="/static/style.css?v=20261115" rel="stylesheet" />
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
+        }}></script>
       </head>
       <body class={'bg-[#080716] text-[#e2e1f5] antialiased ' + (props.bodyClass || '')}>
+        <div id="nav-progress" aria-hidden="true"></div>
+        <div id="sidebar-backdrop" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs hidden lg:hidden" aria-hidden="true"></div>
         <div class="flex min-h-screen">
-          {/* LEFT SIDEBAR (Collapsible) */}
-          <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-[#0f0e26] border-r border-[#1f1b4b] flex flex-col justify-between transition-all duration-300 transform -translate-x-full lg:translate-x-0">
-            <div class="flex flex-col overflow-y-auto">
+          {/* LEFT SIDEBAR (Auto Hover-Expand Rail + Click "Thu gọn") */}
+          <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 lg:w-[72px] bg-[#0f0e26]/95 backdrop-blur-md border-r border-[#1f1b4b] flex flex-col justify-between transition-all duration-200 transform -translate-x-full lg:translate-x-0">
+            <div class="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
               {/* Brand Logo */}
-              <div class="h-16 flex items-center gap-3 px-6 border-b border-[#1f1b4b]">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25">
+              <a href="/" class="h-16 shrink-0 flex items-center gap-3 px-[18px] border-b border-[#1f1b4b] hover:bg-white/[0.02] transition-colors">
+                <div class="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25">
                   <i class="fas fa-wand-magic-sparkles text-sm"></i>
                 </div>
-                <div class="leading-none sidebar-header-text">
-                  <div class="font-extrabold text-sm tracking-tight text-white">{siteName}</div>
-                  <div class="text-[9px] text-[#9f9dbb] mt-0.5">Kho Skill Video AI</div>
+                <div class="leading-none sidebar-header-text min-w-0">
+                  <div class="font-extrabold text-sm tracking-tight text-white whitespace-nowrap">{siteName}</div>
+                  <div class="text-[10px] text-[#9f9dbb] mt-0.5 whitespace-nowrap">Kho Skill Video AI</div>
                 </div>
-              </div>
+              </a>
 
               {/* Navigation Menu */}
-              <div class="px-3 py-5 flex flex-col gap-6">
+              <div class="px-3 py-4 flex flex-col gap-5">
                 <div>
-                  <div class="px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text">Khám phá</div>
+                  <div class="sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text">Khám phá</div>
                   <nav class="flex flex-col gap-1">
-                    <a href="/" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'home' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
-                      <i class="fas fa-house w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Trang chủ</span>
+                    <a href="/" title="Trang chủ" data-nav="home" class={sbCls(isHome)}>
+                      <i class={`fas fa-house w-5 shrink-0 text-center ${isHome ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Trang chủ</span>
                     </a>
-                    <a href="/san-pham?sort=hot" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-fire w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Bán chạy nhất</span>
+                    <a href="/san-pham" title="Tất cả sản phẩm" data-nav="all" class={sbCls(isProductsAll)}>
+                      <i class={`fas fa-grid-2 fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Tất cả sản phẩm</span>
+                    </a>
+                    <a href="/san-pham?sort=bestseller" title="Bán chạy nhất" data-nav="bestseller" class={sbCls(isBestseller)}>
+                      <i class={`fas fa-fire w-5 shrink-0 text-center ${isBestseller ? 'text-orange-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Bán chạy nhất</span>
                     </a>
                   </nav>
                 </div>
 
                 <div>
-                  <div class="px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text">Sản phẩm</div>
+                  <div class="sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text">Danh mục</div>
                   <nav class="flex flex-col gap-1">
-                    <a href="/san-pham?type=skill" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-white bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20">
-                      <i class="fas fa-wand-magic-sparkles w-5 text-center text-indigo-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Skill AI</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none">Đang bán</span>
+                    <a href="/san-pham?type=skill" title="Skill AI (Đang bán)" data-nav="skill" class={sbCls(isSkill)}>
+                      <i class={`fas fa-wand-magic-sparkles w-5 shrink-0 text-center ${isSkill ? 'text-indigo-400' : 'text-indigo-400/80'}`}></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+                        <span class="truncate">Skill AI</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none shrink-0">Đang bán</span>
                       </span>
                     </a>
-                    <a href="/san-pham?type=course" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-graduation-cap w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Khóa học</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                    <a href="/san-pham?type=course" title="Khóa học Video AI (Sắp mở)" data-nav="course" class={sbCls(isCourse)}>
+                      <i class={`fas fa-graduation-cap w-5 shrink-0 text-center ${isCourse ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+                        <span class="truncate">Khóa học</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0">Sắp mở</span>
                       </span>
                     </a>
-                    <a href="/san-pham?type=chatbot" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'chatbot' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
-                      <i class="fas fa-robot w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Chatbot</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                    <a href="/san-pham?type=chatbot" title="Chatbot (Sắp mở)" data-nav="chatbot" class={sbCls(isChatbot)}>
+                      <i class={`fas fa-robot w-5 shrink-0 text-center ${isChatbot ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+                        <span class="truncate">Chatbot</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0">Sắp mở</span>
                       </span>
                     </a>
-                    <a href="/san-pham?type=app" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-mobile-screen-button w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>App Video AI</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                    <a href="/san-pham?type=app" title="App Video AI (Sắp mở)" data-nav="app" class={sbCls(isApp)}>
+                      <i class={`fas fa-mobile-screen-button w-5 shrink-0 text-center ${isApp ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+                        <span class="truncate">App Video AI</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0">Sắp mở</span>
                       </span>
                     </a>
-                    <a href="/combo" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-box-open w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Combo tiết kiệm</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
-                      </span>
-                    </a>
-                    <a href="/lien-he" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-video w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Yêu cầu Video AI</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
+                    <a href="/combo" title="Combo tiết kiệm (Sắp mở)" data-nav="combo" class={sbCls(isCombo)}>
+                      <i class={`fas fa-box-open w-5 shrink-0 text-center ${isCombo ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+                        <span class="truncate">Combo tiết kiệm</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0">Sắp mở</span>
                       </span>
                     </a>
                   </nav>
                 </div>
 
                 <div>
-                  <div class="px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2 sidebar-text">Khác</div>
+                  <div class="sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text">Thông tin</div>
                   <nav class="flex flex-col gap-1">
-                    <a href="/lien-he" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-user-gear w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text flex-1 flex items-center justify-between">
-                        <span>Custom Chatbot</span>
-                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold leading-none">Sắp mở</span>
-                      </span>
+                    <a href="/bang-gia" title="Bảng giá" data-nav="pricing" class={sbCls(isPricing)}>
+                      <i class={`fas fa-tags w-5 shrink-0 text-center ${isPricing ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Bảng giá</span>
                     </a>
-                    <a href="/bang-gia" class={`sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition ${active === 'pricing' ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#b9b8d9] hover:text-white hover:bg-white/5'}`}>
-                      <i class="fas fa-tags w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Bảng giá</span>
+                    <a href="/blog" title="Blog kiến thức" data-nav="blog" class={sbCls(isBlog)}>
+                      <i class={`fas fa-newspaper w-5 shrink-0 text-center ${isBlog ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Blog</span>
                     </a>
-                    <a href="/gioi-thieu" class="sidebar-menu-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition text-[#b9b8d9] hover:text-white hover:bg-white/5">
-                      <i class="fas fa-info-circle w-5 text-center text-slate-400"></i>
-                      <span class="sidebar-text">Giới thiệu</span>
+                    <a href="/affiliate" title="Affiliate" data-nav="affiliate" class={sbCls(isAffiliate)}>
+                      <i class={`fas fa-handshake w-5 shrink-0 text-center ${isAffiliate ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Affiliate</span>
+                    </a>
+                    <a href="/gioi-thieu" title="Giới thiệu" data-nav="about" class={sbCls(isAbout)}>
+                      <i class={`fas fa-circle-info w-5 shrink-0 text-center ${isAbout ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Giới thiệu</span>
+                    </a>
+                    <a href="/lien-he" title="Liên hệ & Yêu cầu riêng" data-nav="contact" class={sbCls(isContact)}>
+                      <i class={`fas fa-headset w-5 shrink-0 text-center ${isContact ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <span class="sidebar-text whitespace-nowrap">Liên hệ hỗ trợ</span>
                     </a>
                   </nav>
                 </div>
               </div>
             </div>
 
-            {/* Sidebar toggle button */}
-            <div class="p-3 border-t border-[#1f1b4b]">
-              <button id="sidebar-toggle-btn" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition">
-                <i class="fas fa-angles-left w-5 text-center"></i>
-                <span class="sidebar-text">Thu nhỏ</span>
+            {/* Sidebar Footer Controls: Thu gọn + Ghim mở rộng */}
+            <div class="p-3 border-t border-[#1f1b4b] flex items-center gap-1.5 shrink-0">
+              <button type="button" id="sidebar-toggle-btn" title="Thu gọn thanh bên"
+                class="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                <i id="sidebar-toggle-icon" class="fas fa-angles-left w-5 shrink-0 text-center"></i>
+                <span id="sidebar-toggle-label" class="sidebar-text whitespace-nowrap">Thu gọn</span>
+              </button>
+              <button type="button" id="sidebar-pin-btn" title="Ghim cố định mở rộng"
+                class="sidebar-badge w-9 h-9 shrink-0 grid place-items-center rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer">
+                <i class="fas fa-thumbtack"></i>
               </button>
             </div>
           </aside>
 
           {/* MAIN CONTENT WRAPPER */}
-          <div id="main-content-wrap" class="flex-1 lg:ml-64 flex flex-col min-h-screen transition-all duration-300 overflow-hidden">
+          <div id="main-content-wrap" class="flex-1 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip">
             {/* Header */}
             <header id="site-header" class="sticky top-0 z-40 bg-[#0f0e26]/85 backdrop-blur border-b border-[#1f1b4b]">
               <div class="max-w-7xl mx-auto px-4 sm:px-6">
@@ -181,8 +217,8 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                   {/* Header Nav Links (Desktop) */}
                   <nav id="main-nav" class="hidden lg:flex items-center gap-1.5">
                     {nav.map(n => (
-                      <a href={n.href}
-                        class={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ${active === n.key ? 'text-indigo-400 bg-indigo-500/10' : 'text-[#9f9dbb] hover:text-white'}`}>
+                      <a href={n.href} data-top-nav={n.key}
+                        class={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ${n.on ? 'is-active text-indigo-400 bg-indigo-500/10' : 'text-[#9f9dbb] hover:text-white hover:bg-white/5'}`}>
                         {n.label}
                       </a>
                     ))}
@@ -255,10 +291,18 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                   </form>
                   <div class="grid grid-cols-2 gap-1.5">
                     {nav.map(n => (
-                      <a href={n.href} class={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ${active === n.key ? 'bg-indigo-500/10 text-indigo-400' : 'text-[#b9b8d9] hover:bg-white/5'}`}>
-                        <i class={`fas ${n.icon} w-4 text-center text-slate-400`}></i>{n.label}
+                      <a href={n.href} data-mob-nav={n.key} class={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ${n.on ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/25' : 'text-[#b9b8d9] hover:bg-white/5'}`}>
+                        <i class={`fas ${n.icon} w-4 text-center ${n.on ? 'text-indigo-400' : 'text-slate-400'}`}></i>{n.label}
                       </a>
                     ))}
+                  </div>
+                  <div class="pt-2 border-t border-[#1f1b4b] flex flex-wrap gap-1.5">
+                    <a href="/san-pham?type=skill" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+                      <i class="fas fa-wand-magic-sparkles mr-1"></i>Skill AI (Đang bán)
+                    </a>
+                    <a href="/san-pham?type=course" class="px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium">Khóa học (Sắp mở)</a>
+                    <a href="/san-pham?type=chatbot" class="px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium">Chatbot (Sắp mở)</a>
+                    <a href="/san-pham?type=app" class="px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium">App Video AI (Sắp mở)</a>
                   </div>
                 </div>
               </div>
