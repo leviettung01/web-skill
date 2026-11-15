@@ -7902,22 +7902,37 @@ function discountPercent(price, original) {
   if (!original || original <= price) return 0;
   return Math.round((original - price) / original * 100);
 }
+function parseSafeDate(s) {
+  if (!s) return null;
+  const trimmed = String(s).trim();
+  if (!trimmed) return null;
+  const iso = trimmed.includes("T") ? trimmed : trimmed.replace(" ", "T") + (/[zZ]$|[+-]\d{2}(:?\d{2})?$/.test(trimmed) ? "" : "Z");
+  const normalized = iso.replace(/([+-]\d{2})$/, "$1:00");
+  const d = new Date(normalized);
+  return isNaN(d.getTime()) ? null : d;
+}
 function formatDate(s) {
   if (!s) return "\u2014";
-  const d = new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z");
-  if (isNaN(d.getTime())) return s;
-  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const d = parseSafeDate(s);
+  if (!d) return s;
+  return d.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh"
+  });
 }
 function formatDateTime(s) {
   if (!s) return "\u2014";
-  const d = new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z");
-  if (isNaN(d.getTime())) return s;
+  const d = parseSafeDate(s);
+  if (!d) return s;
   return d.toLocaleString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh"
   });
 }
 function parseJSON(s, fallback) {
@@ -7996,6 +8011,349 @@ function toEmbedVideoUrl(url) {
   } catch {
   }
   return raw2;
+}
+
+// src/lib/email.ts
+function genTokenHex(bytes = 32) {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function sha256Hex(input2) {
+  const data = new TextEncoder().encode(input2);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function escHtml(str) {
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function readEnv(env, key) {
+  const fromBinding = env && typeof env[key] === "string" ? env[key] : "";
+  const fromProcess = typeof process !== "undefined" && process.env && typeof process.env[key] === "string" ? process.env[key] : "";
+  return (fromBinding || fromProcess || "").trim();
+}
+function getEmailConfig(env) {
+  const apiKey = readEnv(env, "RESEND_API_KEY");
+  const from = readEnv(env, "EMAIL_FROM") || "KhoSkill AI <noreply@khoskill.site>";
+  return { apiKey, from, configured: Boolean(apiKey) };
+}
+function isEmailConfigured(env) {
+  return getEmailConfig(env).configured;
+}
+async function sendEmail(env, msg) {
+  const cfg = getEmailConfig(env);
+  if (!cfg.configured) {
+    return { ok: false, skipped: true, error: "RESEND_API_KEY ch\u01B0a \u0111\u01B0\u1EE3c c\u1EA5u h\xECnh tr\xEAn m\xE1y ch\u1EE7" };
+  }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cfg.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: cfg.from,
+        to: [msg.to],
+        subject: msg.subject,
+        html: msg.html,
+        ...msg.text ? { text: msg.text } : {}
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data?.message || data?.error || `HTTP ${res.status}` };
+    }
+    return { ok: true, id: data?.id };
+  } catch (err) {
+    return { ok: false, error: String(err?.message || err) };
+  }
+}
+async function sendBatchEmails(env, messages) {
+  if (messages.length === 0) return { sent: 0, failed: 0 };
+  const cfg = getEmailConfig(env);
+  if (!cfg.configured) {
+    return { sent: 0, failed: messages.length, skipped: true, error: "RESEND_API_KEY ch\u01B0a \u0111\u01B0\u1EE3c c\u1EA5u h\xECnh" };
+  }
+  let sent = 0;
+  let failed = 0;
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100).map((m) => ({
+      from: cfg.from,
+      to: [m.to],
+      subject: m.subject,
+      html: m.html,
+      ...m.text ? { text: m.text } : {}
+    }));
+    try {
+      const res = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(chunk)
+      });
+      if (res.ok) {
+        sent += chunk.length;
+      } else {
+        failed += chunk.length;
+      }
+    } catch {
+      failed += chunk.length;
+    }
+  }
+  return { sent, failed };
+}
+function renderEmailShell(opts) {
+  const siteName = escHtml(opts.siteName || "KhoSkill AI");
+  const origin = escHtml(opts.origin);
+  const heading = escHtml(opts.heading);
+  const ctaBlock = opts.ctaLabel && opts.ctaUrl ? `<div style="margin:26px 0 8px;">
+         <a href="${escHtml(opts.ctaUrl)}" style="display:inline-block;padding:13px 24px;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#c026d3);color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;">
+           ${escHtml(opts.ctaLabel)}
+         </a>
+       </div>` : "";
+  const footerNote = opts.footerNote ? `<p style="margin:18px 0 0;font-size:12px;color:#94a3b8;line-height:1.5;">${opts.footerNote}</p>` : "";
+  return `<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:24px 12px;background:#070614;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#e2e8f0;">
+  <div style="max-width:560px;margin:0 auto;background:#0f0e24;border:1px solid #221e54;border-radius:20px;overflow:hidden;">
+    <div style="padding:22px 26px;background:linear-gradient(135deg,#1b1846,#2a1459);border-bottom:1px solid #221e54;">
+      <a href="${origin}" style="color:#ffffff;font-size:18px;font-weight:800;text-decoration:none;letter-spacing:-0.3px;">${siteName}</a>
+    </div>
+    <div style="padding:28px 26px;font-size:14px;line-height:1.65;color:#cbd5e1;">
+      <h1 style="margin:0 0 14px;font-size:20px;line-height:1.3;color:#ffffff;">${heading}</h1>
+      ${opts.bodyHtml}
+      ${ctaBlock}
+      ${footerNote}
+    </div>
+    <div style="padding:16px 26px;background:#090818;border-top:1px solid #1b1846;font-size:12px;color:#64748b;">
+      \xA9 2026 ${siteName} \xB7 <a href="${origin}/tai-khoan" style="color:#818cf8;text-decoration:none;">Trang t\xE0i kho\u1EA3n</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+function buildVerificationEmail(opts) {
+  const site = opts.siteName || "KhoSkill AI";
+  return {
+    to: opts.to,
+    subject: `[${site}] X\xE1c minh \u0111\u1ECBa ch\u1EC9 email c\u1EE7a b\u1EA1n`,
+    html: renderEmailShell({
+      siteName: site,
+      origin: opts.origin,
+      heading: "X\xE1c minh email t\xE0i kho\u1EA3n",
+      bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
+        <p>B\u1EA1n v\u1EEBa y\xEAu c\u1EA7u x\xE1c minh \u0111\u1ECBa ch\u1EC9 Gmail/Email tr\xEAn <b>${escHtml(site)}</b> \u0111\u1EC3 nh\u1EADn th\xF4ng b\xE1o c\u1EADp nh\u1EADt Skill AI v\xE0 k\xEDch ho\u1EA1t ch\u01B0\u01A1ng tr\xECnh Affiliate.</p>
+        <p>B\u1EA5m n\xFAt b\xEAn d\u01B0\u1EDBi \u0111\u1EC3 ho\xE0n t\u1EA5t x\xE1c minh (link c\xF3 hi\u1EC7u l\u1EF1c trong <b>30 ph\xFAt</b>):</p>`,
+      ctaLabel: "X\xE1c minh Email ngay",
+      ctaUrl: opts.verifyUrl,
+      footerNote: `N\u1EBFu n\xFAt kh\xF4ng b\u1EA5m \u0111\u01B0\u1EE3c, h\xE3y copy \u0111\u01B0\u1EDDng d\u1EABn sau v\xE0o tr\xECnh duy\u1EC7t:<br><span style="color:#a5b4fc;word-break:break-all;">${escHtml(opts.verifyUrl)}</span>`
+    }),
+    text: `Xin chao ${opts.fullName},
+
+Bam vao link sau de xac minh email tai ${site} (hieu luc 30 phut):
+${opts.verifyUrl}`
+  };
+}
+function buildPasswordResetEmail(opts) {
+  const site = opts.siteName || "KhoSkill AI";
+  return {
+    to: opts.to,
+    subject: `[${site}] Y\xEAu c\u1EA7u \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u`,
+    html: renderEmailShell({
+      siteName: site,
+      origin: opts.origin,
+      heading: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u \u0111\u0103ng nh\u1EADp",
+      bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
+        <p>Ch\xFAng t\xF4i nh\u1EADn \u0111\u01B0\u1EE3c y\xEAu c\u1EA7u \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u cho t\xE0i kho\u1EA3n <b>${escHtml(opts.to)}</b>.</p>
+        <p>Link \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u c\xF3 hi\u1EC7u l\u1EF1c trong <b>30 ph\xFAt</b>. N\u1EBFu b\u1EA1n kh\xF4ng th\u1EF1c hi\u1EC7n y\xEAu c\u1EA7u n\xE0y, h\xE3y b\u1ECF qua email n\xE0y.</p>`,
+      ctaLabel: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u m\u1EDBi",
+      ctaUrl: opts.resetUrl,
+      footerNote: `\u0110\u01B0\u1EDDng d\u1EABn d\u1EF1 ph\xF2ng:<br><span style="color:#a5b4fc;word-break:break-all;">${escHtml(opts.resetUrl)}</span>`
+    }),
+    text: `Dat lai mat khau tai ${site}: ${opts.resetUrl}`
+  };
+}
+function buildOrderPaidEmail(opts) {
+  const site = opts.siteName || "KhoSkill AI";
+  const itemsHtml = opts.items.map((it) => `<li style="margin:8px 0;padding:10px 12px;border-radius:10px;background:#161436;border:1px solid #2a2559;">
+      <div style="font-weight:700;color:#ffffff;">${escHtml(it.product_name)}</div>
+      ${it.license_key ? `<div style="margin-top:4px;font-family:monospace;font-size:12px;color:#34d399;">License Key: ${escHtml(it.license_key)}</div>` : ""}
+    </li>`).join("");
+  return {
+    to: opts.to,
+    subject: `[${site}] \u0110\u01A1n h\xE0ng ${opts.orderCode} \u0111\xE3 thanh to\xE1n th\xE0nh c\xF4ng`,
+    html: renderEmailShell({
+      siteName: site,
+      origin: opts.origin,
+      heading: `Thanh to\xE1n th\xE0nh c\xF4ng \u2014 ${opts.orderCode}`,
+      bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
+        <p>\u0110\u01A1n h\xE0ng <b>${escHtml(opts.orderCode)}</b> tr\u1ECB gi\xE1 <b>${escHtml(opts.totalFormatted)}</b> \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c nh\u1EADn v\xE0 k\xEDch ho\u1EA1t b\u1EA3n quy\u1EC1n tr\u1ECDn \u0111\u1EDDi:</p>
+        <ul style="list-style:none;padding:0;margin:14px 0;">${itemsHtml}</ul>
+        <p>M\u1ED7i khi s\u1EA3n ph\u1EA9m c\xF3 phi\xEAn b\u1EA3n m\u1EDBi ho\u1EB7c b\u1ED5 sung prompt/link t\u1EA3i, b\u1EA1n c\u0169ng s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c th\xF4ng b\xE1o tr\u1EF1c ti\u1EBFp.</p>`,
+      ctaLabel: "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i & T\u1EA3i v\u1EC1",
+      ctaUrl: opts.accountUrl
+    }),
+    text: `Don hang ${opts.orderCode} (${opts.totalFormatted}) da duoc kich hoat. Truy cap ${opts.accountUrl} de tai san pham.`
+  };
+}
+function buildProductUpdateEmail(opts) {
+  const site = opts.siteName || "KhoSkill AI";
+  const notes = opts.changelog ? `<div style="margin:14px 0;padding:12px 14px;border-radius:12px;background:#161436;border:1px solid #2a2559;white-space:pre-line;color:#e2e8f0;">${escHtml(opts.changelog)}</div>` : "";
+  return {
+    to: opts.to,
+    subject: `[${site}] C\u1EADp nh\u1EADt m\u1EDBi ${opts.version}: ${opts.productName}`,
+    html: renderEmailShell({
+      siteName: site,
+      origin: opts.origin,
+      heading: `B\u1EA3n c\u1EADp nh\u1EADt ${opts.version} \u0111\xE3 s\u1EB5n s\xE0ng`,
+      bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
+        <p>S\u1EA3n ph\u1EA9m <b>${escHtml(opts.productName)}</b> b\u1EA1n \u0111\xE3 s\u1EDF h\u1EEFu v\u1EEBa c\xF3 b\u1EA3n c\u1EADp nh\u1EADt <b>${escHtml(opts.version)}</b>:</p>
+        ${notes}
+        <p>H\xE3y truy c\u1EADp m\u1EE5c <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b> \u0111\u1EC3 t\u1EA3i phi\xEAn b\u1EA3n m\u1EDBi nh\u1EA5t mi\u1EC5n ph\xED.</p>`,
+      ctaLabel: "T\u1EA3i phi\xEAn b\u1EA3n m\u1EDBi ngay",
+      ctaUrl: opts.accountUrl
+    }),
+    text: `${opts.productName} co ban cap nhat ${opts.version}. Xem chi tiet & tai ve tai: ${opts.accountUrl}`
+  };
+}
+function buildAdminDirectEmail(opts) {
+  const site = opts.siteName || "KhoSkill AI";
+  const absLink = opts.linkUrl ? opts.linkUrl.startsWith("http://") || opts.linkUrl.startsWith("https://") ? opts.linkUrl : `${opts.origin}${opts.linkUrl.startsWith("/") ? "" : "/"}${opts.linkUrl}` : void 0;
+  return {
+    to: opts.to,
+    subject: `[${site}] ${opts.title}`,
+    html: renderEmailShell({
+      siteName: site,
+      origin: opts.origin,
+      heading: opts.title,
+      bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
+        <div style="margin:14px 0;padding:14px;border-radius:12px;background:#161436;border:1px solid #2a2559;white-space:pre-line;color:#e2e8f0;">${escHtml(opts.message)}</div>`,
+      ctaLabel: absLink ? "M\u1EDF li\xEAn k\u1EBFt \u0111\xEDnh k\xE8m" : void 0,
+      ctaUrl: absLink
+    }),
+    text: `${opts.title}
+
+${opts.message}${absLink ? `
+
+Link: ${absLink}` : ""}`
+  };
+}
+
+// src/lib/oauth.ts
+function readEnv2(env, key) {
+  const fromBinding = env && typeof env[key] === "string" ? env[key] : "";
+  const fromProcess = typeof process !== "undefined" && process.env && typeof process.env[key] === "string" ? process.env[key] : "";
+  return (fromBinding || fromProcess || "").trim();
+}
+function getGoogleConfig(env) {
+  const clientId = readEnv2(env, "GOOGLE_CLIENT_ID");
+  const clientSecret = readEnv2(env, "GOOGLE_CLIENT_SECRET");
+  return {
+    clientId,
+    clientSecret,
+    enabled: Boolean(clientId && clientSecret)
+  };
+}
+function getRequestOrigin(c) {
+  const explicit = readEnv2(c.env, "SITE_URL").replace(/\/+$/, "");
+  if (explicit) return explicit;
+  const proto = c.req.header("x-forwarded-proto") || new URL(c.req.url).protocol.replace(":", "") || "https";
+  const host = c.req.header("x-forwarded-host") || c.req.header("host") || new URL(c.req.url).host;
+  const cleanProto = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? proto.split(",")[0].trim() : "https";
+  return `${cleanProto}://${host.split(",")[0].trim()}`;
+}
+function safeRedirectPath(next, fallback = "/tai-khoan") {
+  if (!next) return fallback;
+  const s = String(next).trim();
+  if (!s.startsWith("/") || s.startsWith("//") || s.startsWith("/api/auth/")) return fallback;
+  return s;
+}
+function toB64Url(bytes) {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function fromB64Url(str) {
+  const b642 = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
+  const bin = atob(b642);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function importHmacKey(secret) {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+}
+async function signOAuthState(payload, secret) {
+  const body = toB64Url(new TextEncoder().encode(JSON.stringify(payload)));
+  const key = await importHmacKey(secret);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
+  return `${body}.${toB64Url(new Uint8Array(sig))}`;
+}
+async function verifyOAuthState(token, secret) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 2) return null;
+  const [body, sigB64] = parts;
+  try {
+    const key = await importHmacKey(secret);
+    const ok = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      fromB64Url(sigB64),
+      new TextEncoder().encode(body)
+    );
+    if (!ok) return null;
+    const data = JSON.parse(new TextDecoder().decode(fromB64Url(body)));
+    if (!data?.exp || data.exp < Date.now()) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+function buildGoogleAuthUrl(opts) {
+  const params = new URLSearchParams({
+    client_id: opts.clientId,
+    redirect_uri: opts.redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state: opts.state,
+    prompt: "select_account"
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+async function exchangeGoogleCode(opts) {
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code: opts.code,
+      client_id: opts.clientId,
+      client_secret: opts.clientSecret,
+      redirect_uri: opts.redirectUri,
+      grant_type: "authorization_code"
+    }).toString()
+  });
+  const tokenData = await tokenRes.json().catch(() => ({}));
+  if (!tokenRes.ok || !tokenData?.access_token) {
+    throw new Error(tokenData?.error_description || tokenData?.error || "Google token exchange failed");
+  }
+  const userRes = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` }
+  });
+  const profile = await userRes.json().catch(() => ({}));
+  if (!userRes.ok || !profile?.sub || !profile?.email) {
+    throw new Error("Kh\xF4ng l\u1EA5y \u0111\u01B0\u1EE3c th\xF4ng tin t\xE0i kho\u1EA3n Google");
+  }
+  return profile;
 }
 
 // src/lib/webhook.ts
@@ -8902,6 +9260,7 @@ var Layout = (props) => {
     user,
     settings = {},
     cartCount = 0,
+    unreadNotifs = 0,
     active = "",
     currentPath = "",
     currentQueryType = "",
@@ -9136,6 +9495,20 @@ var Layout = (props) => {
                     ]
                   }
                 ),
+                user && /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/tai-khoan/thong-bao",
+                    id: "notif-btn",
+                    "aria-label": `Th\xF4ng b\xE1o (${unreadNotifs} ch\u01B0a \u0111\u1ECDc)`,
+                    title: "Th\xF4ng b\xE1o",
+                    class: "relative w-9 h-9 grid place-items-center rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bell text-sm", "aria-hidden": "true" }),
+                      /* @__PURE__ */ jsxDEV("span", { id: "notif-badge", class: `absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-indigo-500 text-white text-[9px] font-bold tabular-nums grid place-items-center ${unreadNotifs > 0 ? "" : "hidden"}`, children: unreadNotifs > 9 ? "9+" : unreadNotifs })
+                    ]
+                  }
+                ),
                 user ? /* @__PURE__ */ jsxDEV("div", { class: "relative", id: "user-menu-wrap", children: [
                   /* @__PURE__ */ jsxDEV(
                     "button",
@@ -9148,13 +9521,13 @@ var Layout = (props) => {
                       "aria-label": "Menu t\xE0i kho\u1EA3n",
                       class: "flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white transition cursor-pointer",
                       children: [
-                        /* @__PURE__ */ jsxDEV("div", { class: "w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold uppercase shadow-sm", children: user.full_name.charAt(0).toUpperCase() }),
+                        user.avatar_url ? /* @__PURE__ */ jsxDEV("img", { src: user.avatar_url, alt: user.full_name, class: "w-7 h-7 rounded-full object-cover shadow-sm", referrerpolicy: "no-referrer" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold uppercase shadow-sm", children: user.full_name.charAt(0).toUpperCase() }),
                         /* @__PURE__ */ jsxDEV("span", { class: "hidden sm:block text-xs font-medium max-w-[90px] truncate", children: user.full_name }),
                         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-down text-[9px] text-[#9492b8]", "aria-hidden": "true" })
                       ]
                     }
                   ),
-                  /* @__PURE__ */ jsxDEV("div", { id: "user-dropdown", role: "menu", class: "hidden absolute right-0 mt-2 w-52 bg-[#0f0e24] rounded-xl shadow-xl border border-[#221e54] py-1.5 overflow-hidden", children: [
+                  /* @__PURE__ */ jsxDEV("div", { id: "user-dropdown", role: "menu", class: "hidden absolute right-0 mt-2 w-56 bg-[#0f0e24] rounded-xl shadow-xl border border-[#221e54] py-1.5 overflow-hidden", children: [
                     /* @__PURE__ */ jsxDEV("div", { class: "px-4 py-2 border-b border-[#221e54]", children: [
                       /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white truncate", children: user.full_name }),
                       /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] truncate", children: user.email })
@@ -9162,6 +9535,13 @@ var Layout = (props) => {
                     /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
                       /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gauge w-4 text-[#9492b8]", "aria-hidden": "true" }),
                       "T\u1ED5ng quan"
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/thong-bao", role: "menuitem", class: "flex items-center justify-between gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bell w-4 text-[#9492b8]", "aria-hidden": "true" }),
+                        "Th\xF4ng b\xE1o"
+                      ] }),
+                      unreadNotifs > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded-full bg-indigo-500 text-white text-[10px] font-bold", children: unreadNotifs })
                     ] }),
                     /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
                       /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-archive w-4 text-[#9492b8]", "aria-hidden": "true" }),
@@ -9177,7 +9557,7 @@ var Layout = (props) => {
                     ] }),
                     /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/ho-so", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
                       /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-gear w-4 text-[#9492b8]", "aria-hidden": "true" }),
-                      "H\u1ED3 s\u01A1"
+                      "H\u1ED3 s\u01A1 & X\xE1c minh"
                     ] }),
                     user.role === "admin" && /* @__PURE__ */ jsxDEV("a", { href: "/admin", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-amber-400 hover:bg-white/5 border-t border-[#221e54]", children: [
                       /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved w-4", "aria-hidden": "true" }),
@@ -9411,7 +9791,7 @@ var Layout = (props) => {
       ] }),
       /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261118" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261119" })
     ] })
   ] });
 };
@@ -11109,119 +11489,188 @@ var AuthShell = ({ title: title2, subtitle, settings = {}, children }) => {
   ] });
 };
 var inputCls = "w-full h-12 px-4 rounded-xl bg-[#161436] border border-[#2a2559] text-white placeholder-[#9492b8] focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none text-sm transition";
-var LoginPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u0103ng nh\u1EADp", subtitle: "Ch\xE0o m\u1EEBng b\u1EA1n quay l\u1EA1i! \u0110\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp Skill \u0111\xE3 mua.", settings: props.settings, children: [
-  props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-300", children: [
-    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
-    "\u0110\u0103ng k\xFD th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp."
-  ] }),
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/login", method: "post", "data-ajax": true, class: "space-y-4", children: [
-    /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "next", value: props.next || "" }),
+var OAUTH_ERROR_MAP = {
+  banned: "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n \u0111\xE3 b\u1ECB kho\xE1.",
+  unverified: "Email Google c\u1EE7a b\u1EA1n ch\u01B0a \u0111\u01B0\u1EE3c Google x\xE1c minh.",
+  cancelled: "B\u1EA1n \u0111\xE3 hu\u1EF7 \u0111\u0103ng nh\u1EADp Google.",
+  not_configured: "\u0110\u0103ng nh\u1EADp Google hi\u1EC7n ch\u01B0a \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t.",
+  state_invalid: "Phi\xEAn \u0111\u0103ng nh\u1EADp Google \u0111\xE3 h\u1EBFt h\u1EA1n, vui l\xF2ng th\u1EED l\u1EA1i.",
+  failed: "Kh\xF4ng th\u1EC3 k\u1EBFt n\u1ED1i Google l\xFAc n\xE0y, vui l\xF2ng th\u1EED l\u1EA1i."
+};
+var GoogleButton = ({ href, label }) => /* @__PURE__ */ jsxDEV("div", { class: "mb-5", children: [
+  /* @__PURE__ */ jsxDEV(
+    "a",
+    {
+      href,
+      "data-no-pjax": true,
+      class: "cta-white flex items-center justify-center gap-3 w-full h-12 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-semibold text-sm shadow-md transition",
+      children: [
+        /* @__PURE__ */ jsxDEV("svg", { class: "w-5 h-5 shrink-0", viewBox: "0 0 24 24", "aria-hidden": "true", children: [
+          /* @__PURE__ */ jsxDEV("path", { fill: "#4285F4", d: "M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z" }),
+          /* @__PURE__ */ jsxDEV("path", { fill: "#34A853", d: "M12 24c3.3 0 6.08-1.09 8.1-2.96l-3.88-3.05c-1.08.73-2.46 1.16-4.22 1.16-3.24 0-5.99-2.19-6.97-5.13H1.03v3.14C3.04 21.15 7.2 24 12 24Z" }),
+          /* @__PURE__ */ jsxDEV("path", { fill: "#FBBC05", d: "M5.03 14.02c-.25-.73-.39-1.51-.39-2.32s.14-1.59.39-2.32V6.24H1.03A11.98 11.98 0 0 0 0 11.7c0 1.94.46 3.77 1.03 5.46l4-3.14Z" }),
+          /* @__PURE__ */ jsxDEV("path", { fill: "#EA4335", d: "M12 4.65c1.8 0 3.41.62 4.68 1.83l3.51-3.51C18.07 1.09 15.3 0 12 0 7.2 0 3.04 2.85 1.03 7.14l4 3.14C6.01 6.84 8.76 4.65 12 4.65Z" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("span", { children: label })
+      ]
+    }
+  ),
+  /* @__PURE__ */ jsxDEV("div", { class: "relative flex items-center justify-center my-5", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "w-full border-t border-[#221e54]" }),
+    /* @__PURE__ */ jsxDEV("span", { class: "px-3 bg-[#0f0e24] text-xs text-[#9492b8] uppercase tracking-wider shrink-0", children: "Ho\u1EB7c b\u1EB1ng email" }),
+    /* @__PURE__ */ jsxDEV("div", { class: "w-full border-t border-[#221e54]" })
+  ] })
+] });
+var LoginPage = (props) => {
+  const errMsg = props.oauthError ? OAUTH_ERROR_MAP[props.oauthError] || OAUTH_ERROR_MAP.failed : "";
+  const googleHref = `/api/auth/google${props.next ? "?next=" + encodeURIComponent(props.next) : ""}`;
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u0103ng nh\u1EADp", subtitle: "Ch\xE0o m\u1EEBng b\u1EA1n quay l\u1EA1i! \u0110\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp Skill \u0111\xE3 mua.", settings: props.settings, children: [
+    props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-300", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
+      "\u0110\u0103ng k\xFD th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp."
+    ] }),
+    props.resetSuccess && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-300", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
+      "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp b\u1EB1ng m\u1EADt kh\u1EA9u m\u1EDBi."
+    ] }),
+    errMsg && /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "mb-5 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5", "aria-hidden": "true" }),
+      errMsg
+    ] }),
+    props.googleEnabled && /* @__PURE__ */ jsxDEV(GoogleButton, { href: googleHref, label: "Ti\u1EBFp t\u1EE5c v\u1EDBi Google" }),
+    /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/login", method: "post", "data-ajax": true, class: "space-y-4", children: [
+      /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "next", value: props.next || "" }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { for: "login-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11", id: "login-email" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
+          /* @__PURE__ */ jsxDEV("label", { for: "login-password", class: "block text-sm font-medium text-[#d6d4ee]", children: "M\u1EADt kh\u1EA9u" }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs text-indigo-400 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, autocomplete: "current-password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", class: inputCls + " pl-11 pr-11", id: "login-password" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
+              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
+              title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
+              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng nh\u1EADp" })
+    ] }),
+    /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
+      "Ch\u01B0a c\xF3 t\xE0i kho\u1EA3n? ",
+      /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng k\xFD ngay" })
+    ] })
+  ] }) });
+};
+var RegisterPage = (props) => {
+  const errMsg = props.oauthError ? OAUTH_ERROR_MAP[props.oauthError] || OAUTH_ERROR_MAP.failed : "";
+  const googleHref = `/api/auth/google${props.ref ? "?ref=" + encodeURIComponent(props.ref) : ""}`;
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng k\xFD", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "T\u1EA1o t\xE0i kho\u1EA3n", subtitle: "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED trong 30 gi\xE2y \u2014 kh\xF4ng c\u1EA7n ch\u1EDD OTP, mua v\xE0 nh\u1EADn Skill ngay.", settings: props.settings, children: [
+    errMsg && /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "mb-5 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5", "aria-hidden": "true" }),
+      errMsg
+    ] }),
+    props.googleEnabled && /* @__PURE__ */ jsxDEV(GoogleButton, { href: googleHref, label: "\u0110\u0103ng k\xFD nhanh v\u1EDBi Google" }),
+    /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/register", method: "post", "data-ajax": true, class: "space-y-4", children: [
+      /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "ref", value: props.ref || "" }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { for: "reg-name", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV("input", { id: "reg-name", type: "text", name: "full_name", required: true, autocomplete: "name", placeholder: "Nguy\u1EC5n V\u0103n A", class: inputCls + " pl-11" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { for: "reg-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV("input", { id: "reg-email", type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@gmail.com", class: inputCls + " pl-11" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-[#9492b8] mt-1", children: "V\xE0o mua ngay kh\xF4ng c\u1EA7n OTP. C\xF3 th\u1EC3 x\xE1c minh email trong H\u1ED3 s\u01A1 \u0111\u1EC3 b\u1EADt Affiliate & nh\u1EADn th\xF4ng b\xE1o c\u1EADp nh\u1EADt." })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { for: "reg-phone", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: [
+          "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i ",
+          /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV("input", { id: "reg-phone", type: "tel", name: "phone", autocomplete: "tel", placeholder: "0915967790", class: inputCls + " pl-11" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { children: [
+        /* @__PURE__ */ jsxDEV("label", { for: "reg-password", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV("input", { id: "reg-password", type: "password", name: "password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11 pr-11" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
+              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
+              title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
+              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-[#b8b6d9] cursor-pointer", children: [
+        /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 accent-indigo-500" }),
+        /* @__PURE__ */ jsxDEV("span", { children: [
+          "T\xF4i \u0111\u1ED3ng \xFD v\u1EDBi ",
+          /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-indigo-400 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
+          " v\xE0 ",
+          /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-indigo-400 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
+    ] }),
+    /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
+      "\u0110\xE3 c\xF3 t\xE0i kho\u1EA3n? ",
+      /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
+    ] })
+  ] }) });
+};
+var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Qu\xEAn m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "Qu\xEAn m\u1EADt kh\u1EA9u", subtitle: "Nh\u1EADp email \u0111\xE3 \u0111\u0103ng k\xFD \u0111\u1EC3 nh\u1EADn li\xEAn k\u1EBFt \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u m\u1EDBi.", settings: props.settings, children: [
+  props.emailEnabled ? /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/forgot-password", method: "post", "data-ajax": true, class: "space-y-4 mb-6", children: [
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "login-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "forgot-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email t\xE0i kho\u1EA3n" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11", id: "login-email" }),
+        /* @__PURE__ */ jsxDEV("input", { id: "forgot-email", type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@gmail.com", class: inputCls + " pl-11" }),
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "login-password", class: "block text-sm font-medium text-[#d6d4ee]", children: "M\u1EADt kh\u1EA9u" }),
-        /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs text-indigo-400 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, autocomplete: "current-password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", class: inputCls + " pl-11 pr-11", id: "login-password" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            type: "button",
-            class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
-            "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
-            title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
-            children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
-          }
-        )
-      ] })
-    ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng nh\u1EADp" })
-  ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
-    "Ch\u01B0a c\xF3 t\xE0i kho\u1EA3n? ",
-    /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng k\xFD ngay" })
-  ] })
-] }) });
-var RegisterPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng k\xFD", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "T\u1EA1o t\xE0i kho\u1EA3n", subtitle: "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED trong 30 gi\xE2y \u0111\u1EC3 s\u1EDF h\u1EEFu c\xE1c b\u1ED9 Skill AI m\u1EDBi nh\u1EA5t.", settings: props.settings, children: [
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/register", method: "post", "data-ajax": true, class: "space-y-4", children: [
-    /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "ref", value: props.ref || "" }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "reg-name", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "reg-name", type: "text", name: "full_name", required: true, autocomplete: "name", placeholder: "Nguy\u1EC5n V\u0103n A", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "reg-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "reg-email", type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "reg-phone", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: [
-        "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i ",
-        /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "reg-phone", type: "tel", name: "phone", autocomplete: "tel", placeholder: "0915967790", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "reg-password", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "reg-password", type: "password", name: "password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11 pr-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            type: "button",
-            class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
-            "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
-            title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
-            children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
-          }
-        )
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-[#b8b6d9] cursor-pointer", children: [
-      /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 accent-indigo-500" }),
-      /* @__PURE__ */ jsxDEV("span", { children: [
-        "T\xF4i \u0111\u1ED3ng \xFD v\u1EDBi ",
-        /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-indigo-400 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
-        " v\xE0 ",
-        /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-indigo-400 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
-  ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
-    "\u0110\xE3 c\xF3 t\xE0i kho\u1EA3n? ",
-    /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
-  ] })
-] }) });
-var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Qu\xEAn m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "Qu\xEAn m\u1EADt kh\u1EA9u", subtitle: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng.", settings: props.settings, children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-[#161436] border border-[#2a2559] space-y-4", children: [
-    /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#c2c0e0] leading-relaxed", children: "Hi\u1EC7n t\u1EA1i vi\u1EC7c kh\xF4i ph\u1EE5c m\u1EADt kh\u1EA9u \u0111\u01B0\u1EE3c x\u1EED l\xFD th\u1EE7 c\xF4ng qua \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o an to\xE0n t\xE0i kho\u1EA3n. Vui l\xF2ng li\xEAn h\u1EC7 v\u1EDBi ch\xFAng t\xF4i k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD." }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-2", "aria-hidden": "true" }),
+      "G\u1EEDi link \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u"
+    ] })
+  ] }) : null,
+  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-[#161436] border border-[#2a2559] space-y-3", children: [
+    /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#c2c0e0] leading-relaxed", children: props.emailEnabled ? "Kh\xF4ng th\u1EA5y email trong h\u1ED9p th\u01B0 ch\xEDnh (h\xE3y ki\u1EC3m tra th\xEAm m\u1EE5c Spam)? B\u1EA1n c\xF3 th\u1EC3 li\xEAn h\u1EC7 tr\u1EF1c ti\u1EBFp \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3:" : "Vui l\xF2ng li\xEAn h\u1EC7 \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng:" }),
     /* @__PURE__ */ jsxDEV(
       "a",
       {
         href: `https://zalo.me/${props.settings?.zalo || ""}`,
         target: "_blank",
         rel: "noopener",
-        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-semibold transition",
+        class: "flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-semibold text-sm transition",
         children: "Chat Zalo h\u1ED7 tr\u1EE3"
       }
     ),
@@ -11229,7 +11678,7 @@ var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Q
       "a",
       {
         href: `mailto:${props.settings?.email || ""}`,
-        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-[#2a2559] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-sm transition",
+        class: "flex items-center justify-center gap-2 w-full h-11 rounded-xl border border-[#2a2559] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-sm transition",
         children: [
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope", "aria-hidden": "true" }),
           "G\u1EEDi email h\u1ED7 tr\u1EE3"
@@ -11242,6 +11691,70 @@ var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Q
     "Quay l\u1EA1i \u0111\u0103ng nh\u1EADp"
   ] }) })
 ] }) });
+var ResetPasswordPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u", subtitle: "T\u1EA1o m\u1EADt kh\u1EA9u m\u1EDBi cho t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n.", settings: props.settings, children: [
+  props.invalidReason ? /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-rose-500/15 border border-rose-500/35 space-y-4", children: [
+    /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-rose-200 leading-relaxed", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-xmark mr-1.5", "aria-hidden": "true" }),
+      props.invalidReason
+    ] }),
+    /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "flex items-center justify-center w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: "Y\xEAu c\u1EA7u link m\u1EDBi" })
+  ] }) : /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/reset-password", method: "post", "data-ajax": true, class: "space-y-4", children: [
+    /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "token", value: props.token || "" }),
+    /* @__PURE__ */ jsxDEV("div", { children: [
+      /* @__PURE__ */ jsxDEV("label", { for: "reset-new-pw", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "M\u1EADt kh\u1EA9u m\u1EDBi" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+        /* @__PURE__ */ jsxDEV("input", { id: "reset-new-pw", type: "password", name: "new_password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11 pr-11" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
+            "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
+            children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { children: [
+      /* @__PURE__ */ jsxDEV("label", { for: "reset-confirm-pw", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Nh\u1EADp l\u1EA1i m\u1EADt kh\u1EA9u" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+        /* @__PURE__ */ jsxDEV("input", { id: "reset-confirm-pw", type: "password", name: "confirm_password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "Nh\u1EADp l\u1EA1i m\u1EADt kh\u1EA9u m\u1EDBi", class: inputCls + " pl-11 pr-11" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-check absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "L\u01B0u m\u1EADt kh\u1EA9u m\u1EDBi" })
+  ] }),
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: [
+    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left mr-1", "aria-hidden": "true" }),
+    "Quay l\u1EA1i \u0111\u0103ng nh\u1EADp"
+  ] }) })
+] }) });
+var VerifyEmailResultPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "X\xE1c minh Email", children: /* @__PURE__ */ jsxDEV(
+  AuthShell,
+  {
+    title: props.ok ? "X\xE1c minh th\xE0nh c\xF4ng" : "X\xE1c minh kh\xF4ng th\xE0nh c\xF4ng",
+    subtitle: props.ok ? "\u0110\u1ECBa ch\u1EC9 email t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c nh\u1EADn." : "Li\xEAn k\u1EBFt x\xE1c minh kh\xF4ng h\u1EE3p l\u1EC7 ho\u1EB7c \u0111\xE3 h\u1EBFt h\u1EA1n.",
+    settings: props.settings,
+    children: /* @__PURE__ */ jsxDEV("div", { class: `p-5 rounded-2xl border space-y-4 ${props.ok ? "bg-emerald-500/15 border-emerald-500/35" : "bg-rose-500/15 border-rose-500/35"}`, children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: `fas ${props.ok ? "fa-circle-check text-emerald-400" : "fa-circle-xmark text-rose-400"} text-2xl mt-0.5 shrink-0`, "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          props.email && /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-mono text-white/80 mb-1", children: props.email }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-white leading-relaxed", children: props.message })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2.5 pt-2", children: props.user ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/affiliate", class: "h-10 px-4 inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white text-sm font-bold hover:opacity-95 transition", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake mr-1.5", "aria-hidden": "true" }),
+          "M\u1EDF Affiliate"
+        ] }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/ho-so", class: "h-10 px-4 inline-flex items-center rounded-xl bg-[#161436] border border-[#2a2559] text-white text-sm font-semibold hover:border-indigo-400 transition", children: "V\u1EC1 H\u1ED3 s\u01A1" })
+      ] }) : /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "h-10 px-5 inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white text-sm font-bold hover:opacity-95 transition", children: "\u0110\u0103ng nh\u1EADp t\xE0i kho\u1EA3n" }) })
+    ] })
+  }
+) });
 
 // src/pages/cart.tsx
 var CheckoutSteps = ({ step }) => {
@@ -11806,6 +12319,7 @@ var OrderPage = (props) => {
 // src/pages/account.tsx
 var MENU = [
   { href: "/tai-khoan", icon: "fa-gauge", label: "T\u1ED5ng quan", key: "dash" },
+  { href: "/tai-khoan/thong-bao", icon: "fa-bell", label: "Th\xF4ng b\xE1o", key: "notifications" },
   { href: "/tai-khoan/san-pham", icon: "fa-box-archive", label: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i", key: "products" },
   { href: "/tai-khoan/don-hang", icon: "fa-receipt", label: "\u0110\u01A1n h\xE0ng", key: "orders" },
   { href: "/tai-khoan/yeu-thich", icon: "fa-heart", label: "Y\xEAu th\xEDch", key: "wishlist" },
@@ -11815,7 +12329,7 @@ var MENU = [
 var AccountShell = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, bodyClass: "dark-portal bg-[#070614] text-slate-100", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[240px_1fr] gap-6", children: [
   /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-4 mb-4", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0", children: props.user?.full_name.charAt(0).toUpperCase() }),
+      props.user?.avatar_url ? /* @__PURE__ */ jsxDEV("img", { src: props.user.avatar_url, alt: props.user.full_name, class: "w-12 h-12 rounded-full object-cover shrink-0 border border-white/15", referrerpolicy: "no-referrer" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0", children: props.user?.full_name.charAt(0).toUpperCase() }),
       /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white truncate text-sm", children: props.user?.full_name }),
         /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] truncate", children: props.user?.email })
@@ -11827,10 +12341,13 @@ var AccountShell = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, bodyCla
         {
           href: m.href,
           "aria-current": props.activeKey === m.key ? "page" : void 0,
-          class: `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "text-[#b8b6d9] hover:text-white hover:bg-[#161436]"}`,
+          class: `flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "text-[#b8b6d9] hover:text-white hover:bg-[#161436]"}`,
           children: [
-            /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon} w-4`, "aria-hidden": "true" }),
-            m.label
+            /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-3", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon} w-4`, "aria-hidden": "true" }),
+              m.label
+            ] }),
+            m.key === "notifications" && (props.unreadNotifs || 0) > 0 && /* @__PURE__ */ jsxDEV("span", { class: `px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${props.activeKey === m.key ? "bg-white text-indigo-700" : "bg-indigo-500 text-white"}`, children: props.unreadNotifs })
           ]
         }
       )),
@@ -11970,6 +12487,17 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
             )
           ] })
         ] }),
+        l.latest_changelog && /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-indigo-300", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket mr-1", "aria-hidden": "true" }),
+              "C\u1EADp nh\u1EADt ",
+              l.latest_version || l.version
+            ] }),
+            l.latest_release_at && /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8]", children: formatDate(l.latest_release_at) })
+          ] }),
+          /* @__PURE__ */ jsxDEV("p", { class: "whitespace-pre-line text-[#c2c0e0] leading-relaxed", children: l.latest_changelog })
+        ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
           l.download_url ? /* @__PURE__ */ jsxDEV(
             "a",
@@ -12063,9 +12591,113 @@ var WishlistPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, a
     ] })
   ] })
 ] })) }) });
+var NotificationsPage = (props) => {
+  const unreadCount = props.notifications.filter((n) => !n.is_read).length;
+  return /* @__PURE__ */ jsxDEV(
+    AccountShell,
+    {
+      ...props,
+      activeKey: "notifications",
+      title: "Th\xF4ng b\xE1o",
+      heading: "H\u1ED9p th\u01B0 th\xF4ng b\xE1o",
+      sub: "C\u1EADp nh\u1EADt phi\xEAn b\u1EA3n Skill AI m\u1EDBi, tr\u1EA1ng th\xE1i \u0111\u01A1n h\xE0ng v\xE0 th\xF4ng b\xE1o t\u1EEB qu\u1EA3n tr\u1ECB vi\xEAn.",
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8]", children: unreadCount > 0 ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+            "B\u1EA1n c\xF3 ",
+            /* @__PURE__ */ jsxDEV("b", { class: "text-indigo-300", children: unreadCount }),
+            " th\xF4ng b\xE1o ch\u01B0a \u0111\u1ECDc"
+          ] }) : "T\u1EA5t c\u1EA3 th\xF4ng b\xE1o \u0111\xE3 \u0111\u01B0\u1EE3c \u0111\u1ECDc" }),
+          unreadCount > 0 && /* @__PURE__ */ jsxDEV("form", { action: "/api/account/notifications/read-all", method: "post", "data-ajax": true, "data-reload": "true", children: /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-9 px-3.5 rounded-xl bg-[#161436] border border-[#2e2968] hover:border-indigo-400 text-xs font-semibold text-[#c2c0e0] hover:text-white transition cursor-pointer", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-double mr-1.5 text-indigo-400", "aria-hidden": "true" }),
+            "\u0110\xE1nh d\u1EA5u t\u1EA5t c\u1EA3 \u0111\xE3 \u0111\u1ECDc"
+          ] }) })
+        ] }),
+        props.notifications.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(
+          EmptyState,
+          {
+            icon: "fa-bell-slash",
+            title: "Ch\u01B0a c\xF3 th\xF4ng b\xE1o n\xE0o",
+            desc: "Khi s\u1EA3n ph\u1EA9m b\u1EA1n mua c\xF3 b\u1EA3n c\u1EADp nh\u1EADt m\u1EDBi ho\u1EB7c \u0111\u01A1n h\xE0ng ho\xE0n t\u1EA5t, th\xF4ng b\xE1o s\u1EBD hi\u1EC7n t\u1EA1i \u0111\xE2y."
+          }
+        ) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: props.notifications.map((n) => {
+          const icon = n.type === "product_update" ? "fa-rocket text-fuchsia-400" : n.type === "order" ? "fa-circle-check text-emerald-400" : n.type === "admin" ? "fa-bullhorn text-amber-400" : "fa-bell text-indigo-400";
+          return /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl border p-5 transition ${n.is_read ? "bg-[#0f0e24] border-[#221e54]" : "bg-[#151336] border-indigo-500/45 shadow-lg shadow-indigo-950/30"}`, children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-[#161436] border border-[#2a2559] grid place-items-center shrink-0 mt-0.5", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon}`, "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2 mb-1", children: [
+                /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-sm flex items-center gap-2", children: [
+                  n.title,
+                  !n.is_read && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-indigo-500 text-white text-[10px] font-bold", children: "M\u1EDBi" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] tabular-nums", children: formatDateTime(n.created_at) })
+              ] }),
+              /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#c2c0e0] whitespace-pre-line leading-relaxed", children: n.message }),
+              /* @__PURE__ */ jsxDEV("div", { class: "mt-3 flex flex-wrap items-center gap-2", children: [
+                n.link_url && /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: `/tai-khoan/thong-bao/${n.id}/doc`,
+                    "data-no-pjax": true,
+                    class: "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up-right-from-square", "aria-hidden": "true" }),
+                      "Xem chi ti\u1EBFt"
+                    ]
+                  }
+                ),
+                !n.is_read && !n.link_url && /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: `/tai-khoan/thong-bao/${n.id}/doc`,
+                    "data-no-pjax": true,
+                    class: "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#2e2968] hover:border-indigo-400 text-[#c2c0e0] hover:text-white text-xs font-medium transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check", "aria-hidden": "true" }),
+                      "\u0110\xE1nh d\u1EA5u \u0111\xE3 \u0111\u1ECDc"
+                    ]
+                  }
+                )
+              ] })
+            ] })
+          ] }) });
+        }) })
+      ]
+    }
+  );
+};
 var AffiliateDashboard = (props) => {
   const link2 = `${props.siteUrl}/dang-ky?ref=${props.affCode}`;
   return /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "affiliate", title: "Affiliate", heading: "Ch\u01B0\u01A1ng tr\xECnh Affiliate", sub: `Gi\u1EDBi thi\u1EC7u b\u1EA1n b\xE8 v\xE0 nh\u1EADn hoa h\u1ED3ng ${props.percent}% cho m\u1ED7i \u0111\u01A1n h\xE0ng th\xE0nh c\xF4ng.`, children: [
+    !props.emailVerified && /* @__PURE__ */ jsxDEV("div", { class: "mb-6 p-5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-100", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 grid place-items-center text-amber-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-lg", "aria-hidden": "true" }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base mb-1", children: "C\u1EA7n x\xE1c minh Email \u0111\u1EC3 b\u1EADt Affiliate" }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-amber-100/90 leading-relaxed mb-3", children: [
+          "\u0110\u1EC3 b\u1EA3o v\u1EC7 hoa h\u1ED3ng v\xE0 ch\u1ED1ng t\xE0i kho\u1EA3n \u1EA3o, b\u1EA1n c\u1EA7n x\xE1c minh email ",
+          /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: props.userEmail }),
+          " tr\u01B0\u1EDBc khi k\xEDch ho\u1EA1t link gi\u1EDBi thi\u1EC7u v\xE0 nh\u1EADn hoa h\u1ED3ng ",
+          props.percent,
+          "%."
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2.5", children: [
+          /* @__PURE__ */ jsxDEV("form", { action: "/api/account/send-verify-email", method: "post", "data-ajax": true, class: "inline-flex items-center", children: /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-10 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition cursor-pointer", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-1.5", "aria-hidden": "true" }),
+            "G\u1EEDi link x\xE1c minh t\u1EDBi Email"
+          ] }) }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/ho-so", class: "h-10 px-4 inline-flex items-center rounded-xl bg-[#161436] border border-[#2e2968] hover:border-indigo-400 text-white text-xs font-semibold transition", children: "M\u1EDF H\u1ED3 s\u01A1 c\xE1 nh\xE2n" }),
+          props.googleEnabled && /* @__PURE__ */ jsxDEV(
+            "a",
+            {
+              href: "/api/auth/google?next=/tai-khoan/affiliate",
+              "data-no-pjax": true,
+              class: "cta-white h-10 px-4 inline-flex items-center rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-semibold transition",
+              children: "X\xE1c minh nhanh b\u1EB1ng Google"
+            }
+          )
+        ] })
+      ] })
+    ] }) }),
     /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-4 mb-6", children: [
       ["fa-percent", "Hoa h\u1ED3ng", props.percent + "%", "from-indigo-500 to-indigo-600"],
       ["fa-users", "Ng\u01B0\u1EDDi gi\u1EDBi thi\u1EC7u", String(props.refCount), "from-fuchsia-500 to-purple-600"],
@@ -12075,37 +12707,48 @@ var AffiliateDashboard = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-white tabular-nums leading-none mb-1", children: val }),
       /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8]", children: lb })
     ] })) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-6 shadow-xl shadow-indigo-950/50", children: [
-      /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-lg mb-1.5", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
+    /* @__PURE__ */ jsxDEV("div", { class: `bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-6 shadow-xl shadow-indigo-950/50 ${props.emailVerified ? "" : "opacity-65"}`, children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1.5", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-lg", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
+        !props.emailVerified && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-black/30 text-amber-200 text-xs font-bold", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock mr-1", "aria-hidden": "true" }),
+          "Ch\u1EDD x\xE1c minh Email"
+        ] })
+      ] }),
       /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-white/85 mb-4", children: [
         "Chia s\u1EBB link n\xE0y, m\u1ED7i khi c\xF3 ng\u01B0\u1EDDi \u0111\u0103ng k\xFD v\xE0 mua h\xE0ng b\u1EA1n nh\u1EADn ",
         props.percent,
         "% hoa h\u1ED3ng."
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row gap-2", children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "aff-link", class: "sr-only", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
-        /* @__PURE__ */ jsxDEV(
-          "input",
-          {
-            type: "text",
-            value: link2,
-            readonly: true,
-            id: "aff-link",
-            class: "flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur font-mono"
-          }
-        ),
-        /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": link2, class: "cta-white h-11 px-5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1.5", "aria-hidden": "true" }),
-          "Sao ch\xE9p link"
+      props.emailVerified ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row gap-2", children: [
+          /* @__PURE__ */ jsxDEV("label", { for: "aff-link", class: "sr-only", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              type: "text",
+              value: link2,
+              readonly: true,
+              id: "aff-link",
+              class: "flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur font-mono"
+            }
+          ),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": link2, class: "cta-white h-11 px-5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1.5", "aria-hidden": "true" }),
+            "Sao ch\xE9p link"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-sm", children: [
+          /* @__PURE__ */ jsxDEV("span", { class: "text-white/85", children: "M\xE3 c\u1EE7a b\u1EA1n:" }),
+          /* @__PURE__ */ jsxDEV("code", { class: "px-3 py-1 rounded-lg bg-white/20 font-mono font-bold tracking-widest", children: props.affCode }),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": props.affCode, class: "text-white/85 hover:text-white text-xs font-medium", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+            "Copy m\xE3"
+          ] })
         ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-sm", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "text-white/85", children: "M\xE3 c\u1EE7a b\u1EA1n:" }),
-        /* @__PURE__ */ jsxDEV("code", { class: "px-3 py-1 rounded-lg bg-white/20 font-mono font-bold tracking-widest", children: props.affCode }),
-        /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": props.affCode, class: "text-white/85 hover:text-white text-xs font-medium", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
-          "Copy m\xE3"
-        ] })
+      ] }) : /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-black/25 border border-white/15 text-sm text-white/90", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock mr-2 text-amber-300", "aria-hidden": "true" }),
+        "Link gi\u1EDBi thi\u1EC7u v\xE0 m\xE3 Affiliate s\u1EBD t\u1EF1 \u0111\u1ED9ng m\u1EDF kho\xE1 ngay sau khi b\u1EA1n ho\xE0n t\u1EA5t x\xE1c minh Email."
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
@@ -12130,126 +12773,174 @@ var AffiliateDashboard = (props) => {
     ] })
   ] });
 };
-var ProfilePage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "profile", title: "H\u1ED3 s\u01A1", heading: "H\u1ED3 s\u01A1 c\xE1 nh\xE2n", sub: "C\u1EADp nh\u1EADt th\xF4ng tin v\xE0 m\u1EADt kh\u1EA9u t\xE0i kho\u1EA3n.", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-5", children: [
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/account/profile", method: "post", "data-ajax": true, class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6", children: [
-    /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-5 text-base", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user mr-2 text-indigo-400", "aria-hidden": "true" }),
-      "Th\xF4ng tin c\xE1 nh\xE2n"
+var ProfilePage = (props) => {
+  const isVerified = props.profile.email_verified === 1;
+  const isOAuthOnly = String(props.profile.password_hash || "").startsWith("OAUTH$");
+  return /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "profile", title: "H\u1ED3 s\u01A1", heading: "H\u1ED3 s\u01A1 c\xE1 nh\xE2n", sub: "C\u1EADp nh\u1EADt th\xF4ng tin, x\xE1c minh email v\xE0 m\u1EADt kh\u1EA9u t\xE0i kho\u1EA3n.", children: [
+    props.verifiedBanner && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-200 flex items-center gap-3", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-400 text-lg shrink-0", "aria-hidden": "true" }),
+      /* @__PURE__ */ jsxDEV("span", { children: "Email c\u1EE7a b\u1EA1n \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c minh th\xE0nh c\xF4ng! T\xEDnh n\u0103ng Affiliate v\xE0 th\xF4ng b\xE1o qua email \u0111\xE3 s\u1EB5n s\xE0ng." })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "profile-name", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
-        /* @__PURE__ */ jsxDEV(
-          "input",
-          {
-            id: "profile-name",
-            type: "text",
-            name: "full_name",
-            value: props.profile.full_name,
-            required: true,
-            autocomplete: "name",
-            class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "profile-email", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "Email" }),
-        /* @__PURE__ */ jsxDEV(
-          "input",
-          {
-            id: "profile-email",
-            type: "email",
-            value: props.profile.email,
-            disabled: true,
-            class: "w-full h-11 px-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-sm text-[#9492b8] cursor-not-allowed"
-          }
-        ),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mt-1", children: "Email kh\xF4ng th\u1EC3 thay \u0111\u1ED5i" })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "profile-phone", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i" }),
-        /* @__PURE__ */ jsxDEV(
-          "input",
-          {
-            id: "profile-phone",
-            type: "tel",
-            name: "phone",
-            value: props.profile.phone || "",
-            autocomplete: "tel",
-            class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
-      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: "L\u01B0u thay \u0111\u1ED5i" })
-    ] })
-  ] }),
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/account/password", method: "post", "data-ajax": true, class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 self-start", children: [
-    /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-5 text-base", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-key mr-2 text-indigo-400", "aria-hidden": "true" }),
-      "\u0110\u1ED5i m\u1EADt kh\u1EA9u"
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "current-password", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "M\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV(
-            "input",
-            {
-              id: "current-password",
-              type: "password",
-              name: "current_password",
-              required: true,
-              autocomplete: "current-password",
-              class: "w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
-            }
-          ),
-          /* @__PURE__ */ jsxDEV(
-            "button",
-            {
-              type: "button",
-              class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition",
-              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i",
-              "aria-pressed": "false",
-              "data-target": "current-password",
-              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
-            }
-          )
+    /* @__PURE__ */ jsxDEV("div", { class: `mb-5 rounded-2xl border p-5 ${isVerified ? "bg-[#0f0e24] border-emerald-500/35" : "bg-amber-500/10 border-amber-500/35"}`, children: /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row sm:items-center justify-between gap-4", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3.5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl grid place-items-center shrink-0 ${isVerified ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/35"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${isVerified ? "fa-shield-halved" : "fa-envelope-circle-check"} text-lg`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1", children: [
+            /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base", children: "X\xE1c minh Email / Gmail" }),
+            isVerified ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check mr-1", "aria-hidden": "true" }),
+              "\u0110\xE3 x\xE1c minh"
+            ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-200 text-[11px] font-bold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1", "aria-hidden": "true" }),
+              "Ch\u01B0a x\xE1c minh"
+            ] }),
+            props.profile.google_id && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-semibold", children: "\u0110\xE3 li\xEAn k\u1EBFt Google" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#c2c0e0] leading-relaxed", children: isVerified ? `Email ${props.profile.email} \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c minh${props.profile.email_verified_at ? " l\xFAc " + formatDateTime(props.profile.email_verified_at) : ""}. B\u1EA1n nh\u1EADn \u0111\u1EE7 th\xF4ng b\xE1o c\u1EADp nh\u1EADt Skill AI v\xE0 quy\u1EC1n Affiliate.` : "B\u1EA1n v\u1EABn mua h\xE0ng b\xECnh th\u01B0\u1EDDng m\xE0 kh\xF4ng c\u1EA7n OTP. B\u1EA5m n\xFAt b\xEAn c\u1EA1nh \u0111\u1EC3 x\xE1c minh Gmail khi mu\u1ED1n b\u1EADt Affiliate, nh\u1EADn b\u1EA3n c\u1EADp nh\u1EADt Skill m\u1EDBi qua email v\xE0 kh\xF4i ph\u1EE5c m\u1EADt kh\u1EA9u t\u1EF1 \u0111\u1ED9ng." })
         ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "new-password", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "M\u1EADt kh\u1EA9u m\u1EDBi" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV(
-            "input",
-            {
-              id: "new-password",
-              type: "password",
-              name: "new_password",
-              required: true,
-              minlength: 6,
-              autocomplete: "new-password",
-              class: "w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
-            }
-          ),
-          /* @__PURE__ */ jsxDEV(
-            "button",
-            {
-              type: "button",
-              class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition",
-              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u m\u1EDBi",
-              "aria-pressed": "false",
-              "data-target": "new-password",
-              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
-            }
-          )
+      !isVerified && /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 shrink-0", children: [
+        /* @__PURE__ */ jsxDEV("form", { action: "/api/account/send-verify-email", method: "post", "data-ajax": true, children: /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition cursor-pointer whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-1.5", "aria-hidden": "true" }),
+          "G\u1EEDi link x\xE1c minh"
+        ] }) }),
+        props.googleEnabled && /* @__PURE__ */ jsxDEV(
+          "a",
+          {
+            href: "/api/auth/google?next=/tai-khoan/ho-so",
+            "data-no-pjax": true,
+            class: "cta-white h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-semibold text-xs transition whitespace-nowrap",
+            children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fab fa-google", "aria-hidden": "true" }),
+              "X\xE1c minh v\u1EDBi Google"
+            ]
+          }
+        )
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-5", children: [
+      /* @__PURE__ */ jsxDEV("form", { action: "/api/account/profile", method: "post", "data-ajax": true, class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-5 text-base", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user mr-2 text-indigo-400", "aria-hidden": "true" }),
+          "Th\xF4ng tin c\xE1 nh\xE2n"
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "profile-name", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                id: "profile-name",
+                type: "text",
+                name: "full_name",
+                value: props.profile.full_name,
+                required: true,
+                autocomplete: "name",
+                class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "profile-email", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "Email" }),
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                id: "profile-email",
+                type: "email",
+                value: props.profile.email,
+                disabled: true,
+                class: "w-full h-11 px-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-sm text-[#9492b8] cursor-not-allowed"
+              }
+            ),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mt-1", children: "Email kh\xF4ng th\u1EC3 thay \u0111\u1ED5i" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "profile-phone", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i" }),
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                id: "profile-phone",
+                type: "tel",
+                name: "phone",
+                value: props.profile.phone || "",
+                autocomplete: "tel",
+                class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer", children: "L\u01B0u thay \u0111\u1ED5i" })
         ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
-      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: "\u0110\u1ED5i m\u1EADt kh\u1EA9u" })
+      /* @__PURE__ */ jsxDEV("form", { action: "/api/account/password", method: "post", "data-ajax": true, class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 self-start", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-2 text-base", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-key mr-2 text-indigo-400", "aria-hidden": "true" }),
+          isOAuthOnly ? "\u0110\u1EB7t m\u1EADt kh\u1EA9u \u0111\u0103ng nh\u1EADp" : "\u0110\u1ED5i m\u1EADt kh\u1EA9u"
+        ] }),
+        isOAuthOnly && /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mb-4", children: "T\xE0i kho\u1EA3n t\u1EA1o qua Google ch\u01B0a c\xF3 m\u1EADt kh\u1EA9u ri\xEAng. \u0110\u1EB7t m\u1EADt kh\u1EA9u n\u1EBFu b\u1EA1n mu\u1ED1n \u0111\u0103ng nh\u1EADp th\xEAm b\u1EB1ng Email." }),
+        /* @__PURE__ */ jsxDEV("div", { class: "space-y-4 mt-4", children: [
+          !isOAuthOnly && /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "current-password", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "M\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  id: "current-password",
+                  type: "password",
+                  name: "current_password",
+                  required: true,
+                  autocomplete: "current-password",
+                  class: "w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition",
+                  "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i",
+                  "aria-pressed": "false",
+                  "data-target": "current-password",
+                  children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "new-password", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "M\u1EADt kh\u1EA9u m\u1EDBi" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  id: "new-password",
+                  type: "password",
+                  name: "new_password",
+                  required: true,
+                  minlength: 6,
+                  autocomplete: "new-password",
+                  class: "w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition",
+                  "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u m\u1EDBi",
+                  "aria-pressed": "false",
+                  "data-target": "new-password",
+                  children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer", children: isOAuthOnly ? "\u0110\u1EB7t m\u1EADt kh\u1EA9u" : "\u0110\u1ED5i m\u1EADt kh\u1EA9u" })
+        ] })
+      ] })
     ] })
-  ] })
-] }) });
+  ] });
+};
 
 // src/pages/static.tsx
 var BlogListPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "blog", title: "Blog", description: "Ki\u1EBFn th\u1EE9c, h\u01B0\u1EDBng d\u1EABn v\xE0 case study v\u1EC1 l\xE0m video AI", children: [
@@ -12765,7 +13456,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     ] }),
     /* @__PURE__ */ jsxDEV("div", { id: "toast-container", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
     /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261116" }),
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261119" }),
     /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261116" })
   ] })
 ] });
@@ -13055,6 +13746,44 @@ var AdminProductForm = (props) => {
           l
         ] }))
       ] }),
+      !props.isNew && /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-indigo-200 p-5 space-y-3", children: [
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket text-indigo-600" }),
+          "Ph\xE1t h\xE0nh c\u1EADp nh\u1EADt"
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-500", children: "Khi n\xE2ng phi\xEAn b\u1EA3n ho\u1EB7c \u0111\u1ED5i link t\u1EA3i, nh\u1EADp ghi ch\xFA v\xE0 t\xEDch ch\u1ECDn b\xEAn d\u01B0\u1EDBi \u0111\u1EC3 th\xF4ng b\xE1o cho t\u1EA5t c\u1EA3 kh\xE1ch \u0111\xE3 mua." }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ghi ch\xFA c\u1EADp nh\u1EADt (Changelog)" }),
+          /* @__PURE__ */ jsxDEV(
+            "textarea",
+            {
+              name: "release_notes",
+              rows: 3,
+              placeholder: "VD: N\xE2ng c\u1EA5p prompt v2.0, s\u1EEDa l\u1ED7i khung h\xECnh d\u1ECDc, th\xEAm t\xE0i li\u1EC7u h\u01B0\u1EDBng d\u1EABn...",
+              class: "w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-xs resize-y"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer p-2.5 rounded-xl bg-indigo-50 border border-indigo-100", children: [
+          /* @__PURE__ */ jsxDEV("input", { type: "checkbox", name: "notify_buyers", value: "1", class: "mt-0.5 accent-brand-600 w-4 h-4 shrink-0" }),
+          /* @__PURE__ */ jsxDEV("span", { children: "G\u1EEDi th\xF4ng b\xE1o trong t\xE0i kho\u1EA3n & Email t\u1EDBi t\u1EA5t c\u1EA3 kh\xE1ch h\xE0ng \u0111\xE3 mua s\u1EA3n ph\u1EA9m n\xE0y" })
+        ] }),
+        (props.releases || []).length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "pt-2 border-t border-slate-100 space-y-1.5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold text-slate-500 uppercase", children: "L\u1ECBch s\u1EED c\u1EADp nh\u1EADt" }),
+          (props.releases || []).slice(0, 3).map((r) => /* @__PURE__ */ jsxDEV("div", { class: "text-xs p-2 rounded-lg bg-slate-50 border border-slate-100", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between font-semibold text-slate-800", children: [
+              /* @__PURE__ */ jsxDEV("span", { children: r.version }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-400", children: [
+                formatDate(r.created_at),
+                " \xB7 ",
+                r.notified_count,
+                " kh\xE1ch"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-slate-600 line-clamp-2 mt-0.5", children: r.changelog })
+          ] }))
+        ] })
+      ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700 mb-3" }),
         /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition mb-2", children: [
@@ -13137,104 +13866,220 @@ var AdminOrders = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, acti
   /* @__PURE__ */ jsxDEV(Pagination, { page: props.page, totalPages: props.totalPages, baseUrl: "/admin/don-hang?status=" + props.status })
 ] });
 var AdminOrderDetail = (props) => {
-  const { order, items } = props;
-  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "orders", heading: `\u0110\u01A1n h\xE0ng ${order.order_code}`, sub: formatDateTime(order.created_at), children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_320px] gap-5", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "space-y-5", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
-          "S\u1EA3n ph\u1EA9m (",
-          items.length,
-          ")"
-        ] }) }),
-        /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: items.map((it) => /* @__PURE__ */ jsxDEV("tr", { children: [
-          /* @__PURE__ */ jsxDEV("td", { children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-800", children: it.product_name }),
-            it.slug && /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${it.slug}`, target: "_blank", class: "text-xs text-brand-600 hover:underline", children: "Xem s\u1EA3n ph\u1EA9m" })
-          ] }),
-          /* @__PURE__ */ jsxDEV("td", { class: "text-right font-bold whitespace-nowrap", children: formatVND(it.price) })
-        ] })) }) })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Thao t\xE1c" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
-          order.status === "pending" && /* @__PURE__ */ jsxDEV(Fragment, { children: [
-            /* @__PURE__ */ jsxDEV("button", { class: "btn-order-action h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition", "data-id": order.id, "data-status": "paid", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle mr-1.5" }),
-              "X\xE1c nh\u1EADn \u0111\xE3 thanh to\xE1n"
+  const { order, items, licenses = [], bankTx, customerStats } = props;
+  const pmLabel = order.payment_method === "bank" ? "Chuy\u1EC3n kho\u1EA3n / VietQR" : order.payment_method === "momo" ? "MoMo" : "V\xED s\u1ED1 d\u01B0";
+  const paidViaLabel = order.paid_via === "webhook" ? "Webhook t\u1EF1 \u0111\u1ED9ng (SePay/Casso)" : order.paid_via === "admin" ? "Admin x\xE1c nh\u1EADn" : order.paid_via === "manual" ? "\u0110\u1ED1i so\xE1t th\u1EE7 c\xF4ng / Demo" : order.paid_via || "\u2014";
+  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "orders", heading: `\u0110\u01A1n h\xE0ng ${order.order_code}`, sub: formatDateTime(order.created_at), children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "mb-4", children: /* @__PURE__ */ jsxDEV("a", { href: "/admin/don-hang", class: "inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left" }),
+      "Quay l\u1EA1i danh s\xE1ch \u0111\u01A1n h\xE0ng"
+    ] }) }),
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "space-y-5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
+            "S\u1EA3n ph\u1EA9m (",
+            items.length,
+            ")"
+          ] }) }),
+          /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: items.map((it) => /* @__PURE__ */ jsxDEV("tr", { children: [
+            /* @__PURE__ */ jsxDEV("td", { children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-800", children: it.product_name }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-3 mt-1 text-xs", children: [
+                it.slug && /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${it.slug}`, target: "_blank", class: "text-slate-500 hover:text-brand-600 hover:underline", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye mr-1" }),
+                  "Xem trang b\xE1n"
+                ] }),
+                it.product_id && /* @__PURE__ */ jsxDEV("a", { href: `/admin/san-pham/${it.product_id}`, class: "text-brand-600 font-semibold hover:underline", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-pen-to-square mr-1" }),
+                  "S\u1EEDa s\u1EA3n ph\u1EA9m / G\u1EAFn link t\u1EA3i"
+                ] })
+              ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("button", { class: "btn-order-action h-11 px-5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-sm transition", "data-id": order.id, "data-status": "cancelled", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ban mr-1.5" }),
-              "Hu\u1EF7 \u0111\u01A1n"
-            ] })
-          ] }),
-          order.status === "paid" && /* @__PURE__ */ jsxDEV("button", { class: "btn-order-action h-11 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition", "data-id": order.id, "data-status": "refunded", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rotate-left mr-1.5" }),
-            "Ho\xE0n ti\u1EC1n"
-          ] }),
-          order.status !== "pending" && order.status !== "paid" && /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-500", children: "\u0110\u01A1n h\xE0ng \u0111\xE3 k\u1EBFt th\xFAc, kh\xF4ng c\xF3 thao t\xE1c kh\u1EA3 d\u1EE5ng." })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("aside", { class: "space-y-5", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Kh\xE1ch h\xE0ng" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm", children: [
-          /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "H\u1ECD t\xEAn:" }),
-            " ",
-            /* @__PURE__ */ jsxDEV("b", { children: order.full_name })
-          ] }),
-          /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Email:" }),
-            " ",
-            /* @__PURE__ */ jsxDEV("b", { class: "break-all", children: order.email })
-          ] }),
-          /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "S\u0110T:" }),
-            " ",
-            /* @__PURE__ */ jsxDEV("b", { children: order.phone || "\u2014" })
-          ] }),
-          /* @__PURE__ */ jsxDEV("a", { href: `/admin/thanh-vien/${order.user_id}`, class: "inline-block text-xs text-brand-600 hover:underline mt-1", children: "Xem h\u1ED3 s\u01A1 \u2192" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Thanh to\xE1n" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "T\u1EA1m t\xEDnh" }),
-            /* @__PURE__ */ jsxDEV("b", { children: formatVND(order.subtotal) })
-          ] }),
-          order.discount > 0 && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: [
-              "Gi\u1EA3m (",
-              order.coupon_code,
-              ")"
+            /* @__PURE__ */ jsxDEV("td", { class: "text-right font-bold whitespace-nowrap", children: formatVND(it.price) })
+          ] })) }) })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
+            "License Key & Quy\u1EC1n t\u1EA3i \u0111\xE3 c\u1EA5p (",
+            licenses.length,
+            ")"
+          ] }) }),
+          licenses.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-5 text-sm text-slate-500", children: "Ch\u01B0a c\u1EA5p license (\u0111\u01A1n ch\u01B0a thanh to\xE1n ho\u1EB7c \u0111\xE3 ho\xE0n ti\u1EC1n)." }) : /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-slate-100", children: licenses.map((l) => /* @__PURE__ */ jsxDEV("div", { class: "p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-800 text-sm flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxDEV("span", { children: l.product_name }),
+                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-mono", children: l.version || "v1.0" })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mt-1", children: [
+                /* @__PURE__ */ jsxDEV("code", { class: "px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-bold", children: l.license_key }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-slate-500", children: [
+                  "\xB7 ",
+                  l.download_count || 0,
+                  " l\u01B0\u1EE3t t\u1EA3i"
+                ] })
+              ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-600", children: [
-              "-",
-              formatVND(order.discount)
+            /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0", children: l.download_url ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-link" }),
+              "\u0110\xE3 c\xF3 link t\u1EA3i"
+            ] }) : /* @__PURE__ */ jsxDEV("a", { href: `/admin/san-pham/${l.product_id}`, class: "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold hover:bg-amber-100", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation" }),
+              "Ch\u01B0a g\u1EAFn link t\u1EA3i \u2192"
+            ] }) })
+          ] })) })
+        ] }),
+        bankTx && /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-emerald-200 p-5 space-y-2", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-building-columns text-emerald-600" }),
+              "Giao d\u1ECBch ng\xE2n h\xE0ng \u0111\u1ED1i so\xE1t"
+            ] }),
+            /* @__PURE__ */ jsxDEV("a", { href: "/admin/giao-dich", class: "text-xs font-semibold text-brand-600 hover:underline", children: "Xem t\u1EA5t c\u1EA3 \u2192" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-2 text-xs text-slate-600 pt-1", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              "Ng\xE2n h\xE0ng: ",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-slate-900", children: bankTx.gateway || bankTx.provider })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              "S\u1ED1 ti\u1EC1n nh\u1EADn: ",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-600", children: formatVND(bankTx.amount_in) })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              "M\xE3 tham chi\u1EBFu: ",
+              /* @__PURE__ */ jsxDEV("code", { class: "font-mono text-slate-800", children: bankTx.reference_code || bankTx.provider_tx_id })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              "Th\u1EDDi gian GD: ",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-slate-800", children: formatDateTime(bankTx.transaction_date) })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "sm:col-span-2", children: [
+              "N\u1ED9i dung CK: ",
+              /* @__PURE__ */ jsxDEV("code", { class: "font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 break-all", children: bankTx.content })
             ] })
-          ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between pt-2.5 border-t border-slate-100", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "font-bold", children: "T\u1ED5ng" }),
-            /* @__PURE__ */ jsxDEV("b", { class: "text-lg text-rose-600", children: formatVND(order.total) })
-          ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between pt-2", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Tr\u1EA1ng th\xE1i" }),
-            /* @__PURE__ */ jsxDEV(StatusBadge, { status: order.status })
-          ] }),
-          order.paid_at && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Thanh to\xE1n l\xFAc" }),
-            /* @__PURE__ */ jsxDEV("b", { class: "text-xs", children: formatDateTime(order.paid_at) })
           ] })
         ] }),
-        order.note && /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-slate-100", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 mb-1", children: "Ghi ch\xFA" }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-sm", children: order.note })
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Thao t\xE1c" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
+            order.status === "pending" && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+              /* @__PURE__ */ jsxDEV("button", { class: "btn-order-action h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition", "data-id": order.id, "data-status": "paid", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle mr-1.5" }),
+                "X\xE1c nh\u1EADn \u0111\xE3 thanh to\xE1n"
+              ] }),
+              /* @__PURE__ */ jsxDEV("button", { class: "btn-order-action h-11 px-5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-sm transition", "data-id": order.id, "data-status": "cancelled", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ban mr-1.5" }),
+                "Hu\u1EF7 \u0111\u01A1n"
+              ] })
+            ] }),
+            order.status === "paid" && /* @__PURE__ */ jsxDEV("button", { class: "btn-order-action h-11 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition", "data-id": order.id, "data-status": "refunded", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rotate-left mr-1.5" }),
+              "Ho\xE0n ti\u1EC1n"
+            ] }),
+            order.status !== "pending" && order.status !== "paid" && /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-500", children: "\u0110\u01A1n h\xE0ng \u0111\xE3 k\u1EBFt th\xFAc, kh\xF4ng c\xF3 thao t\xE1c kh\u1EA3 d\u1EE5ng." })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("aside", { class: "space-y-5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-4", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Kh\xE1ch h\xE0ng" }),
+            customerStats?.email_verified === 1 ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1" }),
+              "Email \u0111\xE3 x\xE1c minh"
+            ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold", children: "Ch\u01B0a x\xE1c minh email" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "H\u1ECD t\xEAn:" }),
+              " ",
+              /* @__PURE__ */ jsxDEV("b", { children: order.full_name })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Email:" }),
+              " ",
+              /* @__PURE__ */ jsxDEV("b", { class: "break-all", children: order.email })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "S\u0110T:" }),
+              " ",
+              /* @__PURE__ */ jsxDEV("b", { children: order.phone || "\u2014" })
+            ] }),
+            customerStats && /* @__PURE__ */ jsxDEV("div", { class: "pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-500", children: [
+              /* @__PURE__ */ jsxDEV("span", { children: [
+                customerStats.order_count,
+                " \u0111\u01A1n h\xE0ng"
+              ] }),
+              /* @__PURE__ */ jsxDEV("span", { children: [
+                "T\u1ED5ng chi: ",
+                /* @__PURE__ */ jsxDEV("b", { class: "text-slate-800", children: formatVND(customerStats.spent) })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV(
+              "a",
+              {
+                href: `/admin/thanh-vien/${order.user_id}`,
+                class: "mt-2 w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold transition",
+                children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user" }),
+                  "Xem h\u1ED3 s\u01A1 & g\u1EEDi th\xF4ng b\xE1o \u2192"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Thanh to\xE1n" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Ph\u01B0\u01A1ng th\u1EE9c" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-xs", children: pmLabel })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "T\u1EA1m t\xEDnh" }),
+              /* @__PURE__ */ jsxDEV("b", { children: formatVND(order.subtotal) })
+            ] }),
+            order.discount > 0 && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: [
+                "Gi\u1EA3m (",
+                order.coupon_code,
+                ")"
+              ] }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-600", children: [
+                "-",
+                formatVND(order.discount)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between pt-2.5 border-t border-slate-100", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "font-bold", children: "T\u1ED5ng" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-lg text-rose-600", children: formatVND(order.total) })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between pt-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Tr\u1EA1ng th\xE1i" }),
+              /* @__PURE__ */ jsxDEV(StatusBadge, { status: order.status })
+            ] }),
+            order.paid_via && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500 shrink-0", children: "Ngu\u1ED3n XN" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-xs text-right", children: paidViaLabel })
+            ] }),
+            order.paid_amount > 0 && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Th\u1EF1c thu" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-xs text-emerald-600", children: formatVND(order.paid_amount) })
+            ] }),
+            order.paid_at && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Thanh to\xE1n l\xFAc" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-xs", children: formatDateTime(order.paid_at) })
+            ] })
+          ] }),
+          order.note && /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-slate-100", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 mb-1", children: "Ghi ch\xFA" }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-sm", children: order.note })
+          ] })
         ] })
       ] })
     ] })
-  ] }) });
+  ] });
 };
 var AdminUsers = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "users", heading: "Qu\u1EA3n l\xFD th\xE0nh vi\xEAn", children: [
   /* @__PURE__ */ jsxDEV("form", { action: "/admin/thanh-vien", method: "get", class: "mb-4 max-w-sm", children: /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
@@ -13259,13 +14104,16 @@ var AdminUsers = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activ
       /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "S\u1ED1 d\u01B0" }),
       /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Vai tr\xF2" }),
       /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Tr\u1EA1ng th\xE1i" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
+      /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Thao t\xE1c" })
     ] }) }),
     /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.users.map((u) => /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5", children: [
+      /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("a", { href: `/admin/thanh-vien/${u.id}`, class: "flex items-center gap-2.5 group", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold shrink-0", children: u.full_name.charAt(0).toUpperCase() }),
         /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 truncate", children: u.full_name }),
+          /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 group-hover:text-brand-600 truncate flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxDEV("span", { children: u.full_name }),
+            u.email_verified === 1 && /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500 text-[11px]", title: "Email \u0111\xE3 x\xE1c minh" })
+          ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 truncate", children: u.email })
         ] })
       ] }) }),
@@ -13276,6 +14124,7 @@ var AdminUsers = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activ
       /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV("span", { class: `px-2 py-0.5 rounded text-[11px] font-bold ${u.role === "admin" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`, children: u.role === "admin" ? "Admin" : "User" }) }),
       /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: u.status }) }),
       /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
+        /* @__PURE__ */ jsxDEV("a", { href: `/admin/thanh-vien/${u.id}`, class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600", title: "Xem h\u1ED3 s\u01A1 & g\u1EEDi th\xF4ng b\xE1o", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs" }) }),
         /* @__PURE__ */ jsxDEV(
           "button",
           {
@@ -13301,6 +14150,245 @@ var AdminUsers = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activ
   ] }) }) }),
   /* @__PURE__ */ jsxDEV(Pagination, { page: props.page, totalPages: props.totalPages, baseUrl: "/admin/thanh-vien" })
 ] });
+var AdminUserDetail = (props) => {
+  const { member, stats, orders, licenses, referrals, notifications, referrer, emailEnabled } = props;
+  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "users", heading: `Th\xE0nh vi\xEAn: ${member.full_name}`, sub: member.email, children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "mb-4 flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxDEV("a", { href: "/admin/thanh-vien", class: "inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left" }),
+        "Quay l\u1EA1i danh s\xE1ch th\xE0nh vi\xEAn"
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            class: "btn-user-action h-9 px-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-400 text-slate-700 text-xs font-semibold transition",
+            "data-id": member.id,
+            "data-action": "toggle-status",
+            children: [
+              /* @__PURE__ */ jsxDEV("i", { class: `fas ${member.status === "active" ? "fa-lock text-rose-500" : "fa-lock-open text-emerald-600"} mr-1.5` }),
+              member.status === "active" ? "Kho\xE1 t\xE0i kho\u1EA3n" : "M\u1EDF kho\xE1"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            class: "btn-user-action h-9 px-3.5 rounded-xl bg-white border border-amber-200 hover:border-amber-400 text-amber-700 text-xs font-semibold transition",
+            "data-id": member.id,
+            "data-action": "toggle-role",
+            children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-shield mr-1.5" }),
+              member.role === "admin" ? "H\u1EA1 xu\u1ED1ng User" : "N\xE2ng l\xEAn Admin"
+            ]
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-5", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "space-y-5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 sm:grid-cols-4 gap-3", children: [
+          ["S\u1EA3n ph\u1EA9m s\u1EDF h\u1EEFu", String(stats.license_count), "text-brand-600"],
+          ["T\u1ED5ng \u0111\u01A1n h\xE0ng", String(stats.order_count), "text-slate-900"],
+          ["T\u1ED5ng chi ti\xEAu", formatVND(stats.spent), "text-emerald-600"],
+          ["S\u1ED1 d\u01B0 v\xED", formatVND(member.balance), "text-amber-600"]
+        ].map(([lb, val, cls]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: lb }),
+          /* @__PURE__ */ jsxDEV("div", { class: `text-lg font-extrabold mt-1 tabular-nums ${cls}`, children: val })
+        ] })) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
+            "S\u1EA3n ph\u1EA9m & License \u0111ang s\u1EDF h\u1EEFu (",
+            licenses.length,
+            ")"
+          ] }) }),
+          licenses.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-6 text-sm text-slate-500", children: "Th\xE0nh vi\xEAn n\xE0y ch\u01B0a s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0o." }) : /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
+            /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+              /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "S\u1EA3n ph\u1EA9m" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "License Key" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "L\u01B0\u1EE3t t\u1EA3i" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Thao t\xE1c" })
+            ] }) }),
+            /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: licenses.map((l) => /* @__PURE__ */ jsxDEV("tr", { children: [
+              /* @__PURE__ */ jsxDEV("td", { children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-800", children: l.product_name }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-400", children: [
+                  l.version || "v1.0",
+                  " \xB7 C\u1EA5p ",
+                  formatDate(l.created_at)
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("code", { class: "px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-bold", children: l.license_key }) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold", children: l.download_count || 0 }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: /* @__PURE__ */ jsxDEV("a", { href: `/admin/san-pham/${l.product_id}`, class: "text-xs font-semibold text-brand-600 hover:underline", children: "S\u1EEDa SP / C\u1EADp nh\u1EADt \u2192" }) })
+            ] })) })
+          ] }) })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
+            "L\u1ECBch s\u1EED \u0111\u01A1n h\xE0ng (",
+            orders.length,
+            ")"
+          ] }) }),
+          orders.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-6 text-sm text-slate-500", children: "Ch\u01B0a c\xF3 \u0111\u01A1n h\xE0ng n\xE0o." }) : /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
+            /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+              /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "M\xE3 \u0111\u01A1n" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ng\xE0y t\u1EA1o" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "T\u1ED5ng" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Tr\u1EA1ng th\xE1i" }),
+              /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
+            ] }) }),
+            /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: orders.map((o) => /* @__PURE__ */ jsxDEV("tr", { children: [
+              /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("a", { href: `/admin/don-hang/${o.id}`, class: "font-bold text-brand-600 hover:underline", children: o.order_code }) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-xs text-slate-500", children: formatDateTime(o.created_at) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-right font-bold", children: formatVND(o.total) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: o.status }) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-right", children: /* @__PURE__ */ jsxDEV("a", { href: `/admin/don-hang/${o.id}`, class: "text-xs font-semibold text-slate-500 hover:text-brand-600", children: "Chi ti\u1EBFt \u2192" }) })
+            ] })) })
+          ] }) })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
+              "Affiliate (",
+              referrals.length,
+              " ng\u01B0\u1EDDi gi\u1EDBi thi\u1EC7u)"
+            ] }),
+            /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-emerald-600 font-bold", children: [
+              "Hoa h\u1ED3ng \u0111\xE3 nh\u1EADn: ",
+              formatVND(member.affiliate_earned || 0)
+            ] })
+          ] }),
+          referrals.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-6 text-sm text-slate-500", children: "Ch\u01B0a gi\u1EDBi thi\u1EC7u th\xE0nh vi\xEAn n\xE0o." }) : /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-slate-100", children: referrals.map((r) => /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-3 flex items-center justify-between text-sm", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("a", { href: `/admin/thanh-vien/${r.id}`, class: "font-semibold text-slate-800 hover:text-brand-600", children: r.full_name }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: r.email })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-right text-xs", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-800", children: formatVND(r.spent || 0) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-slate-400", children: formatDate(r.created_at) })
+            ] })
+          ] })) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("aside", { class: "space-y-5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-3 text-sm", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 pb-3 border-b border-slate-100", children: [
+            member.avatar_url ? /* @__PURE__ */ jsxDEV("img", { src: member.avatar_url, alt: member.full_name, class: "w-12 h-12 rounded-full object-cover shrink-0", referrerpolicy: "no-referrer" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0", children: member.full_name.charAt(0).toUpperCase() }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900 truncate", children: member.full_name }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 truncate", children: member.email }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5 mt-1", children: [
+                member.email_verified === 1 ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check mr-1" }),
+                  "Email \u0111\xE3 x\xE1c minh"
+                ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold", children: "Ch\u01B0a x\xE1c minh email" }),
+                member.google_id && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-semibold", children: "Google" })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "S\u0110T" }),
+            /* @__PURE__ */ jsxDEV("b", { children: member.phone || "\u2014" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Vai tr\xF2" }),
+            /* @__PURE__ */ jsxDEV("b", { children: member.role === "admin" ? "Admin" : "User" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Tr\u1EA1ng th\xE1i" }),
+            /* @__PURE__ */ jsxDEV(StatusBadge, { status: member.status })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "M\xE3 Affiliate" }),
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono font-bold text-brand-600", children: member.affiliate_code })
+          ] }),
+          referrer && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Ng\u01B0\u1EDDi gi\u1EDBi thi\u1EC7u" }),
+            /* @__PURE__ */ jsxDEV("a", { href: `/admin/thanh-vien/${referrer.id}`, class: "font-semibold text-brand-600 hover:underline", children: referrer.full_name })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Ng\xE0y tham gia" }),
+            /* @__PURE__ */ jsxDEV("b", { class: "text-xs", children: formatDateTime(member.created_at) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV(
+          "form",
+          {
+            action: `/api/admin/users/${member.id}/notify`,
+            method: "post",
+            "data-ajax": true,
+            "data-reload": "true",
+            class: "bg-white rounded-2xl border border-indigo-200 p-5 space-y-3.5",
+            children: [
+              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane text-brand-600" }),
+                "G\u1EEDi th\xF4ng b\xE1o / Link cho kh\xE1ch"
+              ] }),
+              /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-500", children: [
+                "Th\xF4ng b\xE1o s\u1EBD hi\u1EC7n ngay trong h\u1ED9p th\u01B0 t\xE0i kho\u1EA3n c\u1EE7a kh\xE1ch",
+                emailEnabled ? " v\xE0 g\u1EEDi k\xE8m qua Email." : " (Email \u0111ang t\u1EAFt v\xEC ch\u01B0a c\u1EA5u h\xECnh Resend API key)."
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ti\xEAu \u0111\u1EC1 *" }),
+                /* @__PURE__ */ jsxDEV("input", { type: "text", name: "title", required: true, placeholder: "VD: C\u1EADp nh\u1EADt b\u1EA3n Skill v2.0 ho\u1EB7c Link ri\xEAng", class: fieldCls })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "N\u1ED9i dung *" }),
+                /* @__PURE__ */ jsxDEV(
+                  "textarea",
+                  {
+                    name: "message",
+                    rows: 4,
+                    required: true,
+                    placeholder: "Nh\u1EADp n\u1ED9i dung th\xF4ng b\xE1o, h\u01B0\u1EDBng d\u1EABn ho\u1EB7c ghi ch\xFA phi\xEAn b\u1EA3n m\u1EDBi...",
+                    class: "w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: [
+                  "Link \u0111\xEDnh k\xE8m ",
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("input", { type: "text", name: "link_url", placeholder: "/tai-khoan/san-pham ho\u1EB7c https://...", class: fieldCls })
+              ] }),
+              /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "checkbox", name: "send_email", value: "1", checked: !!emailEnabled, class: "mt-0.5 accent-brand-600 w-4 h-4 shrink-0" }),
+                /* @__PURE__ */ jsxDEV("span", { children: [
+                  "G\u1EEDi k\xE8m Email t\u1EDBi ",
+                  /* @__PURE__ */ jsxDEV("b", { children: member.email }),
+                  " ",
+                  !emailEnabled && /* @__PURE__ */ jsxDEV("span", { class: "text-amber-600", children: "(c\u1EA7n RESEND_API_KEY)" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
+              /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bell mr-1.5" }),
+                "G\u1EEDi th\xF4ng b\xE1o ngay"
+              ] })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-3 text-sm", children: [
+            "Th\xF4ng b\xE1o \u0111\xE3 g\u1EEDi (",
+            notifications.length,
+            ")"
+          ] }),
+          notifications.length === 0 ? /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-500", children: "Ch\u01B0a c\xF3 th\xF4ng b\xE1o n\xE0o." }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 max-h-80 overflow-y-auto pr-1", children: notifications.map((n) => /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 font-semibold text-slate-800", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: n.title }),
+              /* @__PURE__ */ jsxDEV("span", { class: `px-1.5 py-0.5 rounded text-[10px] shrink-0 ${n.is_read ? "bg-slate-200 text-slate-600" : "bg-indigo-100 text-indigo-700"}`, children: n.is_read ? "\u0110\xE3 \u0111\u1ECDc" : "Ch\u01B0a \u0111\u1ECDc" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-slate-600 mt-1 line-clamp-2", children: n.message }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-slate-400 mt-1", children: formatDateTime(n.created_at) })
+          ] })) })
+        ] })
+      ] })
+    ] })
+  ] });
+};
 var AdminCategories = (props) => {
   const ed = props.editing;
   return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "categories", heading: "Qu\u1EA3n l\xFD danh m\u1EE5c", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5", children: [
@@ -13559,84 +14647,137 @@ var AdminTickets = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, act
 ] }) });
 var AdminSettings = (props) => {
   const s = props.settings;
-  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "settings", heading: "C\xE0i \u0111\u1EB7t h\u1EC7 th\u1ED1ng", children: /* @__PURE__ */ jsxDEV("form", { action: "/api/admin/settings", method: "post", "data-ajax": true, class: "grid lg:grid-cols-2 gap-5", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
-      /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Th\xF4ng tin website" }),
-      [
-        ["site_name", "T\xEAn website"],
-        ["site_tagline", "Slogan"],
-        ["hotline", "Hotline"],
-        ["email", "Email h\u1ED7 tr\u1EE3"],
-        ["zalo", "S\u1ED1 Zalo"],
-        ["facebook", "Link Facebook"],
-        ["youtube", "Link k\xEAnh YouTube"],
-        ["tiktok", "Link TikTok"]
-      ].map(([k, l]) => /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: l }),
-        /* @__PURE__ */ jsxDEV("input", { type: "text", name: k, value: s[k] || "", class: fieldCls })
-      ] }))
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "space-y-5", children: [
+  const st = props.integrationStatus;
+  const callbackUrl = st ? `${st.origin}/api/auth/google/callback` : "/api/auth/google/callback";
+  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "settings", heading: "C\xE0i \u0111\u1EB7t h\u1EC7 th\u1ED1ng", children: [
+    /* @__PURE__ */ jsxDEV("form", { action: "/api/admin/settings", method: "post", "data-ajax": true, class: "grid lg:grid-cols-2 gap-5", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Th\xF4ng tin thanh to\xE1n" }),
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Th\xF4ng tin website" }),
         [
-          ["bank_name", "T\xEAn ng\xE2n h\xE0ng"],
-          ["bank_code", "M\xE3 bank (VietQR: MB, VCB, TCB...)"],
-          ["bank_account", "S\u1ED1 t\xE0i kho\u1EA3n"],
-          ["bank_owner", "Ch\u1EE7 t\xE0i kho\u1EA3n (IN HOA, kh\xF4ng d\u1EA5u)"]
+          ["site_name", "T\xEAn website"],
+          ["site_tagline", "Slogan"],
+          ["hotline", "Hotline"],
+          ["email", "Email h\u1ED7 tr\u1EE3"],
+          ["zalo", "S\u1ED1 Zalo"],
+          ["facebook", "Link Facebook"],
+          ["youtube", "Link k\xEAnh YouTube"],
+          ["tiktok", "Link TikTok"]
         ].map(([k, l]) => /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: l }),
           /* @__PURE__ */ jsxDEV("input", { type: "text", name: k, value: s[k] || "", class: fieldCls })
         ] }))
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Affiliate" }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ph\u1EA7n tr\u0103m hoa h\u1ED3ng (%)" }),
-          /* @__PURE__ */ jsxDEV("input", { type: "number", name: "affiliate_percent", value: s.affiliate_percent || "20", min: "0", max: "100", class: fieldCls })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-amber-500" }),
-            "Webhook ng\xE2n h\xE0ng"
+      /* @__PURE__ */ jsxDEV("div", { class: "space-y-5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Th\xF4ng tin thanh to\xE1n" }),
+          [
+            ["bank_name", "T\xEAn ng\xE2n h\xE0ng"],
+            ["bank_code", "M\xE3 bank (VietQR: MB, VCB, TCB...)"],
+            ["bank_account", "S\u1ED1 t\xE0i kho\u1EA3n"],
+            ["bank_owner", "Ch\u1EE7 t\xE0i kho\u1EA3n (IN HOA, kh\xF4ng d\u1EA5u)"]
+          ].map(([k, l]) => /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: l }),
+            /* @__PURE__ */ jsxDEV("input", { type: "text", name: k, value: s[k] || "", class: fieldCls })
+          ] }))
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Affiliate" }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ph\u1EA7n tr\u0103m hoa h\u1ED3ng (%)" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "number", name: "affiliate_percent", value: s.affiliate_percent || "20", min: "0", max: "100", class: fieldCls })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-amber-500" }),
+              "Webhook ng\xE2n h\xE0ng"
+            ] }),
+            /* @__PURE__ */ jsxDEV("a", { href: "/admin/giao-dich#webhook-config", class: "text-xs font-semibold text-brand-600 hover:underline", children: "L\u1EA5y URL & API Key \u2192" })
           ] }),
-          /* @__PURE__ */ jsxDEV("a", { href: "/admin/giao-dich#webhook-config", class: "text-xs font-semibold text-brand-600 hover:underline", children: "L\u1EA5y URL & API Key \u2192" })
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Nh\xE0 cung c\u1EA5p" }),
+            /* @__PURE__ */ jsxDEV("select", { name: "payment_provider", class: fieldCls, children: [["sepay", "SePay (sepay.vn)"], ["casso", "Casso (casso.vn)"], ["manual", "Th\u1EE7 c\xF4ng (kh\xF4ng webhook)"]].map(([v, l]) => /* @__PURE__ */ jsxDEV("option", { value: v, selected: (s.payment_provider || "sepay") === v, children: l })) })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Th\u1EDDi gian gi\u1EEF \u0111\u01A1n (ph\xFAt)" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "number", name: "payment_timeout_minutes", value: s.payment_timeout_minutes || "60", min: "5", class: fieldCls })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Sai s\u1ED1 cho ph\xE9p (VND)" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "number", name: "amount_tolerance", value: s.amount_tolerance || "0", min: "0", class: fieldCls }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-slate-500 mt-1", children: "\u0110\u1EB7t 0 n\u1EBFu mu\u1ED1n kh\u1EDBp s\u1ED1 ti\u1EC1n tuy\u1EC7t \u0111\u1ED1i." })
+          ] }),
+          /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer", children: [
+            /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "auto_confirm_manual", value: "0" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "checkbox", name: "auto_confirm_manual", value: "1", checked: s.auto_confirm_manual === "1", class: "mt-0.5" }),
+            /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-amber-800 leading-relaxed", children: [
+              /* @__PURE__ */ jsxDEV("b", { children: "B\u1EADt ch\u1EBF \u0111\u1ED9 DEMO" }),
+              " \u2014 cho kh\xE1ch t\u1EF1 x\xE1c nh\u1EADn \u0111\xE3 chuy\u1EC3n kho\u1EA3n m\xE0 kh\xF4ng c\u1EA7n webhook.",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-rose-700", children: " T\u1EAFt khi ch\u1EA1y th\u1EADt" }),
+              ", n\u1EBFu kh\xF4ng kh\xE1ch c\xF3 th\u1EC3 nh\u1EADn h\xE0ng m\xE0 ch\u01B0a tr\u1EA3 ti\u1EC1n."
+            ] })
+          ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Nh\xE0 cung c\u1EA5p" }),
-          /* @__PURE__ */ jsxDEV("select", { name: "payment_provider", class: fieldCls, children: [["sepay", "SePay (sepay.vn)"], ["casso", "Casso (casso.vn)"], ["manual", "Th\u1EE7 c\xF4ng (kh\xF4ng webhook)"]].map(([v, l]) => /* @__PURE__ */ jsxDEV("option", { value: v, selected: (s.payment_provider || "sepay") === v, children: l })) })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Th\u1EDDi gian gi\u1EEF \u0111\u01A1n (ph\xFAt)" }),
-          /* @__PURE__ */ jsxDEV("input", { type: "number", name: "payment_timeout_minutes", value: s.payment_timeout_minutes || "60", min: "5", class: fieldCls })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Sai s\u1ED1 cho ph\xE9p (VND)" }),
-          /* @__PURE__ */ jsxDEV("input", { type: "number", name: "amount_tolerance", value: s.amount_tolerance || "0", min: "0", class: fieldCls }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-slate-500 mt-1", children: "\u0110\u1EB7t 0 n\u1EBFu mu\u1ED1n kh\u1EDBp s\u1ED1 ti\u1EC1n tuy\u1EC7t \u0111\u1ED1i." })
-        ] }),
-        /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer", children: [
-          /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "auto_confirm_manual", value: "0" }),
-          /* @__PURE__ */ jsxDEV("input", { type: "checkbox", name: "auto_confirm_manual", value: "1", checked: s.auto_confirm_manual === "1", class: "mt-0.5" }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-amber-800 leading-relaxed", children: [
-            /* @__PURE__ */ jsxDEV("b", { children: "B\u1EADt ch\u1EBF \u0111\u1ED9 DEMO" }),
-            " \u2014 cho kh\xE1ch t\u1EF1 x\xE1c nh\u1EADn \u0111\xE3 chuy\u1EC3n kho\u1EA3n m\xE0 kh\xF4ng c\u1EA7n webhook.",
-            /* @__PURE__ */ jsxDEV("b", { class: "text-rose-700", children: " T\u1EAFt khi ch\u1EA1y th\u1EADt" }),
-            ", n\u1EBFu kh\xF4ng kh\xE1ch c\xF3 th\u1EC3 nh\u1EADn h\xE0ng m\xE0 ch\u01B0a tr\u1EA3 ti\u1EC1n."
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700 mb-3" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-floppy-disk mr-1.5" }),
+            "L\u01B0u c\xE0i \u0111\u1EB7t"
           ] })
         ] })
+      ] })
+    ] }),
+    st && /* @__PURE__ */ jsxDEV("section", { class: "mt-5 bg-white rounded-2xl border border-slate-200 p-5", children: [
+      /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4 flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug text-brand-600" }),
+        "Tr\u1EA1ng th\xE1i t\xEDch h\u1EE3p Email (Resend) & Google Login"
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700 mb-3" }),
-        /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-floppy-disk mr-1.5" }),
-          "L\u01B0u c\xE0i \u0111\u1EB7t"
+      /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-2 gap-4 text-xs", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxDEV("b", { class: "text-sm text-slate-900", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope mr-1.5 text-brand-600" }),
+              "Email t\u1EF1 \u0111\u1ED9ng (Resend)"
+            ] }),
+            /* @__PURE__ */ jsxDEV("span", { class: `px-2.5 py-0.5 rounded-full font-bold ${st.emailConfigured ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`, children: st.emailConfigured ? "\u0110\xE3 k\u1EBFt n\u1ED1i" : "Ch\u01B0a c\u1EA5u h\xECnh" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-slate-600", children: [
+            "\u0110\u1ECBa ch\u1EC9 g\u1EEDi (From): ",
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200", children: st.emailFrom })
+          ] }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 leading-relaxed", children: [
+            "Th\xEAm bi\u1EBFn m\xF4i tr\u01B0\u1EDDng ",
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono", children: "RESEND_API_KEY" }),
+            " (v\xE0 tu\u1EF3 ch\u1ECDn ",
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono", children: "EMAIL_FROM" }),
+            ") tr\xEAn Vercel + x\xE1c th\u1EF1c b\u1EA3n ghi DNS SPF/DKIM c\u1EE7a Resend t\u1EA1i Tenten \u0111\u1EC3 b\u1EADt g\u1EEDi link x\xE1c minh, qu\xEAn m\u1EADt kh\u1EA9u & email c\u1EADp nh\u1EADt Skill."
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxDEV("b", { class: "text-sm text-slate-900", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fab fa-google mr-1.5 text-rose-500" }),
+              "\u0110\u0103ng nh\u1EADp Google (OAuth 2.0)"
+            ] }),
+            /* @__PURE__ */ jsxDEV("span", { class: `px-2.5 py-0.5 rounded-full font-bold ${st.googleConfigured ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`, children: st.googleConfigured ? "\u0110ang b\u1EADt" : "Ch\u01B0a c\u1EA5u h\xECnh" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-slate-600", children: "Authorized Redirect URI (d\xE1n v\xE0o Google Cloud Console):" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxDEV("input", { type: "text", readonly: true, value: callbackUrl, class: "flex-1 h-8 px-2.5 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-slate-700" }),
+            /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": callbackUrl, class: "h-8 px-2.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold", children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" }) })
+          ] }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 leading-relaxed", children: [
+            "Th\xEAm bi\u1EBFn ",
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono", children: "GOOGLE_CLIENT_ID" }),
+            " & ",
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono", children: "GOOGLE_CLIENT_SECRET" }),
+            ' tr\xEAn Vercel \u0111\u1EC3 n\xFAt "Ti\u1EBFp t\u1EE5c v\u1EDBi Google" xu\u1EA5t hi\u1EC7n t\u1EA1i trang \u0110\u0103ng nh\u1EADp / \u0110\u0103ng k\xFD.'
+          ] })
         ] })
       ] })
     ] })
-  ] }) });
+  ] });
 };
 var TX_STATUS = {
   matched: { label: "\u0110\xE3 kh\u1EDBp", cls: "bg-emerald-100 text-emerald-700", icon: "fa-circle-check" },
@@ -14200,12 +15341,36 @@ app.use("*", async (c, next) => {
   c.set("cartCount", cartCount);
   await next();
 });
+app.use("*", async (c, next) => {
+  if (c.req.method === "GET" && !c.req.path.startsWith("/api/") && !c.req.path.startsWith("/static/")) {
+    const refParam = (c.req.query("ref") || "").trim();
+    if (refParam && /^[A-Za-z0-9_-]{3,20}$/.test(refParam)) {
+      setCookie(c, "khoskill_ref", refParam.toUpperCase(), {
+        httpOnly: true,
+        sameSite: "Lax",
+        path: "/",
+        maxAge: 30 * 86400
+      });
+    }
+    const u = c.get("user");
+    if (u) {
+      const cnt = await c.env.DB.prepare("SELECT COUNT(*) n FROM notifications WHERE user_id=? AND is_read=0").bind(u.id).first().catch(() => ({ n: 0 }));
+      c.set("unreadNotifs", +(cnt?.n || 0));
+    } else {
+      c.set("unreadNotifs", 0);
+    }
+  } else {
+    c.set("unreadNotifs", 0);
+  }
+  await next();
+});
 function base(c) {
   const u = new URL(c.req.url);
   return {
     user: c.get("user"),
     settings: c.get("settings"),
     cartCount: c.get("cartCount"),
+    unreadNotifs: c.get("unreadNotifs") || 0,
     currentPath: u.pathname,
     currentQueryType: u.searchParams.get("type") || "",
     currentQuerySort: u.searchParams.get("sort") || ""
@@ -14462,18 +15627,179 @@ app.get("/gioi-thieu", async (c) => {
 for (const [path, doc] of Object.entries(POLICY_DOCS)) {
   app.get(path, (c) => c.html(/* @__PURE__ */ jsxDEV(DocPage, { ...base(c), heading: doc.heading, html: doc.html })));
 }
+async function createUserNotification(db, opts) {
+  await db.prepare(
+    `INSERT INTO notifications (user_id, product_id, type, title, message, link_url) VALUES (?,?,?,?,?,?)`
+  ).bind(opts.userId, opts.productId ?? null, opts.type || "system", opts.title, opts.message, opts.linkUrl ?? null).run().catch(() => null);
+}
+async function issueEmailToken(db, opts) {
+  const recent = await db.prepare(
+    `SELECT created_at FROM email_tokens WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1`
+  ).bind(opts.userId, opts.purpose).first();
+  if (recent?.created_at) {
+    const diffMs = Date.now() - new Date(recent.created_at).getTime();
+    if (diffMs >= 0 && diffMs < 6e4) {
+      return { waitSeconds: Math.max(1, Math.ceil((6e4 - diffMs) / 1e3)) };
+    }
+  }
+  const rawToken = genTokenHex(32);
+  const tokenHash = await sha256Hex(rawToken);
+  const expiresAt = new Date(Date.now() + (opts.ttlMinutes || 30) * 6e4).toISOString();
+  await db.prepare(
+    `INSERT INTO email_tokens (user_id, email, purpose, token_hash, expires_at) VALUES (?,?,?,?,?)`
+  ).bind(opts.userId, opts.email, opts.purpose, tokenHash, expiresAt).run();
+  return { rawToken };
+}
+async function consumeEmailToken(db, rawToken, purpose) {
+  if (!rawToken || rawToken.length < 32) return { ok: false, reason: "Li\xEAn k\u1EBFt kh\xF4ng h\u1EE3p l\u1EC7." };
+  const tokenHash = await sha256Hex(rawToken);
+  const tok = await db.prepare(
+    `SELECT * FROM email_tokens WHERE token_hash=? AND purpose=?`
+  ).bind(tokenHash, purpose).first();
+  if (!tok) return { ok: false, reason: "Li\xEAn k\u1EBFt kh\xF4ng t\u1ED3n t\u1EA1i ho\u1EB7c kh\xF4ng h\u1EE3p l\u1EC7." };
+  if (tok.used_at) return { ok: false, reason: "Li\xEAn k\u1EBFt n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c s\u1EED d\u1EE5ng tr\u01B0\u1EDBc \u0111\xF3." };
+  if (new Date(tok.expires_at).getTime() < Date.now()) {
+    return { ok: false, reason: "Li\xEAn k\u1EBFt \u0111\xE3 h\u1EBFt h\u1EA1n (30 ph\xFAt). Vui l\xF2ng y\xEAu c\u1EA7u g\u1EEDi l\u1EA1i link m\u1EDBi." };
+  }
+  await db.prepare(`UPDATE email_tokens SET used_at=? WHERE id=? AND used_at IS NULL`).bind((/* @__PURE__ */ new Date()).toISOString(), tok.id).run();
+  return { ok: true, tok };
+}
 app.get("/dang-nhap", (c) => {
   if (c.get("user")) return c.redirect("/tai-khoan");
-  return c.html(/* @__PURE__ */ jsxDEV(LoginPage, { ...base(c), next: c.req.query("next"), registered: c.req.query("registered") === "1" }));
+  return c.html(/* @__PURE__ */ jsxDEV(
+    LoginPage,
+    {
+      ...base(c),
+      next: c.req.query("next"),
+      registered: c.req.query("registered") === "1",
+      resetSuccess: c.req.query("reset") === "1",
+      oauthError: c.req.query("oauth_error"),
+      googleEnabled: getGoogleConfig(c.env).enabled
+    }
+  ));
 });
 app.get("/dang-ky", (c) => {
   if (c.get("user")) return c.redirect("/tai-khoan");
-  return c.html(/* @__PURE__ */ jsxDEV(RegisterPage, { ...base(c), ref: c.req.query("ref") }));
+  const ref = c.req.query("ref") || getCookie(c, "khoskill_ref") || "";
+  return c.html(/* @__PURE__ */ jsxDEV(
+    RegisterPage,
+    {
+      ...base(c),
+      ref,
+      oauthError: c.req.query("oauth_error"),
+      googleEnabled: getGoogleConfig(c.env).enabled
+    }
+  ));
 });
-app.get("/quen-mat-khau", (c) => c.html(/* @__PURE__ */ jsxDEV(ForgotPage, { ...base(c) })));
+app.get("/quen-mat-khau", (c) => c.html(/* @__PURE__ */ jsxDEV(ForgotPage, { ...base(c), emailEnabled: isEmailConfigured(c.env) })));
 app.get("/dang-xuat", (c) => {
   clearSession(c);
   return c.redirect("/");
+});
+app.get("/api/auth/google", async (c) => {
+  const cfg = getGoogleConfig(c.env);
+  if (!cfg.enabled) return c.redirect("/dang-nhap?oauth_error=not_configured");
+  const origin = getRequestOrigin(c);
+  const next = safeRedirectPath(c.req.query("next"), "/tai-khoan");
+  const ref = (c.req.query("ref") || getCookie(c, "khoskill_ref") || "").trim().toUpperCase();
+  const nonce = genTokenHex(16);
+  const signedState = await signOAuthState(
+    { nonce, next, ...ref ? { ref } : {}, exp: Date.now() + 6e5 },
+    getSecret(c.env)
+  );
+  setCookie(c, "oauth_state", signedState, {
+    httpOnly: true,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 600,
+    secure: origin.startsWith("https://")
+  });
+  return c.redirect(buildGoogleAuthUrl({
+    clientId: cfg.clientId,
+    redirectUri: `${origin}/api/auth/google/callback`,
+    state: nonce
+  }));
+});
+app.get("/api/auth/google/callback", async (c) => {
+  const errParam = c.req.query("error");
+  if (errParam) {
+    deleteCookie(c, "oauth_state", { path: "/" });
+    return c.redirect("/dang-nhap?oauth_error=cancelled");
+  }
+  const cfg = getGoogleConfig(c.env);
+  if (!cfg.enabled) return c.redirect("/dang-nhap?oauth_error=not_configured");
+  const code = c.req.query("code") || "";
+  const state = c.req.query("state") || "";
+  const stateCookie = getCookie(c, "oauth_state") || "";
+  deleteCookie(c, "oauth_state", { path: "/" });
+  const verified = await verifyOAuthState(stateCookie, getSecret(c.env));
+  if (!code || !state || !verified || verified.nonce !== state) {
+    return c.redirect("/dang-nhap?oauth_error=state_invalid");
+  }
+  try {
+    const db = c.env.DB;
+    const origin = getRequestOrigin(c);
+    const profile = await exchangeGoogleCode({
+      code,
+      clientId: cfg.clientId,
+      clientSecret: cfg.clientSecret,
+      redirectUri: `${origin}/api/auth/google/callback`
+    });
+    if (profile.email_verified === false) {
+      return c.redirect("/dang-nhap?oauth_error=unverified");
+    }
+    const email = profile.email.trim().toLowerCase();
+    const fullName = (profile.name || email.split("@")[0]).trim();
+    const avatarUrl = profile.picture || null;
+    let u = await db.prepare("SELECT * FROM users WHERE google_id=? OR email=?").bind(profile.sub, email).first();
+    if (u) {
+      if (u.status === "banned") return c.redirect("/dang-nhap?oauth_error=banned");
+      await db.prepare(
+        `UPDATE users SET google_id=?,
+          avatar_url=COALESCE(NULLIF(avatar_url,''), ?),
+          email_verified=1,
+          email_verified_at=COALESCE(email_verified_at, CURRENT_TIMESTAMP),
+          updated_at=CURRENT_TIMESTAMP
+         WHERE id=?`
+      ).bind(profile.sub, avatarUrl, u.id).run();
+      await setSession(c, {
+        id: u.id,
+        email: u.email,
+        full_name: u.full_name,
+        role: u.role,
+        avatar_url: u.avatar_url || avatarUrl,
+        email_verified: 1
+      });
+      const defaultDest = u.role === "admin" ? "/admin" : "/tai-khoan";
+      const dest = verified.next && verified.next !== "/tai-khoan" ? verified.next : defaultDest;
+      return c.redirect(safeRedirectPath(dest, defaultDest));
+    }
+    let referred_by = null;
+    const refCode = (verified.ref || getCookie(c, "khoskill_ref") || "").trim().toUpperCase();
+    if (refCode) {
+      const r = await db.prepare("SELECT id FROM users WHERE affiliate_code=?").bind(refCode).first();
+      if (r) referred_by = r.id;
+    }
+    const oauthHash = "OAUTH$" + genTokenHex(16);
+    const affCode = genCode("AF", 6);
+    const res = await db.prepare(
+      `INSERT INTO users (email, password_hash, full_name, avatar_url, affiliate_code, referred_by, google_id, email_verified, email_verified_at)
+       VALUES (?,?,?,?,?,?,?,1,CURRENT_TIMESTAMP)`
+    ).bind(email, oauthHash, fullName, avatarUrl, affCode, referred_by, profile.sub).run();
+    const userId = res.meta.last_row_id;
+    await createUserNotification(db, {
+      userId,
+      type: "system",
+      title: "Ch\xE0o m\u1EEBng \u0111\u1EBFn v\u1EDBi KhoSkill AI!",
+      message: "T\xE0i kho\u1EA3n Google c\u1EE7a b\u1EA1n \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c minh t\u1EF1 \u0111\u1ED9ng. B\u1EA1n c\xF3 th\u1EC3 mua Skill AI ho\u1EB7c k\xEDch ho\u1EA1t Affiliate ngay.",
+      linkUrl: "/san-pham"
+    });
+    await setSession(c, { id: userId, email, full_name: fullName, role: "user", avatar_url: avatarUrl, email_verified: 1 });
+    return c.redirect(safeRedirectPath(verified.next, "/tai-khoan"));
+  } catch (err) {
+    console.error("[GOOGLE_OAUTH]", err);
+    return c.redirect("/dang-nhap?oauth_error=failed");
+  }
 });
 app.post("/api/auth/register", async (c) => {
   const db = c.env.DB;
@@ -14487,8 +15813,9 @@ app.post("/api/auth/register", async (c) => {
   const exists = await db.prepare("SELECT 1 x FROM users WHERE email=?").bind(email).first();
   if (exists) return c.json({ error: "Email n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c \u0111\u0103ng k\xFD" }, 400);
   let referred_by = null;
-  if (b.ref) {
-    const r = await db.prepare("SELECT id FROM users WHERE affiliate_code=?").bind(String(b.ref).toUpperCase()).first();
+  const refInput = (b.ref || getCookie(c, "khoskill_ref") || "").trim().toUpperCase();
+  if (refInput) {
+    const r = await db.prepare("SELECT id FROM users WHERE affiliate_code=?").bind(refInput).first();
     if (r) referred_by = r.id;
   }
   const hash = await hashPassword(password);
@@ -14496,7 +15823,15 @@ app.post("/api/auth/register", async (c) => {
   const res = await db.prepare(
     `INSERT INTO users (email, password_hash, full_name, phone, affiliate_code, referred_by) VALUES (?,?,?,?,?,?)`
   ).bind(email, hash, full_name, b.phone || null, affCode, referred_by).run();
-  const user = { id: res.meta.last_row_id, email, full_name, role: "user" };
+  const userId = res.meta.last_row_id;
+  await createUserNotification(db, {
+    userId,
+    type: "system",
+    title: "T\u1EA1o t\xE0i kho\u1EA3n th\xE0nh c\xF4ng",
+    message: "B\u1EA1n c\xF3 th\u1EC3 mua Skill ngay l\u1EADp t\u1EE9c. Khi c\u1EA7n tham gia Affiliate ho\u1EB7c nh\u1EADn mail c\u1EADp nh\u1EADt phi\xEAn b\u1EA3n, h\xE3y x\xE1c minh Gmail trong H\u1ED3 s\u01A1.",
+    linkUrl: "/tai-khoan/ho-so"
+  });
+  const user = { id: userId, email, full_name, role: "user", email_verified: 0 };
   await setSession(c, user);
   return c.json({ ok: true, redirect: "/tai-khoan" });
 });
@@ -14507,11 +15842,109 @@ app.post("/api/auth/login", async (c) => {
   const u = await db.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
   if (!u) return c.json({ error: "Email ho\u1EB7c m\u1EADt kh\u1EA9u kh\xF4ng \u0111\xFAng" }, 400);
   if (u.status === "banned") return c.json({ error: "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n \u0111\xE3 b\u1ECB kho\xE1" }, 403);
+  if (String(u.password_hash || "").startsWith("OAUTH$")) {
+    return c.json({ error: 'T\xE0i kho\u1EA3n n\xE0y \u0111\u0103ng k\xFD b\u1EB1ng Google. H\xE3y b\u1EA5m "Ti\u1EBFp t\u1EE5c v\u1EDBi Google" ho\u1EB7c \u0111\u1EB7t m\u1EADt kh\u1EA9u trong H\u1ED3 s\u01A1.' }, 400);
+  }
   const ok = await verifyPassword(b.password || "", u.password_hash);
   if (!ok) return c.json({ error: "Email ho\u1EB7c m\u1EADt kh\u1EA9u kh\xF4ng \u0111\xFAng" }, 400);
-  await setSession(c, { id: u.id, email: u.email, full_name: u.full_name, role: u.role, avatar_url: u.avatar_url });
+  await setSession(c, {
+    id: u.id,
+    email: u.email,
+    full_name: u.full_name,
+    role: u.role,
+    avatar_url: u.avatar_url,
+    email_verified: u.email_verified || 0
+  });
   const next = b.next && String(b.next).startsWith("/") && !String(b.next).startsWith("//") ? b.next : u.role === "admin" ? "/admin" : "/tai-khoan";
   return c.json({ ok: true, redirect: next });
+});
+app.get("/xac-minh-email", async (c) => {
+  const db = c.env.DB;
+  const token = (c.req.query("token") || "").trim();
+  const res = await consumeEmailToken(db, token, "verify");
+  if (!res.ok) {
+    return c.html(/* @__PURE__ */ jsxDEV(VerifyEmailResultPage, { ...base(c), ok: false, message: res.reason }), 400);
+  }
+  const tok = res.tok;
+  await db.prepare(
+    `UPDATE users SET email_verified=1, email_verified_at=COALESCE(email_verified_at, CURRENT_TIMESTAMP), updated_at=CURRENT_TIMESTAMP WHERE id=?`
+  ).bind(tok.user_id).run();
+  await createUserNotification(db, {
+    userId: tok.user_id,
+    type: "system",
+    title: "Email \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c minh",
+    message: "\u0110\u1ECBa ch\u1EC9 email c\u1EE7a b\u1EA1n \u0111\xE3 x\xE1c minh th\xE0nh c\xF4ng. Ch\u01B0\u01A1ng tr\xECnh Affiliate v\xE0 th\xF4ng b\xE1o c\u1EADp nh\u1EADt qua email \u0111\xE3 s\u1EB5n s\xE0ng!",
+    linkUrl: "/tai-khoan/affiliate"
+  });
+  const cur = c.get("user");
+  if (cur && cur.id === tok.user_id) {
+    await setSession(c, { ...cur, email_verified: 1 });
+  }
+  return c.html(/* @__PURE__ */ jsxDEV(
+    VerifyEmailResultPage,
+    {
+      ...base(c),
+      ok: true,
+      email: tok.email,
+      message: "Email c\u1EE7a b\u1EA1n \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c minh th\xE0nh c\xF4ng! T\u1EEB gi\u1EDD b\u1EA1n c\xF3 th\u1EC3 k\xEDch ho\u1EA1t Affiliate v\xE0 nh\u1EADn th\xF4ng b\xE1o c\u1EADp nh\u1EADt Skill AI qua email."
+    }
+  ));
+});
+app.post("/api/auth/forgot-password", async (c) => {
+  if (!isEmailConfigured(c.env)) {
+    return c.json({ error: "Ch\u1EE9c n\u0103ng g\u1EEDi email t\u1EF1 \u0111\u1ED9ng ch\u01B0a \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t. Vui l\xF2ng li\xEAn h\u1EC7 Zalo h\u1ED7 tr\u1EE3 b\xEAn d\u01B0\u1EDBi." }, 400);
+  }
+  const b = await c.req.json();
+  const email = (b.email || "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return c.json({ error: "Vui l\xF2ng nh\u1EADp email h\u1EE3p l\u1EC7" }, 400);
+  }
+  const u = await c.env.DB.prepare("SELECT id, email, full_name, status FROM users WHERE email=?").bind(email).first();
+  if (u && u.status === "active") {
+    const issued = await issueEmailToken(c.env.DB, { userId: u.id, email: u.email, purpose: "reset", ttlMinutes: 30 });
+    if (issued.waitSeconds) {
+      return c.json({ error: `B\u1EA1n v\u1EEBa g\u1EEDi y\xEAu c\u1EA7u. Vui l\xF2ng \u0111\u1EE3i ${issued.waitSeconds} gi\xE2y r\u1ED3i th\u1EED l\u1EA1i.` }, 429);
+    }
+    if (issued.rawToken) {
+      const origin = getRequestOrigin(c);
+      const siteName = c.get("settings")?.site_name || "KhoSkill AI";
+      const resetUrl = `${origin}/dat-lai-mat-khau?token=${issued.rawToken}`;
+      await sendEmail(c.env, buildPasswordResetEmail({
+        to: u.email,
+        fullName: u.full_name,
+        resetUrl,
+        siteName,
+        origin
+      }));
+    }
+  }
+  return c.json({ ok: true, message: "N\u1EBFu email \u0111\xE3 \u0111\u0103ng k\xFD, link \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u \u0111\xE3 \u0111\u01B0\u1EE3c g\u1EEDi. Vui l\xF2ng ki\u1EC3m tra H\u1ED9p th\u01B0 \u0111\u1EBFn v\xE0 m\u1EE5c Spam." });
+});
+app.get("/dat-lai-mat-khau", async (c) => {
+  const rawToken = (c.req.query("token") || "").trim();
+  let invalidReason = "";
+  if (!rawToken || rawToken.length < 32) {
+    invalidReason = "Li\xEAn k\u1EBFt \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u kh\xF4ng h\u1EE3p l\u1EC7.";
+  } else {
+    const tok = await c.env.DB.prepare("SELECT * FROM email_tokens WHERE token_hash=? AND purpose=?").bind(await sha256Hex(rawToken), "reset").first();
+    if (!tok) invalidReason = "Li\xEAn k\u1EBFt \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u kh\xF4ng t\u1ED3n t\u1EA1i.";
+    else if (tok.used_at) invalidReason = "Li\xEAn k\u1EBFt n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c s\u1EED d\u1EE5ng.";
+    else if (new Date(tok.expires_at).getTime() < Date.now()) invalidReason = "Li\xEAn k\u1EBFt \u0111\xE3 h\u1EBFt h\u1EA1n (30 ph\xFAt). H\xE3y g\u1EEDi y\xEAu c\u1EA7u m\u1EDBi.";
+  }
+  return c.html(/* @__PURE__ */ jsxDEV(ResetPasswordPage, { ...base(c), token: rawToken, invalidReason: invalidReason || void 0 }));
+});
+app.post("/api/auth/reset-password", async (c) => {
+  const b = await c.req.json();
+  const token = (b.token || "").trim();
+  const newPassword = String(b.new_password || "");
+  const confirmPassword = String(b.confirm_password || "");
+  if (newPassword.length < 6) return c.json({ error: "M\u1EADt kh\u1EA9u m\u1EDBi ph\u1EA3i c\xF3 \xEDt nh\u1EA5t 6 k\xFD t\u1EF1" }, 400);
+  if (newPassword !== confirmPassword) return c.json({ error: "M\u1EADt kh\u1EA9u nh\u1EADp l\u1EA1i kh\xF4ng kh\u1EDBp" }, 400);
+  const res = await consumeEmailToken(c.env.DB, token, "reset");
+  if (!res.ok) return c.json({ error: res.reason }, 400);
+  const newHash = await hashPassword(newPassword);
+  await c.env.DB.prepare("UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(newHash, res.tok.user_id).run();
+  return c.json({ ok: true, redirect: "/dang-nhap?reset=1" });
 });
 app.post("/api/cart/add", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
@@ -14647,16 +16080,64 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   if (status === "paid") {
     await grantLicenses(db, u.id, orderId);
     await creditAffiliate(db, u.id, total);
+    await notifyOrderPaid(c.env, db, { id: orderId, order_code: code, user_id: u.id, total }, getRequestOrigin(c));
   }
   return c.json({ ok: true, order_code: code });
 });
 async function creditAffiliate(db, userId, total) {
-  const me = await db.prepare("SELECT referred_by FROM users WHERE id=?").bind(userId).first();
+  const me = await db.prepare("SELECT referred_by, full_name FROM users WHERE id=?").bind(userId).first();
   if (!me?.referred_by) return;
+  const refUser = await db.prepare("SELECT id, email_verified, status FROM users WHERE id=?").bind(me.referred_by).first();
+  if (!refUser || refUser.status !== "active" || refUser.email_verified !== 1) return;
   const st = await db.prepare(`SELECT value FROM settings WHERE key='affiliate_percent'`).first();
   const pct = +(st?.value || 20);
   const commission = Math.floor(total * pct / 100);
+  if (commission <= 0) return;
   await db.prepare("UPDATE users SET affiliate_earned=affiliate_earned+?, balance=balance+? WHERE id=?").bind(commission, commission, me.referred_by).run();
+  await createUserNotification(db, {
+    userId: me.referred_by,
+    type: "order",
+    title: `Nh\u1EADn hoa h\u1ED3ng Affiliate +${formatVND(commission)}`,
+    message: `Th\xE0nh vi\xEAn ${me.full_name || "b\u1EA1n gi\u1EDBi thi\u1EC7u"} v\u1EEBa thanh to\xE1n \u0111\u01A1n h\xE0ng. Hoa h\u1ED3ng ${pct}% \u0111\xE3 \u0111\u01B0\u1EE3c c\u1ED9ng v\xE0o v\xED c\u1EE7a b\u1EA1n.`,
+    linkUrl: "/tai-khoan/affiliate"
+  });
+}
+async function notifyOrderPaid(env, db, order, origin = "https://khoskill.site") {
+  try {
+    const [buyer, licenses] = await Promise.all([
+      db.prepare("SELECT id, email, full_name, status FROM users WHERE id=?").bind(order.user_id).first(),
+      db.prepare(
+        `SELECT l.license_key, p.name product_name
+         FROM licenses l JOIN products p ON p.id=l.product_id
+         WHERE l.order_id=? ORDER BY l.id`
+      ).bind(order.id).all()
+    ]);
+    if (!buyer) return;
+    const licList = licenses.results;
+    const names = licList.map((x) => x.product_name).join(", ");
+    await createUserNotification(db, {
+      userId: buyer.id,
+      type: "order",
+      title: `\u0110\u01A1n h\xE0ng ${order.order_code} \u0111\xE3 k\xEDch ho\u1EA1t th\xE0nh c\xF4ng`,
+      message: names ? `H\u1EC7 th\u1ED1ng \u0111\xE3 c\u1EA5p ${licList.length} License Key cho: ${names}. Truy c\u1EADp "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" \u0111\u1EC3 l\u1EA5y key v\xE0 t\u1EA3i t\xE0i li\u1EC7u.` : `\u0110\u01A1n h\xE0ng ${order.order_code} \u0111\xE3 thanh to\xE1n th\xE0nh c\xF4ng.`,
+      linkUrl: "/tai-khoan/san-pham"
+    });
+    if (isEmailConfigured(env) && buyer.email && buyer.status === "active") {
+      const siteSet = await db.prepare(`SELECT value FROM settings WHERE key='site_name'`).first().catch(() => null);
+      await sendEmail(env, buildOrderPaidEmail({
+        to: buyer.email,
+        fullName: buyer.full_name,
+        orderCode: order.order_code,
+        totalFormatted: formatVND(order.total || 0),
+        items: licList,
+        accountUrl: `${origin}/tai-khoan/san-pham`,
+        siteName: siteSet?.value || "KhoSkill AI",
+        origin
+      }));
+    }
+  } catch (err) {
+    console.error("[NOTIFY_ORDER_PAID]", err);
+  }
 }
 async function settleOrder(db, order, opts) {
   await db.prepare(
@@ -14664,8 +16145,9 @@ async function settleOrder(db, order, opts) {
   ).bind((/* @__PURE__ */ new Date()).toISOString(), opts.paidAmount, opts.paidVia, opts.bankTxId ?? null, order.id).run();
   await grantLicenses(db, order.user_id, order.id);
   await creditAffiliate(db, order.user_id, order.total);
+  await notifyOrderPaid(opts.env, db, order, opts.origin);
 }
-async function processTransaction(db, tx, rawPayload, tolerance) {
+async function processTransaction(db, tx, rawPayload, tolerance, env, origin) {
   const dup = await db.prepare(
     `SELECT id, match_status, matched_order_code FROM bank_transactions WHERE provider=? AND provider_tx_id=?`
   ).bind(tx.provider, tx.providerTxId).first();
@@ -14767,7 +16249,7 @@ async function processTransaction(db, tx, rawPayload, tolerance) {
     matchedOrderCode: matchedCode,
     note: tx.amountIn > order.total ? `Kh\xE1ch chuy\u1EC3n th\u1EEBa ${tx.amountIn - order.total}\u0111` : "Kh\u1EDBp ch\xEDnh x\xE1c"
   });
-  await settleOrder(db, order, { paidVia: "webhook", paidAmount: tx.amountIn, bankTxId: txId });
+  await settleOrder(db, order, { paidVia: "webhook", paidAmount: tx.amountIn, bankTxId: txId, env, origin });
   const excess = tx.amountIn - order.total;
   if (excess > 0) {
     await db.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(excess, order.user_id).run();
@@ -14826,10 +16308,11 @@ app.post("/api/webhook/bank", async (c) => {
   const txs = extractTransactions(provider, body);
   if (txs.length === 0) return c.json({ success: true, message: "Kh\xF4ng c\xF3 giao d\u1ECBch n\xE0o", results: [] });
   const tolerance = +(cfg.amount_tolerance || 0);
+  const origin = getRequestOrigin(c);
   const results = [];
   for (const tx of txs) {
     try {
-      results.push(await processTransaction(db, tx, rawText, tolerance));
+      results.push(await processTransaction(db, tx, rawText, tolerance, c.env, origin));
     } catch (err) {
       results.push({ tx_id: tx.providerTxId, status: "error", message: String(err?.message || err) });
     }
@@ -14846,7 +16329,7 @@ app.post("/api/orders/confirm", requireAuth, async (c) => {
   const st = await db.prepare(`SELECT value FROM settings WHERE key='auto_confirm_manual'`).first();
   const autoConfirm = st?.value === "1";
   if (autoConfirm) {
-    await settleOrder(db, o, { paidVia: "manual", paidAmount: o.total });
+    await settleOrder(db, o, { paidVia: "manual", paidAmount: o.total, env: c.env, origin: getRequestOrigin(c) });
     return c.json({ ok: true, status: "paid", message: "\u0110\xE3 x\xE1c nh\u1EADn (ch\u1EBF \u0111\u1ED9 demo)" });
   }
   return c.json({
@@ -14899,10 +16382,35 @@ app.get("/tai-khoan", requireAuth, async (c) => {
 app.get("/tai-khoan/san-pham", requireAuth, async (c) => {
   const u = c.get("user");
   const rows = await c.env.DB.prepare(
-    `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size
+    `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
+       (SELECT r.changelog FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_changelog,
+       (SELECT r.version FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_version,
+       (SELECT r.created_at FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_release_at
      FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
   ).bind(u.id).all();
   return c.html(/* @__PURE__ */ jsxDEV(MyProductsPage, { ...base(c), licenses: rows.results }));
+});
+app.get("/tai-khoan/thong-bao", requireAuth, async (c) => {
+  const u = c.get("user");
+  const rows = await c.env.DB.prepare(
+    `SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 50`
+  ).bind(u.id).all();
+  return c.html(/* @__PURE__ */ jsxDEV(NotificationsPage, { ...base(c), notifications: rows.results }));
+});
+app.get("/tai-khoan/thong-bao/:id/doc", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  const row = await db.prepare("SELECT id, link_url FROM notifications WHERE id=? AND user_id=?").bind(c.req.param("id"), u.id).first();
+  if (row) {
+    await db.prepare("UPDATE notifications SET is_read=1 WHERE id=? AND user_id=?").bind(row.id, u.id).run();
+  }
+  const rawLink = String(row?.link_url || "").trim();
+  const safeDest = rawLink && (rawLink.startsWith("/") && !rawLink.startsWith("//") || rawLink.startsWith("https://") || rawLink.startsWith("http://")) ? rawLink : "/tai-khoan/thong-bao";
+  return c.redirect(safeDest);
+});
+app.post("/api/account/notifications/read-all", requireAuth, async (c) => {
+  const u = c.get("user");
+  await c.env.DB.prepare("UPDATE notifications SET is_read=1 WHERE user_id=? AND is_read=0").bind(u.id).run();
+  return c.json({ ok: true, message: "\u0110\xE3 \u0111\xE1nh d\u1EA5u t\u1EA5t c\u1EA3 th\xF4ng b\xE1o l\xE0 \u0111\xE3 \u0111\u1ECDc!" });
 });
 app.get("/tai-xuong/:licenseId", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
@@ -14930,13 +16438,13 @@ app.get("/tai-khoan/yeu-thich", requireAuth, async (c) => {
 });
 app.get("/tai-khoan/affiliate", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
-  const me = await db.prepare("SELECT affiliate_code, affiliate_earned FROM users WHERE id=?").bind(u.id).first();
+  const me = await db.prepare("SELECT affiliate_code, affiliate_earned, email_verified, email FROM users WHERE id=?").bind(u.id).first();
   const refs = await db.prepare(
     `SELECT u.id, u.full_name, u.email, u.created_at,
      (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status='paid') spent
      FROM users u WHERE u.referred_by=? ORDER BY u.id DESC`
   ).bind(u.id).all();
-  const origin = new URL(c.req.url).origin;
+  const origin = getRequestOrigin(c);
   return c.html(/* @__PURE__ */ jsxDEV(
     AffiliateDashboard,
     {
@@ -14946,14 +16454,54 @@ app.get("/tai-khoan/affiliate", requireAuth, async (c) => {
       refCount: refs.results.length,
       percent: +(c.get("settings").affiliate_percent || 20),
       referrals: refs.results,
-      siteUrl: origin
+      siteUrl: origin,
+      emailVerified: me?.email_verified === 1,
+      userEmail: me?.email || u.email,
+      googleEnabled: getGoogleConfig(c.env).enabled
     }
   ));
 });
 app.get("/tai-khoan/ho-so", requireAuth, async (c) => {
   const u = c.get("user");
   const profile = await c.env.DB.prepare("SELECT * FROM users WHERE id=?").bind(u.id).first();
-  return c.html(/* @__PURE__ */ jsxDEV(ProfilePage, { ...base(c), profile }));
+  return c.html(/* @__PURE__ */ jsxDEV(
+    ProfilePage,
+    {
+      ...base(c),
+      profile,
+      googleEnabled: getGoogleConfig(c.env).enabled,
+      verifiedBanner: c.req.query("verified") === "1"
+    }
+  ));
+});
+app.post("/api/account/send-verify-email", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  const row = await db.prepare("SELECT id, email, full_name, email_verified, status FROM users WHERE id=?").bind(u.id).first();
+  if (!row || row.status === "banned") return c.json({ error: "T\xE0i kho\u1EA3n kh\xF4ng kh\u1EA3 d\u1EE5ng" }, 403);
+  if (row.email_verified === 1) return c.json({ ok: true, message: "Email c\u1EE7a b\u1EA1n \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c minh tr\u01B0\u1EDBc \u0111\xF3!" });
+  if (!isEmailConfigured(c.env)) {
+    return c.json({
+      error: 'H\u1EC7 th\u1ED1ng g\u1EEDi email t\u1EF1 \u0111\u1ED9ng ch\u01B0a \u0111\u01B0\u1EE3c c\u1EA5u h\xECnh. Vui l\xF2ng d\xF9ng n\xFAt "X\xE1c minh v\u1EDBi Google" ho\u1EB7c li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3.'
+    }, 400);
+  }
+  const issued = await issueEmailToken(db, { userId: row.id, email: row.email, purpose: "verify", ttlMinutes: 30 });
+  if (issued.waitSeconds) {
+    return c.json({ error: `B\u1EA1n v\u1EEBa y\xEAu c\u1EA7u g\u1EEDi mail. Vui l\xF2ng \u0111\u1EE3i ${issued.waitSeconds} gi\xE2y r\u1ED3i th\u1EED l\u1EA1i.` }, 429);
+  }
+  const origin = getRequestOrigin(c);
+  const siteName = c.get("settings")?.site_name || "KhoSkill AI";
+  const verifyUrl = `${origin}/xac-minh-email?token=${issued.rawToken}`;
+  const sent = await sendEmail(c.env, buildVerificationEmail({
+    to: row.email,
+    fullName: row.full_name,
+    verifyUrl,
+    siteName,
+    origin
+  }));
+  if (!sent.ok) {
+    return c.json({ error: `Kh\xF4ng th\u1EC3 g\u1EEDi email l\xFAc n\xE0y (${sent.error || "L\u1ED7i SMTP/Resend"}). Vui l\xF2ng th\u1EED l\u1EA1i sau.` }, 500);
+  }
+  return c.json({ ok: true, message: `\u0110\xE3 g\u1EEDi link x\xE1c minh t\u1EDBi ${row.email}. Vui l\xF2ng ki\u1EC3m tra H\u1ED9p th\u01B0 \u0111\u1EBFn (v\xE0 m\u1EE5c Spam)!` });
 });
 app.post("/api/account/profile", requireAuth, async (c) => {
   const u = c.get("user");
@@ -14969,10 +16517,13 @@ app.post("/api/account/password", requireAuth, async (c) => {
   const b = await c.req.json();
   if (!b.new_password || b.new_password.length < 6) return c.json({ error: "M\u1EADt kh\u1EA9u m\u1EDBi ph\u1EA3i c\xF3 \xEDt nh\u1EA5t 6 k\xFD t\u1EF1" }, 400);
   const row = await db.prepare("SELECT password_hash FROM users WHERE id=?").bind(u.id).first();
-  const ok = await verifyPassword(b.current_password || "", row.password_hash);
-  if (!ok) return c.json({ error: "M\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i kh\xF4ng \u0111\xFAng" }, 400);
-  await db.prepare("UPDATE users SET password_hash=? WHERE id=?").bind(await hashPassword(b.new_password), u.id).run();
-  return c.json({ ok: true, message: "\u0110\u1ED5i m\u1EADt kh\u1EA9u th\xE0nh c\xF4ng!" });
+  const isOAuthOnly = String(row?.password_hash || "").startsWith("OAUTH$");
+  if (!isOAuthOnly) {
+    const ok = await verifyPassword(b.current_password || "", row.password_hash);
+    if (!ok) return c.json({ error: "M\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i kh\xF4ng \u0111\xFAng" }, 400);
+  }
+  await db.prepare("UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(await hashPassword(b.new_password), u.id).run();
+  return c.json({ ok: true, message: isOAuthOnly ? "\u0110\xE3 \u0111\u1EB7t m\u1EADt kh\u1EA9u \u0111\u0103ng nh\u1EADp th\xE0nh c\xF4ng!" : "\u0110\u1ED5i m\u1EADt kh\u1EA9u th\xE0nh c\xF4ng!" });
 });
 app.post("/api/reviews", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
@@ -15096,7 +16647,10 @@ app.get("/admin/san-pham/:id", requireAdmin, async (c) => {
   const db = c.env.DB;
   const p = await db.prepare("SELECT * FROM products WHERE id=?").bind(c.req.param("id")).first();
   if (!p) return c.redirect("/admin/san-pham");
-  const cats = await db.prepare("SELECT * FROM categories ORDER BY sort_order").all();
+  const [cats, rels] = await Promise.all([
+    db.prepare("SELECT * FROM categories ORDER BY sort_order").all(),
+    db.prepare("SELECT * FROM product_releases WHERE product_id=? ORDER BY id DESC LIMIT 10").bind(p.id).all().catch(() => ({ results: [] }))
+  ]);
   return c.html(/* @__PURE__ */ jsxDEV(
     AdminProductForm,
     {
@@ -15105,7 +16659,8 @@ app.get("/admin/san-pham/:id", requireAdmin, async (c) => {
       heading: "S\u1EEDa s\u1EA3n ph\u1EA9m",
       product: p,
       categories: cats.results,
-      isNew: false
+      isNew: false,
+      releases: rels.results
     }
   ));
 });
@@ -15170,12 +16725,14 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
   return c.json({ ok: true, redirect: "/admin/san-pham" });
 });
 app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
-  const id = c.req.param("id");
-  const f = productFields(await c.req.json());
+  const db = c.env.DB;
+  const id = +c.req.param("id");
+  const b = await c.req.json();
+  const f = productFields(b);
   if (!f.name || !f.slug) return c.json({ error: "Thi\u1EBFu t\xEAn ho\u1EB7c slug" }, 400);
-  const dup = await c.env.DB.prepare("SELECT 1 x FROM products WHERE slug=? AND id!=?").bind(f.slug, id).first();
+  const dup = await db.prepare("SELECT 1 x FROM products WHERE slug=? AND id!=?").bind(f.slug, id).first();
   if (dup) return c.json({ error: "Slug \u0111\xE3 \u0111\u01B0\u1EE3c d\xF9ng cho s\u1EA3n ph\u1EA9m kh\xE1c" }, 400);
-  await c.env.DB.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
+  await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
     doc_url=?,file_size=?,product_type=?,is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(
     f.name,
@@ -15202,6 +16759,48 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
     id
   ).run();
   invalidateCache();
+  if (b.notify_buyers === "1") {
+    const changelog = String(b.release_notes || "").trim() || `Phi\xEAn b\u1EA3n ${f.version} \u0111\xE3 \u0111\u01B0\u1EE3c c\u1EADp nh\u1EADt link t\u1EA3i v\xE0 t\xE0i li\u1EC7u m\u1EDBi nh\u1EA5t.`;
+    const buyersRes = await db.prepare(
+      `SELECT DISTINCT u.id, u.email, u.full_name
+       FROM licenses l JOIN users u ON u.id=l.user_id
+       WHERE l.product_id=? AND u.status='active'`
+    ).bind(id).all();
+    const buyers = buyersRes.results;
+    const origin = getRequestOrigin(c);
+    const siteName = c.get("settings")?.site_name || "KhoSkill AI";
+    for (const buyer of buyers) {
+      await createUserNotification(db, {
+        userId: buyer.id,
+        productId: id,
+        type: "product_update",
+        title: `C\u1EADp nh\u1EADt ${f.name} (${f.version})`,
+        message: changelog,
+        linkUrl: "/tai-khoan/san-pham"
+      });
+    }
+    let emailSuffix = "";
+    if (buyers.length > 0 && isEmailConfigured(c.env)) {
+      const messages = buyers.filter((u) => u.email).map((u) => buildProductUpdateEmail({
+        to: u.email,
+        fullName: u.full_name,
+        productName: f.name,
+        version: f.version,
+        changelog,
+        accountUrl: `${origin}/tai-khoan/san-pham`,
+        siteName,
+        origin
+      }));
+      const batchRes = await sendBatchEmails(c.env, messages);
+      emailSuffix = ` (\u0111\xE3 g\u1EEDi ${batchRes.sent} email)`;
+    } else if (buyers.length > 0) {
+      emailSuffix = " (l\u01B0u trong h\u1ED9p th\u01B0 web, ch\u01B0a b\u1EADt email)";
+    }
+    await db.prepare(
+      `INSERT INTO product_releases (product_id, version, changelog, download_url, notified_count) VALUES (?,?,?,?,?)`
+    ).bind(id, f.version, changelog, f.download_url, buyers.length).run().catch(() => null);
+    return c.json({ ok: true, message: `\u0110\xE3 l\u01B0u & g\u1EEDi th\xF4ng b\xE1o cho ${buyers.length} kh\xE1ch \u0111\xE3 mua${emailSuffix}!` });
+  }
   return c.json({ ok: true, message: "\u0110\xE3 l\u01B0u thay \u0111\u1ED5i!", redirect: "/admin/san-pham" });
 });
 app.delete("/api/admin/products/:id", requireAdmin, async (c) => {
@@ -15260,7 +16859,15 @@ app.get("/admin/don-hang/:id", requireAdmin, async (c) => {
   const db = c.env.DB;
   const o = await db.prepare(`SELECT o.*, u.full_name, u.email, u.phone FROM orders o JOIN users u ON u.id=o.user_id WHERE o.id=?`).bind(c.req.param("id")).first();
   if (!o) return c.redirect("/admin/don-hang");
-  const items = await db.prepare(`SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`).bind(o.id).all();
+  const [items, licenses, bankTx, customerStats] = await Promise.all([
+    db.prepare(`SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`).bind(o.id).all(),
+    db.prepare(`SELECT l.*, p.name product_name, p.version, p.download_url FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.order_id=? ORDER BY l.id`).bind(o.id).all(),
+    o.bank_tx_id ? db.prepare("SELECT * FROM bank_transactions WHERE id=?").bind(o.bank_tx_id).first() : db.prepare("SELECT * FROM bank_transactions WHERE matched_order_id=? ORDER BY id DESC LIMIT 1").bind(o.id).first(),
+    db.prepare(`SELECT u.email_verified, u.google_id,
+        (SELECT COUNT(*) FROM orders WHERE user_id=u.id) order_count,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status='paid') spent
+      FROM users u WHERE u.id=?`).bind(o.user_id).first()
+  ]);
   return c.html(/* @__PURE__ */ jsxDEV(
     AdminOrderDetail,
     {
@@ -15268,7 +16875,10 @@ app.get("/admin/don-hang/:id", requireAdmin, async (c) => {
       activeKey: "orders",
       heading: "Chi ti\u1EBFt \u0111\u01A1n h\xE0ng",
       order: o,
-      items: items.results
+      items: items.results,
+      licenses: licenses.results,
+      bankTx,
+      customerStats
     }
   ));
 });
@@ -15279,7 +16889,7 @@ app.post("/api/admin/orders/:id/status", requireAdmin, async (c) => {
   const o = await db.prepare("SELECT * FROM orders WHERE id=?").bind(c.req.param("id")).first();
   if (!o) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y \u0111\u01A1n h\xE0ng" }, 404);
   if (status === "paid" && o.status !== "paid") {
-    await settleOrder(db, o, { paidVia: "admin", paidAmount: o.total });
+    await settleOrder(db, o, { paidVia: "admin", paidAmount: o.total, env: c.env, origin: getRequestOrigin(c) });
     return c.json({ ok: true });
   }
   await db.prepare("UPDATE orders SET status=?, paid_at=? WHERE id=?").bind(status, status === "paid" ? (/* @__PURE__ */ new Date()).toISOString() : o.paid_at, o.id).run();
@@ -15344,7 +16954,7 @@ app.post("/api/admin/banktx/:id/match", requireAdmin, async (c) => {
   const o = await db.prepare("SELECT * FROM orders WHERE order_code=?").bind(String(order_code || "").trim().toUpperCase()).first();
   if (!o) return c.json({ error: "M\xE3 \u0111\u01A1n h\xE0ng kh\xF4ng t\u1ED3n t\u1EA1i" }, 404);
   if (o.status === "paid") return c.json({ error: "\u0110\u01A1n h\xE0ng n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c thanh to\xE1n" }, 400);
-  await settleOrder(db, o, { paidVia: "manual", paidAmount: tx.amount_in, bankTxId: tx.id });
+  await settleOrder(db, o, { paidVia: "manual", paidAmount: tx.amount_in, bankTxId: tx.id, env: c.env, origin: getRequestOrigin(c) });
   await db.prepare(
     `UPDATE bank_transactions SET match_status='matched', matched_order_id=?, matched_order_code=?,
      note=COALESCE(note,'') || ' | \u0110\u1ED1i so\xE1t th\u1EE7 c\xF4ng b\u1EDFi admin' WHERE id=?`
@@ -15383,6 +16993,82 @@ app.get("/admin/thanh-vien", requireAdmin, async (c) => {
       q
     }
   ));
+});
+app.get("/admin/thanh-vien/:id", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = +c.req.param("id");
+  const member = await db.prepare("SELECT * FROM users WHERE id=?").bind(id).first();
+  if (!member) return c.redirect("/admin/thanh-vien");
+  const [stats, orders, licenses, referrals, notifications, referrer] = await Promise.all([
+    db.prepare(`SELECT
+        (SELECT COUNT(*) FROM orders WHERE user_id=?1) order_count,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=?1 AND status='paid') spent,
+        (SELECT COUNT(*) FROM licenses WHERE user_id=?1) license_count`).bind(id).first(),
+    db.prepare("SELECT * FROM orders WHERE user_id=? ORDER BY id DESC").bind(id).all(),
+    db.prepare(`SELECT l.*, p.name product_name, p.version FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`).bind(id).all(),
+    db.prepare(`SELECT u.id, u.full_name, u.email, u.created_at,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status='paid') spent
+      FROM users u WHERE u.referred_by=? ORDER BY u.id DESC`).bind(id).all(),
+    db.prepare("SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 20").bind(id).all().catch(() => ({ results: [] })),
+    member.referred_by ? db.prepare("SELECT id, full_name FROM users WHERE id=?").bind(member.referred_by).first() : Promise.resolve(null)
+  ]);
+  return c.html(/* @__PURE__ */ jsxDEV(
+    AdminUserDetail,
+    {
+      user: c.get("user"),
+      activeKey: "users",
+      heading: `Th\xE0nh vi\xEAn: ${member.full_name}`,
+      member,
+      stats: stats || { order_count: 0, spent: 0, license_count: 0 },
+      orders: orders.results,
+      licenses: licenses.results,
+      referrals: referrals.results,
+      notifications: notifications.results,
+      referrer,
+      emailEnabled: isEmailConfigured(c.env)
+    }
+  ));
+});
+app.post("/api/admin/users/:id/notify", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = +c.req.param("id");
+  const b = await c.req.json();
+  const title2 = String(b.title || "").trim();
+  const message = String(b.message || "").trim();
+  const linkUrl = String(b.link_url || "").trim();
+  if (!title2 || !message) return c.json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EA7y \u0111\u1EE7 ti\xEAu \u0111\u1EC1 v\xE0 n\u1ED9i dung" }, 400);
+  if (linkUrl && !(linkUrl.startsWith("/") && !linkUrl.startsWith("//")) && !linkUrl.startsWith("https://") && !linkUrl.startsWith("http://")) {
+    return c.json({ error: "Link \u0111\xEDnh k\xE8m ph\u1EA3i b\u1EAFt \u0111\u1EA7u b\u1EB1ng / ho\u1EB7c https://" }, 400);
+  }
+  const member = await db.prepare("SELECT id, email, full_name, status FROM users WHERE id=?").bind(id).first();
+  if (!member) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y th\xE0nh vi\xEAn" }, 404);
+  await createUserNotification(db, {
+    userId: member.id,
+    type: "admin",
+    title: title2,
+    message,
+    linkUrl: linkUrl || null
+  });
+  let emailNote = "";
+  if (b.send_email === "1") {
+    if (isEmailConfigured(c.env) && member.email) {
+      const origin = getRequestOrigin(c);
+      const siteName = c.get("settings")?.site_name || "KhoSkill AI";
+      const res = await sendEmail(c.env, buildAdminDirectEmail({
+        to: member.email,
+        fullName: member.full_name,
+        title: title2,
+        message,
+        linkUrl: linkUrl || void 0,
+        siteName,
+        origin
+      }));
+      emailNote = res.ok ? " v\xE0 \u0111\xE3 g\u1EEDi Email!" : ` (g\u1EEDi Email l\u1ED7i: ${res.error})`;
+    } else {
+      emailNote = " (ch\u01B0a g\u1EEDi Email v\xEC ch\u01B0a c\u1EA5u h\xECnh RESEND_API_KEY)";
+    }
+  }
+  return c.json({ ok: true, message: `\u0110\xE3 g\u1EEDi th\xF4ng b\xE1o v\xE0o t\xE0i kho\u1EA3n kh\xE1ch${emailNote}` });
 });
 app.post("/api/admin/users/:id/action", requireAdmin, async (c) => {
   const db = c.env.DB;
@@ -15509,7 +17195,21 @@ app.post("/api/admin/tickets/:id/close", requireAdmin, async (c) => {
 });
 app.get("/admin/cai-dat", requireAdmin, async (c) => {
   const fresh = await fetchSettings(c.env.DB).catch(() => c.get("settings"));
-  return c.html(/* @__PURE__ */ jsxDEV(AdminSettings, { user: c.get("user"), activeKey: "settings", heading: "C\xE0i \u0111\u1EB7t h\u1EC7 th\u1ED1ng", settings: fresh }));
+  return c.html(/* @__PURE__ */ jsxDEV(
+    AdminSettings,
+    {
+      user: c.get("user"),
+      activeKey: "settings",
+      heading: "C\xE0i \u0111\u1EB7t h\u1EC7 th\u1ED1ng",
+      settings: fresh,
+      integrationStatus: {
+        emailConfigured: isEmailConfigured(c.env),
+        emailFrom: getEmailConfig(c.env).from,
+        googleConfigured: getGoogleConfig(c.env).enabled,
+        origin: getRequestOrigin(c)
+      }
+    }
+  ));
 });
 var SETTINGS_KEYS = /* @__PURE__ */ new Set([
   "site_name",

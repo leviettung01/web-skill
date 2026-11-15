@@ -7,6 +7,7 @@ export interface LayoutProps {
   user?: SessionUser | null
   settings?: Record<string, string>
   cartCount?: number
+  unreadNotifs?: number
   active?: string
   currentPath?: string
   currentQueryType?: string
@@ -18,7 +19,7 @@ export interface LayoutProps {
 
 export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
   const {
-    title, description, user, settings = {}, cartCount = 0,
+    title, description, user, settings = {}, cartCount = 0, unreadNotifs = 0,
     active = '', currentPath = '', currentQueryType = '', currentQuerySort = '',
     canonical, children
   } = props
@@ -247,26 +248,42 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                       <span id="cart-badge" class={`absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold tabular-nums grid place-items-center ${cartCount > 0 ? '' : 'hidden'}`}>{cartCount}</span>
                     </a>
 
+                    {user && (
+                      <a href="/tai-khoan/thong-bao" id="notif-btn" aria-label={`Thông báo (${unreadNotifs} chưa đọc)`} title="Thông báo"
+                        class="relative w-9 h-9 grid place-items-center rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white transition">
+                        <i class="fas fa-bell text-sm" aria-hidden="true"></i>
+                        <span id="notif-badge" class={`absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-indigo-500 text-white text-[9px] font-bold tabular-nums grid place-items-center ${unreadNotifs > 0 ? '' : 'hidden'}`}>{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>
+                      </a>
+                    )}
+
                     {user ? (
                       <div class="relative" id="user-menu-wrap">
                         <button type="button" id="user-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="user-dropdown" aria-label="Menu tài khoản"
                           class="flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white transition cursor-pointer">
-                          <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold uppercase shadow-sm">
-                            {user.full_name.charAt(0).toUpperCase()}
-                          </div>
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.full_name} class="w-7 h-7 rounded-full object-cover shadow-sm" referrerpolicy="no-referrer" />
+                          ) : (
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold uppercase shadow-sm">
+                              {user.full_name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <span class="hidden sm:block text-xs font-medium max-w-[90px] truncate">{user.full_name}</span>
                           <i class="fas fa-chevron-down text-[9px] text-[#9492b8]" aria-hidden="true"></i>
                         </button>
-                        <div id="user-dropdown" role="menu" class="hidden absolute right-0 mt-2 w-52 bg-[#0f0e24] rounded-xl shadow-xl border border-[#221e54] py-1.5 overflow-hidden">
+                        <div id="user-dropdown" role="menu" class="hidden absolute right-0 mt-2 w-56 bg-[#0f0e24] rounded-xl shadow-xl border border-[#221e54] py-1.5 overflow-hidden">
                           <div class="px-4 py-2 border-b border-[#221e54]">
                             <div class="text-xs font-bold text-white truncate">{user.full_name}</div>
                             <div class="text-[11px] text-[#9492b8] truncate">{user.email}</div>
                           </div>
                           <a href="/tai-khoan" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white"><i class="fas fa-gauge w-4 text-[#9492b8]" aria-hidden="true"></i>Tổng quan</a>
+                          <a href="/tai-khoan/thong-bao" role="menuitem" class="flex items-center justify-between gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white">
+                            <span class="flex items-center gap-2"><i class="fas fa-bell w-4 text-[#9492b8]" aria-hidden="true"></i>Thông báo</span>
+                            {unreadNotifs > 0 && <span class="px-1.5 py-0.5 rounded-full bg-indigo-500 text-white text-[10px] font-bold">{unreadNotifs}</span>}
+                          </a>
                           <a href="/tai-khoan/san-pham" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white"><i class="fas fa-box-archive w-4 text-[#9492b8]" aria-hidden="true"></i>Sản phẩm của tôi</a>
                           <a href="/tai-khoan/don-hang" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white"><i class="fas fa-receipt w-4 text-[#9492b8]" aria-hidden="true"></i>Đơn hàng</a>
                           <a href="/tai-khoan/affiliate" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white"><i class="fas fa-handshake w-4 text-[#9492b8]" aria-hidden="true"></i>Affiliate</a>
-                          <a href="/tai-khoan/ho-so" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white"><i class="fas fa-user-gear w-4 text-[#9492b8]" aria-hidden="true"></i>Hồ sơ</a>
+                          <a href="/tai-khoan/ho-so" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white"><i class="fas fa-user-gear w-4 text-[#9492b8]" aria-hidden="true"></i>Hồ sơ &amp; Xác minh</a>
                           {user.role === 'admin' && (
                             <a href="/admin" role="menuitem" class="flex items-center gap-2 px-4 py-2 text-xs text-amber-400 hover:bg-white/5 border-t border-[#221e54]"><i class="fas fa-shield-halved w-4" aria-hidden="true"></i>Quản trị</a>
                           )}
@@ -408,7 +425,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         <div id="toast-container" aria-live="polite" aria-atomic="true" role="status" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-        <script src="/static/app.js?v=20261118"></script>
+        <script src="/static/app.js?v=20261119"></script>
       </body>
     </html>
   )

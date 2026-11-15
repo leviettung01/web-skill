@@ -8,19 +8,34 @@ export function discountPercent(price: number, original?: number | null): number
   return Math.round(((original - price) / original) * 100)
 }
 
+function parseSafeDate(s?: string | null): Date | null {
+  if (!s) return null
+  const trimmed = String(s).trim()
+  if (!trimmed) return null
+  const iso = trimmed.includes('T')
+    ? trimmed
+    : trimmed.replace(' ', 'T') + (/[zZ]$|[+-]\d{2}(:?\d{2})?$/.test(trimmed) ? '' : 'Z')
+  const normalized = iso.replace(/([+-]\d{2})$/, '$1:00')
+  const d = new Date(normalized)
+  return isNaN(d.getTime()) ? null : d
+}
+
 export function formatDate(s?: string | null): string {
   if (!s) return '—'
-  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z')
-  if (isNaN(d.getTime())) return s
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const d = parseSafeDate(s)
+  if (!d) return s
+  return d.toLocaleDateString('vi-VN', {
+    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh'
+  })
 }
 
 export function formatDateTime(s?: string | null): string {
   if (!s) return '—'
-  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z')
-  if (isNaN(d.getTime())) return s
+  const d = parseSafeDate(s)
+  if (!d) return s
   return d.toLocaleString('vi-VN', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Asia/Ho_Chi_Minh'
   })
 }
 

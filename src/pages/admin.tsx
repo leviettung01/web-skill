@@ -99,7 +99,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
 
       <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
       <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-      <script src="/static/app.js?v=20261116"></script>
+      <script src="/static/app.js?v=20261119"></script>
       <script src="/static/admin.js?v=20261116"></script>
     </body>
   </html>
@@ -268,7 +268,7 @@ export const AdminProducts: FC<AdminProps & { products: any[]; categories: any[]
 const fieldCls = 'w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm'
 const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5'
 
-export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]; isNew: boolean }> = (props) => {
+export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]; isNew: boolean; releases?: any[] }> = (props) => {
   const p = props.product || {}
   return (
     <AdminShell {...props} activeKey="products" heading={props.isNew ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm'} sub={props.isNew ? '' : p.name}>
@@ -398,6 +398,38 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
             ))}
           </div>
 
+          {!props.isNew && (
+            <div class="bg-white rounded-2xl border border-indigo-200 p-5 space-y-3">
+              <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                <i class="fas fa-rocket text-indigo-600"></i>Phát hành cập nhật
+              </h3>
+              <p class="text-xs text-slate-500">Khi nâng phiên bản hoặc đổi link tải, nhập ghi chú và tích chọn bên dưới để thông báo cho tất cả khách đã mua.</p>
+              <div>
+                <label class={labelCls}>Ghi chú cập nhật (Changelog)</label>
+                <textarea name="release_notes" rows={3} placeholder="VD: Nâng cấp prompt v2.0, sửa lỗi khung hình dọc, thêm tài liệu hướng dẫn..."
+                  class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-xs resize-y"></textarea>
+              </div>
+              <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer p-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+                <input type="checkbox" name="notify_buyers" value="1" class="mt-0.5 accent-brand-600 w-4 h-4 shrink-0" />
+                <span>Gửi thông báo trong tài khoản &amp; Email tới tất cả khách hàng đã mua sản phẩm này</span>
+              </label>
+              {(props.releases || []).length > 0 && (
+                <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                  <div class="text-[11px] font-bold text-slate-500 uppercase">Lịch sử cập nhật</div>
+                  {(props.releases || []).slice(0, 3).map((r: any) => (
+                    <div class="text-xs p-2 rounded-lg bg-slate-50 border border-slate-100">
+                      <div class="flex justify-between font-semibold text-slate-800">
+                        <span>{r.version}</span>
+                        <span class="text-[10px] text-slate-400">{formatDate(r.created_at)} · {r.notified_count} khách</span>
+                      </div>
+                      <div class="text-slate-600 line-clamp-2 mt-0.5">{r.changelog}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div class="bg-white rounded-2xl border border-slate-200 p-5">
             <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700 mb-3"></div>
             <button type="submit" class="w-full h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition mb-2">
@@ -462,25 +494,95 @@ export const AdminOrders: FC<AdminProps & { orders: any[]; page: number; totalPa
   </AdminShell>
 )
 
-export const AdminOrderDetail: FC<AdminProps & { order: any; items: any[] }> = (props) => {
-  const { order, items } = props
+export const AdminOrderDetail: FC<AdminProps & {
+  order: any; items: any[]; licenses?: any[]; bankTx?: any; customerStats?: { order_count: number; spent: number; email_verified: number; google_id?: string | null }
+}> = (props) => {
+  const { order, items, licenses = [], bankTx, customerStats } = props
+  const pmLabel = order.payment_method === 'bank' ? 'Chuyển khoản / VietQR' : order.payment_method === 'momo' ? 'MoMo' : 'Ví số dư'
+  const paidViaLabel = order.paid_via === 'webhook' ? 'Webhook tự động (SePay/Casso)' : order.paid_via === 'admin' ? 'Admin xác nhận' : order.paid_via === 'manual' ? 'Đối soát thủ công / Demo' : order.paid_via || '—'
   return (
     <AdminShell {...props} activeKey="orders" heading={`Đơn hàng ${order.order_code}`} sub={formatDateTime(order.created_at)}>
-      <div class="grid lg:grid-cols-[1fr_320px] gap-5">
+      <div class="mb-4">
+        <a href="/admin/don-hang" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition">
+          <i class="fas fa-arrow-left"></i>Quay lại danh sách đơn hàng
+        </a>
+      </div>
+      <div class="grid lg:grid-cols-[1fr_340px] gap-5">
         <div class="space-y-5">
           <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-200"><h3 class="font-bold text-slate-900">Sản phẩm ({items.length})</h3></div>
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="font-bold text-slate-900">Sản phẩm ({items.length})</h3>
+            </div>
             <table class="w-full admin-table text-sm">
               <tbody class="divide-y divide-slate-100">
                 {items.map(it => (
                   <tr>
-                    <td><div class="font-semibold text-slate-800">{it.product_name}</div>{it.slug && <a href={`/san-pham/${it.slug}`} target="_blank" class="text-xs text-brand-600 hover:underline">Xem sản phẩm</a>}</td>
+                    <td>
+                      <div class="font-semibold text-slate-800">{it.product_name}</div>
+                      <div class="flex flex-wrap items-center gap-3 mt-1 text-xs">
+                        {it.slug && <a href={`/san-pham/${it.slug}`} target="_blank" class="text-slate-500 hover:text-brand-600 hover:underline"><i class="fas fa-eye mr-1"></i>Xem trang bán</a>}
+                        {it.product_id && <a href={`/admin/san-pham/${it.product_id}`} class="text-brand-600 font-semibold hover:underline"><i class="fas fa-pen-to-square mr-1"></i>Sửa sản phẩm / Gắn link tải</a>}
+                      </div>
+                    </td>
                     <td class="text-right font-bold whitespace-nowrap">{formatVND(it.price)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="font-bold text-slate-900">License Key &amp; Quyền tải đã cấp ({licenses.length})</h3>
+            </div>
+            {licenses.length === 0 ? (
+              <div class="p-5 text-sm text-slate-500">Chưa cấp license (đơn chưa thanh toán hoặc đã hoàn tiền).</div>
+            ) : (
+              <div class="divide-y divide-slate-100">
+                {licenses.map(l => (
+                  <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                        <span>{l.product_name}</span>
+                        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-mono">{l.version || 'v1.0'}</span>
+                      </div>
+                      <div class="flex items-center gap-2 mt-1">
+                        <code class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-bold">{l.license_key}</code>
+                        <span class="text-xs text-slate-500">· {l.download_count || 0} lượt tải</span>
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      {l.download_url ? (
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold">
+                          <i class="fas fa-link"></i>Đã có link tải
+                        </span>
+                      ) : (
+                        <a href={`/admin/san-pham/${l.product_id}`} class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold hover:bg-amber-100">
+                          <i class="fas fa-triangle-exclamation"></i>Chưa gắn link tải →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {bankTx && (
+            <div class="bg-white rounded-2xl border border-emerald-200 p-5 space-y-2">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2"><i class="fas fa-building-columns text-emerald-600"></i>Giao dịch ngân hàng đối soát</h3>
+                <a href="/admin/giao-dich" class="text-xs font-semibold text-brand-600 hover:underline">Xem tất cả →</a>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-2 text-xs text-slate-600 pt-1">
+                <div>Ngân hàng: <b class="text-slate-900">{bankTx.gateway || bankTx.provider}</b></div>
+                <div>Số tiền nhận: <b class="text-emerald-600">{formatVND(bankTx.amount_in)}</b></div>
+                <div>Mã tham chiếu: <code class="font-mono text-slate-800">{bankTx.reference_code || bankTx.provider_tx_id}</code></div>
+                <div>Thời gian GD: <b class="text-slate-800">{formatDateTime(bankTx.transaction_date)}</b></div>
+                <div class="sm:col-span-2">Nội dung CK: <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 break-all">{bankTx.content}</code></div>
+              </div>
+            </div>
+          )}
 
           <div class="bg-white rounded-2xl border border-slate-200 p-5">
             <h3 class="font-bold text-slate-900 mb-4">Thao tác</h3>
@@ -507,21 +609,40 @@ export const AdminOrderDetail: FC<AdminProps & { order: any; items: any[] }> = (
 
         <aside class="space-y-5">
           <div class="bg-white rounded-2xl border border-slate-200 p-5">
-            <h3 class="font-bold text-slate-900 mb-4">Khách hàng</h3>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-900">Khách hàng</h3>
+              {customerStats?.email_verified === 1 ? (
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold"><i class="fas fa-circle-check mr-1"></i>Email đã xác minh</span>
+              ) : (
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">Chưa xác minh email</span>
+              )}
+            </div>
             <div class="space-y-2.5 text-sm">
               <div><span class="text-slate-500">Họ tên:</span> <b>{order.full_name}</b></div>
               <div><span class="text-slate-500">Email:</span> <b class="break-all">{order.email}</b></div>
               <div><span class="text-slate-500">SĐT:</span> <b>{order.phone || '—'}</b></div>
-              <a href={`/admin/thanh-vien/${order.user_id}`} class="inline-block text-xs text-brand-600 hover:underline mt-1">Xem hồ sơ →</a>
+              {customerStats && (
+                <div class="pt-2 border-t border-slate-100 flex justify-between text-xs text-slate-500">
+                  <span>{customerStats.order_count} đơn hàng</span>
+                  <span>Tổng chi: <b class="text-slate-800">{formatVND(customerStats.spent)}</b></span>
+                </div>
+              )}
+              <a href={`/admin/thanh-vien/${order.user_id}`}
+                class="mt-2 w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold transition">
+                <i class="fas fa-user"></i>Xem hồ sơ &amp; gửi thông báo →
+              </a>
             </div>
           </div>
           <div class="bg-white rounded-2xl border border-slate-200 p-5">
             <h3 class="font-bold text-slate-900 mb-4">Thanh toán</h3>
             <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between"><span class="text-slate-500">Phương thức</span><b class="text-xs">{pmLabel}</b></div>
               <div class="flex justify-between"><span class="text-slate-500">Tạm tính</span><b>{formatVND(order.subtotal)}</b></div>
               {order.discount > 0 && <div class="flex justify-between"><span class="text-slate-500">Giảm ({order.coupon_code})</span><b class="text-emerald-600">-{formatVND(order.discount)}</b></div>}
               <div class="flex justify-between pt-2.5 border-t border-slate-100"><span class="font-bold">Tổng</span><b class="text-lg text-rose-600">{formatVND(order.total)}</b></div>
               <div class="flex justify-between pt-2"><span class="text-slate-500">Trạng thái</span><StatusBadge status={order.status} /></div>
+              {order.paid_via && <div class="flex justify-between gap-2"><span class="text-slate-500 shrink-0">Nguồn XN</span><b class="text-xs text-right">{paidViaLabel}</b></div>}
+              {order.paid_amount > 0 && <div class="flex justify-between"><span class="text-slate-500">Thực thu</span><b class="text-xs text-emerald-600">{formatVND(order.paid_amount)}</b></div>}
               {order.paid_at && <div class="flex justify-between"><span class="text-slate-500">Thanh toán lúc</span><b class="text-xs">{formatDateTime(order.paid_at)}</b></div>}
             </div>
             {order.note && <div class="mt-4 pt-4 border-t border-slate-100"><div class="text-xs text-slate-500 mb-1">Ghi chú</div><p class="text-sm">{order.note}</p></div>}
@@ -546,16 +667,22 @@ export const AdminUsers: FC<AdminProps & { users: any[]; page: number; totalPage
       <div class="overflow-x-auto">
         <table class="w-full admin-table text-sm">
           <thead class="bg-slate-50 border-b border-slate-200">
-            <tr><th class="text-left">Thành viên</th><th class="text-left">SĐT</th><th class="text-center">Đơn hàng</th><th class="text-right">Đã chi</th><th class="text-right">Số dư</th><th class="text-center">Vai trò</th><th class="text-center">Trạng thái</th><th class="text-right"></th></tr>
+            <tr><th class="text-left">Thành viên</th><th class="text-left">SĐT</th><th class="text-center">Đơn hàng</th><th class="text-right">Đã chi</th><th class="text-right">Số dư</th><th class="text-center">Vai trò</th><th class="text-center">Trạng thái</th><th class="text-right">Thao tác</th></tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             {props.users.map(u => (
               <tr>
                 <td>
-                  <div class="flex items-center gap-2.5">
+                  <a href={`/admin/thanh-vien/${u.id}`} class="flex items-center gap-2.5 group">
                     <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold shrink-0">{u.full_name.charAt(0).toUpperCase()}</div>
-                    <div class="min-w-0"><div class="font-semibold text-slate-900 truncate">{u.full_name}</div><div class="text-xs text-slate-500 truncate">{u.email}</div></div>
-                  </div>
+                    <div class="min-w-0">
+                      <div class="font-semibold text-slate-900 group-hover:text-brand-600 truncate flex items-center gap-1.5">
+                        <span>{u.full_name}</span>
+                        {u.email_verified === 1 && <i class="fas fa-circle-check text-emerald-500 text-[11px]" title="Email đã xác minh"></i>}
+                      </div>
+                      <div class="text-xs text-slate-500 truncate">{u.email}</div>
+                    </div>
+                  </a>
                 </td>
                 <td class="text-slate-600">{u.phone || '—'}</td>
                 <td class="text-center font-semibold">{u.order_count || 0}</td>
@@ -566,6 +693,9 @@ export const AdminUsers: FC<AdminProps & { users: any[]; page: number; totalPage
                 </td>
                 <td class="text-center"><StatusBadge status={u.status} /></td>
                 <td class="text-right whitespace-nowrap">
+                  <a href={`/admin/thanh-vien/${u.id}`} class="inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600" title="Xem hồ sơ & gửi thông báo">
+                    <i class="fas fa-eye text-xs"></i>
+                  </a>
                   <button class="btn-user-action inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500" title={u.status === 'active' ? 'Khoá' : 'Mở khoá'}
                     data-id={u.id} data-action="toggle-status"><i class={`fas ${u.status === 'active' ? 'fa-lock' : 'fa-lock-open'} text-xs`}></i></button>
                   <button class="btn-user-action inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-amber-50 text-amber-600" title="Đổi vai trò"
@@ -580,6 +710,230 @@ export const AdminUsers: FC<AdminProps & { users: any[]; page: number; totalPage
     <Pagination page={props.page} totalPages={props.totalPages} baseUrl="/admin/thanh-vien" />
   </AdminShell>
 )
+
+export const AdminUserDetail: FC<AdminProps & {
+  member: any
+  stats: { order_count: number; spent: number; license_count: number }
+  orders: any[]
+  licenses: any[]
+  referrals: any[]
+  notifications: any[]
+  referrer?: any
+  emailEnabled?: boolean
+}> = (props) => {
+  const { member, stats, orders, licenses, referrals, notifications, referrer, emailEnabled } = props
+  return (
+    <AdminShell {...props} activeKey="users" heading={`Thành viên: ${member.full_name}`} sub={member.email}>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <a href="/admin/thanh-vien" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition">
+          <i class="fas fa-arrow-left"></i>Quay lại danh sách thành viên
+        </a>
+        <div class="flex items-center gap-2">
+          <button class="btn-user-action h-9 px-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-400 text-slate-700 text-xs font-semibold transition"
+            data-id={member.id} data-action="toggle-status">
+            <i class={`fas ${member.status === 'active' ? 'fa-lock text-rose-500' : 'fa-lock-open text-emerald-600'} mr-1.5`}></i>
+            {member.status === 'active' ? 'Khoá tài khoản' : 'Mở khoá'}
+          </button>
+          <button class="btn-user-action h-9 px-3.5 rounded-xl bg-white border border-amber-200 hover:border-amber-400 text-amber-700 text-xs font-semibold transition"
+            data-id={member.id} data-action="toggle-role">
+            <i class="fas fa-user-shield mr-1.5"></i>{member.role === 'admin' ? 'Hạ xuống User' : 'Nâng lên Admin'}
+          </button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-[1fr_360px] gap-5">
+        <div class="space-y-5">
+          {/* Stats */}
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              ['Sản phẩm sở hữu', String(stats.license_count), 'text-brand-600'],
+              ['Tổng đơn hàng', String(stats.order_count), 'text-slate-900'],
+              ['Tổng chi tiêu', formatVND(stats.spent), 'text-emerald-600'],
+              ['Số dư ví', formatVND(member.balance), 'text-amber-600']
+            ].map(([lb, val, cls]) => (
+              <div class="bg-white rounded-2xl border border-slate-200 p-4">
+                <div class="text-xs text-slate-500">{lb}</div>
+                <div class={`text-lg font-extrabold mt-1 tabular-nums ${cls}`}>{val}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Owned products & licenses */}
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="font-bold text-slate-900">Sản phẩm &amp; License đang sở hữu ({licenses.length})</h3>
+            </div>
+            {licenses.length === 0 ? (
+              <div class="p-6 text-sm text-slate-500">Thành viên này chưa sở hữu sản phẩm nào.</div>
+            ) : (
+              <div class="overflow-x-auto">
+                <table class="w-full admin-table text-sm">
+                  <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr><th class="text-left">Sản phẩm</th><th class="text-left">License Key</th><th class="text-center">Lượt tải</th><th class="text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    {licenses.map(l => (
+                      <tr>
+                        <td>
+                          <div class="font-semibold text-slate-800">{l.product_name}</div>
+                          <div class="text-xs text-slate-400">{l.version || 'v1.0'} · Cấp {formatDate(l.created_at)}</div>
+                        </td>
+                        <td><code class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-bold">{l.license_key}</code></td>
+                        <td class="text-center font-semibold">{l.download_count || 0}</td>
+                        <td class="text-right whitespace-nowrap">
+                          <a href={`/admin/san-pham/${l.product_id}`} class="text-xs font-semibold text-brand-600 hover:underline">Sửa SP / Cập nhật →</a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Orders */}
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200"><h3 class="font-bold text-slate-900">Lịch sử đơn hàng ({orders.length})</h3></div>
+            {orders.length === 0 ? (
+              <div class="p-6 text-sm text-slate-500">Chưa có đơn hàng nào.</div>
+            ) : (
+              <div class="overflow-x-auto">
+                <table class="w-full admin-table text-sm">
+                  <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr><th class="text-left">Mã đơn</th><th class="text-left">Ngày tạo</th><th class="text-right">Tổng</th><th class="text-center">Trạng thái</th><th class="text-right"></th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    {orders.map(o => (
+                      <tr>
+                        <td><a href={`/admin/don-hang/${o.id}`} class="font-bold text-brand-600 hover:underline">{o.order_code}</a></td>
+                        <td class="text-xs text-slate-500">{formatDateTime(o.created_at)}</td>
+                        <td class="text-right font-bold">{formatVND(o.total)}</td>
+                        <td class="text-center"><StatusBadge status={o.status} /></td>
+                        <td class="text-right"><a href={`/admin/don-hang/${o.id}`} class="text-xs font-semibold text-slate-500 hover:text-brand-600">Chi tiết →</a></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Affiliate referrals */}
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="font-bold text-slate-900">Affiliate ({referrals.length} người giới thiệu)</h3>
+              <span class="text-xs text-emerald-600 font-bold">Hoa hồng đã nhận: {formatVND(member.affiliate_earned || 0)}</span>
+            </div>
+            {referrals.length === 0 ? (
+              <div class="p-6 text-sm text-slate-500">Chưa giới thiệu thành viên nào.</div>
+            ) : (
+              <div class="divide-y divide-slate-100">
+                {referrals.map(r => (
+                  <div class="px-5 py-3 flex items-center justify-between text-sm">
+                    <div>
+                      <a href={`/admin/thanh-vien/${r.id}`} class="font-semibold text-slate-800 hover:text-brand-600">{r.full_name}</a>
+                      <div class="text-xs text-slate-500">{r.email}</div>
+                    </div>
+                    <div class="text-right text-xs">
+                      <div class="font-bold text-slate-800">{formatVND(r.spent || 0)}</div>
+                      <div class="text-slate-400">{formatDate(r.created_at)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside class="space-y-5">
+          {/* Customer profile card */}
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 text-sm">
+            <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+              {member.avatar_url ? (
+                <img src={member.avatar_url} alt={member.full_name} class="w-12 h-12 rounded-full object-cover shrink-0" referrerpolicy="no-referrer" />
+              ) : (
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0">
+                  {member.full_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div class="min-w-0">
+                <div class="font-bold text-slate-900 truncate">{member.full_name}</div>
+                <div class="text-xs text-slate-500 truncate">{member.email}</div>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  {member.email_verified === 1 ? (
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold"><i class="fas fa-check mr-1"></i>Email đã xác minh</span>
+                  ) : (
+                    <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">Chưa xác minh email</span>
+                  )}
+                  {member.google_id && <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-semibold">Google</span>}
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-between"><span class="text-slate-500">SĐT</span><b>{member.phone || '—'}</b></div>
+            <div class="flex justify-between"><span class="text-slate-500">Vai trò</span><b>{member.role === 'admin' ? 'Admin' : 'User'}</b></div>
+            <div class="flex justify-between"><span class="text-slate-500">Trạng thái</span><StatusBadge status={member.status} /></div>
+            <div class="flex justify-between"><span class="text-slate-500">Mã Affiliate</span><code class="font-mono font-bold text-brand-600">{member.affiliate_code}</code></div>
+            {referrer && <div class="flex justify-between"><span class="text-slate-500">Người giới thiệu</span><a href={`/admin/thanh-vien/${referrer.id}`} class="font-semibold text-brand-600 hover:underline">{referrer.full_name}</a></div>}
+            <div class="flex justify-between"><span class="text-slate-500">Ngày tham gia</span><b class="text-xs">{formatDateTime(member.created_at)}</b></div>
+          </div>
+
+          {/* Direct notification + email form */}
+          <form action={`/api/admin/users/${member.id}/notify`} method="post" data-ajax data-reload="true"
+            class="bg-white rounded-2xl border border-indigo-200 p-5 space-y-3.5">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+              <i class="fas fa-paper-plane text-brand-600"></i>Gửi thông báo / Link cho khách
+            </h3>
+            <p class="text-xs text-slate-500">Thông báo sẽ hiện ngay trong hộp thư tài khoản của khách{emailEnabled ? ' và gửi kèm qua Email.' : ' (Email đang tắt vì chưa cấu hình Resend API key).'}</p>
+            <div>
+              <label class={labelCls}>Tiêu đề *</label>
+              <input type="text" name="title" required placeholder="VD: Cập nhật bản Skill v2.0 hoặc Link riêng" class={fieldCls} />
+            </div>
+            <div>
+              <label class={labelCls}>Nội dung *</label>
+              <textarea name="message" rows={4} required placeholder="Nhập nội dung thông báo, hướng dẫn hoặc ghi chú phiên bản mới..."
+                class="w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"></textarea>
+            </div>
+            <div>
+              <label class={labelCls}>Link đính kèm <span class="text-slate-400 font-normal">(tuỳ chọn)</span></label>
+              <input type="text" name="link_url" placeholder="/tai-khoan/san-pham hoặc https://..." class={fieldCls} />
+            </div>
+            <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+              <input type="checkbox" name="send_email" value="1" checked={!!emailEnabled} class="mt-0.5 accent-brand-600 w-4 h-4 shrink-0" />
+              <span>Gửi kèm Email tới <b>{member.email}</b> {!emailEnabled && <span class="text-amber-600">(cần RESEND_API_KEY)</span>}</span>
+            </label>
+            <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
+            <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer">
+              <i class="fas fa-bell mr-1.5"></i>Gửi thông báo ngay
+            </button>
+          </form>
+
+          {/* Recent notifications sent to user */}
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="font-bold text-slate-900 mb-3 text-sm">Thông báo đã gửi ({notifications.length})</h3>
+            {notifications.length === 0 ? (
+              <p class="text-xs text-slate-500">Chưa có thông báo nào.</p>
+            ) : (
+              <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                {notifications.map(n => (
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                    <div class="flex items-center justify-between gap-2 font-semibold text-slate-800">
+                      <span class="truncate">{n.title}</span>
+                      <span class={`px-1.5 py-0.5 rounded text-[10px] shrink-0 ${n.is_read ? 'bg-slate-200 text-slate-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                        {n.is_read ? 'Đã đọc' : 'Chưa đọc'}
+                      </span>
+                    </div>
+                    <p class="text-slate-600 mt-1 line-clamp-2">{n.message}</p>
+                    <div class="text-[10px] text-slate-400 mt-1">{formatDateTime(n.created_at)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+    </AdminShell>
+  )
+}
 
 /* ---------------- GENERIC LIST PAGES ---------------- */
 export const AdminCategories: FC<AdminProps & { categories: any[]; editing?: any }> = (props) => {
@@ -782,8 +1136,13 @@ export const AdminTickets: FC<AdminProps & { tickets: any[] }> = (props) => (
   </AdminShell>
 )
 
-export const AdminSettings: FC<AdminProps & { settings: Record<string, string> }> = (props) => {
+export const AdminSettings: FC<AdminProps & {
+  settings: Record<string, string>
+  integrationStatus?: { emailConfigured: boolean; emailFrom: string; googleConfigured: boolean; origin: string }
+}> = (props) => {
   const s = props.settings
+  const st = props.integrationStatus
+  const callbackUrl = st ? `${st.origin}/api/auth/google/callback` : '/api/auth/google/callback'
   return (
     <AdminShell {...props} activeKey="settings" heading="Cài đặt hệ thống">
       <form action="/api/admin/settings" method="post" data-ajax class="grid lg:grid-cols-2 gap-5">
@@ -854,6 +1213,42 @@ export const AdminSettings: FC<AdminProps & { settings: Record<string, string> }
           </div>
         </div>
       </form>
+
+      {st && (
+        <section class="mt-5 bg-white rounded-2xl border border-slate-200 p-5">
+          <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i class="fas fa-plug text-brand-600"></i>Trạng thái tích hợp Email (Resend) &amp; Google Login
+          </h3>
+          <div class="grid md:grid-cols-2 gap-4 text-xs">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <b class="text-sm text-slate-900"><i class="fas fa-envelope mr-1.5 text-brand-600"></i>Email tự động (Resend)</b>
+                <span class={`px-2.5 py-0.5 rounded-full font-bold ${st.emailConfigured ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {st.emailConfigured ? 'Đã kết nối' : 'Chưa cấu hình'}
+                </span>
+              </div>
+              <div class="text-slate-600">Địa chỉ gửi (From): <code class="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">{st.emailFrom}</code></div>
+              <p class="text-slate-500 leading-relaxed">Thêm biến môi trường <code class="font-mono">RESEND_API_KEY</code> (và tuỳ chọn <code class="font-mono">EMAIL_FROM</code>) trên Vercel + xác thực bản ghi DNS SPF/DKIM của Resend tại Tenten để bật gửi link xác minh, quên mật khẩu &amp; email cập nhật Skill.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <b class="text-sm text-slate-900"><i class="fab fa-google mr-1.5 text-rose-500"></i>Đăng nhập Google (OAuth 2.0)</b>
+                <span class={`px-2.5 py-0.5 rounded-full font-bold ${st.googleConfigured ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {st.googleConfigured ? 'Đang bật' : 'Chưa cấu hình'}
+                </span>
+              </div>
+              <div class="text-slate-600">Authorized Redirect URI (dán vào Google Cloud Console):</div>
+              <div class="flex items-center gap-1.5">
+                <input type="text" readonly value={callbackUrl} class="flex-1 h-8 px-2.5 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-slate-700" />
+                <button type="button" data-copy={callbackUrl} class="h-8 px-2.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold">
+                  <i class="far fa-copy"></i>
+                </button>
+              </div>
+              <p class="text-slate-500 leading-relaxed">Thêm biến <code class="font-mono">GOOGLE_CLIENT_ID</code> &amp; <code class="font-mono">GOOGLE_CLIENT_SECRET</code> trên Vercel để nút "Tiếp tục với Google" xuất hiện tại trang Đăng nhập / Đăng ký.</p>
+            </div>
+          </div>
+        </section>
+      )}
     </AdminShell>
   )
 }

@@ -1,12 +1,18 @@
 export type Bindings = {
   DB: D1Database
   JWT_SECRET?: string
+  RESEND_API_KEY?: string
+  EMAIL_FROM?: string
+  GOOGLE_CLIENT_ID?: string
+  GOOGLE_CLIENT_SECRET?: string
+  SITE_URL?: string
 }
 
 export type Variables = {
   user: SessionUser | null
   settings: Record<string, string>
   cartCount: number
+  unreadNotifs: number
 }
 
 export interface SessionUser {
@@ -15,6 +21,7 @@ export interface SessionUser {
   full_name: string
   role: string
   avatar_url?: string | null
+  email_verified?: number
 }
 
 export interface Product {

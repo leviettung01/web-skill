@@ -1,9 +1,17 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { getCookie } from 'hono/cookie'
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import type { Bindings, Variables, SessionUser } from './lib/types'
-import { getSession, setSession, clearSession, hashPassword, verifyPassword, genCode, genLicenseKey } from './lib/auth'
+import { getSession, setSession, clearSession, getSecret, hashPassword, verifyPassword, genCode, genLicenseKey } from './lib/auth'
 import { slugify, formatVND } from './lib/utils'
+import {
+  genTokenHex, sha256Hex, isEmailConfigured, getEmailConfig, sendEmail, sendBatchEmails,
+  buildVerificationEmail, buildPasswordResetEmail, buildOrderPaidEmail, buildProductUpdateEmail, buildAdminDirectEmail
+} from './lib/email'
+import {
+  getGoogleConfig, getRequestOrigin, safeRedirectPath, signOAuthState, verifyOAuthState,
+  buildGoogleAuthUrl, exchangeGoogleCode
+} from './lib/oauth'
 import {
   verifyWebhookAuth, extractTransactions, extractOrderCodes,
   normalizeDate, type NormalizedTx
@@ -12,16 +20,16 @@ import {
 import { HomePage } from './pages/home'
 import { ProductListPage } from './pages/products'
 import { ProductDetailPage } from './pages/product-detail'
-import { LoginPage, RegisterPage, ForgotPage } from './pages/auth'
+import { LoginPage, RegisterPage, ForgotPage, ResetPasswordPage, VerifyEmailResultPage } from './pages/auth'
 import { CartPage, CheckoutPage, OrderPage } from './pages/cart'
-import { AccountDashboard, MyProductsPage, MyOrdersPage, WishlistPage, AffiliateDashboard, ProfilePage } from './pages/account'
+import { AccountDashboard, MyProductsPage, MyOrdersPage, WishlistPage, AffiliateDashboard, ProfilePage, NotificationsPage } from './pages/account'
 import {
   BlogListPage, BlogDetailPage, PricingPage, AboutPage, ContactPage,
   AffiliateLandingPage, DocPage, NotFoundPage
 } from './pages/static'
 import {
   AdminDashboard, AdminProducts, AdminProductForm, AdminOrders, AdminOrderDetail,
-  AdminUsers, AdminCategories, AdminCoupons, AdminPosts, AdminReviews, AdminTickets, AdminSettings,
+  AdminUsers, AdminUserDetail, AdminCategories, AdminCoupons, AdminPosts, AdminReviews, AdminTickets, AdminSettings,
   AdminBankTx
 } from './pages/admin'
 import { POLICY_DOCS } from './lib/docs'
@@ -81,12 +89,38 @@ app.use('*', async (c, next) => {
   await next()
 })
 
+app.use('*', async (c, next) => {
+  if (c.req.method === 'GET' && !c.req.path.startsWith('/api/') && !c.req.path.startsWith('/static/')) {
+    const refParam = (c.req.query('ref') || '').trim()
+    if (refParam && /^[A-Za-z0-9_-]{3,20}$/.test(refParam)) {
+      setCookie(c, 'khoskill_ref', refParam.toUpperCase(), {
+        httpOnly: true,
+        sameSite: 'Lax',
+        path: '/',
+        maxAge: 30 * 86400
+      })
+    }
+    const u = c.get('user')
+    if (u) {
+      const cnt = await c.env.DB.prepare('SELECT COUNT(*) n FROM notifications WHERE user_id=? AND is_read=0')
+        .bind(u.id).first<any>().catch(() => ({ n: 0 }))
+      c.set('unreadNotifs', +(cnt?.n || 0))
+    } else {
+      c.set('unreadNotifs', 0)
+    }
+  } else {
+    c.set('unreadNotifs', 0)
+  }
+  await next()
+})
+
 function base(c: any) {
   const u = new URL(c.req.url)
   return {
     user: c.get('user'),
     settings: c.get('settings'),
     cartCount: c.get('cartCount'),
+    unreadNotifs: c.get('unreadNotifs') || 0,
     currentPath: u.pathname,
     currentQueryType: u.searchParams.get('type') || '',
     currentQuerySort: u.searchParams.get('sort') || ''
@@ -304,18 +338,198 @@ for (const [path, doc] of Object.entries(POLICY_DOCS)) {
 }
 
 /* ============================================================
+   NOTIFICATIONS & EMAIL TOKEN HELPERS
+   ============================================================ */
+async function createUserNotification(
+  db: D1Database,
+  opts: { userId: number; productId?: number | null; type?: string; title: string; message: string; linkUrl?: string | null }
+) {
+  await db.prepare(
+    `INSERT INTO notifications (user_id, product_id, type, title, message, link_url) VALUES (?,?,?,?,?,?)`
+  ).bind(opts.userId, opts.productId ?? null, opts.type || 'system', opts.title, opts.message, opts.linkUrl ?? null)
+    .run().catch(() => null)
+}
+
+async function issueEmailToken(
+  db: D1Database,
+  opts: { userId: number; email: string; purpose: 'verify' | 'reset'; ttlMinutes?: number }
+): Promise<{ rawToken?: string; waitSeconds?: number }> {
+  const recent = await db.prepare(
+    `SELECT created_at FROM email_tokens WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1`
+  ).bind(opts.userId, opts.purpose).first<any>()
+  if (recent?.created_at) {
+    const diffMs = Date.now() - new Date(recent.created_at).getTime()
+    if (diffMs >= 0 && diffMs < 60_000) {
+      return { waitSeconds: Math.max(1, Math.ceil((60_000 - diffMs) / 1000)) }
+    }
+  }
+  const rawToken = genTokenHex(32)
+  const tokenHash = await sha256Hex(rawToken)
+  const expiresAt = new Date(Date.now() + (opts.ttlMinutes || 30) * 60_000).toISOString()
+  await db.prepare(
+    `INSERT INTO email_tokens (user_id, email, purpose, token_hash, expires_at) VALUES (?,?,?,?,?)`
+  ).bind(opts.userId, opts.email, opts.purpose, tokenHash, expiresAt).run()
+  return { rawToken }
+}
+
+async function consumeEmailToken(
+  db: D1Database,
+  rawToken: string,
+  purpose: 'verify' | 'reset'
+): Promise<{ ok: true; tok: any } | { ok: false; reason: string }> {
+  if (!rawToken || rawToken.length < 32) return { ok: false, reason: 'Liên kết không hợp lệ.' }
+  const tokenHash = await sha256Hex(rawToken)
+  const tok = await db.prepare(
+    `SELECT * FROM email_tokens WHERE token_hash=? AND purpose=?`
+  ).bind(tokenHash, purpose).first<any>()
+  if (!tok) return { ok: false, reason: 'Liên kết không tồn tại hoặc không hợp lệ.' }
+  if (tok.used_at) return { ok: false, reason: 'Liên kết này đã được sử dụng trước đó.' }
+  if (new Date(tok.expires_at).getTime() < Date.now()) {
+    return { ok: false, reason: 'Liên kết đã hết hạn (30 phút). Vui lòng yêu cầu gửi lại link mới.' }
+  }
+  await db.prepare(`UPDATE email_tokens SET used_at=? WHERE id=? AND used_at IS NULL`)
+    .bind(new Date().toISOString(), tok.id).run()
+  return { ok: true, tok }
+}
+
+/* ============================================================
    AUTH
    ============================================================ */
 app.get('/dang-nhap', (c) => {
   if (c.get('user')) return c.redirect('/tai-khoan')
-  return c.html(<LoginPage {...base(c)} next={c.req.query('next')} registered={c.req.query('registered') === '1'} />)
+  return c.html(<LoginPage {...base(c)}
+    next={c.req.query('next')}
+    registered={c.req.query('registered') === '1'}
+    resetSuccess={c.req.query('reset') === '1'}
+    oauthError={c.req.query('oauth_error')}
+    googleEnabled={getGoogleConfig(c.env).enabled} />)
 })
 app.get('/dang-ky', (c) => {
   if (c.get('user')) return c.redirect('/tai-khoan')
-  return c.html(<RegisterPage {...base(c)} ref={c.req.query('ref')} />)
+  const ref = c.req.query('ref') || getCookie(c, 'khoskill_ref') || ''
+  return c.html(<RegisterPage {...base(c)}
+    ref={ref}
+    oauthError={c.req.query('oauth_error')}
+    googleEnabled={getGoogleConfig(c.env).enabled} />)
 })
-app.get('/quen-mat-khau', (c) => c.html(<ForgotPage {...base(c)} />))
+app.get('/quen-mat-khau', (c) => c.html(<ForgotPage {...base(c)} emailEnabled={isEmailConfigured(c.env)} />))
 app.get('/dang-xuat', (c) => { clearSession(c); return c.redirect('/') })
+
+app.get('/api/auth/google', async (c) => {
+  const cfg = getGoogleConfig(c.env)
+  if (!cfg.enabled) return c.redirect('/dang-nhap?oauth_error=not_configured')
+  const origin = getRequestOrigin(c)
+  const next = safeRedirectPath(c.req.query('next'), '/tai-khoan')
+  const ref = (c.req.query('ref') || getCookie(c, 'khoskill_ref') || '').trim().toUpperCase()
+  const nonce = genTokenHex(16)
+  const signedState = await signOAuthState(
+    { nonce, next, ...(ref ? { ref } : {}), exp: Date.now() + 600_000 },
+    getSecret(c.env)
+  )
+  setCookie(c, 'oauth_state', signedState, {
+    httpOnly: true,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: 600,
+    secure: origin.startsWith('https://')
+  })
+  return c.redirect(buildGoogleAuthUrl({
+    clientId: cfg.clientId,
+    redirectUri: `${origin}/api/auth/google/callback`,
+    state: nonce
+  }))
+})
+
+app.get('/api/auth/google/callback', async (c) => {
+  const errParam = c.req.query('error')
+  if (errParam) {
+    deleteCookie(c, 'oauth_state', { path: '/' })
+    return c.redirect('/dang-nhap?oauth_error=cancelled')
+  }
+  const cfg = getGoogleConfig(c.env)
+  if (!cfg.enabled) return c.redirect('/dang-nhap?oauth_error=not_configured')
+
+  const code = c.req.query('code') || ''
+  const state = c.req.query('state') || ''
+  const stateCookie = getCookie(c, 'oauth_state') || ''
+  deleteCookie(c, 'oauth_state', { path: '/' })
+
+  const verified = await verifyOAuthState(stateCookie, getSecret(c.env))
+  if (!code || !state || !verified || verified.nonce !== state) {
+    return c.redirect('/dang-nhap?oauth_error=state_invalid')
+  }
+
+  try {
+    const db = c.env.DB
+    const origin = getRequestOrigin(c)
+    const profile = await exchangeGoogleCode({
+      code,
+      clientId: cfg.clientId,
+      clientSecret: cfg.clientSecret,
+      redirectUri: `${origin}/api/auth/google/callback`
+    })
+    if (profile.email_verified === false) {
+      return c.redirect('/dang-nhap?oauth_error=unverified')
+    }
+    const email = profile.email.trim().toLowerCase()
+    const fullName = (profile.name || email.split('@')[0]).trim()
+    const avatarUrl = profile.picture || null
+
+    let u = await db.prepare('SELECT * FROM users WHERE google_id=? OR email=?')
+      .bind(profile.sub, email).first<any>()
+
+    if (u) {
+      if (u.status === 'banned') return c.redirect('/dang-nhap?oauth_error=banned')
+      await db.prepare(
+        `UPDATE users SET google_id=?,
+          avatar_url=COALESCE(NULLIF(avatar_url,''), ?),
+          email_verified=1,
+          email_verified_at=COALESCE(email_verified_at, CURRENT_TIMESTAMP),
+          updated_at=CURRENT_TIMESTAMP
+         WHERE id=?`
+      ).bind(profile.sub, avatarUrl, u.id).run()
+      await setSession(c, {
+        id: u.id,
+        email: u.email,
+        full_name: u.full_name,
+        role: u.role,
+        avatar_url: u.avatar_url || avatarUrl,
+        email_verified: 1
+      })
+      const defaultDest = u.role === 'admin' ? '/admin' : '/tai-khoan'
+      const dest = verified.next && verified.next !== '/tai-khoan' ? verified.next : defaultDest
+      return c.redirect(safeRedirectPath(dest, defaultDest))
+    }
+
+    let referred_by: number | null = null
+    const refCode = (verified.ref || getCookie(c, 'khoskill_ref') || '').trim().toUpperCase()
+    if (refCode) {
+      const r = await db.prepare('SELECT id FROM users WHERE affiliate_code=?').bind(refCode).first<any>()
+      if (r) referred_by = r.id
+    }
+
+    const oauthHash = 'OAUTH$' + genTokenHex(16)
+    const affCode = genCode('AF', 6)
+    const res = await db.prepare(
+      `INSERT INTO users (email, password_hash, full_name, avatar_url, affiliate_code, referred_by, google_id, email_verified, email_verified_at)
+       VALUES (?,?,?,?,?,?,?,1,CURRENT_TIMESTAMP)`
+    ).bind(email, oauthHash, fullName, avatarUrl, affCode, referred_by, profile.sub).run()
+
+    const userId = res.meta.last_row_id as number
+    await createUserNotification(db, {
+      userId,
+      type: 'system',
+      title: 'Chào mừng đến với KhoSkill AI!',
+      message: 'Tài khoản Google của bạn đã được xác minh tự động. Bạn có thể mua Skill AI hoặc kích hoạt Affiliate ngay.',
+      linkUrl: '/san-pham'
+    })
+    await setSession(c, { id: userId, email, full_name: fullName, role: 'user', avatar_url: avatarUrl, email_verified: 1 })
+    return c.redirect(safeRedirectPath(verified.next, '/tai-khoan'))
+  } catch (err) {
+    console.error('[GOOGLE_OAUTH]', err)
+    return c.redirect('/dang-nhap?oauth_error=failed')
+  }
+})
 
 app.post('/api/auth/register', async (c) => {
   const db = c.env.DB
@@ -332,8 +546,9 @@ app.post('/api/auth/register', async (c) => {
   if (exists) return c.json({ error: 'Email này đã được đăng ký' }, 400)
 
   let referred_by: number | null = null
-  if (b.ref) {
-    const r = await db.prepare('SELECT id FROM users WHERE affiliate_code=?').bind(String(b.ref).toUpperCase()).first<any>()
+  const refInput = (b.ref || getCookie(c, 'khoskill_ref') || '').trim().toUpperCase()
+  if (refInput) {
+    const r = await db.prepare('SELECT id FROM users WHERE affiliate_code=?').bind(refInput).first<any>()
     if (r) referred_by = r.id
   }
 
@@ -343,7 +558,15 @@ app.post('/api/auth/register', async (c) => {
     `INSERT INTO users (email, password_hash, full_name, phone, affiliate_code, referred_by) VALUES (?,?,?,?,?,?)`
   ).bind(email, hash, full_name, b.phone || null, affCode, referred_by).run()
 
-  const user: SessionUser = { id: res.meta.last_row_id as number, email, full_name, role: 'user' }
+  const userId = res.meta.last_row_id as number
+  await createUserNotification(db, {
+    userId,
+    type: 'system',
+    title: 'Tạo tài khoản thành công',
+    message: 'Bạn có thể mua Skill ngay lập tức. Khi cần tham gia Affiliate hoặc nhận mail cập nhật phiên bản, hãy xác minh Gmail trong Hồ sơ.',
+    linkUrl: '/tai-khoan/ho-so'
+  })
+  const user: SessionUser = { id: userId, email, full_name, role: 'user', email_verified: 0 }
   await setSession(c, user)
   return c.json({ ok: true, redirect: '/tai-khoan' })
 })
@@ -355,13 +578,112 @@ app.post('/api/auth/login', async (c) => {
   const u = await db.prepare('SELECT * FROM users WHERE email=?').bind(email).first<any>()
   if (!u) return c.json({ error: 'Email hoặc mật khẩu không đúng' }, 400)
   if (u.status === 'banned') return c.json({ error: 'Tài khoản của bạn đã bị khoá' }, 403)
+  if (String(u.password_hash || '').startsWith('OAUTH$')) {
+    return c.json({ error: 'Tài khoản này đăng ký bằng Google. Hãy bấm "Tiếp tục với Google" hoặc đặt mật khẩu trong Hồ sơ.' }, 400)
+  }
   const ok = await verifyPassword(b.password || '', u.password_hash)
   if (!ok) return c.json({ error: 'Email hoặc mật khẩu không đúng' }, 400)
 
-  await setSession(c, { id: u.id, email: u.email, full_name: u.full_name, role: u.role, avatar_url: u.avatar_url })
+  await setSession(c, {
+    id: u.id,
+    email: u.email,
+    full_name: u.full_name,
+    role: u.role,
+    avatar_url: u.avatar_url,
+    email_verified: u.email_verified || 0
+  })
   const next = b.next && String(b.next).startsWith('/') && !String(b.next).startsWith('//')
     ? b.next : (u.role === 'admin' ? '/admin' : '/tai-khoan')
   return c.json({ ok: true, redirect: next })
+})
+
+app.get('/xac-minh-email', async (c) => {
+  const db = c.env.DB
+  const token = (c.req.query('token') || '').trim()
+  const res = await consumeEmailToken(db, token, 'verify')
+  if (!res.ok) {
+    return c.html(<VerifyEmailResultPage {...base(c)} ok={false} message={res.reason} />, 400)
+  }
+  const tok = res.tok
+  await db.prepare(
+    `UPDATE users SET email_verified=1, email_verified_at=COALESCE(email_verified_at, CURRENT_TIMESTAMP), updated_at=CURRENT_TIMESTAMP WHERE id=?`
+  ).bind(tok.user_id).run()
+  await createUserNotification(db, {
+    userId: tok.user_id,
+    type: 'system',
+    title: 'Email đã được xác minh',
+    message: 'Địa chỉ email của bạn đã xác minh thành công. Chương trình Affiliate và thông báo cập nhật qua email đã sẵn sàng!',
+    linkUrl: '/tai-khoan/affiliate'
+  })
+  const cur = c.get('user')
+  if (cur && cur.id === tok.user_id) {
+    await setSession(c, { ...cur, email_verified: 1 })
+  }
+  return c.html(<VerifyEmailResultPage {...base(c)} ok={true} email={tok.email}
+    message="Email của bạn đã được xác minh thành công! Từ giờ bạn có thể kích hoạt Affiliate và nhận thông báo cập nhật Skill AI qua email." />)
+})
+
+app.post('/api/auth/forgot-password', async (c) => {
+  if (!isEmailConfigured(c.env)) {
+    return c.json({ error: 'Chức năng gửi email tự động chưa được kích hoạt. Vui lòng liên hệ Zalo hỗ trợ bên dưới.' }, 400)
+  }
+  const b = await c.req.json<any>()
+  const email = (b.email || '').trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return c.json({ error: 'Vui lòng nhập email hợp lệ' }, 400)
+  }
+  const u = await c.env.DB.prepare('SELECT id, email, full_name, status FROM users WHERE email=?').bind(email).first<any>()
+  if (u && u.status === 'active') {
+    const issued = await issueEmailToken(c.env.DB, { userId: u.id, email: u.email, purpose: 'reset', ttlMinutes: 30 })
+    if (issued.waitSeconds) {
+      return c.json({ error: `Bạn vừa gửi yêu cầu. Vui lòng đợi ${issued.waitSeconds} giây rồi thử lại.` }, 429)
+    }
+    if (issued.rawToken) {
+      const origin = getRequestOrigin(c)
+      const siteName = c.get('settings')?.site_name || 'KhoSkill AI'
+      const resetUrl = `${origin}/dat-lai-mat-khau?token=${issued.rawToken}`
+      await sendEmail(c.env, buildPasswordResetEmail({
+        to: u.email,
+        fullName: u.full_name,
+        resetUrl,
+        siteName,
+        origin
+      }))
+    }
+  }
+  return c.json({ ok: true, message: 'Nếu email đã đăng ký, link đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra Hộp thư đến và mục Spam.' })
+})
+
+app.get('/dat-lai-mat-khau', async (c) => {
+  const rawToken = (c.req.query('token') || '').trim()
+  let invalidReason = ''
+  if (!rawToken || rawToken.length < 32) {
+    invalidReason = 'Liên kết đặt lại mật khẩu không hợp lệ.'
+  } else {
+    const tok = await c.env.DB.prepare('SELECT * FROM email_tokens WHERE token_hash=? AND purpose=?')
+      .bind(await sha256Hex(rawToken), 'reset').first<any>()
+    if (!tok) invalidReason = 'Liên kết đặt lại mật khẩu không tồn tại.'
+    else if (tok.used_at) invalidReason = 'Liên kết này đã được sử dụng.'
+    else if (new Date(tok.expires_at).getTime() < Date.now()) invalidReason = 'Liên kết đã hết hạn (30 phút). Hãy gửi yêu cầu mới.'
+  }
+  return c.html(<ResetPasswordPage {...base(c)} token={rawToken} invalidReason={invalidReason || undefined} />)
+})
+
+app.post('/api/auth/reset-password', async (c) => {
+  const b = await c.req.json<any>()
+  const token = (b.token || '').trim()
+  const newPassword = String(b.new_password || '')
+  const confirmPassword = String(b.confirm_password || '')
+  if (newPassword.length < 6) return c.json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự' }, 400)
+  if (newPassword !== confirmPassword) return c.json({ error: 'Mật khẩu nhập lại không khớp' }, 400)
+
+  const res = await consumeEmailToken(c.env.DB, token, 'reset')
+  if (!res.ok) return c.json({ error: res.reason }, 400)
+
+  const newHash = await hashPassword(newPassword)
+  await c.env.DB.prepare('UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
+    .bind(newHash, res.tok.user_id).run()
+  return c.json({ ok: true, redirect: '/dang-nhap?reset=1' })
 })
 
 /* ============================================================
@@ -509,18 +831,70 @@ app.post('/api/orders/create', requireAuth, async (c) => {
   if (status === 'paid') {
     await grantLicenses(db, u.id, orderId)
     await creditAffiliate(db, u.id, total)
+    await notifyOrderPaid(c.env, db, { id: orderId, order_code: code, user_id: u.id, total }, getRequestOrigin(c))
   }
   return c.json({ ok: true, order_code: code })
 })
 
 async function creditAffiliate(db: D1Database, userId: number, total: number) {
-  const me = await db.prepare('SELECT referred_by FROM users WHERE id=?').bind(userId).first<any>()
+  const me = await db.prepare('SELECT referred_by, full_name FROM users WHERE id=?').bind(userId).first<any>()
   if (!me?.referred_by) return
+  const refUser = await db.prepare('SELECT id, email_verified, status FROM users WHERE id=?').bind(me.referred_by).first<any>()
+  if (!refUser || refUser.status !== 'active' || refUser.email_verified !== 1) return
+
   const st = await db.prepare(`SELECT value FROM settings WHERE key='affiliate_percent'`).first<any>()
   const pct = +(st?.value || 20)
   const commission = Math.floor(total * pct / 100)
+  if (commission <= 0) return
   await db.prepare('UPDATE users SET affiliate_earned=affiliate_earned+?, balance=balance+? WHERE id=?')
     .bind(commission, commission, me.referred_by).run()
+  await createUserNotification(db, {
+    userId: me.referred_by,
+    type: 'order',
+    title: `Nhận hoa hồng Affiliate +${formatVND(commission)}`,
+    message: `Thành viên ${me.full_name || 'bạn giới thiệu'} vừa thanh toán đơn hàng. Hoa hồng ${pct}% đã được cộng vào ví của bạn.`,
+    linkUrl: '/tai-khoan/affiliate'
+  })
+}
+
+async function notifyOrderPaid(env: any, db: D1Database, order: any, origin = 'https://khoskill.site') {
+  try {
+    const [buyer, licenses] = await Promise.all([
+      db.prepare('SELECT id, email, full_name, status FROM users WHERE id=?').bind(order.user_id).first<any>(),
+      db.prepare(
+        `SELECT l.license_key, p.name product_name
+         FROM licenses l JOIN products p ON p.id=l.product_id
+         WHERE l.order_id=? ORDER BY l.id`
+      ).bind(order.id).all()
+    ])
+    if (!buyer) return
+    const licList = licenses.results as any[]
+    const names = licList.map(x => x.product_name).join(', ')
+    await createUserNotification(db, {
+      userId: buyer.id,
+      type: 'order',
+      title: `Đơn hàng ${order.order_code} đã kích hoạt thành công`,
+      message: names
+        ? `Hệ thống đã cấp ${licList.length} License Key cho: ${names}. Truy cập "Sản phẩm của tôi" để lấy key và tải tài liệu.`
+        : `Đơn hàng ${order.order_code} đã thanh toán thành công.`,
+      linkUrl: '/tai-khoan/san-pham'
+    })
+    if (isEmailConfigured(env) && buyer.email && buyer.status === 'active') {
+      const siteSet = await db.prepare(`SELECT value FROM settings WHERE key='site_name'`).first<any>().catch(() => null)
+      await sendEmail(env, buildOrderPaidEmail({
+        to: buyer.email,
+        fullName: buyer.full_name,
+        orderCode: order.order_code,
+        totalFormatted: formatVND(order.total || 0),
+        items: licList,
+        accountUrl: `${origin}/tai-khoan/san-pham`,
+        siteName: siteSet?.value || 'KhoSkill AI',
+        origin
+      }))
+    }
+  } catch (err) {
+    console.error('[NOTIFY_ORDER_PAID]', err)
+  }
 }
 
 /* ============================================================
@@ -530,7 +904,7 @@ async function creditAffiliate(db: D1Database, userId: number, total: number) {
 async function settleOrder(
   db: D1Database,
   order: any,
-  opts: { paidVia: string; paidAmount: number; bankTxId?: number | null }
+  opts: { paidVia: string; paidAmount: number; bankTxId?: number | null; env?: any; origin?: string }
 ) {
   await db.prepare(
     `UPDATE orders SET status='paid', paid_at=?, paid_amount=?, paid_via=?, bank_tx_id=? WHERE id=?`
@@ -538,6 +912,7 @@ async function settleOrder(
 
   await grantLicenses(db, order.user_id, order.id)
   await creditAffiliate(db, order.user_id, order.total)
+  await notifyOrderPaid(opts.env, db, order, opts.origin)
 }
 
 /* ============================================================
@@ -551,7 +926,9 @@ async function processTransaction(
   db: D1Database,
   tx: NormalizedTx,
   rawPayload: string,
-  tolerance: number
+  tolerance: number,
+  env?: any,
+  origin?: string
 ): Promise<{ tx_id: string; status: string; order?: string; message: string }> {
   // --- Chống xử lý trùng (idempotency) ---
   const dup = await db.prepare(
@@ -646,7 +1023,7 @@ async function processTransaction(
       ? `Khách chuyển thừa ${tx.amountIn - order.total}đ` : 'Khớp chính xác'
   })
 
-  await settleOrder(db, order, { paidVia: 'webhook', paidAmount: tx.amountIn, bankTxId: txId })
+  await settleOrder(db, order, { paidVia: 'webhook', paidAmount: tx.amountIn, bankTxId: txId, env, origin })
 
   // Chuyển tiền thừa vào ví khách (nếu có)
   const excess = tx.amountIn - order.total
@@ -709,10 +1086,11 @@ app.post('/api/webhook/bank', async (c) => {
 
   // 3. Xử lý từng giao dịch
   const tolerance = +(cfg.amount_tolerance || 0)
+  const origin = getRequestOrigin(c)
   const results: any[] = []
   for (const tx of txs) {
     try {
-      results.push(await processTransaction(db, tx, rawText, tolerance))
+      results.push(await processTransaction(db, tx, rawText, tolerance, c.env, origin))
     } catch (err: any) {
       results.push({ tx_id: tx.providerTxId, status: 'error', message: String(err?.message || err) })
     }
@@ -737,7 +1115,7 @@ app.post('/api/orders/confirm', requireAuth, async (c) => {
 
   if (autoConfirm) {
     // Chế độ DEMO (chỉ bật khi chưa gắn webhook thật)
-    await settleOrder(db, o, { paidVia: 'manual', paidAmount: o.total })
+    await settleOrder(db, o, { paidVia: 'manual', paidAmount: o.total, env: c.env, origin: getRequestOrigin(c) })
     return c.json({ ok: true, status: 'paid', message: 'Đã xác nhận (chế độ demo)' })
   }
 
@@ -792,10 +1170,41 @@ app.get('/tai-khoan', requireAuth, async (c) => {
 app.get('/tai-khoan/san-pham', requireAuth, async (c) => {
   const u = c.get('user')!
   const rows = await c.env.DB.prepare(
-    `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size
+    `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
+       (SELECT r.changelog FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_changelog,
+       (SELECT r.version FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_version,
+       (SELECT r.created_at FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_release_at
      FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
   ).bind(u.id).all()
   return c.html(<MyProductsPage {...base(c)} licenses={rows.results as any} />)
+})
+
+app.get('/tai-khoan/thong-bao', requireAuth, async (c) => {
+  const u = c.get('user')!
+  const rows = await c.env.DB.prepare(
+    `SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 50`
+  ).bind(u.id).all()
+  return c.html(<NotificationsPage {...base(c)} notifications={rows.results as any} />)
+})
+
+app.get('/tai-khoan/thong-bao/:id/doc', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  const row = await db.prepare('SELECT id, link_url FROM notifications WHERE id=? AND user_id=?')
+    .bind(c.req.param('id'), u.id).first<any>()
+  if (row) {
+    await db.prepare('UPDATE notifications SET is_read=1 WHERE id=? AND user_id=?').bind(row.id, u.id).run()
+  }
+  const rawLink = String(row?.link_url || '').trim()
+  const safeDest = rawLink && ((rawLink.startsWith('/') && !rawLink.startsWith('//')) || rawLink.startsWith('https://') || rawLink.startsWith('http://'))
+    ? rawLink
+    : '/tai-khoan/thong-bao'
+  return c.redirect(safeDest)
+})
+
+app.post('/api/account/notifications/read-all', requireAuth, async (c) => {
+  const u = c.get('user')!
+  await c.env.DB.prepare('UPDATE notifications SET is_read=1 WHERE user_id=? AND is_read=0').bind(u.id).run()
+  return c.json({ ok: true, message: 'Đã đánh dấu tất cả thông báo là đã đọc!' })
 })
 
 /* Download redirect - đếm lượt tải và bảo vệ link */
@@ -829,22 +1238,58 @@ app.get('/tai-khoan/yeu-thich', requireAuth, async (c) => {
 
 app.get('/tai-khoan/affiliate', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
-  const me = await db.prepare('SELECT affiliate_code, affiliate_earned FROM users WHERE id=?').bind(u.id).first<any>()
+  const me = await db.prepare('SELECT affiliate_code, affiliate_earned, email_verified, email FROM users WHERE id=?').bind(u.id).first<any>()
   const refs = await db.prepare(
     `SELECT u.id, u.full_name, u.email, u.created_at,
      (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status='paid') spent
      FROM users u WHERE u.referred_by=? ORDER BY u.id DESC`
   ).bind(u.id).all()
-  const origin = new URL(c.req.url).origin
+  const origin = getRequestOrigin(c)
   return c.html(<AffiliateDashboard {...base(c)} affCode={me?.affiliate_code || ''}
     earned={me?.affiliate_earned || 0} refCount={(refs.results as any[]).length}
-    percent={+(c.get('settings').affiliate_percent || 20)} referrals={refs.results as any} siteUrl={origin} />)
+    percent={+(c.get('settings').affiliate_percent || 20)} referrals={refs.results as any} siteUrl={origin}
+    emailVerified={me?.email_verified === 1} userEmail={me?.email || u.email}
+    googleEnabled={getGoogleConfig(c.env).enabled} />)
 })
 
 app.get('/tai-khoan/ho-so', requireAuth, async (c) => {
   const u = c.get('user')!
   const profile = await c.env.DB.prepare('SELECT * FROM users WHERE id=?').bind(u.id).first<any>()
-  return c.html(<ProfilePage {...base(c)} profile={profile} />)
+  return c.html(<ProfilePage {...base(c)} profile={profile}
+    googleEnabled={getGoogleConfig(c.env).enabled}
+    verifiedBanner={c.req.query('verified') === '1'} />)
+})
+
+app.post('/api/account/send-verify-email', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  const row = await db.prepare('SELECT id, email, full_name, email_verified, status FROM users WHERE id=?').bind(u.id).first<any>()
+  if (!row || row.status === 'banned') return c.json({ error: 'Tài khoản không khả dụng' }, 403)
+  if (row.email_verified === 1) return c.json({ ok: true, message: 'Email của bạn đã được xác minh trước đó!' })
+
+  if (!isEmailConfigured(c.env)) {
+    return c.json({
+      error: 'Hệ thống gửi email tự động chưa được cấu hình. Vui lòng dùng nút "Xác minh với Google" hoặc liên hệ hỗ trợ.'
+    }, 400)
+  }
+
+  const issued = await issueEmailToken(db, { userId: row.id, email: row.email, purpose: 'verify', ttlMinutes: 30 })
+  if (issued.waitSeconds) {
+    return c.json({ error: `Bạn vừa yêu cầu gửi mail. Vui lòng đợi ${issued.waitSeconds} giây rồi thử lại.` }, 429)
+  }
+  const origin = getRequestOrigin(c)
+  const siteName = c.get('settings')?.site_name || 'KhoSkill AI'
+  const verifyUrl = `${origin}/xac-minh-email?token=${issued.rawToken}`
+  const sent = await sendEmail(c.env, buildVerificationEmail({
+    to: row.email,
+    fullName: row.full_name,
+    verifyUrl,
+    siteName,
+    origin
+  }))
+  if (!sent.ok) {
+    return c.json({ error: `Không thể gửi email lúc này (${sent.error || 'Lỗi SMTP/Resend'}). Vui lòng thử lại sau.` }, 500)
+  }
+  return c.json({ ok: true, message: `Đã gửi link xác minh tới ${row.email}. Vui lòng kiểm tra Hộp thư đến (và mục Spam)!` })
 })
 
 app.post('/api/account/profile', requireAuth, async (c) => {
@@ -863,10 +1308,14 @@ app.post('/api/account/password', requireAuth, async (c) => {
   const b = await c.req.json<any>()
   if (!b.new_password || b.new_password.length < 6) return c.json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự' }, 400)
   const row = await db.prepare('SELECT password_hash FROM users WHERE id=?').bind(u.id).first<any>()
-  const ok = await verifyPassword(b.current_password || '', row.password_hash)
-  if (!ok) return c.json({ error: 'Mật khẩu hiện tại không đúng' }, 400)
-  await db.prepare('UPDATE users SET password_hash=? WHERE id=?').bind(await hashPassword(b.new_password), u.id).run()
-  return c.json({ ok: true, message: 'Đổi mật khẩu thành công!' })
+  const isOAuthOnly = String(row?.password_hash || '').startsWith('OAUTH$')
+  if (!isOAuthOnly) {
+    const ok = await verifyPassword(b.current_password || '', row.password_hash)
+    if (!ok) return c.json({ error: 'Mật khẩu hiện tại không đúng' }, 400)
+  }
+  await db.prepare('UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
+    .bind(await hashPassword(b.new_password), u.id).run()
+  return c.json({ ok: true, message: isOAuthOnly ? 'Đã đặt mật khẩu đăng nhập thành công!' : 'Đổi mật khẩu thành công!' })
 })
 
 /* ============================================================
@@ -976,9 +1425,13 @@ app.get('/admin/san-pham/:id', requireAdmin, async (c) => {
   const db = c.env.DB
   const p = await db.prepare('SELECT * FROM products WHERE id=?').bind(c.req.param('id')).first<any>()
   if (!p) return c.redirect('/admin/san-pham')
-  const cats = await db.prepare('SELECT * FROM categories ORDER BY sort_order').all()
+  const [cats, rels] = await Promise.all([
+    db.prepare('SELECT * FROM categories ORDER BY sort_order').all(),
+    db.prepare('SELECT * FROM product_releases WHERE product_id=? ORDER BY id DESC LIMIT 10').bind(p.id).all()
+      .catch(() => ({ results: [] }))
+  ])
   return c.html(<AdminProductForm user={c.get('user')!} activeKey="products" heading="Sửa sản phẩm"
-    product={p} categories={cats.results as any} isNew={false} />)
+    product={p} categories={cats.results as any} isNew={false} releases={rels.results as any} />)
 })
 
 function productFields(b: any) {
@@ -1025,18 +1478,70 @@ app.post('/api/admin/products', requireAdmin, async (c) => {
 })
 
 app.post('/api/admin/products/:id/update', requireAdmin, async (c) => {
-  const id = c.req.param('id')
-  const f = productFields(await c.req.json<any>())
+  const db = c.env.DB
+  const id = +c.req.param('id')
+  const b = await c.req.json<any>()
+  const f = productFields(b)
   if (!f.name || !f.slug) return c.json({ error: 'Thiếu tên hoặc slug' }, 400)
-  const dup = await c.env.DB.prepare('SELECT 1 x FROM products WHERE slug=? AND id!=?').bind(f.slug, id).first<any>()
+  const dup = await db.prepare('SELECT 1 x FROM products WHERE slug=? AND id!=?').bind(f.slug, id).first<any>()
   if (dup) return c.json({ error: 'Slug đã được dùng cho sản phẩm khác' }, 400)
-  await c.env.DB.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
+  await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
     doc_url=?,file_size=?,product_type=?,is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
       f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status, id).run()
   invalidateCache()
+
+  if (b.notify_buyers === '1') {
+    const changelog = String(b.release_notes || '').trim() || `Phiên bản ${f.version} đã được cập nhật link tải và tài liệu mới nhất.`
+    const buyersRes = await db.prepare(
+      `SELECT DISTINCT u.id, u.email, u.full_name
+       FROM licenses l JOIN users u ON u.id=l.user_id
+       WHERE l.product_id=? AND u.status='active'`
+    ).bind(id).all()
+    const buyers = buyersRes.results as any[]
+    const origin = getRequestOrigin(c)
+    const siteName = c.get('settings')?.site_name || 'KhoSkill AI'
+
+    for (const buyer of buyers) {
+      await createUserNotification(db, {
+        userId: buyer.id,
+        productId: id,
+        type: 'product_update',
+        title: `Cập nhật ${f.name} (${f.version})`,
+        message: changelog,
+        linkUrl: '/tai-khoan/san-pham'
+      })
+    }
+
+    let emailSuffix = ''
+    if (buyers.length > 0 && isEmailConfigured(c.env)) {
+      const messages = buyers
+        .filter(u => u.email)
+        .map(u => buildProductUpdateEmail({
+          to: u.email,
+          fullName: u.full_name,
+          productName: f.name,
+          version: f.version,
+          changelog,
+          accountUrl: `${origin}/tai-khoan/san-pham`,
+          siteName,
+          origin
+        }))
+      const batchRes = await sendBatchEmails(c.env, messages)
+      emailSuffix = ` (đã gửi ${batchRes.sent} email)`
+    } else if (buyers.length > 0) {
+      emailSuffix = ' (lưu trong hộp thư web, chưa bật email)'
+    }
+
+    await db.prepare(
+      `INSERT INTO product_releases (product_id, version, changelog, download_url, notified_count) VALUES (?,?,?,?,?)`
+    ).bind(id, f.version, changelog, f.download_url, buyers.length).run().catch(() => null)
+
+    return c.json({ ok: true, message: `Đã lưu & gửi thông báo cho ${buyers.length} khách đã mua${emailSuffix}!` })
+  }
+
   return c.json({ ok: true, message: 'Đã lưu thay đổi!', redirect: '/admin/san-pham' })
 })
 
@@ -1081,10 +1586,22 @@ app.get('/admin/don-hang/:id', requireAdmin, async (c) => {
   const o = await db.prepare(`SELECT o.*, u.full_name, u.email, u.phone FROM orders o JOIN users u ON u.id=o.user_id WHERE o.id=?`)
     .bind(c.req.param('id')).first<any>()
   if (!o) return c.redirect('/admin/don-hang')
-  const items = await db.prepare(`SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`)
-    .bind(o.id).all()
+  const [items, licenses, bankTx, customerStats] = await Promise.all([
+    db.prepare(`SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`)
+      .bind(o.id).all(),
+    db.prepare(`SELECT l.*, p.name product_name, p.version, p.download_url FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.order_id=? ORDER BY l.id`)
+      .bind(o.id).all(),
+    o.bank_tx_id
+      ? db.prepare('SELECT * FROM bank_transactions WHERE id=?').bind(o.bank_tx_id).first<any>()
+      : db.prepare('SELECT * FROM bank_transactions WHERE matched_order_id=? ORDER BY id DESC LIMIT 1').bind(o.id).first<any>(),
+    db.prepare(`SELECT u.email_verified, u.google_id,
+        (SELECT COUNT(*) FROM orders WHERE user_id=u.id) order_count,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status='paid') spent
+      FROM users u WHERE u.id=?`).bind(o.user_id).first<any>()
+  ])
   return c.html(<AdminOrderDetail user={c.get('user')!} activeKey="orders" heading="Chi tiết đơn hàng"
-    order={o} items={items.results as any} />)
+    order={o} items={items.results as any} licenses={licenses.results as any}
+    bankTx={bankTx} customerStats={customerStats} />)
 })
 
 app.post('/api/admin/orders/:id/status', requireAdmin, async (c) => {
@@ -1096,7 +1613,7 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (c) => {
 
   if (status === 'paid' && o.status !== 'paid') {
     // Admin xác nhận thủ công -> dùng chung luồng settleOrder
-    await settleOrder(db, o, { paidVia: 'admin', paidAmount: o.total })
+    await settleOrder(db, o, { paidVia: 'admin', paidAmount: o.total, env: c.env, origin: getRequestOrigin(c) })
     return c.json({ ok: true })
   }
 
@@ -1157,7 +1674,7 @@ app.post('/api/admin/banktx/:id/match', requireAdmin, async (c) => {
   if (!o) return c.json({ error: 'Mã đơn hàng không tồn tại' }, 404)
   if (o.status === 'paid') return c.json({ error: 'Đơn hàng này đã được thanh toán' }, 400)
 
-  await settleOrder(db, o, { paidVia: 'manual', paidAmount: tx.amount_in, bankTxId: tx.id })
+  await settleOrder(db, o, { paidVia: 'manual', paidAmount: tx.amount_in, bankTxId: tx.id, env: c.env, origin: getRequestOrigin(c) })
   await db.prepare(
     `UPDATE bank_transactions SET match_status='matched', matched_order_id=?, matched_order_code=?,
      note=COALESCE(note,'') || ' | Đối soát thủ công bởi admin' WHERE id=?`
@@ -1191,6 +1708,82 @@ app.get('/admin/thanh-vien', requireAdmin, async (c) => {
     .bind(...binds, perPage, (page - 1) * perPage).all()
   return c.html(<AdminUsers user={c.get('user')!} activeKey="users" heading="Quản lý thành viên"
     users={rows.results as any} page={page} totalPages={Math.ceil((cnt?.n || 0) / perPage)} q={q} />)
+})
+
+app.get('/admin/thanh-vien/:id', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = +c.req.param('id')
+  const member = await db.prepare('SELECT * FROM users WHERE id=?').bind(id).first<any>()
+  if (!member) return c.redirect('/admin/thanh-vien')
+
+  const [stats, orders, licenses, referrals, notifications, referrer] = await Promise.all([
+    db.prepare(`SELECT
+        (SELECT COUNT(*) FROM orders WHERE user_id=?1) order_count,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=?1 AND status='paid') spent,
+        (SELECT COUNT(*) FROM licenses WHERE user_id=?1) license_count`).bind(id).first<any>(),
+    db.prepare('SELECT * FROM orders WHERE user_id=? ORDER BY id DESC').bind(id).all(),
+    db.prepare(`SELECT l.*, p.name product_name, p.version FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`).bind(id).all(),
+    db.prepare(`SELECT u.id, u.full_name, u.email, u.created_at,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status='paid') spent
+      FROM users u WHERE u.referred_by=? ORDER BY u.id DESC`).bind(id).all(),
+    db.prepare('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 20').bind(id).all()
+      .catch(() => ({ results: [] })),
+    member.referred_by
+      ? db.prepare('SELECT id, full_name FROM users WHERE id=?').bind(member.referred_by).first<any>()
+      : Promise.resolve(null)
+  ])
+
+  return c.html(<AdminUserDetail user={c.get('user')!} activeKey="users" heading={`Thành viên: ${member.full_name}`}
+    member={member} stats={stats || { order_count: 0, spent: 0, license_count: 0 }}
+    orders={orders.results as any} licenses={licenses.results as any}
+    referrals={referrals.results as any} notifications={notifications.results as any}
+    referrer={referrer} emailEnabled={isEmailConfigured(c.env)} />)
+})
+
+app.post('/api/admin/users/:id/notify', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = +c.req.param('id')
+  const b = await c.req.json<any>()
+  const title = String(b.title || '').trim()
+  const message = String(b.message || '').trim()
+  const linkUrl = String(b.link_url || '').trim()
+
+  if (!title || !message) return c.json({ error: 'Vui lòng nhập đầy đủ tiêu đề và nội dung' }, 400)
+  if (linkUrl && !(linkUrl.startsWith('/') && !linkUrl.startsWith('//')) && !linkUrl.startsWith('https://') && !linkUrl.startsWith('http://')) {
+    return c.json({ error: 'Link đính kèm phải bắt đầu bằng / hoặc https://' }, 400)
+  }
+
+  const member = await db.prepare('SELECT id, email, full_name, status FROM users WHERE id=?').bind(id).first<any>()
+  if (!member) return c.json({ error: 'Không tìm thấy thành viên' }, 404)
+
+  await createUserNotification(db, {
+    userId: member.id,
+    type: 'admin',
+    title,
+    message,
+    linkUrl: linkUrl || null
+  })
+
+  let emailNote = ''
+  if (b.send_email === '1') {
+    if (isEmailConfigured(c.env) && member.email) {
+      const origin = getRequestOrigin(c)
+      const siteName = c.get('settings')?.site_name || 'KhoSkill AI'
+      const res = await sendEmail(c.env, buildAdminDirectEmail({
+        to: member.email,
+        fullName: member.full_name,
+        title,
+        message,
+        linkUrl: linkUrl || undefined,
+        siteName,
+        origin
+      }))
+      emailNote = res.ok ? ' và đã gửi Email!' : ` (gửi Email lỗi: ${res.error})`
+    } else {
+      emailNote = ' (chưa gửi Email vì chưa cấu hình RESEND_API_KEY)'
+    }
+  }
+  return c.json({ ok: true, message: `Đã gửi thông báo vào tài khoản khách${emailNote}` })
 })
 
 app.post('/api/admin/users/:id/action', requireAdmin, async (c) => {
@@ -1340,7 +1933,13 @@ app.post('/api/admin/tickets/:id/close', requireAdmin, async (c) => {
 
 app.get('/admin/cai-dat', requireAdmin, async (c) => {
   const fresh = await fetchSettings(c.env.DB).catch(() => c.get('settings'))
-  return c.html(<AdminSettings user={c.get('user')!} activeKey="settings" heading="Cài đặt hệ thống" settings={fresh} />)
+  return c.html(<AdminSettings user={c.get('user')!} activeKey="settings" heading="Cài đặt hệ thống" settings={fresh}
+    integrationStatus={{
+      emailConfigured: isEmailConfigured(c.env),
+      emailFrom: getEmailConfig(c.env).from,
+      googleConfigured: getGoogleConfig(c.env).enabled,
+      origin: getRequestOrigin(c)
+    }} />)
 })
 
 const SETTINGS_KEYS = new Set([

@@ -527,7 +527,8 @@
       if (u.origin !== location.origin) return false;
       var p = u.pathname;
       if (p.indexOf('/admin') === 0 || p.indexOf('/api/') === 0 || p.indexOf('/static/') === 0 ||
-          p.indexOf('/tai-xuong/') === 0 || p.indexOf('/videos/') === 0 || p === '/dang-xuat') {
+          p.indexOf('/tai-xuong/') === 0 || p.indexOf('/videos/') === 0 || p === '/dang-xuat' ||
+          p === '/xac-minh-email' || p === '/dat-lai-mat-khau' || p.slice(-4) === '/doc') {
         return false;
       }
       return true;
@@ -649,10 +650,17 @@
       }
       document.title = doc.title || document.title;
 
-      // Sync cart badge from server HTML
+      // Sync cart & notification badges from server HTML
       var newBadge = doc.getElementById('cart-badge');
       if (newBadge) {
         setCartBadge(Number(newBadge.textContent) || 0);
+      }
+      var newNotif = doc.getElementById('notif-badge');
+      var curNotif = document.getElementById('notif-badge');
+      if (newNotif && curNotif) {
+        var nc = (newNotif.textContent || '').trim();
+        curNotif.textContent = nc;
+        curNotif.classList.toggle('hidden', newNotif.classList.contains('hidden'));
       }
 
       var destHref = finalUrl.pathname + finalUrl.search + u.hash;
@@ -1543,7 +1551,7 @@
     var a = e.target.closest('a[href]');
     if (a) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      if (a.target === '_blank' || a.hasAttribute('download')) return;
+      if (a.target === '_blank' || a.hasAttribute('download') || a.hasAttribute('data-no-pjax')) return;
       var href = a.getAttribute('href') || '';
       if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0 ||
           href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
@@ -1567,7 +1575,7 @@
   document.addEventListener('pointerenter', function (e) {
     if (!e.target || typeof e.target.closest !== 'function') return;
     var a = e.target.closest('a[href]');
-    if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+    if (!a || a.target === '_blank' || a.hasAttribute('download') || a.hasAttribute('data-no-pjax')) return;
     if (!canPjaxUrl(a.href)) return;
     clearTimeout(hoverPrefetchTimer);
     hoverPrefetchTimer = setTimeout(function () { prefetchUrl(a.href); }, 35);
@@ -1576,7 +1584,7 @@
   document.addEventListener('touchstart', function (e) {
     if (!e.target || typeof e.target.closest !== 'function') return;
     var a = e.target.closest('a[href]');
-    if (a && a.target !== '_blank' && canPjaxUrl(a.href)) prefetchUrl(a.href);
+    if (a && a.target !== '_blank' && !a.hasAttribute('data-no-pjax') && canPjaxUrl(a.href)) prefetchUrl(a.href);
   }, { passive: true });
 
   // Intercept GET forms (search, product filter form, blog search)

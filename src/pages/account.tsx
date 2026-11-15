@@ -5,6 +5,7 @@ import { formatVND, formatDate, formatDateTime, gradientFor, PRODUCT_TYPE_LABEL 
 
 const MENU = [
   { href: '/tai-khoan', icon: 'fa-gauge', label: 'Tổng quan', key: 'dash' },
+  { href: '/tai-khoan/thong-bao', icon: 'fa-bell', label: 'Thông báo', key: 'notifications' },
   { href: '/tai-khoan/san-pham', icon: 'fa-box-archive', label: 'Sản phẩm của tôi', key: 'products' },
   { href: '/tai-khoan/don-hang', icon: 'fa-receipt', label: 'Đơn hàng', key: 'orders' },
   { href: '/tai-khoan/yeu-thich', icon: 'fa-heart', label: 'Yêu thích', key: 'wishlist' },
@@ -19,9 +20,13 @@ const AccountShell: FC<PropsWithChildren<LayoutProps & { activeKey: string; head
         <aside class="lg:sticky-side">
           <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-4 mb-4">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0">
-                {props.user?.full_name.charAt(0).toUpperCase()}
-              </div>
+              {props.user?.avatar_url ? (
+                <img src={props.user.avatar_url} alt={props.user.full_name} class="w-12 h-12 rounded-full object-cover shrink-0 border border-white/15" referrerpolicy="no-referrer" />
+              ) : (
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0">
+                  {props.user?.full_name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div class="min-w-0">
                 <div class="font-bold text-white truncate text-sm">{props.user?.full_name}</div>
                 <div class="text-xs text-[#9492b8] truncate">{props.user?.email}</div>
@@ -31,8 +36,13 @@ const AccountShell: FC<PropsWithChildren<LayoutProps & { activeKey: string; head
           <nav aria-label="Menu tài khoản" class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-2 space-y-0.5">
             {MENU.map(m => (
               <a href={m.href} aria-current={props.activeKey === m.key ? 'page' : undefined}
-                class={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-[#b8b6d9] hover:text-white hover:bg-[#161436]'}`}>
-                <i class={`fas ${m.icon} w-4`} aria-hidden="true"></i>{m.label}
+                class={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-[#b8b6d9] hover:text-white hover:bg-[#161436]'}`}>
+                <span class="flex items-center gap-3"><i class={`fas ${m.icon} w-4`} aria-hidden="true"></i>{m.label}</span>
+                {m.key === 'notifications' && (props.unreadNotifs || 0) > 0 && (
+                  <span class={`px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${props.activeKey === m.key ? 'bg-white text-indigo-700' : 'bg-indigo-500 text-white'}`}>
+                    {props.unreadNotifs}
+                  </span>
+                )}
               </a>
             ))}
             {props.user?.role === 'admin' && (
@@ -193,6 +203,16 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[] }> = (props) => 
                   </div>
                 </div>
 
+                {l.latest_changelog && (
+                  <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                      <span class="font-bold text-indigo-300"><i class="fas fa-rocket mr-1" aria-hidden="true"></i>Cập nhật {l.latest_version || l.version}</span>
+                      {l.latest_release_at && <span class="text-[11px] text-[#9492b8]">{formatDate(l.latest_release_at)}</span>}
+                    </div>
+                    <p class="whitespace-pre-line text-[#c2c0e0] leading-relaxed">{l.latest_changelog}</p>
+                  </div>
+                )}
+
                 <div class="flex flex-wrap gap-2">
                   {l.download_url ? (
                     <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
@@ -310,13 +330,117 @@ export const WishlistPage: FC<LayoutProps & { items: any[] }> = (props) => (
   </AccountShell>
 )
 
+/* ---------- Notifications ---------- */
+export const NotificationsPage: FC<LayoutProps & { notifications: any[] }> = (props) => {
+  const unreadCount = props.notifications.filter(n => !n.is_read).length
+  return (
+    <AccountShell {...props} activeKey="notifications" title="Thông báo" heading="Hộp thư thông báo"
+      sub="Cập nhật phiên bản Skill AI mới, trạng thái đơn hàng và thông báo từ quản trị viên.">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-xs text-[#9492b8]">
+          {unreadCount > 0 ? <>Bạn có <b class="text-indigo-300">{unreadCount}</b> thông báo chưa đọc</> : 'Tất cả thông báo đã được đọc'}
+        </div>
+        {unreadCount > 0 && (
+          <form action="/api/account/notifications/read-all" method="post" data-ajax data-reload="true">
+            <button type="submit" class="h-9 px-3.5 rounded-xl bg-[#161436] border border-[#2e2968] hover:border-indigo-400 text-xs font-semibold text-[#c2c0e0] hover:text-white transition cursor-pointer">
+              <i class="fas fa-check-double mr-1.5 text-indigo-400" aria-hidden="true"></i>Đánh dấu tất cả đã đọc
+            </button>
+          </form>
+        )}
+      </div>
+
+      {props.notifications.length === 0 ? (
+        <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54]">
+          <EmptyState icon="fa-bell-slash" title="Chưa có thông báo nào"
+            desc="Khi sản phẩm bạn mua có bản cập nhật mới hoặc đơn hàng hoàn tất, thông báo sẽ hiện tại đây." />
+        </div>
+      ) : (
+        <div class="space-y-3">
+          {props.notifications.map(n => {
+            const icon = n.type === 'product_update' ? 'fa-rocket text-fuchsia-400'
+              : n.type === 'order' ? 'fa-circle-check text-emerald-400'
+              : n.type === 'admin' ? 'fa-bullhorn text-amber-400'
+              : 'fa-bell text-indigo-400'
+            return (
+              <div class={`rounded-2xl border p-5 transition ${n.is_read ? 'bg-[#0f0e24] border-[#221e54]' : 'bg-[#151336] border-indigo-500/45 shadow-lg shadow-indigo-950/30'}`}>
+                <div class="flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-[#161436] border border-[#2a2559] grid place-items-center shrink-0 mt-0.5">
+                    <i class={`fas ${icon}`} aria-hidden="true"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                      <h2 class="font-bold text-white text-sm flex items-center gap-2">
+                        {n.title}
+                        {!n.is_read && <span class="px-2 py-0.5 rounded-full bg-indigo-500 text-white text-[10px] font-bold">Mới</span>}
+                      </h2>
+                      <span class="text-[11px] text-[#9492b8] tabular-nums">{formatDateTime(n.created_at)}</span>
+                    </div>
+                    <p class="text-sm text-[#c2c0e0] whitespace-pre-line leading-relaxed">{n.message}</p>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                      {n.link_url && (
+                        <a href={`/tai-khoan/thong-bao/${n.id}/doc`} data-no-pjax
+                          class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">
+                          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>Xem chi tiết
+                        </a>
+                      )}
+                      {!n.is_read && !n.link_url && (
+                        <a href={`/tai-khoan/thong-bao/${n.id}/doc`} data-no-pjax
+                          class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#2e2968] hover:border-indigo-400 text-[#c2c0e0] hover:text-white text-xs font-medium transition">
+                          <i class="fas fa-check" aria-hidden="true"></i>Đánh dấu đã đọc
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </AccountShell>
+  )
+}
+
 /* ---------- Affiliate ---------- */
 export const AffiliateDashboard: FC<LayoutProps & {
   affCode: string; earned: number; refCount: number; percent: number; referrals: any[]; siteUrl: string
+  emailVerified: boolean; userEmail: string; googleEnabled?: boolean
 }> = (props) => {
   const link = `${props.siteUrl}/dang-ky?ref=${props.affCode}`
   return (
     <AccountShell {...props} activeKey="affiliate" title="Affiliate" heading="Chương trình Affiliate" sub={`Giới thiệu bạn bè và nhận hoa hồng ${props.percent}% cho mỗi đơn hàng thành công.`}>
+      {!props.emailVerified && (
+        <div class="mb-6 p-5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-100">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 grid place-items-center text-amber-300 shrink-0">
+              <i class="fas fa-shield-halved text-lg" aria-hidden="true"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h2 class="font-bold text-white text-base mb-1">Cần xác minh Email để bật Affiliate</h2>
+              <p class="text-sm text-amber-100/90 leading-relaxed mb-3">
+                Để bảo vệ hoa hồng và chống tài khoản ảo, bạn cần xác minh email <b class="text-white">{props.userEmail}</b> trước khi kích hoạt link giới thiệu và nhận hoa hồng {props.percent}%.
+              </p>
+              <div class="flex flex-wrap items-center gap-2.5">
+                <form action="/api/account/send-verify-email" method="post" data-ajax class="inline-flex items-center">
+                  <button type="submit" class="h-10 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition cursor-pointer">
+                    <i class="fas fa-paper-plane mr-1.5" aria-hidden="true"></i>Gửi link xác minh tới Email
+                  </button>
+                </form>
+                <a href="/tai-khoan/ho-so" class="h-10 px-4 inline-flex items-center rounded-xl bg-[#161436] border border-[#2e2968] hover:border-indigo-400 text-white text-xs font-semibold transition">
+                  Mở Hồ sơ cá nhân
+                </a>
+                {props.googleEnabled && (
+                  <a href="/api/auth/google?next=/tai-khoan/affiliate" data-no-pjax
+                    class="cta-white h-10 px-4 inline-flex items-center rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-semibold transition">
+                    Xác minh nhanh bằng Google
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div class="grid sm:grid-cols-3 gap-4 mb-6">
         {[
           ['fa-percent', 'Hoa hồng', props.percent + '%', 'from-indigo-500 to-indigo-600'],
@@ -333,24 +457,35 @@ export const AffiliateDashboard: FC<LayoutProps & {
         ))}
       </div>
 
-      <div class="bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-6 shadow-xl shadow-indigo-950/50">
-        <h2 class="font-bold text-lg mb-1.5">Link giới thiệu của bạn</h2>
+      <div class={`bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-6 shadow-xl shadow-indigo-950/50 ${props.emailVerified ? '' : 'opacity-65'}`}>
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+          <h2 class="font-bold text-lg">Link giới thiệu của bạn</h2>
+          {!props.emailVerified && <span class="px-2.5 py-0.5 rounded-full bg-black/30 text-amber-200 text-xs font-bold"><i class="fas fa-lock mr-1" aria-hidden="true"></i>Chờ xác minh Email</span>}
+        </div>
         <p class="text-sm text-white/85 mb-4">Chia sẻ link này, mỗi khi có người đăng ký và mua hàng bạn nhận {props.percent}% hoa hồng.</p>
-        <div class="flex flex-col sm:flex-row gap-2">
-          <label for="aff-link" class="sr-only">Link giới thiệu của bạn</label>
-          <input type="text" value={link} readonly id="aff-link"
-            class="flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur font-mono" />
-          <button type="button" data-copy={link} class="cta-white h-11 px-5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap">
-            <i class="far fa-copy mr-1.5" aria-hidden="true"></i>Sao chép link
-          </button>
-        </div>
-        <div class="mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-sm">
-          <span class="text-white/85">Mã của bạn:</span>
-          <code class="px-3 py-1 rounded-lg bg-white/20 font-mono font-bold tracking-widest">{props.affCode}</code>
-          <button type="button" data-copy={props.affCode} class="text-white/85 hover:text-white text-xs font-medium">
-            <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy mã
-          </button>
-        </div>
+        {props.emailVerified ? (
+          <>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <label for="aff-link" class="sr-only">Link giới thiệu của bạn</label>
+              <input type="text" value={link} readonly id="aff-link"
+                class="flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur font-mono" />
+              <button type="button" data-copy={link} class="cta-white h-11 px-5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap">
+                <i class="far fa-copy mr-1.5" aria-hidden="true"></i>Sao chép link
+              </button>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-sm">
+              <span class="text-white/85">Mã của bạn:</span>
+              <code class="px-3 py-1 rounded-lg bg-white/20 font-mono font-bold tracking-widest">{props.affCode}</code>
+              <button type="button" data-copy={props.affCode} class="text-white/85 hover:text-white text-xs font-medium">
+                <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy mã
+              </button>
+            </div>
+          </>
+        ) : (
+          <div class="p-3.5 rounded-xl bg-black/25 border border-white/15 text-sm text-white/90">
+            <i class="fas fa-lock mr-2 text-amber-300" aria-hidden="true"></i>Link giới thiệu và mã Affiliate sẽ tự động mở khoá ngay sau khi bạn hoàn tất xác minh Email.
+          </div>
+        )}
       </div>
 
       <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden">
@@ -390,62 +525,129 @@ export const AffiliateDashboard: FC<LayoutProps & {
 }
 
 /* ---------- Profile ---------- */
-export const ProfilePage: FC<LayoutProps & { profile: any }> = (props) => (
-  <AccountShell {...props} activeKey="profile" title="Hồ sơ" heading="Hồ sơ cá nhân" sub="Cập nhật thông tin và mật khẩu tài khoản.">
-    <div class="grid lg:grid-cols-2 gap-5">
-      <form action="/api/account/profile" method="post" data-ajax class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6">
-        <h2 class="font-bold text-white mb-5 text-base"><i class="fas fa-user mr-2 text-indigo-400" aria-hidden="true"></i>Thông tin cá nhân</h2>
-        <div class="space-y-4">
-          <div>
-            <label for="profile-name" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Họ và tên</label>
-            <input id="profile-name" type="text" name="full_name" value={props.profile.full_name} required autocomplete="name"
-              class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
-          </div>
-          <div>
-            <label for="profile-email" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Email</label>
-            <input id="profile-email" type="email" value={props.profile.email} disabled
-              class="w-full h-11 px-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-sm text-[#9492b8] cursor-not-allowed" />
-            <p class="text-xs text-[#9492b8] mt-1">Email không thể thay đổi</p>
-          </div>
-          <div>
-            <label for="profile-phone" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Số điện thoại</label>
-            <input id="profile-phone" type="tel" name="phone" value={props.profile.phone || ''} autocomplete="tel"
-              class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
-          </div>
-          <div role="alert" class="form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200"></div>
-          <button type="submit" class="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition">Lưu thay đổi</button>
+export const ProfilePage: FC<LayoutProps & { profile: any; googleEnabled?: boolean; verifiedBanner?: boolean }> = (props) => {
+  const isVerified = props.profile.email_verified === 1
+  const isOAuthOnly = String(props.profile.password_hash || '').startsWith('OAUTH$')
+  return (
+    <AccountShell {...props} activeKey="profile" title="Hồ sơ" heading="Hồ sơ cá nhân" sub="Cập nhật thông tin, xác minh email và mật khẩu tài khoản.">
+      {props.verifiedBanner && (
+        <div class="mb-5 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-200 flex items-center gap-3">
+          <i class="fas fa-circle-check text-emerald-400 text-lg shrink-0" aria-hidden="true"></i>
+          <span>Email của bạn đã được xác minh thành công! Tính năng Affiliate và thông báo qua email đã sẵn sàng.</span>
         </div>
-      </form>
+      )}
 
-      <form action="/api/account/password" method="post" data-ajax class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 self-start">
-        <h2 class="font-bold text-white mb-5 text-base"><i class="fas fa-key mr-2 text-indigo-400" aria-hidden="true"></i>Đổi mật khẩu</h2>
-        <div class="space-y-4">
-          <div>
-            <label for="current-password" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Mật khẩu hiện tại</label>
-            <div class="relative">
-              <input id="current-password" type="password" name="current_password" required autocomplete="current-password"
-                class="w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
-              <button type="button" class="toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition"
-                aria-label="Hiện mật khẩu hiện tại" aria-pressed="false" data-target="current-password">
-                <i class="far fa-eye text-sm" aria-hidden="true"></i>
-              </button>
+      {/* Email Verification & Google Link Card */}
+      <div class={`mb-5 rounded-2xl border p-5 ${isVerified ? 'bg-[#0f0e24] border-emerald-500/35' : 'bg-amber-500/10 border-amber-500/35'}`}>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div class={`w-11 h-11 rounded-xl grid place-items-center shrink-0 ${isVerified ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/35'}`}>
+              <i class={`fas ${isVerified ? 'fa-shield-halved' : 'fa-envelope-circle-check'} text-lg`} aria-hidden="true"></i>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h2 class="font-bold text-white text-base">Xác minh Email / Gmail</h2>
+                {isVerified ? (
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold">
+                    <i class="fas fa-check mr-1" aria-hidden="true"></i>Đã xác minh
+                  </span>
+                ) : (
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-200 text-[11px] font-bold">
+                    <i class="fas fa-clock mr-1" aria-hidden="true"></i>Chưa xác minh
+                  </span>
+                )}
+                {props.profile.google_id && (
+                  <span class="px-2.5 py-0.5 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-semibold">
+                    Đã liên kết Google
+                  </span>
+                )}
+              </div>
+              <p class="text-xs text-[#c2c0e0] leading-relaxed">
+                {isVerified
+                  ? `Email ${props.profile.email} đã được xác minh${props.profile.email_verified_at ? ' lúc ' + formatDateTime(props.profile.email_verified_at) : ''}. Bạn nhận đủ thông báo cập nhật Skill AI và quyền Affiliate.`
+                  : 'Bạn vẫn mua hàng bình thường mà không cần OTP. Bấm nút bên cạnh để xác minh Gmail khi muốn bật Affiliate, nhận bản cập nhật Skill mới qua email và khôi phục mật khẩu tự động.'}
+              </p>
             </div>
           </div>
-          <div>
-            <label for="new-password" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Mật khẩu mới</label>
-            <div class="relative">
-              <input id="new-password" type="password" name="new_password" required minlength={6} autocomplete="new-password"
-                class="w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
-              <button type="button" class="toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition"
-                aria-label="Hiện mật khẩu mới" aria-pressed="false" data-target="new-password">
-                <i class="far fa-eye text-sm" aria-hidden="true"></i>
-              </button>
+
+          {!isVerified && (
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <form action="/api/account/send-verify-email" method="post" data-ajax>
+                <button type="submit" class="h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:opacity-95 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition cursor-pointer whitespace-nowrap">
+                  <i class="fas fa-paper-plane mr-1.5" aria-hidden="true"></i>Gửi link xác minh
+                </button>
+              </form>
+              {props.googleEnabled && (
+                <a href="/api/auth/google?next=/tai-khoan/ho-so" data-no-pjax
+                  class="cta-white h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-semibold text-xs transition whitespace-nowrap">
+                  <i class="fab fa-google" aria-hidden="true"></i>Xác minh với Google
+                </a>
+              )}
             </div>
-          </div>
-          <div role="alert" class="form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200"></div>
-          <button type="submit" class="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition">Đổi mật khẩu</button>
+          )}
         </div>
-      </form>
-    </div>
-  </AccountShell>
-)
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-5">
+        <form action="/api/account/profile" method="post" data-ajax class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6">
+          <h2 class="font-bold text-white mb-5 text-base"><i class="fas fa-user mr-2 text-indigo-400" aria-hidden="true"></i>Thông tin cá nhân</h2>
+          <div class="space-y-4">
+            <div>
+              <label for="profile-name" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Họ và tên</label>
+              <input id="profile-name" type="text" name="full_name" value={props.profile.full_name} required autocomplete="name"
+                class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label for="profile-email" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Email</label>
+              <input id="profile-email" type="email" value={props.profile.email} disabled
+                class="w-full h-11 px-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-sm text-[#9492b8] cursor-not-allowed" />
+              <p class="text-xs text-[#9492b8] mt-1">Email không thể thay đổi</p>
+            </div>
+            <div>
+              <label for="profile-phone" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Số điện thoại</label>
+              <input id="profile-phone" type="tel" name="phone" value={props.profile.phone || ''} autocomplete="tel"
+                class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
+            </div>
+            <div role="alert" class="form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200"></div>
+            <button type="submit" class="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer">Lưu thay đổi</button>
+          </div>
+        </form>
+
+        <form action="/api/account/password" method="post" data-ajax class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 self-start">
+          <h2 class="font-bold text-white mb-2 text-base"><i class="fas fa-key mr-2 text-indigo-400" aria-hidden="true"></i>{isOAuthOnly ? 'Đặt mật khẩu đăng nhập' : 'Đổi mật khẩu'}</h2>
+          {isOAuthOnly && (
+            <p class="text-xs text-[#9492b8] mb-4">Tài khoản tạo qua Google chưa có mật khẩu riêng. Đặt mật khẩu nếu bạn muốn đăng nhập thêm bằng Email.</p>
+          )}
+          <div class="space-y-4 mt-4">
+            {!isOAuthOnly && (
+              <div>
+                <label for="current-password" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Mật khẩu hiện tại</label>
+                <div class="relative">
+                  <input id="current-password" type="password" name="current_password" required autocomplete="current-password"
+                    class="w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
+                  <button type="button" class="toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition"
+                    aria-label="Hiện mật khẩu hiện tại" aria-pressed="false" data-target="current-password">
+                    <i class="far fa-eye text-sm" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            )}
+            <div>
+              <label for="new-password" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Mật khẩu mới</label>
+              <div class="relative">
+                <input id="new-password" type="password" name="new_password" required minlength={6} autocomplete="new-password"
+                  class="w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
+                <button type="button" class="toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition"
+                  aria-label="Hiện mật khẩu mới" aria-pressed="false" data-target="new-password">
+                  <i class="far fa-eye text-sm" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div role="alert" class="form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200"></div>
+            <button type="submit" class="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer">{isOAuthOnly ? 'Đặt mật khẩu' : 'Đổi mật khẩu'}</button>
+          </div>
+        </form>
+      </div>
+    </AccountShell>
+  )
+}

@@ -12,7 +12,12 @@ if (!cs) { console.error('POSTGRES_URL required'); process.exit(1) }
 const client = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } })
 await client.connect()
 
-for (const f of ['0001_initial_schema.sql', '0002_bank_webhook.sql', 'seed.sql']) {
+const onlyArg = process.argv.find(a => a.startsWith('--only='))
+const files = onlyArg
+  ? [onlyArg.slice('--only='.length)]
+  : ['0001_initial_schema.sql', '0002_bank_webhook.sql', '0003_auth_notifications.sql', 'seed.sql']
+
+for (const f of files) {
   const sql = readFileSync(join(dir, f), 'utf8')
   console.log('==', f)
   await client.query(sql)
