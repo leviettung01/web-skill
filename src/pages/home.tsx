@@ -127,10 +127,12 @@ export const HomePage: FC<Props> = (props) => {
         <div class="absolute inset-0 hero-grid"></div>
         <div class="relative max-w-7xl mx-auto px-4 py-14 md:py-20">
           <div class="grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
-            <div>
-              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
-                Đang mở bán <b class="text-emerald-300 tabular-nums">{stats.products} Skill AI</b> — <span class="tabular-nums">{stats.sold.toLocaleString('vi-VN')}+</span> lượt mua thành công
+            <div class="min-w-0">
+              <div class="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-[11px] sm:text-xs font-semibold mb-6 max-w-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true"></span>
+                <span>Đang mở bán <b class="text-emerald-300 tabular-nums">{stats.products} Skill AI</b></span>
+                <span class="text-white/40" aria-hidden="true">·</span>
+                <span><span class="tabular-nums">{stats.sold.toLocaleString('vi-VN')}+</span> lượt mua thành công</span>
               </div>
               <h1 class="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5">
                 Kho <span class="bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Skill AI Làm Video</span> thực chiến số 1 Việt Nam
@@ -169,7 +171,7 @@ export const HomePage: FC<Props> = (props) => {
             </div>
 
             {/* Hero 3D Multi-Device Studio Stage (Adaptive 16:9 <-> 9:16) */}
-            <div class="hero-stage-wrapper relative">
+            <div class="hero-stage-wrapper relative min-w-0">
               <button type="button" id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>
               </button>

@@ -60,7 +60,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
       : 'text-[#c2c0e0] border border-transparent hover:text-white hover:bg-white/5'}`
 
   return (
-    <html lang="vi" class="scroll-smooth">
+    <html lang="vi" class="scroll-smooth overflow-x-clip">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -72,17 +72,17 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         {props.ogImage && <meta property="og:image" content={props.ogImage} />}
         {canonical && <link rel="canonical" href={canonical} />}
         <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
-        <link href="/static/tailwind.css?v=20261116" rel="stylesheet" />
+        <link href="/static/tailwind.css?v=20261117" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
-        <link href="/static/style.css?v=20261116" rel="stylesheet" />
+        <link href="/static/style.css?v=20261117" rel="stylesheet" />
         <script dangerouslySetInnerHTML={{
           __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
         }}></script>
       </head>
-      <body class={'bg-[#070614] text-[#f4f4fc] antialiased dark-portal ' + (props.bodyClass || '')}>
+      <body class={'bg-[#070614] text-[#f4f4fc] antialiased dark-portal overflow-x-clip ' + (props.bodyClass || '')}>
         <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
         <div id="nav-progress" aria-hidden="true"></div>
         <div id="sidebar-backdrop" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs hidden lg:hidden" aria-hidden="true"></div>
@@ -205,7 +205,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
           </aside>
 
           {/* MAIN CONTENT WRAPPER */}
-          <div id="main-content-wrap" class="flex-1 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip">
+          <div id="main-content-wrap" class="flex-1 min-w-0 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip">
             {/* Header */}
             <header id="site-header" class="sticky top-0 z-40 bg-[#0f0e24]/85 backdrop-blur border-b border-[#221e54]">
               <div class="max-w-7xl mx-auto px-4 sm:px-6">
@@ -320,7 +320,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
             </header>
 
             {/* Main content body */}
-            <main id="main-content" tabindex={-1} class="flex-1 outline-none">{children}</main>
+            <main id="main-content" tabindex={-1} class="flex-1 min-w-0 outline-none">{children}</main>
 
             {/* Footer */}
             <footer id="site-footer" class="bg-[#060512] text-[#9492b8] border-t border-[#221e54] mt-16">
@@ -408,7 +408,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         <div id="toast-container" aria-live="polite" aria-atomic="true" role="status" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-        <script src="/static/app.js?v=20261116"></script>
+        <script src="/static/app.js?v=20261117"></script>
       </body>
     </html>
   )

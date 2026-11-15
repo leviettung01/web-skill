@@ -8938,7 +8938,7 @@ var Layout = (props) => {
     { href: "/lien-he", label: "Li\xEAn h\u1EC7", key: "contact", icon: "fa-headset", on: isContact }
   ];
   const sbCls = (on) => `sidebar-menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${on ? "is-active text-white bg-indigo-500/15 border border-indigo-500/30 shadow-sm shadow-indigo-500/10" : "text-[#c2c0e0] border border-transparent hover:text-white hover:bg-white/5"}`;
-  return /* @__PURE__ */ jsxDEV("html", { lang: "vi", class: "scroll-smooth", children: [
+  return /* @__PURE__ */ jsxDEV("html", { lang: "vi", class: "scroll-smooth overflow-x-clip", children: [
     /* @__PURE__ */ jsxDEV("head", { children: [
       /* @__PURE__ */ jsxDEV("meta", { charset: "UTF-8" }),
       /* @__PURE__ */ jsxDEV("meta", { name: "viewport", content: "width=device-width, initial-scale=1.0" }),
@@ -8950,17 +8950,17 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261116", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261117", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261116", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261117", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
     ] }),
-    /* @__PURE__ */ jsxDEV("body", { class: "bg-[#070614] text-[#f4f4fc] antialiased dark-portal " + (props.bodyClass || ""), children: [
+    /* @__PURE__ */ jsxDEV("body", { class: "bg-[#070614] text-[#f4f4fc] antialiased dark-portal overflow-x-clip " + (props.bodyClass || ""), children: [
       /* @__PURE__ */ jsxDEV("a", { href: "#main-content", class: "skip-link", children: "Chuy\u1EC3n \u0111\u1EBFn n\u1ED9i dung ch\xEDnh" }),
       /* @__PURE__ */ jsxDEV("div", { id: "nav-progress", "aria-hidden": "true" }),
       /* @__PURE__ */ jsxDEV("div", { id: "sidebar-backdrop", class: "fixed inset-0 z-40 bg-black/60 backdrop-blur-xs hidden lg:hidden", "aria-hidden": "true" }),
@@ -9087,7 +9087,7 @@ var Layout = (props) => {
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { id: "main-content-wrap", class: "flex-1 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip", children: [
+        /* @__PURE__ */ jsxDEV("div", { id: "main-content-wrap", class: "flex-1 min-w-0 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip", children: [
           /* @__PURE__ */ jsxDEV("header", { id: "site-header", class: "sticky top-0 z-40 bg-[#0f0e24]/85 backdrop-blur border-b border-[#221e54]", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 sm:px-6", children: /* @__PURE__ */ jsxDEV("div", { class: "h-16 flex items-center justify-between gap-4", children: [
               /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex lg:hidden items-center gap-2 shrink-0 group", children: [
@@ -9247,7 +9247,7 @@ var Layout = (props) => {
               ] })
             ] }) })
           ] }),
-          /* @__PURE__ */ jsxDEV("main", { id: "main-content", tabindex: -1, class: "flex-1 outline-none", children }),
+          /* @__PURE__ */ jsxDEV("main", { id: "main-content", tabindex: -1, class: "flex-1 min-w-0 outline-none", children }),
           /* @__PURE__ */ jsxDEV("footer", { id: "site-footer", class: "bg-[#060512] text-[#9492b8] border-t border-[#221e54] mt-16", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-12", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8", children: [
               /* @__PURE__ */ jsxDEV("div", { children: [
@@ -9411,7 +9411,7 @@ var Layout = (props) => {
       ] }),
       /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261116" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261117" })
     ] })
   ] });
 };
@@ -9501,18 +9501,18 @@ var ProductCard = ({ p, compact }) => {
         ] })
       ] }) }),
       /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 border-t border-[#221e54] flex items-end justify-between gap-2", children: [
-        /* @__PURE__ */ jsxDEV("div", { children: comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-amber-300 tabular-nums", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-amber-300 tabular-nums whitespace-nowrap", children: [
           "D\u1EF1 ki\u1EBFn: ",
           formatVND(p.price)
         ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
           p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] line-through leading-none mb-0.5 tabular-nums", children: formatVND(p.original_price) }),
           /* @__PURE__ */ jsxDEV("div", { class: "text-base font-extrabold text-rose-400 leading-none tabular-nums", children: formatVND(p.price) })
         ] }) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: comingSoon ? /* @__PURE__ */ jsxDEV(
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5 shrink-0", children: comingSoon ? /* @__PURE__ */ jsxDEV(
           "a",
           {
             href: `/san-pham/${p.slug}`,
-            class: "h-9 px-3 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 hover:bg-amber-500/25 text-xs font-bold inline-flex items-center gap-1.5 transition",
+            class: "h-9 px-3 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 hover:bg-amber-500/25 text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition",
             children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]", "aria-hidden": "true" }),
               "Ch\u01B0a m\u1EDF b\xE1n"
@@ -9546,7 +9546,7 @@ var ProductCard = ({ p, compact }) => {
     ] })
   ] });
 };
-var SectionTitle = ({ title: title2, subtitle, center, more }) => /* @__PURE__ */ jsxDEV("div", { class: `flex items-end justify-between gap-4 mb-7 ${center ? "flex-col items-center text-center" : ""}`, children: [
+var SectionTitle = ({ title: title2, subtitle, center, more }) => /* @__PURE__ */ jsxDEV("div", { class: `flex gap-4 mb-7 ${center ? "flex-col items-center justify-center text-center" : "flex-wrap items-end justify-between"}`, children: [
   /* @__PURE__ */ jsxDEV("div", { children: [
     /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight", children: title2 }),
     subtitle && /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-1.5 text-sm md:text-base", children: subtitle })
@@ -9751,20 +9751,24 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 py-14 md:py-20", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-10 xl:gap-12 items-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-emerald-400", "aria-hidden": "true" }),
-            "\u0110ang m\u1EDF b\xE1n ",
-            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300 tabular-nums", children: [
-              stats.products,
-              " Skill AI"
+        /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-[11px] sm:text-xs font-semibold mb-6 max-w-full", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0", "aria-hidden": "true" }),
+            /* @__PURE__ */ jsxDEV("span", { children: [
+              "\u0110ang m\u1EDF b\xE1n ",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300 tabular-nums", children: [
+                stats.products,
+                " Skill AI"
+              ] })
             ] }),
-            " \u2014 ",
-            /* @__PURE__ */ jsxDEV("span", { class: "tabular-nums", children: [
-              stats.sold.toLocaleString("vi-VN"),
-              "+"
-            ] }),
-            " l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
+            /* @__PURE__ */ jsxDEV("span", { class: "text-white/40", "aria-hidden": "true", children: "\xB7" }),
+            /* @__PURE__ */ jsxDEV("span", { children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "tabular-nums", children: [
+                stats.sold.toLocaleString("vi-VN"),
+                "+"
+              ] }),
+              " l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
+            ] })
           ] }),
           /* @__PURE__ */ jsxDEV("h1", { class: "text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5", children: [
             "Kho ",
@@ -9796,7 +9800,7 @@ var HomePage = (props) => {
             /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: label })
           ] })) })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "hero-stage-wrapper relative", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "hero-stage-wrapper relative min-w-0", children: [
           /* @__PURE__ */ jsxDEV("button", { type: "button", id: "heroPrevPhoneBtn", class: "phone-nav-arrow phone-nav-prev", "aria-label": "Xem video tr\u01B0\u1EDBc", title: "Chuy\u1EC3n video tr\u01B0\u1EDBc (Tr\xE1i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left", "aria-hidden": "true" }) }),
           /* @__PURE__ */ jsxDEV("button", { type: "button", id: "heroNextPhoneBtn", class: "phone-nav-arrow phone-nav-next", "aria-label": "Xem video ti\u1EBFp theo", title: "Chuy\u1EC3n video k\u1EBF ti\u1EBFp (Ph\u1EA3i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right", "aria-hidden": "true" }) }),
           /* @__PURE__ */ jsxDEV("div", { class: "hero-stage frame-landscape", id: "heroStage", children: [

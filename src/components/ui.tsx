@@ -91,9 +91,9 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
 
         {/* Pricing & Add/Wishlist actions */}
         <div class="mt-auto pt-3 border-t border-[#221e54] flex items-end justify-between gap-2">
-          <div>
+          <div class="min-w-0">
             {comingSoon ? (
-              <div class="text-xs font-semibold text-amber-300 tabular-nums">Dự kiến: {formatVND(p.price)}</div>
+              <div class="text-xs font-semibold text-amber-300 tabular-nums whitespace-nowrap">Dự kiến: {formatVND(p.price)}</div>
             ) : (
               <>
                 {p.original_price && p.original_price > p.price && (
@@ -103,10 +103,10 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
               </>
             )}
           </div>
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 shrink-0">
             {comingSoon ? (
               <a href={`/san-pham/${p.slug}`}
-                class="h-9 px-3 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 hover:bg-amber-500/25 text-xs font-bold inline-flex items-center gap-1.5 transition">
+                class="h-9 px-3 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 hover:bg-amber-500/25 text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition">
                 <i class="fas fa-clock text-[10px]" aria-hidden="true"></i>Chưa mở bán
               </a>
             ) : (
@@ -130,7 +130,7 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
 
 export const SectionTitle: FC<{ title: string; subtitle?: string; center?: boolean; more?: { href: string; label: string } }> =
   ({ title, subtitle, center, more }) => (
-    <div class={`flex items-end justify-between gap-4 mb-7 ${center ? 'flex-col items-center text-center' : ''}`}>
+    <div class={`flex gap-4 mb-7 ${center ? 'flex-col items-center justify-center text-center' : 'flex-wrap items-end justify-between'}`}>
       <div>
         <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">{title}</h2>
         {subtitle && <p class="text-[#b8b6d9] mt-1.5 text-sm md:text-base">{subtitle}</p>}

@@ -201,6 +201,7 @@ h1, h2, h3 {
 
 /* Marquee logos */
 @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee-wrap { contain: layout inline-size; min-width: 0; max-width: 100%; }
 .marquee-track { animation: marquee 26s linear infinite; }
 .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
 
@@ -699,10 +700,17 @@ body.dark-portal textarea:focus {
   font-size: 11px;
   font-weight: 700;
   backdrop-filter: blur(8px);
-  max-width: 68%;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 58%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.studio-chip > span:not(.studio-aspect-pill):not(.w-1\.5) {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .studio-aspect-pill {
@@ -721,6 +729,7 @@ body.dark-portal textarea:focus {
   align-items: center;
   gap: 6px;
   pointer-events: auto;
+  flex-shrink: 0;
 }
 
 .studio-sound-btn,
@@ -736,6 +745,8 @@ body.dark-portal textarea:focus {
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   backdrop-filter: blur(8px);
   transition: background-color 0.2s, border-color 0.2s, transform 0.15s;
@@ -838,6 +849,9 @@ body.dark-portal textarea:focus {
 .wall-track-wrapper {
   position: relative;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  contain: layout inline-size;
   overflow: hidden;
   mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
@@ -1202,11 +1216,11 @@ body.dark-portal textarea:focus {
   }
   .phone-left {
     left: 2%;
-    transform: rotate(-6deg) scale(0.92);
+    transform: translate(0, -50%) rotate(-6deg) scale(0.84);
   }
   .phone-right {
     right: 2%;
-    transform: rotate(6deg) scale(0.92);
+    transform: translate(0, -50%) rotate(6deg) scale(0.84);
   }
   .theater-layout {
     grid-template-columns: 1fr;
@@ -1279,6 +1293,19 @@ body.dark-portal textarea:focus {
   transform: translate(-50%, -50%);
   border-radius: 22px;
   padding: 6px;
+}
+@media (max-width: 1023px) {
+  .hero-stage.frame-landscape {
+    height: clamp(360px, 48vw, 430px);
+  }
+}
+@media (max-width: 640px) {
+  .hero-stage.frame-landscape {
+    height: clamp(220px, 56vw, 275px);
+  }
+  .phone-front.frame-landscape {
+    width: 96%;
+  }
 }
 .phone-front.frame-landscape .phone-notch {
   display: none;
