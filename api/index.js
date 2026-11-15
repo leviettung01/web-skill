@@ -8980,7 +8980,7 @@ var Layout = (props) => {
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Trang ch\u1EE7" })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", title: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m", "data-nav": "all", class: sbCls(isProductsAll), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-grid-2 fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? "text-indigo-400" : "text-slate-400"}` }),
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? "text-indigo-400" : "text-slate-400"}` }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m" })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?sort=bestseller", title: "B\xE1n ch\u1EA1y nh\u1EA5t", "data-nav": "bestseller", class: sbCls(isBestseller), children: [

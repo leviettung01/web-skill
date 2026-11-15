@@ -78,6 +78,9 @@ body {
     padding-right: 0 !important;
     gap: 0 !important;
   }
+  html:not(.sb-pinned) #sidebar:not(.sb-hover-open) #sidebar-pin-btn {
+    display: none;
+  }
 
   /* Hover expanded overlay (zero content reflow!) */
   html:not(.sb-pinned) #sidebar.sb-hover-open {
@@ -438,7 +441,7 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
 .hero-stage-wrapper {
   position: relative;
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
   margin: 0 auto;
 }
 .hero-stage {
@@ -1337,8 +1340,12 @@ body.bg-\[\#080716\] .hover\:bg-amber-50:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: inherit;
+  border-radius: 30px;
+  background: #000;
   display: block;
+}
+.hero-stage.frame-landscape {
+  height: clamp(300px, 42vw, 440px);
 }
 .phone-front {
   transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1), height 0.32s cubic-bezier(0.22, 1, 0.36, 1), top 0.32s ease, transform 0.32s ease, border-radius 0.25s ease;

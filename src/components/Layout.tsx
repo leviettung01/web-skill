@@ -107,7 +107,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                       <span class="sidebar-text whitespace-nowrap">Trang chủ</span>
                     </a>
                     <a href="/san-pham" title="Tất cả sản phẩm" data-nav="all" class={sbCls(isProductsAll)}>
-                      <i class={`fas fa-grid-2 fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? 'text-indigo-400' : 'text-slate-400'}`}></i>
+                      <i class={`fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? 'text-indigo-400' : 'text-slate-400'}`}></i>
                       <span class="sidebar-text whitespace-nowrap">Tất cả sản phẩm</span>
                     </a>
                     <a href="/san-pham?sort=bestseller" title="Bán chạy nhất" data-nav="bestseller" class={sbCls(isBestseller)}>
