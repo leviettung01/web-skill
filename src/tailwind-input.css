@@ -13,5 +13,10 @@
   --color-brand-900: #312e81;
   --color-brand-950: #1e1b4b;
 
-  --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
+  --color-canvas: #070614;
+  --color-surface: #0f0e24;
+  --color-elevated: #161436;
+
+  --font-sans: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }

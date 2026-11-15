@@ -30,8 +30,9 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const comingSoon = p.status === 'coming_soon'
 
   return (
-    <Layout {...props} active="products" title={p.name} description={p.short_desc} ogImage={p.thumbnail || undefined}>
-      <div class="bg-[#0f0e26] border-b border-[#1f1b4b]">
+    <Layout {...props} active="products" title={p.name} description={p.short_desc} ogImage={p.thumbnail || undefined}
+      bodyClass={!owned && !comingSoon ? 'has-sticky-buy-bar' : ''}>
+      <div class="bg-[#0f0e24] border-b border-[#221e54]">
         <div class="max-w-7xl mx-auto px-4 pt-6 pb-8">
           <Breadcrumb items={[
             { label: 'Sản phẩm', href: '/san-pham' },
@@ -43,7 +44,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
             {/* COLUMN 1: Adaptive Video Player (Auto 16:9 Landscape / 9:16 Portrait) & Specs Grid */}
             <div>
               {p.demo_video_url ? (
-                <div class="adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#1f1b4b] bg-[#080716] shadow-2xl relative aspect-video w-full"
+                <div class="adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl relative aspect-video w-full"
                   data-poster={demoPoster || p.thumbnail || ''}
                   data-url={p.demo_video_url}>
                   <div class="video-ambient-bg" style={demoPoster || p.thumbnail ? `background-image:url('${demoPoster || p.thumbnail}')` : ''}></div>
@@ -52,27 +53,27 @@ export const ProductDetailPage: FC<Props> = (props) => {
                       <video src={p.demo_video_url} poster={demoPoster || p.thumbnail || undefined}
                         class="adaptive-demo-video w-full h-full object-contain bg-transparent" controls playsinline preload="metadata"></video>
                     ) : (
-                      <iframe src={embedVideoUrl} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                      <iframe src={embedVideoUrl} title={`Demo ${p.name}`} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     )}
                   </div>
                   <div class="absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5">
-                    <span class="text-[10px] font-bold text-white tracking-wider bg-black/65 backdrop-blur px-2.5 py-1 rounded-md border border-white/10">VIDEO DEMO</span>
+                    <span class="text-[10px] font-bold text-white tracking-wider bg-black/70 backdrop-blur px-2.5 py-1 rounded-md border border-white/15">VIDEO DEMO</span>
                     <button type="button" data-video={p.demo_video_url} data-poster={demoPoster || p.thumbnail || ''} data-title={p.name} data-aspect="auto"
-                      class="pointer-events-auto text-[10px] font-bold text-indigo-300 hover:text-white bg-black/65 hover:bg-indigo-600/90 backdrop-blur px-2.5 py-1 rounded-md border border-white/10 transition cursor-pointer" title="Mở trình phát lớn">
-                      <i class="fas fa-expand mr-1"></i>Phóng to
+                      class="pointer-events-auto text-[10px] font-bold text-indigo-200 hover:text-white bg-black/70 hover:bg-indigo-600 backdrop-blur px-2.5 py-1 rounded-md border border-white/15 transition cursor-pointer" title="Mở trình phát lớn" aria-label={`Phóng to video demo ${p.name}`}>
+                      <i class="fas fa-expand mr-1" aria-hidden="true"></i>Phóng to
                     </button>
                   </div>
                 </div>
               ) : p.thumbnail ? (
-                <div class="adaptive-thumb-wrapper mx-auto rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video relative shadow-lg">
+                <div class="adaptive-thumb-wrapper mx-auto rounded-2xl overflow-hidden border border-[#221e54] bg-[#070614] aspect-video relative shadow-lg">
                   <div class="video-ambient-bg" style={`background-image:url('${p.thumbnail}')`}></div>
                   <img src={p.thumbnail} alt={p.name} class="relative z-[2] w-full h-full object-contain" />
                 </div>
               ) : (
-                <div class="rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video grid place-items-center text-white/95 relative shadow-lg"
+                <div class="rounded-2xl overflow-hidden border border-[#221e54] bg-[#070614] aspect-video grid place-items-center text-white/95 relative shadow-lg"
                   style={`background:${gradientFor(p.id)}`}>
                   <div class="text-center p-4">
-                    <i class={`fas ${PRODUCT_TYPE_ICON[p.product_type] || 'fa-cube'} text-6xl mb-3 opacity-90`}></i>
+                    <i class={`fas ${PRODUCT_TYPE_ICON[p.product_type] || 'fa-cube'} text-6xl mb-3 opacity-90`} aria-hidden="true"></i>
                     <div class="text-sm font-bold uppercase tracking-[0.2em] opacity-80">{PRODUCT_TYPE_LABEL[p.product_type]}</div>
                   </div>
                 </div>
@@ -81,177 +82,181 @@ export const ProductDetailPage: FC<Props> = (props) => {
               {gallery.length > 0 && (
                 <div class="grid grid-cols-4 gap-2.5 mt-3">
                   {gallery.slice(0, 8).map((g, i) => (
-                    <img src={g} alt={`${p.name} ảnh ${i + 1}`} loading="lazy"
-                      class="aspect-[9/16] object-cover rounded-lg border border-[#1f1b4b] cursor-pointer hover:border-indigo-500 transition" />
+                    <button type="button" data-image-preview={g} data-title={`${p.name} — Ảnh ${i + 1}`}
+                      aria-label={`Xem lớn ảnh ${i + 1} của ${p.name}`}
+                      class="aspect-video rounded-lg border border-[#221e54] bg-[#070614] overflow-hidden cursor-pointer hover:border-indigo-400 transition">
+                      <img src={g} alt={`${p.name} ảnh ${i + 1}`} loading="lazy" class="w-full h-full object-contain" />
+                    </button>
                   ))}
                 </div>
               )}
 
               {/* Specs Grid boards */}
               <div class="grid grid-cols-2 gap-3 mt-5">
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-400 grid place-items-center text-sm shrink-0"><i class="fas fa-bolt"></i></div>
+                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-400 grid place-items-center text-sm shrink-0"><i class="fas fa-bolt" aria-hidden="true"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Giao hàng</div>
+                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Giao hàng</div>
                     <div class="text-xs font-bold text-white">Tự động 24/7</div>
                   </div>
                 </div>
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-cubes"></i></div>
+                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-cubes" aria-hidden="true"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Nội dung</div>
+                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Nội dung</div>
                     <div class="text-xs font-bold text-white">Full tài liệu + HDSD</div>
                   </div>
                 </div>
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-400 grid place-items-center text-sm shrink-0"><i class="fas fa-infinity"></i></div>
+                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 grid place-items-center text-sm shrink-0"><i class="fas fa-infinity" aria-hidden="true"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Truy cập</div>
+                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Truy cập</div>
                     <div class="text-xs font-bold text-white">Trọn đời + update free</div>
                   </div>
                 </div>
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-rose-500/10 text-rose-400 grid place-items-center text-sm shrink-0"><i class="fas fa-headset"></i></div>
+                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-rose-500/15 text-rose-400 grid place-items-center text-sm shrink-0"><i class="fas fa-headset" aria-hidden="true"></i></div>
                   <div>
-                    <div class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Hỗ trợ</div>
+                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Hỗ trợ</div>
                     <div class="text-xs font-bold text-white">1-1 qua Zalo</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* COLUMN 2: Product info, Urgency Scarcity, Call to Action */}
+            {/* COLUMN 2: Product info & Call to Action */}
             <div class="flex flex-col justify-start">
               <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
-                {p.category_name && <a href={`/danh-muc/${p.category_slug}`} class="px-2.5 py-1 rounded bg-[#16143c] text-slate-300 text-xs font-medium hover:text-white hover:bg-white/5 transition">{p.category_name}</a>}
+                <span class="px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
+                {p.category_name && <a href={`/danh-muc/${p.category_slug}`} class="px-2.5 py-1 rounded bg-[#161436] border border-[#221e54] text-[#c2c0e0] text-xs font-medium hover:text-white hover:border-indigo-500/40 transition">{p.category_name}</a>}
                 {comingSoon ? (
-                  <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"><i class="fas fa-clock mr-1"></i>CHƯA MỞ BÁN</span>
+                  <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold"><i class="fas fa-clock mr-1" aria-hidden="true"></i>CHƯA MỞ BÁN</span>
                 ) : (
                   <>
-                    {p.is_hot === 1 && <span class="px-2.5 py-1 rounded bg-orange-500/15 text-orange-400 text-xs font-bold"><i class="fas fa-fire mr-1 animate-pulse"></i>HOT</span>}
-                    {p.is_new === 1 && <span class="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 text-xs font-bold">MỚI</span>}
+                    {p.is_hot === 1 && <span class="px-2.5 py-1 rounded bg-orange-500/15 text-orange-300 text-xs font-bold"><i class="fas fa-fire mr-1" aria-hidden="true"></i>HOT</span>}
+                    {p.is_new === 1 && <span class="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-300 text-xs font-bold">MỚI</span>}
                   </>
                 )}
               </div>
 
-              <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3 glow-text-brand">{p.name}</h1>
+              <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3">{p.name}</h1>
 
-              <div class="flex flex-wrap items-center gap-4 text-xs mb-4">
+              <div class="flex flex-wrap items-center gap-4 text-xs mb-4 tabular-nums">
                 <a href="#reviews" class="flex items-center gap-1.5">
                   <Stars rating={p.rating} size="text-xs" />
                   <b class="text-white text-sm">{p.rating.toFixed(1)}</b>
-                  <span class="text-slate-400">({p.rating_count} đánh giá)</span>
+                  <span class="text-[#b8b6d9]">({p.rating_count} đánh giá)</span>
                 </a>
-                <span class="text-[#1f1b4b]">|</span>
-                <span class="text-slate-400"><i class="fas fa-cart-shopping mr-1 text-slate-500"></i>{p.sold_count} đã bán</span>
-                <span class="text-[#1f1b4b]">|</span>
-                <span class="text-slate-400"><i class="fas fa-eye mr-1 text-slate-500"></i>{p.view_count} xem</span>
+                <span class="text-[#2a2559]" aria-hidden="true">|</span>
+                <span class="text-[#b8b6d9]"><i class="fas fa-cart-shopping mr-1 text-[#9492b8]" aria-hidden="true"></i>{p.sold_count} đã bán</span>
+                <span class="text-[#2a2559]" aria-hidden="true">|</span>
+                <span class="text-[#b8b6d9]"><i class="fas fa-eye mr-1 text-[#9492b8]" aria-hidden="true"></i>{p.view_count} xem</span>
               </div>
 
-              <p class="text-[#9f9dbb] text-sm leading-relaxed mb-5">{p.short_desc}</p>
+              <p class="text-[#c2c0e0] text-sm leading-relaxed mb-5">{p.short_desc}</p>
 
-              {/* Pricing Box - Glowing container */}
-              <div class="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-[#0f0e26] via-[#1a184c]/50 to-[#0b0a19] p-5 mb-4 glow-brand relative overflow-hidden">
-                <div class="flex items-end flex-wrap gap-3 mb-1.5">
-                  <span class="text-3xl md:text-4xl font-extrabold text-[#f43f5e] leading-none">{formatVND(p.price)}</span>
+              {/* Pricing Box */}
+              <div class="rounded-2xl border border-indigo-500/35 bg-gradient-to-br from-[#0f0e24] via-[#1a184c]/55 to-[#070614] p-5 mb-4 glow-brand relative overflow-hidden">
+                <div class="flex items-end flex-wrap gap-3 mb-1.5 tabular-nums">
+                  <span class="text-3xl md:text-4xl font-extrabold text-rose-400 leading-none">{formatVND(p.price)}</span>
                   {p.original_price && p.original_price > p.price && (
                     <>
-                      <span class="text-base text-slate-500 line-through leading-none">{formatVND(p.original_price)}</span>
-                      <span class="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-bold">-{off}%</span>
+                      <span class="text-base text-[#9492b8] line-through leading-none">{formatVND(p.original_price)}</span>
+                      <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold">-{off}%</span>
                     </>
                   )}
                 </div>
-                {save > 0 && <div class="text-xs text-emerald-400 font-bold flex items-center gap-1"><i class="fas fa-piggy-bank text-sm"></i>Tiết kiệm {formatVND(save)}</div>}
-                <div class="mt-4 pt-3 border-t border-indigo-500/20 text-[11px] text-[#9f9dbb] flex flex-wrap gap-x-4 gap-y-1.5">
-                  <span><i class="fas fa-infinity text-indigo-400 mr-1"></i>Sở hữu trọn đời</span>
-                  <span><i class="fas fa-bolt text-indigo-400 mr-1"></i>Giao tự động</span>
-                  <span><i class="fas fa-rotate-left text-indigo-400 mr-1"></i>Hoàn tiền 7 ngày</span>
+                {save > 0 && <div class="text-xs text-emerald-400 font-bold flex items-center gap-1 tabular-nums"><i class="fas fa-piggy-bank text-sm" aria-hidden="true"></i>Tiết kiệm {formatVND(save)}</div>}
+                <div class="mt-4 pt-3 border-t border-indigo-500/25 text-xs text-[#b8b6d9] flex flex-wrap gap-x-4 gap-y-1.5">
+                  <span><i class="fas fa-infinity text-indigo-400 mr-1" aria-hidden="true"></i>Sở hữu trọn đời</span>
+                  <span><i class="fas fa-bolt text-indigo-400 mr-1" aria-hidden="true"></i>Giao tự động</span>
+                  <span><i class="fas fa-rotate-left text-indigo-400 mr-1" aria-hidden="true"></i>Hoàn tiền 7 ngày</span>
                 </div>
               </div>
 
               {comingSoon ? (
-                <div class="mb-5 bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl">
+                <div class="mb-5 bg-amber-500/10 border border-amber-500/35 p-4 rounded-xl">
                   <div class="text-sm font-bold text-amber-300 flex items-center gap-2 mb-1">
-                    <i class="fas fa-clock"></i>Sản phẩm hiện đang ở trạng thái Chưa mở bán
+                    <i class="fas fa-clock" aria-hidden="true"></i>Sản phẩm hiện đang ở trạng thái Chưa mở bán
                   </div>
-                  <p class="text-xs text-amber-200/80 leading-relaxed">
+                  <p class="text-xs text-amber-200/85 leading-relaxed">
                     Hiện tại hệ thống đang ưu tiên mở bán 5 bộ Skill AI hoàn thiện nhất. Hãy nhắn Zalo hoặc quay lại sau để cập nhật ngày phát hành chính thức.
                   </p>
                 </div>
               ) : (
-                <div class="mb-5 bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl flex items-center justify-between gap-3">
+                <div class="mb-5 bg-indigo-500/10 border border-indigo-500/25 p-4 rounded-xl flex items-center justify-between gap-3">
                   <div class="text-xs text-indigo-200 flex items-center gap-2">
-                    <i class="fas fa-bolt text-emerald-400"></i>
+                    <i class="fas fa-bolt text-emerald-400" aria-hidden="true"></i>
                     <span>Thanh toán VietQR tự động 24/7 — nhận link tải Skill ngay lập tức.</span>
                   </div>
-                  <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold shrink-0">Còn hàng</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-bold shrink-0">Còn hàng</span>
                 </div>
               )}
 
               {owned ? (
-                <div class="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 mb-4">
+                <div class="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-5 mb-4">
                   <div class="flex items-center gap-2.5 text-emerald-400 font-bold mb-2">
-                    <i class="fas fa-circle-check text-lg"></i>Bạn đã sở hữu sản phẩm này
+                    <i class="fas fa-circle-check text-lg" aria-hidden="true"></i>Bạn đã sở hữu sản phẩm này
                   </div>
-                  <p class="text-xs text-emerald-300/80 mb-3.5 leading-relaxed">Truy cập link tải sản phẩm và license key trong khu vực tài khoản của bạn.</p>
-                  <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition">
-                    <i class="fas fa-download"></i>Truy cập sản phẩm
+                  <p class="text-xs text-emerald-200/85 mb-3.5 leading-relaxed">Truy cập link tải sản phẩm và tài liệu hướng dẫn trong khu vực tài khoản của bạn.</p>
+                  <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+                    <i class="fas fa-download" aria-hidden="true"></i>Truy cập sản phẩm
                   </a>
                 </div>
               ) : comingSoon ? (
                 <div class="flex flex-col gap-2.5 mb-4">
-                  <button type="button" disabled class="w-full h-12 rounded-xl bg-[#16143c] border border-[#28235d] text-amber-300 font-bold text-sm cursor-not-allowed">
-                    <i class="fas fa-clock mr-1.5"></i>Tạm thời chưa mở bán
+                  <button type="button" disabled class="w-full h-12 rounded-xl bg-[#161436] border border-[#2a2559] text-amber-300 font-bold text-sm cursor-not-allowed">
+                    <i class="fas fa-clock mr-1.5" aria-hidden="true"></i>Tạm thời chưa mở bán
                   </button>
                   <div class="grid sm:grid-cols-2 gap-2.5">
                     <a href={`https://zalo.me/${settings?.zalo || ''}`} target="_blank" rel="noopener"
                       class="flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-bold text-xs transition">
-                      <i class="fas fa-bell"></i>Nhắn Zalo nhận lịch mở bán
+                      <i class="fas fa-bell" aria-hidden="true"></i>Nhắn Zalo nhận lịch mở bán
                     </a>
                     <a href="/san-pham?type=skill"
-                      class="flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 font-bold text-xs transition">
-                      <i class="fas fa-wand-magic-sparkles"></i>Xem 5 Skill đang bán
+                      class="flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/35 bg-indigo-500/15 text-indigo-200 hover:bg-indigo-500/25 font-bold text-xs transition">
+                      <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem 5 Skill đang bán
                     </a>
                   </div>
                 </div>
               ) : (
                 <div class="flex flex-col gap-2.5 mb-4">
                   <div class="flex flex-wrap gap-2.5">
-                    <button class="btn-buy-now flex-1 min-w-[150px] h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 transition shadow-lg shadow-rose-500/10" data-id={p.id}>
-                      <i class="fas fa-bolt mr-1.5"></i>Mua ngay
+                    <button type="button" class="btn-buy-now flex-1 min-w-[150px] h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 transition shadow-lg shadow-rose-500/15 cursor-pointer" data-id={p.id}>
+                      <i class="fas fa-bolt mr-1.5" aria-hidden="true"></i>Mua ngay
                     </button>
-                    <button class="btn-add-cart flex-1 min-w-[150px] h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition shadow-md shadow-indigo-600/10" data-id={p.id} data-name={p.name}>
-                      <i class="fas fa-cart-plus mr-1.5"></i>Thêm vào giỏ
+                    <button type="button" class="btn-add-cart flex-1 min-w-[150px] h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer" data-id={p.id} data-name={p.name}>
+                      <i class="fas fa-cart-plus mr-1.5" aria-hidden="true"></i>Thêm vào giỏ
                     </button>
-                    <button class={`btn-wishlist w-12 h-12 rounded-xl border border-[#1f1b4b] hover:border-rose-500 transition flex items-center justify-center ${inWishlist ? 'text-rose-500 bg-rose-500/10' : 'text-slate-400 bg-white/5'}`}
+                    <button type="button" aria-label={inWishlist ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích'}
+                      class={`btn-wishlist w-12 h-12 rounded-xl border border-[#221e54] hover:border-rose-400 transition flex items-center justify-center cursor-pointer ${inWishlist ? 'text-rose-400 bg-rose-500/15' : 'text-[#c2c0e0] bg-white/5'}`}
                       data-id={p.id} title="Yêu thích">
-                      <i class={`${inWishlist ? 'fas' : 'far'} fa-heart`}></i>
+                      <i class={`${inWishlist ? 'fas' : 'far'} fa-heart`} aria-hidden="true"></i>
                     </button>
                   </div>
 
                   {/* Zalo Consultant CTA Button */}
                   <a href={`https://zalo.me/${settings?.zalo}`} target="_blank" rel="noopener"
-                    class="flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold text-xs hover:bg-indigo-500/20 hover:text-white transition duration-200">
-                    <i class="fab fa-whatsapp text-sm"></i>Liên hệ tư vấn Zalo nhận khuyến mãi thêm
+                    class="flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-indigo-500/35 bg-indigo-500/15 text-indigo-200 font-bold text-xs hover:bg-indigo-500/25 hover:text-white transition duration-200">
+                    <i class="fas fa-comment-dots text-sm" aria-hidden="true"></i>Liên hệ tư vấn Zalo nhận khuyến mãi thêm
                   </a>
                 </div>
               )}
 
               {p.demo_url && (
                 <a href={p.demo_url} target="_blank" rel="noopener"
-                  class="flex items-center justify-center gap-2 w-full h-11 rounded-xl border border-[#1f1b4b] hover:border-indigo-500 text-indigo-400 hover:text-white hover:bg-[#16143c] font-semibold text-xs transition mb-5">
-                  <i class="fas fa-arrow-up-right-from-square"></i>Xem demo trực tiếp
+                  class="flex items-center justify-center gap-2 w-full h-11 rounded-xl border border-[#221e54] hover:border-indigo-400 text-indigo-300 hover:text-white hover:bg-[#161436] font-semibold text-xs transition mb-5">
+                  <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>Xem demo trực tiếp
                 </a>
               )}
 
               {features.length > 0 && (
-                <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5 mb-4">
+                <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5 mb-4">
                   <h3 class="font-bold text-white mb-3 text-xs uppercase tracking-wider">Bạn nhận được</h3>
                   <ul class="space-y-2">
                     {features.map(f => (
-                      <li class="flex gap-2.5 text-xs text-[#9f9dbb]">
-                        <i class="fas fa-circle-check text-emerald-400 mt-0.5 shrink-0"></i><span>{f}</span>
+                      <li class="flex gap-2.5 text-xs text-[#d6d4ee]">
+                        <i class="fas fa-circle-check text-emerald-400 mt-0.5 shrink-0" aria-hidden="true"></i><span>{f}</span>
                       </li>
                     ))}
                   </ul>
@@ -259,10 +264,10 @@ export const ProductDetailPage: FC<Props> = (props) => {
               )}
 
               {tech.length > 0 && (
-                <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5">
+                <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
                   <h3 class="font-bold text-white mb-3 text-xs uppercase tracking-wider">Công nghệ sử dụng</h3>
                   <div class="flex flex-wrap gap-1.5">
-                    {tech.map(t => <span class="px-2.5 py-1 rounded-lg bg-[#16143c] text-[#e2e1f5] text-[10px] font-bold border border-[#1f1b4b]">{t}</span>)}
+                    {tech.map(t => <span class="px-2.5 py-1 rounded-lg bg-[#161436] text-[#f4f4fc] text-[11px] font-bold border border-[#2a2559]">{t}</span>)}
                   </div>
                 </div>
               )}
@@ -285,29 +290,32 @@ export const ProductDetailPage: FC<Props> = (props) => {
       <div class="max-w-7xl mx-auto px-4 py-10">
         <div class="grid lg:grid-cols-[1fr_320px] gap-8">
           <div>
-            <div class="flex items-center gap-1 border-b border-[#1f1b4b] mb-6 overflow-x-auto">
-              <button class="tab-btn active px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-tab="desc" data-group="pd">
-                <i class="fas fa-file-lines mr-1.5"></i>Mô tả chi tiết
+            <div role="tablist" aria-label="Thông tin chi tiết sản phẩm" class="flex items-center gap-1.5 border-b border-[#221e54] mb-6 overflow-x-auto pb-2">
+              <button type="button" role="tab" aria-selected="true" aria-controls="panel-desc" id="tab-desc"
+                class="tab-btn active px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer" data-tab="desc" data-group="pd">
+                <i class="fas fa-file-lines mr-1.5" aria-hidden="true"></i>Mô tả chi tiết
               </button>
-              <button class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-tab="rev" data-group="pd">
-                <i class="fas fa-star mr-1.5"></i>Đánh giá ({p.rating_count})
+              <button type="button" role="tab" aria-selected="false" aria-controls="panel-rev" id="tab-rev"
+                class="tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer" data-tab="rev" data-group="pd">
+                <i class="fas fa-star mr-1.5" aria-hidden="true"></i>Đánh giá ({p.rating_count})
               </button>
-              <button class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap" data-tab="policy" data-group="pd">
-                <i class="fas fa-shield-halved mr-1.5"></i>Chính sách
+              <button type="button" role="tab" aria-selected="false" aria-controls="panel-policy" id="tab-policy"
+                class="tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer" data-tab="policy" data-group="pd">
+                <i class="fas fa-shield-halved mr-1.5" aria-hidden="true"></i>Chính sách
               </button>
             </div>
 
-            <div class="tab-panel bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 md:p-8" data-tab="desc" data-group="pd">
+            <div role="tabpanel" id="panel-desc" aria-labelledby="tab-desc" class="tab-panel bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8" data-tab="desc" data-group="pd">
               <div class="prose-vn max-w-none" dangerouslySetInnerHTML={{ __html: p.description || '<p>Đang cập nhật mô tả.</p>' }}></div>
             </div>
 
-            <div class="tab-panel hidden" data-tab="rev" data-group="pd" id="reviews">
-              <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 mb-5">
+            <div role="tabpanel" id="panel-rev" aria-labelledby="tab-rev" class="tab-panel hidden" data-tab="rev" data-group="pd">
+              <div id="reviews" class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 mb-5">
                 <div class="grid sm:grid-cols-[180px_1fr] gap-7 items-center">
                   <div class="text-center">
-                    <div class="text-5xl font-extrabold text-white">{p.rating.toFixed(1)}</div>
+                    <div class="text-5xl font-extrabold text-white tabular-nums">{p.rating.toFixed(1)}</div>
                     <div class="my-2"><Stars rating={p.rating} size="text-base" /></div>
-                    <div class="text-xs text-slate-400">{p.rating_count} đánh giá</div>
+                    <div class="text-xs text-[#9492b8] tabular-nums">{p.rating_count} đánh giá</div>
                   </div>
                   <div class="space-y-1.5">
                     {[5, 4, 3, 2, 1].map(star => {
@@ -315,12 +323,12 @@ export const ProductDetailPage: FC<Props> = (props) => {
                       const totalR = Object.values(ratingBreakdown).reduce((a, b) => a + b, 0) || 1
                       const pct = Math.round((cnt / totalR) * 100)
                       return (
-                        <div class="flex items-center gap-2.5 text-xs">
-                          <span class="w-10 text-slate-400 shrink-0">{star} <i class="fas fa-star text-amber-400"></i></span>
-                          <div class="flex-1 h-2 rounded-full bg-[#16143c] overflow-hidden">
+                        <div class="flex items-center gap-2.5 text-xs tabular-nums">
+                          <span class="w-10 text-[#b8b6d9] shrink-0">{star} <i class="fas fa-star text-amber-400" aria-hidden="true"></i></span>
+                          <div class="flex-1 h-2 rounded-full bg-[#161436] overflow-hidden">
                             <div class="h-full bg-amber-400 rounded-full" style={`width:${pct}%`}></div>
                           </div>
-                          <span class="w-8 text-right text-slate-400">{cnt}</span>
+                          <span class="w-8 text-right text-[#b8b6d9]">{cnt}</span>
                         </div>
                       )
                     })}
@@ -329,35 +337,35 @@ export const ProductDetailPage: FC<Props> = (props) => {
               </div>
 
               {canReview && (
-                <form action="/api/reviews" method="post" data-ajax data-reload="true" class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 mb-5">
+                <form action="/api/reviews" method="post" data-ajax data-reload="true" class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 mb-5">
                   <h3 class="font-bold text-white mb-4">Viết đánh giá của bạn</h3>
                   <input type="hidden" name="product_id" value={p.id} />
                   <div class="mb-4">
-                    <label class="block text-xs font-semibold text-[#9f9dbb] mb-2">Số sao</label>
-                    <select name="rating" class="h-10 px-3 rounded-lg border border-[#1f1b4b] bg-[#16143c] text-white outline-none focus:border-indigo-500/50 text-xs">
+                    <label for="review-rating" class="block text-xs font-semibold text-[#c2c0e0] mb-2">Số sao</label>
+                    <select id="review-rating" name="rating" class="h-10 px-3 rounded-lg border border-[#2a2559] bg-[#161436] text-white outline-none focus:border-indigo-500 text-xs">
                       {[5, 4, 3, 2, 1].map(s => <option value={s}>{s} sao</option>)}
                     </select>
                   </div>
                   <div class="mb-4">
-                    <label class="block text-xs font-semibold text-[#9f9dbb] mb-2">Nhận xét</label>
-                    <textarea name="comment" rows={4} required placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
-                      class="w-full p-3 rounded-lg border border-[#1f1b4b] bg-[#16143c] text-white outline-none focus:border-indigo-500/50 text-xs resize-y"></textarea>
+                    <label for="review-comment" class="block text-xs font-semibold text-[#c2c0e0] mb-2">Nhận xét</label>
+                    <textarea id="review-comment" name="comment" rows={4} required placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                      class="w-full p-3 rounded-lg border border-[#2a2559] bg-[#161436] text-white outline-none focus:border-indigo-500 text-xs resize-y"></textarea>
                   </div>
-                  <div class="form-error hidden text-xs text-rose-500 mb-3"></div>
-                  <button type="submit" class="h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-md shadow-indigo-600/10">Gửi đánh giá</button>
+                  <div class="form-error hidden text-xs text-rose-400 mb-3" role="alert"></div>
+                  <button type="submit" class="h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-md shadow-indigo-600/15 cursor-pointer">Gửi đánh giá</button>
                 </form>
               )}
               {!user && (
-                <div class="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-5 mb-5 text-xs text-amber-300">
-                  <i class="fas fa-circle-info mr-1.5"></i>
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-5 text-xs text-amber-200">
+                  <i class="fas fa-circle-info mr-1.5" aria-hidden="true"></i>
                   <a href="/dang-nhap" class="font-bold underline">Đăng nhập</a> và mua sản phẩm để viết đánh giá.
                 </div>
               )}
 
               <div class="space-y-3">
-                {reviews.length === 0 && <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-10 text-center text-[#9f9dbb] text-xs">Chưa có đánh giá nào. Hãy là người đầu tiên!</div>}
+                {reviews.length === 0 && <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-10 text-center text-[#9492b8] text-xs">Chưa có đánh giá nào. Hãy là người đầu tiên!</div>}
                 {reviews.map(r => (
-                  <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5">
+                  <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
                     <div class="flex items-start gap-3">
                       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-xs shrink-0">
                         {(r.full_name || 'K').charAt(0).toUpperCase()}
@@ -365,11 +373,11 @@ export const ProductDetailPage: FC<Props> = (props) => {
                       <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-2 mb-1">
                           <b class="text-xs text-white">{r.full_name}</b>
-                          <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">Đã mua</span>
-                          <span class="text-[10px] text-slate-500 ml-auto">{formatDate(r.created_at)}</span>
+                          <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Đã mua</span>
+                          <span class="text-[11px] text-[#9492b8] ml-auto">{formatDate(r.created_at)}</span>
                         </div>
                         <Stars rating={r.rating} />
-                        <p class="text-xs text-[#9f9dbb] mt-2 leading-relaxed">{r.comment}</p>
+                        <p class="text-xs text-[#c2c0e0] mt-2 leading-relaxed">{r.comment}</p>
                       </div>
                     </div>
                   </div>
@@ -377,10 +385,10 @@ export const ProductDetailPage: FC<Props> = (props) => {
               </div>
             </div>
 
-            <div class="tab-panel hidden bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 md:p-8" data-tab="policy" data-group="pd">
+            <div role="tabpanel" id="panel-policy" aria-labelledby="tab-policy" class="tab-panel hidden bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8" data-tab="policy" data-group="pd">
               <div class="prose-vn max-w-none">
                 <h3>Chính sách giao hàng</h3>
-                <p>Sản phẩm số được giao <b>tự động 100%</b>. Ngay sau khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link tải sản phẩm và license key sẽ xuất hiện trong mục <b>Tài khoản → Sản phẩm của tôi</b>.</p>
+                <p>Sản phẩm số được giao <b>tự động 100%</b>. Ngay sau khi đơn hàng chuyển sang trạng thái "Đã thanh toán", link tải sản phẩm và tài liệu hướng dẫn sẽ xuất hiện trong mục <b>Tài khoản → Sản phẩm của tôi</b>.</p>
                 <h3>Chính sách bảo hành</h3>
                 <ul>
                   <li>Hỗ trợ kỹ thuật miễn phí 6-12 tháng tuỳ sản phẩm</li>
@@ -401,7 +409,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
 
           {/* Sticky sidebar */}
           <aside class="space-y-4 lg:sticky-side">
-            <div class="bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5">
+            <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
               <h3 class="font-bold text-white mb-3.5 text-xs uppercase tracking-wider">Cam kết của chúng tôi</h3>
               <ul class="space-y-3 text-xs">
                 {[
@@ -411,23 +419,23 @@ export const ProductDetailPage: FC<Props> = (props) => {
                   ['fa-shield-halved', 'Hoàn tiền 100% trong 7 ngày'],
                   ['fa-lock', 'Thanh toán an toàn qua VietQR']
                 ].map(([ic, t]) => (
-                  <li class="flex gap-2.5 text-[#9f9dbb]">
-                    <i class={`fas ${ic} text-indigo-400 mt-0.5 w-4`}></i><span>{t}</span>
+                  <li class="flex gap-2.5 text-[#c2c0e0]">
+                    <i class={`fas ${ic} text-indigo-400 mt-0.5 w-4`} aria-hidden="true"></i><span>{t}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div class="bg-[#0f0e26] rounded-2xl p-5 text-white border border-[#1f1b4b]">
+            <div class="bg-[#0f0e24] rounded-2xl p-5 text-white border border-[#221e54]">
               <h3 class="font-bold mb-1.5 text-xs uppercase tracking-wider text-white">Cần tư vấn thêm?</h3>
-              <p class="text-[11px] text-[#9f9dbb] mb-4 leading-relaxed">Đội ngũ hỗ trợ sẵn sàng giải đáp mọi thắc mắc của bạn 24/7.</p>
+              <p class="text-xs text-[#9492b8] mb-4 leading-relaxed">Đội ngũ hỗ trợ sẵn sàng giải đáp mọi thắc mắc của bạn 24/7.</p>
               <a href={`https://zalo.me/${settings?.zalo}`} target="_blank" rel="noopener"
-                class="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold text-xs transition mb-2">
+                class="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs transition mb-2">
                 Chat Zalo ngay
               </a>
               <a href={`tel:${(settings?.hotline || '').replace(/\s/g, '')}`}
-                class="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-[#16143c] border border-[#1f1b4b] text-[#e2e1f5] font-bold text-xs hover:bg-white/5 transition">
-                <i class="fas fa-phone"></i>{settings?.hotline}
+                class="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-[#161436] border border-[#2a2559] text-white font-bold text-xs hover:bg-white/10 transition tabular-nums">
+                <i class="fas fa-phone" aria-hidden="true"></i>{settings?.hotline}
               </a>
             </div>
           </aside>
@@ -441,6 +449,30 @@ export const ProductDetailPage: FC<Props> = (props) => {
             {related.map(r => <ProductCard p={r} />)}
           </div>
         </section>
+      )}
+
+      {/* Mobile Sticky Bottom Purchase Bar */}
+      {!owned && !comingSoon && (
+        <div class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-[#0f0e24]/95 backdrop-blur-md border-t border-indigo-500/30 px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xl">
+          <div class="min-w-0">
+            <div class="text-[11px] text-[#9492b8] truncate">{p.name}</div>
+            <div class="flex items-baseline gap-2 tabular-nums">
+              <span class="text-base font-extrabold text-rose-400">{formatVND(p.price)}</span>
+              {p.original_price && p.original_price > p.price && (
+                <span class="text-[11px] text-[#9492b8] line-through">{formatVND(p.original_price)}</span>
+              )}
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" class="btn-add-cart w-11 h-11 rounded-xl bg-[#161436] border border-[#2a2559] text-indigo-300 grid place-items-center cursor-pointer"
+              data-id={p.id} data-name={p.name} aria-label="Thêm vào giỏ hàng">
+              <i class="fas fa-cart-plus" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn-buy-now h-11 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-xs shadow-lg cursor-pointer" data-id={p.id}>
+              <i class="fas fa-bolt mr-1" aria-hidden="true"></i>Mua ngay
+            </button>
+          </div>
+        </div>
       )}
     </Layout>
   )

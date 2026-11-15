@@ -6,23 +6,24 @@ import { formatVND, formatDate } from '../lib/utils'
 /* ---------------- BLOG LIST ---------------- */
 export const BlogListPage: FC<LayoutProps & { posts: any[]; page: number; totalPages: number; q: string }> = (props) => (
   <Layout {...props} active="blog" title="Blog" description="Kiến thức, hướng dẫn và case study về làm video AI">
-    <div class="bg-white border-b border-slate-200">
+    <div class="bg-[#0f0e24] border-b border-[#221e54]">
       <div class="max-w-7xl mx-auto px-4 py-8">
         <Breadcrumb items={[{ label: 'Blog' }]} />
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Kiến thức làm video AI</h1>
-        <p class="text-slate-500 mt-2 max-w-2xl">Hướng dẫn chi tiết, mẹo hay và case study thực tế từ cộng đồng làm video AI.</p>
-        <form action="/blog" method="get" class="mt-5 max-w-md">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Kiến thức làm video AI</h1>
+        <p class="text-[#b8b6d9] mt-2 max-w-2xl">Hướng dẫn chi tiết, mẹo hay và case study thực tế từ cộng đồng làm video AI.</p>
+        <form action="/blog" method="get" class="mt-5 max-w-md" role="search">
+          <label for="blog-search" class="sr-only">Tìm bài viết</label>
           <div class="relative">
-            <input type="text" name="q" value={props.q} placeholder="Tìm bài viết..."
-              class="w-full h-11 pl-10 pr-3 rounded-xl bg-slate-100 focus:bg-white border border-transparent focus:border-brand-400 outline-none text-sm transition" />
-            <i class="fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input id="blog-search" type="search" name="q" value={props.q} placeholder="Tìm bài viết..."
+              class="w-full h-11 pl-10 pr-3 rounded-xl bg-[#161436] text-white placeholder-[#9492b8] border border-[#221e54] focus:border-indigo-500 outline-none text-sm transition" />
+            <i class="fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm" aria-hidden="true"></i>
           </div>
         </form>
       </div>
     </div>
     <div class="max-w-7xl mx-auto px-4 py-8">
       {props.posts.length === 0
-        ? <div class="bg-white rounded-2xl border border-slate-200"><EmptyState icon="fa-newspaper" title="Không tìm thấy bài viết" action={{ href: '/blog', label: 'Xem tất cả' }} /></div>
+        ? <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54]"><EmptyState icon="fa-newspaper" title="Không tìm thấy bài viết" action={{ href: '/blog', label: 'Xem tất cả' }} /></div>
         : (
           <>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -42,26 +43,26 @@ export const BlogDetailPage: FC<LayoutProps & { post: any; related: any[] }> = (
     <Layout {...props} active="blog" title={post.title} description={post.excerpt}>
       <article class="max-w-4xl mx-auto px-4 py-8">
         <Breadcrumb items={[{ label: 'Blog', href: '/blog' }, { label: post.title }]} />
-        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight mb-4">{post.title}</h1>
-        <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 pb-6 mb-7 border-b border-slate-200">
-          <span><i class="far fa-calendar mr-1.5"></i>{formatDate(post.created_at)}</span>
-          <span><i class="far fa-eye mr-1.5"></i>{post.view_count} lượt xem</span>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-4">{post.title}</h1>
+        <div class="flex flex-wrap items-center gap-4 text-sm text-[#9492b8] pb-6 mb-7 border-b border-[#221e54] tabular-nums">
+          <span><i class="far fa-calendar mr-1.5" aria-hidden="true"></i>{formatDate(post.created_at)}</span>
+          <span><i class="far fa-eye mr-1.5" aria-hidden="true"></i>{post.view_count} lượt xem</span>
           {post.tags && (
             <div class="flex flex-wrap gap-1.5">
               {post.tags.split(',').map((t: string) => (
-                <span class="px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 text-xs font-semibold">#{t.trim()}</span>
+                <span class="px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">#{t.trim()}</span>
               ))}
             </div>
           )}
         </div>
-        {post.excerpt && <p class="text-lg text-slate-600 leading-relaxed mb-7 font-medium">{post.excerpt}</p>}
-        <div class="prose-vn max-w-none" dangerouslySetInnerHTML={{ __html: post.content || '' }}></div>
+        {post.excerpt && <p class="text-lg text-[#c2c0e0] leading-relaxed mb-7 font-medium">{post.excerpt}</p>}
+        <div class="prose-vn max-w-none bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-9" dangerouslySetInnerHTML={{ __html: post.content || '' }}></div>
 
-        <div class="mt-10 p-6 rounded-2xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white text-center">
-          <h3 class="text-xl font-extrabold mb-2">Bắt đầu làm video AI ngay hôm nay</h3>
+        <div class="mt-10 p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white text-center shadow-xl shadow-indigo-950/50">
+          <h2 class="text-xl font-extrabold mb-2">Bắt đầu làm video AI ngay hôm nay</h2>
           <p class="text-white/85 text-sm mb-5">Khám phá bộ 5 Skill AI làm video thực chiến đã được kiểm chứng bằng video demo thật.</p>
-          <a href="/san-pham?type=skill" class="cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition">
-            <i class="fas fa-wand-magic-sparkles"></i>Xem Skill AI đang bán
+          <a href="/san-pham?type=skill" class="cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem Skill AI đang bán
           </a>
         </div>
 
@@ -100,61 +101,61 @@ const PLANS = [
 
 export const PricingPage: FC<LayoutProps> = (props) => (
   <Layout {...props} active="pricing" title="Bảng giá" description="Bảng giá bộ 5 Skill AI làm video đang mở bán và lộ trình các dịch vụ sắp ra mắt">
-    <div class="bg-slate-950 text-white relative overflow-hidden">
+    <div class="bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3">Bảng giá minh bạch</h1>
-        <p class="text-slate-300 max-w-2xl mx-auto">Hiện tại hệ thống mở bán trọn bộ 5 Skill AI thực chiến. Mua một lần, sở hữu trọn đời, không phí duy trì.</p>
+        <p class="text-[#c2c0e0] max-w-2xl mx-auto">Hiện tại hệ thống mở bán trọn bộ 5 Skill AI thực chiến. Mua một lần, sở hữu trọn đời, không phí duy trì.</p>
       </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 -mt-8 pb-14 relative">
       <div class="grid lg:grid-cols-3 gap-5">
         {PLANS.map(pl => (
-          <div class={`rounded-2xl p-7 relative ${pl.highlight ? 'bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-2xl shadow-brand-500/30 lg:-mt-4 lg:mb-4' : 'bg-white border border-slate-200'}`}>
+          <div class={`rounded-2xl p-7 relative ${pl.highlight ? 'bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-indigo-500/30 lg:-mt-4 lg:mb-4' : 'bg-[#0f0e24] border border-[#221e54]'}`}>
             {pl.highlight && (
-              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-900 text-xs font-extrabold whitespace-nowrap">
-                ⭐ {pl.tag}
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1">
+                <i class="fas fa-star text-[10px]" aria-hidden="true"></i>{pl.tag}
               </div>
             )}
-            <div class={`w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? 'bg-white/20' : pl.available ? 'bg-brand-50 text-brand-600' : 'bg-amber-500/15 text-amber-400'}`}>
-              <i class={`fas ${pl.icon}`}></i>
+            <div class={`w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? 'bg-white/20 text-white' : pl.available ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'}`}>
+              <i class={`fas ${pl.icon}`} aria-hidden="true"></i>
             </div>
-            <h3 class={`text-xl font-extrabold mb-1 ${pl.highlight ? '' : 'text-slate-900'}`}>{pl.name}</h3>
+            <h2 class="text-xl font-extrabold text-white mb-1">{pl.name}</h2>
             {!pl.highlight && (
-              <div class={`text-xs font-bold mb-3 ${pl.available ? 'text-emerald-400' : 'text-amber-400'}`}>{pl.tag}</div>
+              <div class={`text-xs font-bold mb-3 ${pl.available ? 'text-emerald-400' : 'text-amber-300'}`}>{pl.tag}</div>
             )}
-            <p class={`text-sm mb-5 leading-relaxed ${pl.highlight ? 'text-white/85' : 'text-slate-500'}`}>{pl.desc}</p>
+            <p class={`text-sm mb-5 leading-relaxed ${pl.highlight ? 'text-white/90' : 'text-[#b8b6d9]'}`}>{pl.desc}</p>
             <div class="mb-6">
-              <span class={`text-3xl font-extrabold ${pl.highlight ? '' : 'text-slate-900'}`}>{formatVND(pl.price)}</span>
-              <span class={`text-sm ml-1.5 ${pl.highlight ? 'text-white/70' : 'text-slate-400'}`}>{pl.available ? '/ trọn đời' : '/ dự kiến'}</span>
+              <span class="text-3xl font-extrabold text-white tabular-nums">{formatVND(pl.price)}</span>
+              <span class={`text-sm ml-1.5 ${pl.highlight ? 'text-white/80' : 'text-[#9492b8]'}`}>{pl.available ? '/ trọn đời' : '/ dự kiến'}</span>
             </div>
             <ul class="space-y-2.5 mb-7">
               {pl.features.map(f => (
-                <li class={`flex gap-2.5 text-sm ${pl.highlight ? 'text-white/90' : 'text-slate-600'}`}>
-                  <i class={`fas ${pl.available ? 'fa-circle-check' : 'fa-clock'} mt-0.5 shrink-0 ${pl.highlight ? 'text-emerald-300' : pl.available ? 'text-emerald-500' : 'text-amber-400'}`}></i>{f}
+                <li class={`flex gap-2.5 text-sm ${pl.highlight ? 'text-white/95' : 'text-[#c2c0e0]'}`}>
+                  <i class={`fas ${pl.available ? 'fa-circle-check' : 'fa-clock'} mt-0.5 shrink-0 ${pl.highlight ? 'text-emerald-300' : pl.available ? 'text-emerald-400' : 'text-amber-400'}`} aria-hidden="true"></i>{f}
                 </li>
               ))}
             </ul>
             <a href={pl.href}
-              class={`flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? 'cta-white bg-white text-brand-700 hover:bg-slate-100' : pl.available ? 'bg-brand-600 hover:bg-brand-700 text-white' : 'bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25'}`}>
-              {pl.cta}<i class="fas fa-arrow-right text-xs"></i>
+              class={`flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? 'cta-white bg-white text-indigo-700 hover:bg-slate-100' : pl.available ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25'}`}>
+              {pl.cta}<i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
             </a>
           </div>
         ))}
       </div>
 
-      <div class="mt-12 bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
-        <h2 class="text-xl font-extrabold text-slate-900 mb-6 text-center">So sánh chi tiết các gói</h2>
+      <div class="mt-12 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8">
+        <h2 class="text-xl font-extrabold text-white mb-6 text-center">So sánh chi tiết các gói</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm min-w-[600px]">
             <thead>
-              <tr class="border-b-2 border-slate-200">
-                <th class="text-left py-3 font-bold text-slate-700">Tính năng</th>
-                {PLANS.map(p => <th class="py-3 px-3 font-bold text-slate-900 text-center">{p.name}</th>)}
+              <tr class="border-b-2 border-[#221e54]">
+                <th class="text-left py-3 font-bold text-[#c2c0e0]">Tính năng</th>
+                {PLANS.map(p => <th class="py-3 px-3 font-bold text-white text-center">{p.name}</th>)}
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-[#221e54]">
               {[
                 ['Trạng thái', 'Đang mở bán', 'Đang mở bán', 'Chưa mở bán'],
                 ['Sở hữu trọn đời', true, true, true],
@@ -166,12 +167,14 @@ export const PricingPage: FC<LayoutProps> = (props) => (
                 ['Khóa học + Chatbot + App', false, false, 'Sắp mở']
               ].map(([label, ...vals]) => (
                 <tr>
-                  <td class="py-3 text-slate-600 font-medium">{label}</td>
+                  <td class="py-3.5 text-[#c2c0e0] font-medium">{label}</td>
                   {vals.map(v => (
-                    <td class="py-3 px-3 text-center">
+                    <td class="py-3.5 px-3 text-center">
                       {typeof v === 'boolean'
-                        ? (v ? <i class="fas fa-circle-check text-emerald-500"></i> : <i class="fas fa-minus text-slate-500"></i>)
-                        : <span class="font-semibold text-slate-800">{v}</span>}
+                        ? (v
+                          ? <i class="fas fa-circle-check text-emerald-400" aria-label="Có"></i>
+                          : <i class="fas fa-minus text-[#9492b8]" aria-label="Không"></i>)
+                        : <span class="font-semibold text-white">{v}</span>}
                     </td>
                   ))}
                 </tr>
@@ -189,11 +192,11 @@ export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => {
   const siteName = props.settings?.site_name || 'KhoSkill AI'
   return (
   <Layout {...props} title="Giới thiệu" description={`Về ${siteName} — kho Skill AI làm video thực chiến hàng đầu Việt Nam`}>
-    <div class="bg-slate-950 text-white relative overflow-hidden">
+    <div class="bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">Về {siteName}</h1>
-        <p class="text-slate-300 leading-relaxed">Chúng tôi giúp người Việt làm video AI bán hàng một cách dễ dàng nhất — bắt đầu từ bộ 5 Skill AI thực chiến đang mở bán, cùng hệ sinh thái Khóa học, Chatbot và App sắp ra mắt.</p>
+        <p class="text-[#c2c0e0] leading-relaxed">Chúng tôi giúp người Việt làm video AI bán hàng một cách dễ dàng nhất — bắt đầu từ bộ 5 Skill AI thực chiến đang mở bán, cùng hệ sinh thái Khóa học, Chatbot và App sắp ra mắt.</p>
       </div>
     </div>
 
@@ -204,17 +207,17 @@ export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => {
           ['fa-users', props.stats.users.toLocaleString('vi-VN') + '+', 'Khách hàng'],
           ['fa-cart-shopping', props.stats.sold.toLocaleString('vi-VN') + '+', 'Lượt mua']
         ].map(([ic, num, lb]) => (
-          <div class="bg-white rounded-2xl border border-slate-200 p-7 text-center">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center mx-auto mb-3.5 shadow-lg">
-              <i class={`fas ${ic}`}></i>
+          <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 text-center">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center mx-auto mb-3.5 shadow-lg">
+              <i class={`fas ${ic}`} aria-hidden="true"></i>
             </div>
-            <div class="text-3xl font-extrabold text-slate-900">{num}</div>
-            <div class="text-sm text-slate-500 mt-1">{lb}</div>
+            <div class="text-3xl font-extrabold text-white tabular-nums">{num}</div>
+            <div class="text-sm text-[#9492b8] mt-1">{lb}</div>
           </div>
         ))}
       </div>
 
-      <div class="prose-vn max-w-none bg-white rounded-2xl border border-slate-200 p-7 md:p-10">
+      <div class="prose-vn max-w-none bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 md:p-10">
         <h2>Câu chuyện của chúng tôi</h2>
         <p>{siteName} ra đời từ nhu cầu thực tế: rất nhiều người muốn làm video bán hàng bằng AI nhưng không biết viết prompt chuẩn, không giữ được nhân vật xuyên suốt 30 giây và tốn nhiều thời gian thử sai.</p>
         <p>Chúng tôi đóng gói sẵn từng <b>Skill tạo video AI theo ngách &amp; công cụ</b> (Muse AI Pro, Seedance 2.5, Thuỷ Sinh 30s, DIY Làm Vườn, Affiliate Fitness) — tất cả đều đã chạy thực tế ra video demo để bạn kiểm chứng trước khi mua.</p>
@@ -246,42 +249,42 @@ export const ContactPage: FC<LayoutProps> = (props) => {
     <div class="max-w-6xl mx-auto px-4 py-10">
       <Breadcrumb items={[{ label: 'Liên hệ' }]} />
       <div class="grid lg:grid-cols-[1fr_360px] gap-7">
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
-          <h1 class="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Gửi yêu cầu hỗ trợ</h1>
-          <p class="text-slate-500 text-sm mb-6">Điền form bên dưới, chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc.</p>
+        <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8">
+          <h1 class="text-2xl font-extrabold text-white mb-2 tracking-tight">Gửi yêu cầu hỗ trợ</h1>
+          <p class="text-[#b8b6d9] text-sm mb-6">Điền form bên dưới, chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc.</p>
           <form action="/api/tickets" method="post" data-ajax class="space-y-4">
             <div class="grid sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Họ tên *</label>
-                <input type="text" name="name" required value={props.user?.full_name || ''}
-                  class="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm" />
+                <label for="contact-name" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Họ tên *</label>
+                <input id="contact-name" type="text" name="name" required value={props.user?.full_name || ''}
+                  class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Email *</label>
-                <input type="email" name="email" required value={props.user?.email || ''}
-                  class="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm" />
+                <label for="contact-email" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Email *</label>
+                <input id="contact-email" type="email" name="email" required value={props.user?.email || ''}
+                  class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Tiêu đề *</label>
-              <input type="text" name="subject" required placeholder="Vấn đề bạn gặp phải"
-                class="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm" />
+              <label for="contact-subject" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Tiêu đề *</label>
+              <input id="contact-subject" type="text" name="subject" required placeholder="Vấn đề bạn gặp phải"
+                class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Nội dung *</label>
-              <textarea name="message" rows={6} required placeholder="Mô tả chi tiết vấn đề của bạn..."
-                class="w-full p-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"></textarea>
+              <label for="contact-message" class="block text-sm font-medium text-[#c2c0e0] mb-1.5">Nội dung *</label>
+              <textarea id="contact-message" name="message" rows={6} required placeholder="Mô tả chi tiết vấn đề của bạn..."
+                class="w-full p-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm resize-y"></textarea>
             </div>
-            <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
-            <button type="submit" class="h-12 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition">
-              <i class="fas fa-paper-plane mr-1.5"></i>Gửi yêu cầu
+            <div role="alert" class="form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200"></div>
+            <button type="submit" class="h-12 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-indigo-500/25 transition">
+              <i class="fas fa-paper-plane mr-1.5" aria-hidden="true"></i>Gửi yêu cầu
             </button>
           </form>
         </div>
 
         <aside class="space-y-4">
-          <div class="bg-white rounded-2xl border border-slate-200 p-5">
-            <h3 class="font-bold text-slate-900 mb-4">Thông tin liên hệ</h3>
+          <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
+            <h2 class="font-bold text-white mb-4 text-base">Thông tin liên hệ</h2>
             <div class="space-y-4">
               {[
                 ['fa-phone-volume', 'Hotline', props.settings?.hotline, `tel:${(props.settings?.hotline || '').replace(/\s/g, '')}`],
@@ -290,22 +293,24 @@ export const ContactPage: FC<LayoutProps> = (props) => {
                 ['fa-clock', 'Giờ làm việc', '8:00 – 22:00 (T2–CN)', '']
               ].map(([ic, lb, val, href]) => (
                 <div class="flex gap-3.5">
-                  <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 grid place-items-center shrink-0"><i class={`fas ${ic}`}></i></div>
+                  <div class="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 grid place-items-center shrink-0">
+                    <i class={`fas ${ic}`} aria-hidden="true"></i>
+                  </div>
                   <div class="min-w-0">
-                    <div class="text-xs text-slate-500">{lb}</div>
-                    {href ? <a href={href as string} target="_blank" rel="noopener" class="font-semibold text-slate-900 text-sm hover:text-brand-600 break-all">{val}</a>
-                      : <div class="font-semibold text-slate-900 text-sm">{val}</div>}
+                    <div class="text-xs text-[#9492b8]">{lb}</div>
+                    {href ? <a href={href as string} target="_blank" rel="noopener" class="font-semibold text-white text-sm hover:text-indigo-300 break-all transition">{val}</a>
+                      : <div class="font-semibold text-white text-sm">{val}</div>}
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          <div class="bg-gradient-to-br from-brand-600 to-fuchsia-600 rounded-2xl p-5 text-white">
-            <i class="fas fa-bolt text-2xl mb-2.5"></i>
-            <h3 class="font-bold mb-1.5">Cần hỗ trợ gấp?</h3>
-            <p class="text-xs text-white/85 mb-4 leading-relaxed">Chat Zalo là kênh phản hồi nhanh nhất, thường dưới 5 phút trong giờ làm việc.</p>
+          <div class="bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-5 text-white shadow-xl shadow-indigo-950/50">
+            <i class="fas fa-bolt text-2xl mb-2.5" aria-hidden="true"></i>
+            <h2 class="font-bold mb-1.5 text-base">Cần hỗ trợ gấp?</h2>
+            <p class="text-xs text-white/90 mb-4 leading-relaxed">Chat Zalo là kênh phản hồi nhanh nhất, thường dưới 5 phút trong giờ làm việc.</p>
             <a href={`https://zalo.me/${props.settings?.zalo}`} target="_blank" rel="noopener"
-              class="cta-white flex items-center justify-center w-full h-11 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition">Chat Zalo ngay</a>
+              class="cta-white flex items-center justify-center w-full h-11 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition">Chat Zalo ngay</a>
           </div>
         </aside>
       </div>
@@ -319,19 +324,19 @@ export const AffiliateLandingPage: FC<LayoutProps & { percent: number }> = (prop
   const siteName = props.settings?.site_name || 'KhoSkill AI'
   return (
   <Layout {...props} active="affiliate" title="Chương trình Affiliate" description={`Kiếm hoa hồng khi giới thiệu sản phẩm ${siteName}`}>
-    <div class="bg-slate-950 text-white relative overflow-hidden">
+    <div class="bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold mb-5">
-          <i class="fas fa-handshake text-amber-400"></i>Chương trình đối tác
+          <i class="fas fa-handshake text-amber-400" aria-hidden="true"></i>Chương trình đối tác
         </div>
         <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
           Nhận <span class="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">{props.percent}% hoa hồng</span> mỗi đơn hàng
         </h1>
-        <p class="text-slate-300 max-w-2xl mx-auto mb-8">Chia sẻ link giới thiệu, kiếm thu nhập thụ động không giới hạn. Không cần vốn, không cần kho hàng.</p>
+        <p class="text-[#c2c0e0] max-w-2xl mx-auto mb-8">Chia sẻ link giới thiệu, kiếm thu nhập thụ động không giới hạn. Không cần vốn, không cần kho hàng.</p>
         <a href={props.user ? '/tai-khoan/affiliate' : '/dang-ky'}
-          class="inline-flex h-12 px-7 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-bold hover:opacity-90 shadow-xl transition">
-          <i class="fas fa-rocket"></i>{props.user ? 'Vào trang Affiliate' : 'Tham gia ngay — Miễn phí'}
+          class="inline-flex h-12 px-7 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-bold hover:opacity-90 shadow-xl transition">
+          <i class="fas fa-rocket" aria-hidden="true"></i>{props.user ? 'Vào trang Affiliate' : 'Tham gia ngay — Miễn phí'}
         </a>
       </div>
     </div>
@@ -344,12 +349,12 @@ export const AffiliateLandingPage: FC<LayoutProps & { percent: number }> = (prop
           ['fa-share-nodes', '2. Chia sẻ link', 'Đăng link lên Facebook, TikTok, Zalo, group hoặc gửi trực tiếp cho bạn bè.'],
           ['fa-coins', '3. Nhận hoa hồng', `Nhận ${props.percent}% giá trị mỗi đơn hàng phát sinh từ link của bạn.`]
         ].map(([ic, t, d]) => (
-          <div class="bg-white rounded-2xl border border-slate-200 p-7 text-center">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center text-xl mx-auto mb-4 shadow-lg">
-              <i class={`fas ${ic}`}></i>
+          <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xl mx-auto mb-4 shadow-lg">
+              <i class={`fas ${ic}`} aria-hidden="true"></i>
             </div>
-            <h3 class="font-bold text-slate-900 mb-2">{t}</h3>
-            <p class="text-sm text-slate-500 leading-relaxed">{d}</p>
+            <h3 class="font-bold text-white mb-2">{t}</h3>
+            <p class="text-sm text-[#b8b6d9] leading-relaxed">{d}</p>
           </div>
         ))}
       </div>
@@ -357,17 +362,17 @@ export const AffiliateLandingPage: FC<LayoutProps & { percent: number }> = (prop
       <SectionTitle center title="Thu nhập tham khảo" subtitle="Ước tính dựa trên số đơn giới thiệu mỗi tháng" />
       <div class="grid sm:grid-cols-3 gap-5 mt-8">
         {[[5, 890000], [20, 890000], [50, 890000]].map(([n, avg]) => (
-          <div class="bg-white rounded-2xl border border-slate-200 p-7 text-center">
-            <div class="text-sm text-slate-500 mb-1">{n} đơn / tháng</div>
-            <div class="text-3xl font-extrabold text-emerald-600">{formatVND(Math.round(n * avg * props.percent / 100))}</div>
-            <div class="text-xs text-slate-400 mt-1.5">Giá trị đơn TB {formatVND(avg)}</div>
+          <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 text-center">
+            <div class="text-sm text-[#b8b6d9] mb-1 tabular-nums">{n} đơn / tháng</div>
+            <div class="text-3xl font-extrabold text-emerald-400 tabular-nums">{formatVND(Math.round(n * avg * props.percent / 100))}</div>
+            <div class="text-xs text-[#9492b8] mt-1.5 tabular-nums">Giá trị đơn TB {formatVND(avg)}</div>
           </div>
         ))}
       </div>
 
-      <div class="mt-14 bg-white rounded-2xl border border-slate-200 p-7 md:p-10">
-        <h2 class="text-xl font-extrabold text-slate-900 mb-5">Điều khoản chương trình</h2>
-        <ul class="space-y-3 text-sm text-slate-600">
+      <div class="mt-14 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 md:p-10">
+        <h2 class="text-xl font-extrabold text-white mb-5">Điều khoản chương trình</h2>
+        <ul class="space-y-3 text-sm text-[#c2c0e0]">
           {[
             `Hoa hồng ${props.percent}% trên giá trị đơn hàng thực thu (sau giảm giá)`,
             'Hoa hồng được ghi nhận khi đơn hàng chuyển sang trạng thái "Đã thanh toán"',
@@ -375,7 +380,7 @@ export const AffiliateLandingPage: FC<LayoutProps & { percent: number }> = (prop
             'Không áp dụng cho đơn hàng tự mua bằng mã của chính mình',
             `Nghiêm cấm spam, chạy quảng cáo trên thương hiệu ${siteName}`
           ].map(t => (
-            <li class="flex gap-2.5"><i class="fas fa-circle-check text-emerald-500 mt-0.5 shrink-0"></i>{t}</li>
+            <li class="flex gap-2.5"><i class="fas fa-circle-check text-emerald-400 mt-0.5 shrink-0" aria-hidden="true"></i>{t}</li>
           ))}
         </ul>
       </div>
@@ -389,8 +394,8 @@ export const DocPage: FC<LayoutProps & { heading: string; html: string }> = (pro
   <Layout {...props} title={props.heading}>
     <div class="max-w-4xl mx-auto px-4 py-10">
       <Breadcrumb items={[{ label: props.heading }]} />
-      <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7">{props.heading}</h1>
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 md:p-9">
+      <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-7">{props.heading}</h1>
+      <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-9">
         <div class="prose-vn max-w-none" dangerouslySetInnerHTML={{ __html: props.html }}></div>
       </div>
     </div>
@@ -401,15 +406,15 @@ export const DocPage: FC<LayoutProps & { heading: string; html: string }> = (pro
 export const NotFoundPage: FC<LayoutProps> = (props) => (
   <Layout {...props} title="Không tìm thấy trang">
     <div class="max-w-lg mx-auto px-4 py-24 text-center">
-      <div class="text-7xl font-extrabold bg-gradient-to-r from-brand-500 to-fuchsia-500 bg-clip-text text-transparent mb-4">404</div>
-      <h1 class="text-2xl font-extrabold text-slate-900 mb-2">Không tìm thấy trang</h1>
-      <p class="text-slate-500 mb-7">Trang bạn tìm kiếm không tồn tại hoặc đã bị di chuyển.</p>
+      <div class="text-7xl font-extrabold bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent mb-4 tabular-nums">404</div>
+      <h1 class="text-2xl font-extrabold text-white mb-2">Không tìm thấy trang</h1>
+      <p class="text-[#b8b6d9] mb-7">Trang bạn tìm kiếm không tồn tại hoặc đã bị di chuyển.</p>
       <div class="flex flex-wrap justify-center gap-3">
-        <a href="/" class="h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition">
-          <i class="fas fa-house"></i>Về trang chủ
+        <a href="/" class="h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition">
+          <i class="fas fa-house" aria-hidden="true"></i>Về trang chủ
         </a>
-        <a href="/san-pham" class="h-11 px-5 inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 hover:border-brand-400 font-semibold text-sm transition">
-          <i class="fas fa-cubes"></i>Xem sản phẩm
+        <a href="/san-pham" class="h-11 px-5 inline-flex items-center gap-2 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-sm transition">
+          <i class="fas fa-cubes" aria-hidden="true"></i>Xem sản phẩm
         </a>
       </div>
     </div>

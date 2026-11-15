@@ -119,35 +119,37 @@ export const HomePage: FC<Props> = (props) => {
   const siteName = props.settings?.site_name || 'KhoSkill AI'
   return (
     <Layout {...props} active="home">
+      <script id="demo-videos-json" type="application/json" dangerouslySetInnerHTML={{ __html: JSON.stringify(DEMO_VIDEOS).replace(/</g, '\\u003c') }}></script>
+
       {/* ============ HERO ============ */}
-      <section id="hero-section" class="relative bg-slate-950 text-white overflow-hidden">
+      <section id="hero-section" class="relative bg-[#070614] text-white overflow-hidden">
         <div class="absolute inset-0 hero-mesh"></div>
         <div class="absolute inset-0 hero-grid"></div>
         <div class="relative max-w-7xl mx-auto px-4 py-14 md:py-20">
           <div class="grid lg:grid-cols-2 gap-10 xl:gap-12 items-center">
             <div>
               <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Đang mở bán <b class="text-emerald-300">{stats.products} Skill AI</b> — {stats.sold.toLocaleString('vi-VN')}+ lượt mua thành công
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
+                Đang mở bán <b class="text-emerald-300 tabular-nums">{stats.products} Skill AI</b> — <span class="tabular-nums">{stats.sold.toLocaleString('vi-VN')}+</span> lượt mua thành công
               </div>
               <h1 class="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5">
-                Kho <span class="bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Skill AI Làm Video</span> thực chiến số 1 Việt Nam
+                Kho <span class="bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Skill AI Làm Video</span> thực chiến số 1 Việt Nam
               </h1>
-              <p class="text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl">
+              <p class="text-[#c2c0e0] text-base md:text-lg leading-relaxed mb-8 max-w-xl">
                 Mở bán trọn bộ 5 Skill AI thực chiến làm video 30s chuẩn viral: Muse AI Pro, Seedance 2.5, Thuỷ Sinh, DIY Làm Vườn, Affiliate Fitness.
                 Mua một lần — sở hữu trọn đời — giao link tải tự động 24/7.
               </p>
               <div class="flex flex-wrap items-center gap-3 mb-9">
-                <a href="/san-pham?type=skill" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition">
-                  <i class="fas fa-wand-magic-sparkles"></i>Xem 5 Skill đang mở bán
+                <a href="/san-pham?type=skill" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 font-semibold shadow-xl shadow-indigo-500/30 hover:opacity-95 transition">
+                  <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem 5 Skill đang mở bán
                 </a>
                 <a href="#theater" id="heroTrailerBtn" class="h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg">
-                  <span class="w-6 h-6 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow"><i class="fas fa-play ml-0.5"></i></span>
+                  <span class="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow"><i class="fas fa-play ml-0.5" aria-hidden="true"></i></span>
                   Xem demo 30s
                 </a>
                 {comingSoon.length > 0 && (
-                  <a href="#coming-soon-section" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition">
-                    <i class="fas fa-clock text-amber-400"></i>Dịch vụ sắp mở
+                  <a href="#coming-soon-section" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-[#c2c0e0] hover:text-white hover:bg-white/10 transition">
+                    <i class="fas fa-clock text-amber-400" aria-hidden="true"></i>Dịch vụ sắp mở
                   </a>
                 )}
               </div>
@@ -158,27 +160,26 @@ export const HomePage: FC<Props> = (props) => {
                   ['fa-star', '4.9/5', 'Đánh giá']
                 ].map(([icon, num, label]) => (
                   <div class="text-center p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur">
-                    <i class={`fas ${icon} text-brand-400 mb-1.5`}></i>
-                    <div class="text-xl font-extrabold">{num}</div>
-                    <div class="text-[11px] text-slate-400">{label}</div>
+                    <i class={`fas ${icon} text-indigo-400 mb-1.5`} aria-hidden="true"></i>
+                    <div class="text-xl font-extrabold tabular-nums">{num}</div>
+                    <div class="text-[11px] text-[#9492b8]">{label}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Hero 3D Multi-Device Stage with Switchable Carousel & Short GUI (Phone dọc chuẩn TikTok / Reels) */}
+            {/* Hero 3D Multi-Device Studio Stage (Adaptive 16:9 <-> 9:16) */}
             <div class="hero-stage-wrapper relative">
-              {/* Navigation arrows for switching phones */}
-              <button id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
-                <i class="fas fa-chevron-left"></i>
+              <button type="button" id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
               </button>
-              <button id="heroNextPhoneBtn" class="phone-nav-arrow phone-nav-next" aria-label="Xem video tiếp theo" title="Chuyển video kế tiếp (Phải)">
-                <i class="fas fa-chevron-right"></i>
+              <button type="button" id="heroNextPhoneBtn" class="phone-nav-arrow phone-nav-next" aria-label="Xem video tiếp theo" title="Chuyển video kế tiếp (Phải)">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
               </button>
 
               <div class="hero-stage frame-landscape" id="heroStage">
                 {/* Back Left Preview Card (Poster-first for fast initial load) */}
-                <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
+                <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex={0} aria-label="Xem video mẫu trước" title="Nhấp để xem video này ở giữa">
                   <div class="phone-notch"></div>
                   <img
                     id="heroLeftImg"
@@ -188,12 +189,12 @@ export const HomePage: FC<Props> = (props) => {
                     decoding="async"
                   />
                   <div class="phone-side-hint phone-side-hint-left">
-                    <i class="fas fa-arrow-right mr-1"></i> Xem tiếp
+                    <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> Xem tiếp
                   </div>
                 </div>
 
                 {/* Back Right Preview Card */}
-                <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex="0" title="Nhấp để xem video này ở giữa">
+                <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex={0} aria-label="Xem video mẫu kế tiếp" title="Nhấp để xem video này ở giữa">
                   <div class="phone-notch"></div>
                   <img
                     id="heroRightImg"
@@ -203,16 +204,15 @@ export const HomePage: FC<Props> = (props) => {
                     decoding="async"
                   />
                   <div class="phone-side-hint phone-side-hint-right">
-                    Xem tiếp <i class="fas fa-arrow-left ml-1"></i>
+                    Xem tiếp <i class="fas fa-arrow-left ml-1" aria-hidden="true"></i>
                   </div>
                 </div>
 
-                {/* Main Front Showcase Frame (Auto morphs 16:9 Landscape <-> 9:16 Portrait) */}
+                {/* Main Front Studio Showcase Frame (Auto morphs 16:9 Landscape <-> 9:16 Portrait) */}
                 <div class="phone phone-front frame-landscape" id="heroFrontPhone">
                   <div class="phone-notch"></div>
                   <div class="video-ambient-bg" id="heroFrontAmbient" style={`background-image:url('${DEMO_VIDEOS[0].posterUrl}')`}></div>
 
-                  {/* Main video: giữ nguyên tỉ lệ gốc (object-fit: contain), không crop */}
                   <video
                     id="heroFrontVideo"
                     src={DEMO_VIDEOS[0].videoUrl}
@@ -224,94 +224,46 @@ export const HomePage: FC<Props> = (props) => {
                     preload="metadata"
                   ></video>
 
-                  {/* Center play/pause overlay */}
-                  <button id="heroPlayCenterBtn" class="phone-play-btn" aria-label="Phát / tạm dừng">
-                    <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon"></i>
+                  <button type="button" id="heroPlayCenterBtn" class="phone-play-btn" aria-label="Phát hoặc tạm dừng video">
+                    <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon" aria-hidden="true"></i>
                   </button>
 
-                  {/* Short Video GUI Overlay (TikTok / Reels / Instagram) */}
-                  <div class="short-gui-overlay" id="shortGuiOverlay" data-platform="tiktok">
-                    {/* Top Bar */}
-                    <div class="short-top-bar" id="shortTopBar">
-                      <div class="short-top-left" id="shortTopLeft">
-                        <span class="short-badge-live"><i class="fas fa-tower-broadcast mr-1 text-rose-500"></i>LIVE</span>
-                        <span class="short-top-pill">Dành cho bạn</span>
+                  {/* Clean Creative Studio Overlay */}
+                  <div class="studio-overlay" id="studioOverlay">
+                    <div class="studio-top-bar">
+                      <div class="studio-chip">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0" aria-hidden="true"></span>
+                        <span id="heroStudioLabel" class="truncate">{DEMO_VIDEOS[0].shortTitle}</span>
+                        <span id="heroAspectPill" class="studio-aspect-pill">16:9</span>
                       </div>
-                      <div class="short-top-right">
-                        <button id="heroSoundBtn" class="short-sound-btn" aria-label="Bật tiếng" title="Bật / tắt tiếng">
-                          <i class="fas fa-volume-xmark mr-1"></i><span id="heroSoundText">Bật tiếng</span>
+                      <div class="studio-top-actions">
+                        <button type="button" id="heroSoundBtn" class="studio-sound-btn" aria-label="Bật tiếng" title="Bật / tắt tiếng">
+                          <i class="fas fa-volume-xmark" aria-hidden="true"></i>
+                          <span id="heroSoundText">Bật tiếng</span>
                         </button>
+                        <a href={`/san-pham/${DEMO_VIDEOS[0].slug}`} id="heroDetailLink" class="studio-detail-link" title="Xem chi tiết Skill">
+                          <span>Chi tiết</span>
+                          <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                        </a>
                       </div>
                     </div>
 
-                    {/* Right Action Icons Column */}
-                    <div class="short-actions" id="shortActions">
-                      {/* Avatar */}
-                      <div class="short-avatar-box" id="shortAvatarBox">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=khoskill1" alt="Avatar" class="short-avatar-img" id="shortAvatarImg" />
-                        <button class="short-follow-plus" id="shortFollowPlus" title="Theo dõi"><i class="fas fa-plus"></i></button>
-                      </div>
-
-                      {/* Like */}
-                      <div class="short-action-btn" id="shortLikeBtn" role="button" title="Thích">
-                        <div class="action-icon-circle"><i class="fas fa-heart text-white" id="shortLikeIcon"></i></div>
-                        <span class="action-count" id="shortLikeCount">142.8K</span>
-                      </div>
-
-                      {/* Comment */}
-                      <div class="short-action-btn" id="shortCommentBtn" role="button" title="Bình luận">
-                        <div class="action-icon-circle"><i class="fas fa-comment-dots text-white" id="shortCommentIcon"></i></div>
-                        <span class="action-count" id="shortCommentCount">2.5K</span>
-                      </div>
-
-                      {/* Bookmark / Save */}
-                      <div class="short-action-btn" id="shortSaveBtn" role="button" title="Lưu">
-                        <div class="action-icon-circle"><i class="fas fa-bookmark text-white" id="shortSaveIcon"></i></div>
-                        <span class="action-count" id="shortSaveCount">18.4K</span>
-                      </div>
-
-                      {/* Share */}
-                      <div class="short-action-btn" id="shortShareBtn" role="button" title="Chia sẻ">
-                        <div class="action-icon-circle"><i class="fas fa-share text-white" id="shortShareIcon"></i></div>
-                        <span class="action-count" id="shortShareCount">3.9K</span>
-                      </div>
-
-                      {/* Music Disc */}
-                      <div class="short-disc-box" id="shortDiscBox">
-                        <div class="short-disc-spin" id="shortDiscSpin">
-                          <i class="fas fa-compact-disc text-white text-lg"></i>
-                        </div>
-                      </div>
+                    <div class="studio-bottom-bar">
+                      <div class="studio-caption-text" id="heroCaptionText">{DEMO_VIDEOS[0].title}</div>
+                      <span class="studio-aspect-pill tabular-nums" id="heroDurBadge">{DEMO_VIDEOS[0].dur}</span>
                     </div>
 
-                    {/* Bottom Info Overlay */}
-                    <div class="short-bottom-info" id="shortBottomInfo">
-                      <div class="short-author-row" id="shortAuthorRow">
-                        <span class="short-author-handle" id="shortAuthorHandle">@khoskill.ai</span>
-                        <span class="short-verified-badge" id="shortVerifiedBadge"><i class="fas fa-circle-check text-sky-400"></i></span>
-                        <button class="short-follow-pill" id="shortFollowPill">Theo dõi</button>
-                      </div>
-                      <p class="short-caption" id="shortCaption">
-                        Skill làm video AI 30s liền mạch chỉ với 1 prompt chuẩn viral 🚀 Khóa nhân vật cực đỉnh #MuseAI #AIVideo #SkillAI
-                      </p>
-                      <div class="short-music-track" id="shortMusicTrack">
-                        <i class="fas fa-music text-[10px] animate-pulse"></i>
-                        <span class="short-music-title" id="shortMusicTitle">♫ KhoSkill AI - Âm thanh gốc</span>
-                      </div>
-                    </div>
-
-                    {/* Bottom Scrubber */}
-                    <div class="short-progress-track" id="heroProgressTrack">
-                      <div class="short-progress-fill" id="heroProgressFill"></div>
+                    <div class="studio-progress-track" id="heroProgressTrack" role="slider" aria-label="Tua tiến độ video" tabindex={0}>
+                      <div class="studio-progress-fill" id="heroProgressFill"></div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Stage interaction hint */}
-              <div class="stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2">
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm">
-                  <i class="fas fa-arrow-left-right text-brand-400"></i> Bấm <b>Trái / Phải</b> hoặc <b>chạm điện thoại 2 bên</b> để đổi chiều xem video
+              <div class="stage-nav-hint text-center text-xs text-[#9492b8] mt-4 flex items-center justify-center gap-2">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-[#c2c0e0] backdrop-blur shadow-sm">
+                  <i class="fas fa-arrow-left-right text-indigo-400" aria-hidden="true"></i> Bấm <b>Trái / Phải</b> hoặc <b>chạm thẻ 2 bên</b> để chuyển video demo
                 </span>
               </div>
             </div>
@@ -319,12 +271,12 @@ export const HomePage: FC<Props> = (props) => {
         </div>
 
         {/* Trust marquee */}
-        <div class="relative border-t border-white/5 bg-[#080716]/60 backdrop-blur py-3 marquee-wrap overflow-hidden">
-          <div class="marquee-track flex gap-10 w-max text-slate-500 text-xs font-semibold whitespace-nowrap">
+        <div class="relative border-t border-white/5 bg-[#070614]/70 backdrop-blur py-3 marquee-wrap overflow-hidden">
+          <div class="marquee-track flex gap-10 w-max text-[#9492b8] text-xs font-semibold whitespace-nowrap">
             {[...Array(2)].map(() => (
               <>
                 {['Muse AI', 'Seedance 2.5', 'Veo 3', 'Google Flow', 'Kling AI', 'ChatGPT', 'Gemini', 'CapCut', 'Sora', 'Runway'].map(b => (
-                  <span class="flex items-center gap-2"><i class="fas fa-circle-nodes text-indigo-500/60"></i>{b}</span>
+                  <span class="flex items-center gap-2"><i class="fas fa-circle-nodes text-indigo-500/70" aria-hidden="true"></i>{b}</span>
                 ))}
               </>
             ))}
@@ -332,52 +284,60 @@ export const HomePage: FC<Props> = (props) => {
         </div>
       </section>
 
-      {/* ============ VIDEO WALL MARQUEE (1clickvn style) ============ */}
+      {/* ============ VIDEO WALL MARQUEE ============ */}
       <section class="wall" id="theater-wall" aria-label="Clip mẫu làm bằng AI">
         <div class="wall-head">
-          <span class="wall-kicker">
-            <i class="fas fa-wand-magic-sparkles text-brand-400"></i>
-            Làm bằng Muse AI &amp; Seedance
-          </span>
-          <span class="wall-note">
-            <i class="fas fa-mouse-pointer text-slate-400 mr-1"></i>
-            Clip thật từ repo, không dựng lại. Rê chuột để dừng · Bấm để xem lớn.
-          </span>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="wall-kicker">
+              <i class="fas fa-wand-magic-sparkles text-indigo-400" aria-hidden="true"></i>
+              Làm bằng Muse AI &amp; Seedance
+            </span>
+            <span class="wall-note">
+              <i class="fas fa-mouse-pointer text-[#9492b8] mr-1" aria-hidden="true"></i>
+              Clip thật từ kho dự án. Rê chuột hoặc bấm Tạm dừng · Nhấp để xem lớn.
+            </span>
+          </div>
+          <button type="button" id="wallToggleBtn" class="wall-toggle-btn" aria-pressed="false" aria-label="Tạm dừng dải video chạy tự động">
+            <i class="fas fa-pause text-[11px]" aria-hidden="true"></i>
+            <span>Tạm dừng</span>
+          </button>
         </div>
         <div class="wall-track-wrapper">
           <div class="wall-track" id="wallTrack">
             {[...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => (
-              <div class={`wall-card ${v.orient === 'portrait' ? 'wall-card-portrait' : 'wall-card-landscape'}`}
+              <button type="button"
+                class={`wall-card ${v.orient === 'portrait' ? 'wall-card-portrait' : 'wall-card-landscape'}`}
                 data-video-index={idx % DEMO_VIDEOS.length} data-src={v.videoUrl} data-title={v.title}
-                data-slug={v.slug} data-desc={v.desc} data-poster={v.posterUrl} data-orient={v.orient}>
+                data-slug={v.slug} data-desc={v.desc} data-poster={v.posterUrl} data-orient={v.orient}
+                aria-label={`Xem demo ${v.shortTitle}`}>
                 <img src={v.posterUrl} alt={v.shortTitle} loading="lazy" decoding="async" class="wall-card-thumb" />
                 <span class="card-tag">{v.tag}</span>
-                <span class="card-dur">{v.dur}</span>
-                <div class="wall-card-play">
-                  <div class="wall-card-play-icon"><i class="fas fa-play ml-0.5"></i></div>
-                </div>
+                <span class="card-dur tabular-nums">{v.dur}</span>
+                <span class="wall-card-play" aria-hidden="true">
+                  <span class="wall-card-play-icon"><i class="fas fa-play ml-0.5"></i></span>
+                </span>
                 <div class="card-info">
                   <div class="card-title">{v.shortTitle}</div>
-                  <div class="card-action"><i class="fas fa-circle-play text-[10px]"></i>Bấm để xem video</div>
+                  <div class="card-action"><i class="fas fa-circle-play text-[10px]" aria-hidden="true"></i>Bấm để xem video</div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============ THEATER SECTION (1clickvn style) ============ */}
+      {/* ============ THEATER SECTION ============ */}
       <section class="theater-section reveal" id="theater">
         <div class="max-w-7xl mx-auto px-4">
           <div class="text-center max-w-3xl mx-auto mb-10">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 font-mono text-xs uppercase font-bold tracking-wider mb-3">
-              <i class="fas fa-eye text-xs"></i>Xem Tận Mắt · Video AI Thật
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/25 text-indigo-300 font-mono text-xs uppercase font-bold tracking-wider mb-3">
+              <i class="fas fa-eye text-xs" aria-hidden="true"></i>Xem Tận Mắt · Video AI Thật
             </span>
             <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3">
               Xem Trước Khi Sở Hữu
             </h2>
-            <p class="text-slate-300 text-sm md:text-base leading-relaxed">
-              Trailer 30s, video học viên và clip demo các ngách từ kho repo. Bấm chọn video bên phải để chuyển ngay lập tức.
+            <p class="text-[#c2c0e0] text-sm md:text-base leading-relaxed">
+              Video demo thực tế từng bộ Skill AI. Bấm chọn video bên phải để chuyển ngay lập tức.
             </p>
           </div>
 
@@ -394,52 +354,52 @@ export const HomePage: FC<Props> = (props) => {
                   playsinline
                   preload="metadata"
                 ></video>
-                <button class="player-big-play" id="theaterBigPlayBtn" aria-label="Phát video">
-                  <i class="fas fa-play text-white ml-1"></i>
+                <button type="button" class="player-big-play" id="theaterBigPlayBtn" aria-label="Phát video">
+                  <i class="fas fa-play text-white ml-1" aria-hidden="true"></i>
                 </button>
                 <div class="player-bar">
-                  <button class="theater-ctrl-btn" id="theaterPlayBtn" aria-label="Phát / tạm dừng">
-                    <i class="fas fa-play" id="theaterPlayIcon"></i>
+                  <button type="button" class="theater-ctrl-btn" id="theaterPlayBtn" aria-label="Phát hoặc tạm dừng">
+                    <i class="fas fa-play" id="theaterPlayIcon" aria-hidden="true"></i>
                   </button>
-                  <div class="theater-progress" id="theaterProgressTrack">
+                  <div class="theater-progress" id="theaterProgressTrack" role="slider" aria-label="Tua video" tabindex={0}>
                     <div class="theater-progress-fill" id="theaterProgressFill"></div>
                   </div>
-                  <span class="theater-timecode" id="theaterTimecode">00:00 / 00:30</span>
-                  <button class="theater-ctrl-btn" id="theaterSoundBtn" aria-label="Bật / tắt tiếng">
-                    <i class="fas fa-volume-high" id="theaterSoundIcon"></i>
+                  <span class="theater-timecode tabular-nums" id="theaterTimecode">00:00 / 00:30</span>
+                  <button type="button" class="theater-ctrl-btn" id="theaterSoundBtn" aria-label="Bật hoặc tắt tiếng">
+                    <i class="fas fa-volume-high" id="theaterSoundIcon" aria-hidden="true"></i>
                   </button>
-                  <button class="theater-ctrl-btn" id="theaterFullscreenBtn" aria-label="Toàn màn hình">
-                    <i class="fas fa-expand"></i>
+                  <button type="button" class="theater-ctrl-btn" id="theaterFullscreenBtn" aria-label="Toàn màn hình">
+                    <i class="fas fa-expand" aria-hidden="true"></i>
                   </button>
                 </div>
               </div>
-              <div class="player-info border-t border-[#1f1b4b]">
+              <div class="player-info border-t border-[#221e54]">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-                  <span class="px-2.5 py-0.5 rounded bg-brand-500/10 text-brand-400 text-xs font-bold uppercase tracking-wider" id="activeVideoTag">
+                  <span class="px-2.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold uppercase tracking-wider" id="activeVideoTag">
                     {DEMO_VIDEOS[0].tag}
                   </span>
-                  <span class="font-mono text-xs text-slate-400" id="activeVideoDur">
+                  <span class="font-mono text-xs text-[#9492b8] tabular-nums" id="activeVideoDur">
                     Thời lượng: {DEMO_VIDEOS[0].dur}
                   </span>
                 </div>
                 <h3 class="text-xl md:text-2xl font-extrabold text-white mb-2" id="activeVideoTitle">
                   {DEMO_VIDEOS[0].title}
                 </h3>
-                <p class="text-slate-300 text-sm leading-relaxed mb-5" id="activeVideoDesc">
+                <p class="text-[#c2c0e0] text-sm leading-relaxed mb-5" id="activeVideoDesc">
                   {DEMO_VIDEOS[0].desc}
                 </p>
-                <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/10">
                   <div class="flex items-baseline gap-2">
-                    <span class="text-2xl font-black text-white" id="activeVideoPrice">
+                    <span class="text-2xl font-black text-white tabular-nums" id="activeVideoPrice">
                       {formatVND(DEMO_VIDEOS[0].price)}
                     </span>
-                    <span class="text-xs text-slate-500 line-through" id="activeVideoOrigPrice">
+                    <span class="text-xs text-[#9492b8] line-through tabular-nums" id="activeVideoOrigPrice">
                       {formatVND(DEMO_VIDEOS[0].originalPrice)}
                     </span>
                   </div>
                   <div class="flex gap-2">
-                    <a href={`/san-pham/${DEMO_VIDEOS[0].slug}`} id="activeVideoLink" class="h-10 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 text-white font-semibold text-xs hover:opacity-90 transition">
-                      <i class="fas fa-bolt"></i>Mua sản phẩm này
+                    <a href={`/san-pham/${DEMO_VIDEOS[0].slug}`} id="activeVideoLink" class="h-10 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-xs hover:opacity-95 transition">
+                      <i class="fas fa-bolt" aria-hidden="true"></i>Mua sản phẩm này
                     </a>
                   </div>
                 </div>
@@ -448,32 +408,32 @@ export const HomePage: FC<Props> = (props) => {
 
             {/* Playlist Sidebar */}
             <div class="playlist-panel">
-              <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#1f1b4b]">
+              <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#221e54]">
                 <div class="text-sm font-bold text-white flex items-center gap-2">
-                  <i class="fas fa-list-ul text-brand-400"></i>Danh sách video ({DEMO_VIDEOS.length})
+                  <i class="fas fa-list-ul text-indigo-400" aria-hidden="true"></i>Danh sách video ({DEMO_VIDEOS.length})
                 </div>
-                <span class="text-[11px] text-slate-400 font-medium">Bấm để đổi video</span>
+                <span class="text-[11px] text-[#9492b8] font-medium">Bấm để đổi video</span>
               </div>
               <div class="playlist" id="theaterPlaylist">
                 {DEMO_VIDEOS.map((v, i) => (
-                  <div class={`playlist-item ${i === 0 ? 'active' : ''}`} data-index={i}>
+                  <button type="button" class={`playlist-item ${i === 0 ? 'active' : ''}`} data-index={i} aria-pressed={i === 0 ? 'true' : 'false'}>
                     <div class="playlist-thumb-wrap">
                       <img src={v.posterUrl} alt={v.shortTitle} loading="lazy" />
-                      <span class="thumb-dur">{v.dur}</span>
+                      <span class="thumb-dur tabular-nums">{v.dur}</span>
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] uppercase font-bold text-brand-400">{v.tag}</span>
+                        <span class="text-[10px] uppercase font-bold text-indigo-400">{v.tag}</span>
                       </div>
-                      <h4 class="text-xs font-bold text-white truncate group-hover:text-brand-300">{v.shortTitle}</h4>
-                      <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
-                        <span class="font-extrabold text-amber-400">{formatVND(v.price)}</span>
+                      <h4 class="text-xs font-bold text-white truncate">{v.shortTitle}</h4>
+                      <div class="text-[11px] text-[#9492b8] mt-1 flex items-center gap-2">
+                        <span class="font-extrabold text-amber-300 tabular-nums">{formatVND(v.price)}</span>
                       </div>
                     </div>
-                    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-slate-400 shrink-0">
+                    <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-[#9492b8] shrink-0" aria-hidden="true">
                       <i class="fas fa-play"></i>
-                    </div>
-                  </div>
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -489,32 +449,58 @@ export const HomePage: FC<Props> = (props) => {
         </div>
       </section>
 
-      {/* ============ FEATURED ============ */}
-      {featured.length > 0 && (
-        <section id="featured-section" class="max-w-7xl mx-auto px-4 py-8 reveal">
-          <SectionTitle title="5 Skill AI đang mở bán" subtitle="Bộ 5 Skill thực chiến tạo video 30s — đã test ra demo, mua là dùng ngay" more={{ href: '/san-pham?type=skill', label: 'Xem tất cả' }} />
+      {/* ============ UNIFIED CATALOG SHOWCASE (Single De-duplicated Grid + Filter Tabs) ============ */}
+      <section id="catalog-section" class="max-w-7xl mx-auto px-4 py-8 reveal">
+        <SectionTitle
+          title="Kho Skill AI thực chiến"
+          subtitle="5 bộ Skill làm video 30s đang mở bán — lọc nhanh theo mức độ phổ biến"
+          more={{ href: '/san-pham?type=skill', label: 'Xem tất cả' }}
+        />
+        <div role="tablist" aria-label="Lọc danh sách Skill AI" class="flex flex-wrap items-center gap-2 mb-7">
+          <button type="button" role="tab" aria-selected="true" class="tab-btn active h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] transition cursor-pointer" data-tab="featured" data-group="hp">
+            <i class="fas fa-wand-magic-sparkles mr-1.5 text-indigo-300" aria-hidden="true"></i>Đang mở bán ({featured.length})
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer" data-tab="hot" data-group="hp">
+            <i class="fas fa-fire mr-1.5 text-orange-400" aria-hidden="true"></i>Bán chạy nhất
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer" data-tab="new" data-group="hp">
+            <i class="fas fa-bolt mr-1.5 text-emerald-400" aria-hidden="true"></i>Mới ra mắt
+          </button>
+        </div>
+
+        <div role="tabpanel" class="tab-panel" data-tab="featured" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {featured.slice(0, 8).map(p => <ProductCard p={p} />)}
           </div>
-        </section>
-      )}
+        </div>
+        <div role="tabpanel" class="tab-panel hidden" data-tab="hot" data-group="hp">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {hot.slice(0, 8).map(p => <ProductCard p={p} />)}
+          </div>
+        </div>
+        <div role="tabpanel" class="tab-panel hidden" data-tab="new" data-group="hp">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {newest.slice(0, 8).map(p => <ProductCard p={p} />)}
+          </div>
+        </div>
+      </section>
 
       {/* ============ COMING SOON SERVICES ============ */}
       {comingSoon.length > 0 && (
         <section id="coming-soon-section" class="max-w-7xl mx-auto px-4 py-10 reveal">
-          <div class="rounded-3xl bg-gradient-to-br from-[#0f0e26] via-[#1a184c]/70 to-[#080716] p-7 md:p-10 text-white relative overflow-hidden border border-[#1f1b4b]">
+          <div class="rounded-3xl bg-gradient-to-br from-[#0f0e24] via-[#17153d]/80 to-[#070614] p-7 md:p-10 text-white relative overflow-hidden border border-[#221e54]">
             <div class="absolute inset-0 hero-mesh opacity-30"></div>
             <div class="relative">
               <div class="flex flex-wrap items-end justify-between gap-4 mb-7">
                 <div>
-                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold mb-3">
-                    <i class="fas fa-clock"></i>DỊCH VỤ TẠM THỜI CHƯA MỞ BÁN
+                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold mb-3">
+                    <i class="fas fa-clock" aria-hidden="true"></i>DỊCH VỤ TẠM THỜI CHƯA MỞ BÁN
                   </div>
                   <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Khóa học, Chatbot, App &amp; Combo sắp ra mắt</h2>
-                  <p class="text-[#9f9dbb] mt-1.5 text-sm md:text-base">Hiện tại hệ thống chỉ mở bán 5 bộ Skill AI. Các dịch vụ khác sẽ sớm mở bán trong thời gian tới.</p>
+                  <p class="text-[#b8b6d9] mt-1.5 text-sm md:text-base">Hiện tại hệ thống chỉ mở bán 5 bộ Skill AI. Các dịch vụ khác sẽ sớm mở bán trong thời gian tới.</p>
                 </div>
                 <a href="/lien-he" class="cta-white h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition">
-                  Nhắn Zalo nhận lịch mở bán<i class="fas fa-arrow-right text-xs"></i>
+                  Nhắn Zalo nhận lịch mở bán<i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
                 </a>
               </div>
               <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -525,40 +511,18 @@ export const HomePage: FC<Props> = (props) => {
         </section>
       )}
 
-      {/* ============ HOT + NEW tabs ============ */}
-      <section id="hot-new-section" class="max-w-7xl mx-auto px-4 py-8 reveal">
-        <div class="flex items-center gap-1 border-b border-[#1f1b4b] mb-7">
-          <button class="tab-btn active px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 transition" data-tab="hot" data-group="hp">
-            <i class="fas fa-fire mr-1.5 text-orange-500"></i>Bán chạy nhất
-          </button>
-          <button class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 transition" data-tab="new" data-group="hp">
-            <i class="fas fa-sparkles mr-1.5 text-indigo-400"></i>Mới ra mắt
-          </button>
-        </div>
-        <div class="tab-panel" data-tab="hot" data-group="hp">
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {hot.slice(0, 8).map(p => <ProductCard p={p} />)}
-          </div>
-        </div>
-        <div class="tab-panel hidden" data-tab="new" data-group="hp">
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {newest.slice(0, 8).map(p => <ProductCard p={p} />)}
-          </div>
-        </div>
-      </section>
-
       {/* ============ BENEFITS ============ */}
-      <section id="benefits-section" class="bg-[#0f0e26]/60 border-y border-[#1f1b4b] py-16 mt-10 reveal">
+      <section id="benefits-section" class="bg-[#0f0e24]/60 border-y border-[#221e54] py-16 mt-10 reveal">
         <div class="max-w-7xl mx-auto px-4">
-          <SectionTitle center title={`Lợi ích khi mua tại ${siteName}`} subtitle="Trải nghiệm tuyệt vời cùng những ưu điểm vượt trội" />
+          <SectionTitle center title={`Lợi ích khi mua tại ${siteName}`} subtitle="Trải nghiệm mượt mà cùng quy trình hỗ trợ chuẩn thực chiến" />
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
             {BENEFITS.map(b => (
-              <div class="p-6 rounded-2xl border border-[#1f1b4b] bg-[#0f0e26] hover:border-indigo-500/20 hover:shadow-lg transition group">
+              <div class="p-6 rounded-2xl border border-[#221e54] bg-[#0f0e24] hover:border-indigo-500/35 hover:shadow-lg transition group">
                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-lg mb-4 shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition">
-                  <i class={`fas ${b.icon}`}></i>
+                  <i class={`fas ${b.icon}`} aria-hidden="true"></i>
                 </div>
                 <h3 class="font-bold text-white mb-1.5">{b.title}</h3>
-                <p class="text-sm text-[#9f9dbb] leading-relaxed">{b.desc}</p>
+                <p class="text-sm text-[#b8b6d9] leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
@@ -570,15 +534,15 @@ export const HomePage: FC<Props> = (props) => {
         <SectionTitle center title="Mua hàng chỉ 4 bước" subtitle="Đơn giản, nhanh chóng, nhận link tải & tài liệu Skill ngay lập tức" />
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8 relative">
           {STEPS.map((s, i) => (
-            <div class="relative p-6 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] text-center">
-              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-slate-800 text-white text-xs font-bold">{s.n}</div>
-              <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 grid place-items-center text-xl mx-auto mt-2 mb-4">
-                <i class={`fas ${s.icon}`}></i>
+            <div class="relative p-6 rounded-2xl bg-[#0f0e24] border border-[#221e54] text-center">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-bold font-mono">{s.n}</div>
+              <div class="w-14 h-14 rounded-2xl bg-indigo-500/15 text-indigo-400 grid place-items-center text-xl mx-auto mt-2 mb-4">
+                <i class={`fas ${s.icon}`} aria-hidden="true"></i>
               </div>
               <h3 class="font-bold text-white mb-1.5">{s.title}</h3>
-              <p class="text-[13px] text-[#9f9dbb] leading-relaxed">{s.desc}</p>
+              <p class="text-[13px] text-[#b8b6d9] leading-relaxed">{s.desc}</p>
               {i < STEPS.length - 1 && (
-                <i class="fas fa-arrow-right absolute top-1/2 -right-4 text-slate-600 hidden lg:block"></i>
+                <i class="fas fa-arrow-right absolute top-1/2 -right-4 text-[#5c5980] hidden lg:block" aria-hidden="true"></i>
               )}
             </div>
           ))}
@@ -587,24 +551,24 @@ export const HomePage: FC<Props> = (props) => {
 
       {/* ============ REVIEWS ============ */}
       {reviews.length > 0 && (
-        <section id="reviews-section" class="bg-[#0f0e26] border-y border-[#1f1b4b] py-16 reveal">
+        <section id="reviews-section" class="bg-[#0f0e24] border-y border-[#221e54] py-16 reveal">
           <div class="max-w-7xl mx-auto px-4">
             <div class="text-center mb-10">
               <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Khách hàng nói gì?</h2>
-              <p class="text-slate-400 mt-2">Cảm nhận từ những người đã trải nghiệm sản phẩm của chúng tôi</p>
+              <p class="text-[#b8b6d9] mt-2">Cảm nhận từ những người đã trải nghiệm sản phẩm của chúng tôi</p>
             </div>
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
               {reviews.slice(0, 6).map(r => (
-                <div class="p-6 rounded-2xl bg-[#080716]/80 border border-[#1f1b4b]">
+                <div class="p-6 rounded-2xl bg-[#070614]/85 border border-[#221e54]">
                   <Stars rating={r.rating} size="text-sm" />
-                  <p class="text-slate-300 text-sm leading-relaxed my-4">"{r.comment}"</p>
-                  <div class="flex items-center gap-3 pt-4 border-t border-[#1f1b4b]">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-sm">
+                  <p class="text-[#d6d4ee] text-sm leading-relaxed my-4">"{r.comment}"</p>
+                  <div class="flex items-center gap-3 pt-4 border-t border-[#221e54]">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-sm shrink-0">
                       {(r.full_name || 'K').charAt(0).toUpperCase()}
                     </div>
                     <div class="min-w-0">
                       <div class="font-semibold text-white text-sm truncate">{r.full_name}</div>
-                      <a href={`/san-pham/${r.product_slug}`} class="text-xs text-slate-400 truncate block hover:text-indigo-400">{r.product_name}</a>
+                      <a href={`/san-pham/${r.product_slug}`} class="text-xs text-[#9492b8] truncate block hover:text-indigo-300">{r.product_name}</a>
                     </div>
                   </div>
                 </div>
@@ -625,17 +589,18 @@ export const HomePage: FC<Props> = (props) => {
       )}
 
       {/* ============ FAQ ============ */}
-      <section id="faq-section" class="bg-[#080716] border-t border-[#1f1b4b] py-16 reveal">
+      <section id="faq-section" class="bg-[#070614] border-t border-[#221e54] py-16 reveal">
         <div class="max-w-3xl mx-auto px-4">
           <SectionTitle center title="Câu hỏi thường gặp" subtitle="Những thắc mắc phổ biến nhất từ khách hàng" />
           <div class="space-y-3 mt-8">
             {FAQS.map((f, i) => (
-              <div class="rounded-xl border border-[#1f1b4b] bg-[#0f0e26] overflow-hidden">
-                <button class="faq-q w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/5 transition">
+              <div class="rounded-xl border border-[#221e54] bg-[#0f0e24] overflow-hidden">
+                <button type="button" class="faq-q w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/5 transition cursor-pointer"
+                  aria-expanded={i === 0 ? 'true' : 'false'}>
                   <span class="font-semibold text-white text-[15px]">{f.q}</span>
-                  <i class="faq-icon fas fa-plus text-indigo-500 text-sm transition-transform shrink-0"></i>
+                  <i class={`faq-icon fas fa-plus text-indigo-400 text-sm transition-transform shrink-0 ${i === 0 ? 'rotate-45' : ''}`} aria-hidden="true"></i>
                 </button>
-                <div class={`faq-a px-5 pb-4 text-sm text-[#9f9dbb] leading-relaxed ${i === 0 ? '' : 'hidden'}`}>{f.a}</div>
+                <div class={`faq-a px-5 pb-4 text-sm text-[#b8b6d9] leading-relaxed ${i === 0 ? '' : 'hidden'}`}>{f.a}</div>
               </div>
             ))}
           </div>
@@ -644,17 +609,17 @@ export const HomePage: FC<Props> = (props) => {
 
       {/* ============ CTA ============ */}
       <section id="cta-section" class="max-w-7xl mx-auto px-4 py-14 reveal">
-        <div class="rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-fuchsia-600 p-8 md:p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-600/10">
+        <div class="rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-fuchsia-600 p-8 md:p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-600/20">
           <div class="absolute inset-0 hero-grid opacity-20"></div>
           <div class="relative">
             <h2 class="text-2xl md:text-4xl font-extrabold mb-3 tracking-tight">Sẵn sàng bắt đầu kiếm tiền với video AI?</h2>
-            <p class="text-white/85 mb-7 max-w-2xl mx-auto">Tham gia cùng hàng nghìn người đang dùng công cụ của chúng tôi để sản xuất video bán hàng mỗi ngày.</p>
+            <p class="text-white/90 mb-7 max-w-2xl mx-auto">Tham gia cùng hàng nghìn người đang dùng bộ Skill của chúng tôi để sản xuất video bán hàng mỗi ngày.</p>
             <div class="flex flex-wrap justify-center gap-3">
               <a href="/dang-ky" class="cta-white h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white text-indigo-900 font-bold hover:bg-slate-100 transition shadow-xl">
-                <i class="fas fa-user-plus"></i>Đăng ký miễn phí
+                <i class="fas fa-user-plus" aria-hidden="true"></i>Đăng ký miễn phí
               </a>
               <a href="/san-pham" class="h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/30 backdrop-blur font-semibold hover:bg-white/25 transition">
-                <i class="fas fa-eye"></i>Xem sản phẩm
+                <i class="fas fa-eye" aria-hidden="true"></i>Xem sản phẩm
               </a>
             </div>
           </div>

@@ -8929,13 +8929,15 @@ var Layout = (props) => {
   const nav = [
     { href: "/", label: "Trang ch\u1EE7", key: "home", icon: "fa-house", on: isHome },
     { href: "/san-pham", label: "S\u1EA3n ph\u1EA9m", key: "products", icon: "fa-cubes", on: path.startsWith("/san-pham") || path.startsWith("/danh-muc") || active === "products" },
-    { href: "/combo", label: "Combo", key: "combo", icon: "fa-box-open", on: isCombo },
     { href: "/bang-gia", label: "B\u1EA3ng gi\xE1", key: "pricing", icon: "fa-tags", on: isPricing },
     { href: "/blog", label: "Blog", key: "blog", icon: "fa-newspaper", on: isBlog },
-    { href: "/affiliate", label: "Affiliate", key: "affiliate", icon: "fa-handshake", on: isAffiliate },
+    { href: "/affiliate", label: "Affiliate", key: "affiliate", icon: "fa-handshake", on: isAffiliate }
+  ];
+  const mobExtraNav = [
+    { href: "/combo", label: "Combo", key: "combo", icon: "fa-box-open", on: isCombo },
     { href: "/lien-he", label: "Li\xEAn h\u1EC7", key: "contact", icon: "fa-headset", on: isContact }
   ];
-  const sbCls = (on) => `sidebar-menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${on ? "is-active text-white bg-indigo-500/15 border border-indigo-500/30 shadow-sm shadow-indigo-500/10" : "text-[#b9b8d9] border border-transparent hover:text-white hover:bg-white/5"}`;
+  const sbCls = (on) => `sidebar-menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${on ? "is-active text-white bg-indigo-500/15 border border-indigo-500/30 shadow-sm shadow-indigo-500/10" : "text-[#c2c0e0] border border-transparent hover:text-white hover:bg-white/5"}`;
   return /* @__PURE__ */ jsxDEV("html", { lang: "vi", class: "scroll-smooth", children: [
     /* @__PURE__ */ jsxDEV("head", { children: [
       /* @__PURE__ */ jsxDEV("meta", { charset: "UTF-8" }),
@@ -8948,124 +8950,126 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261115", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261116", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261115", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261116", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
     ] }),
-    /* @__PURE__ */ jsxDEV("body", { class: "bg-[#080716] text-[#e2e1f5] antialiased " + (props.bodyClass || ""), children: [
+    /* @__PURE__ */ jsxDEV("body", { class: "bg-[#070614] text-[#f4f4fc] antialiased dark-portal " + (props.bodyClass || ""), children: [
+      /* @__PURE__ */ jsxDEV("a", { href: "#main-content", class: "skip-link", children: "Chuy\u1EC3n \u0111\u1EBFn n\u1ED9i dung ch\xEDnh" }),
       /* @__PURE__ */ jsxDEV("div", { id: "nav-progress", "aria-hidden": "true" }),
       /* @__PURE__ */ jsxDEV("div", { id: "sidebar-backdrop", class: "fixed inset-0 z-40 bg-black/60 backdrop-blur-xs hidden lg:hidden", "aria-hidden": "true" }),
       /* @__PURE__ */ jsxDEV("div", { class: "flex min-h-screen", children: [
-        /* @__PURE__ */ jsxDEV("aside", { id: "sidebar", class: "fixed inset-y-0 left-0 z-50 w-64 lg:w-[72px] bg-[#0f0e26]/95 backdrop-blur-md border-r border-[#1f1b4b] flex flex-col justify-between transition-all duration-200 transform -translate-x-full lg:translate-x-0", children: [
+        /* @__PURE__ */ jsxDEV("aside", { id: "sidebar", "aria-label": "Thanh \u0111i\u1EC1u h\u01B0\u1EDBng b\xEAn", class: "fixed inset-y-0 left-0 z-50 w-64 lg:w-[72px] bg-[#0f0e24]/95 backdrop-blur-md border-r border-[#221e54] flex flex-col justify-between transition-all duration-200 transform -translate-x-full lg:translate-x-0", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col flex-1 overflow-y-auto overflow-x-hidden", children: [
-            /* @__PURE__ */ jsxDEV("a", { href: "/", class: "h-16 shrink-0 flex items-center gap-3 px-[18px] border-b border-[#1f1b4b] hover:bg-white/[0.02] transition-colors", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm" }) }),
+            /* @__PURE__ */ jsxDEV("a", { href: "/", class: "h-16 shrink-0 flex items-center gap-3 px-[18px] border-b border-[#221e54] hover:bg-white/[0.03] transition-colors", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm", "aria-hidden": "true" }) }),
               /* @__PURE__ */ jsxDEV("div", { class: "leading-none sidebar-header-text min-w-0", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-sm tracking-tight text-white whitespace-nowrap", children: siteName }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9f9dbb] mt-0.5 whitespace-nowrap", children: "Kho Skill Video AI" })
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] mt-0.5 whitespace-nowrap", children: "Kho Skill Video AI" })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "px-3 py-4 flex flex-col gap-5", children: [
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text", children: "Kh\xE1m ph\xE1" }),
-                /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/", title: "Trang ch\u1EE7", "data-nav": "home", class: sbCls(isHome), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-house w-5 shrink-0 text-center ${isHome ? "text-indigo-400" : "text-slate-400"}` }),
+                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-[#9492b8] tracking-wider mb-1.5 sidebar-text", children: "Kh\xE1m ph\xE1" }),
+                /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", "aria-label": "Kh\xE1m ph\xE1", children: [
+                  /* @__PURE__ */ jsxDEV("a", { href: "/", title: "Trang ch\u1EE7", "data-nav": "home", "aria-current": isHome ? "page" : void 0, class: sbCls(isHome), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-house w-5 shrink-0 text-center ${isHome ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Trang ch\u1EE7" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", title: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m", "data-nav": "all", class: sbCls(isProductsAll), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", title: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m", "data-nav": "all", "aria-current": isProductsAll ? "page" : void 0, class: sbCls(isProductsAll), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-cubes w-5 shrink-0 text-center ${isProductsAll ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?sort=bestseller", title: "B\xE1n ch\u1EA1y nh\u1EA5t", "data-nav": "bestseller", class: sbCls(isBestseller), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-fire w-5 shrink-0 text-center ${isBestseller ? "text-orange-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?sort=bestseller", title: "B\xE1n ch\u1EA1y nh\u1EA5t", "data-nav": "bestseller", "aria-current": isBestseller ? "page" : void 0, class: sbCls(isBestseller), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-fire w-5 shrink-0 text-center ${isBestseller ? "text-orange-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "B\xE1n ch\u1EA1y nh\u1EA5t" })
                   ] })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text", children: "Danh m\u1EE5c" }),
-                /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", title: "Skill AI (\u0110ang b\xE1n)", "data-nav": "skill", class: sbCls(isSkill), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-wand-magic-sparkles w-5 shrink-0 text-center ${isSkill ? "text-indigo-400" : "text-indigo-400/80"}` }),
+                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-[#9492b8] tracking-wider mb-1.5 sidebar-text", children: "Danh m\u1EE5c" }),
+                /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", "aria-label": "Danh m\u1EE5c s\u1EA3n ph\u1EA9m", children: [
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", title: "Skill AI (\u0110ang b\xE1n)", "data-nav": "skill", "aria-current": isSkill ? "page" : void 0, class: sbCls(isSkill), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-wand-magic-sparkles w-5 shrink-0 text-center ${isSkill ? "text-indigo-400" : "text-indigo-400/80"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
                       /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Skill AI" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold leading-none shrink-0", children: "\u0110ang b\xE1n" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold leading-none shrink-0", children: "\u0110ang b\xE1n" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", title: "Kh\xF3a h\u1ECDc Video AI (S\u1EAFp m\u1EDF)", "data-nav": "course", class: sbCls(isCourse), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-graduation-cap w-5 shrink-0 text-center ${isCourse ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", title: "Kh\xF3a h\u1ECDc Video AI (S\u1EAFp m\u1EDF)", "data-nav": "course", "aria-current": isCourse ? "page" : void 0, class: sbCls(isCourse), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-graduation-cap w-5 shrink-0 text-center ${isCourse ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
                       /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Kh\xF3a h\u1ECDc" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-[#b8b6d9] font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", title: "Chatbot (S\u1EAFp m\u1EDF)", "data-nav": "chatbot", class: sbCls(isChatbot), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-robot w-5 shrink-0 text-center ${isChatbot ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", title: "Chatbot (S\u1EAFp m\u1EDF)", "data-nav": "chatbot", "aria-current": isChatbot ? "page" : void 0, class: sbCls(isChatbot), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-robot w-5 shrink-0 text-center ${isChatbot ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
                       /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Chatbot" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-[#b8b6d9] font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", title: "App Video AI (S\u1EAFp m\u1EDF)", "data-nav": "app", class: sbCls(isApp), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-mobile-screen-button w-5 shrink-0 text-center ${isApp ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", title: "App Video AI (S\u1EAFp m\u1EDF)", "data-nav": "app", "aria-current": isApp ? "page" : void 0, class: sbCls(isApp), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-mobile-screen-button w-5 shrink-0 text-center ${isApp ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
                       /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "App Video AI" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-[#b8b6d9] font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/combo", title: "Combo ti\u1EBFt ki\u1EC7m (S\u1EAFp m\u1EDF)", "data-nav": "combo", class: sbCls(isCombo), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-box-open w-5 shrink-0 text-center ${isCombo ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/combo", title: "Combo ti\u1EBFt ki\u1EC7m (S\u1EAFp m\u1EDF)", "data-nav": "combo", "aria-current": isCombo ? "page" : void 0, class: sbCls(isCombo), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-box-open w-5 shrink-0 text-center ${isCombo ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
                       /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Combo ti\u1EBFt ki\u1EC7m" }),
-                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-slate-800/90 text-slate-400 font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-[#b8b6d9] font-semibold leading-none shrink-0", children: "S\u1EAFp m\u1EDF" })
                     ] })
                   ] })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1.5 sidebar-text", children: "Th\xF4ng tin" }),
-                /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", title: "B\u1EA3ng gi\xE1", "data-nav": "pricing", class: sbCls(isPricing), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-tags w-5 shrink-0 text-center ${isPricing ? "text-indigo-400" : "text-slate-400"}` }),
+                /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-[#9492b8] tracking-wider mb-1.5 sidebar-text", children: "Th\xF4ng tin" }),
+                /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", "aria-label": "Th\xF4ng tin v\xE0 h\u1ED7 tr\u1EE3", children: [
+                  /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", title: "B\u1EA3ng gi\xE1", "data-nav": "pricing", "aria-current": isPricing ? "page" : void 0, class: sbCls(isPricing), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-tags w-5 shrink-0 text-center ${isPricing ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "B\u1EA3ng gi\xE1" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/blog", title: "Blog ki\u1EBFn th\u1EE9c", "data-nav": "blog", class: sbCls(isBlog), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-newspaper w-5 shrink-0 text-center ${isBlog ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/blog", title: "Blog ki\u1EBFn th\u1EE9c", "data-nav": "blog", "aria-current": isBlog ? "page" : void 0, class: sbCls(isBlog), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-newspaper w-5 shrink-0 text-center ${isBlog ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Blog" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/affiliate", title: "Affiliate", "data-nav": "affiliate", class: sbCls(isAffiliate), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-handshake w-5 shrink-0 text-center ${isAffiliate ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/affiliate", title: "Affiliate", "data-nav": "affiliate", "aria-current": isAffiliate ? "page" : void 0, class: sbCls(isAffiliate), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-handshake w-5 shrink-0 text-center ${isAffiliate ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Affiliate" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/gioi-thieu", title: "Gi\u1EDBi thi\u1EC7u", "data-nav": "about", class: sbCls(isAbout), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-circle-info w-5 shrink-0 text-center ${isAbout ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/gioi-thieu", title: "Gi\u1EDBi thi\u1EC7u", "data-nav": "about", "aria-current": isAbout ? "page" : void 0, class: sbCls(isAbout), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-circle-info w-5 shrink-0 text-center ${isAbout ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Gi\u1EDBi thi\u1EC7u" })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", title: "Li\xEAn h\u1EC7 & Y\xEAu c\u1EA7u ri\xEAng", "data-nav": "contact", class: sbCls(isContact), children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-headset w-5 shrink-0 text-center ${isContact ? "text-indigo-400" : "text-slate-400"}` }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", title: "Li\xEAn h\u1EC7 & Y\xEAu c\u1EA7u ri\xEAng", "data-nav": "contact", "aria-current": isContact ? "page" : void 0, class: sbCls(isContact), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-headset w-5 shrink-0 text-center ${isContact ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text whitespace-nowrap", children: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3" })
                   ] })
                 ] })
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "p-3 border-t border-[#1f1b4b] flex items-center gap-1.5 shrink-0", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "p-3 border-t border-[#221e54] flex items-center gap-1.5 shrink-0", children: [
             /* @__PURE__ */ jsxDEV(
               "button",
               {
                 type: "button",
                 id: "sidebar-toggle-btn",
                 title: "Thu g\u1ECDn thanh b\xEAn",
-                class: "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer",
+                "aria-label": "Thu g\u1ECDn thanh b\xEAn",
+                class: "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#c2c0e0] hover:text-white hover:bg-white/10 transition cursor-pointer",
                 children: [
-                  /* @__PURE__ */ jsxDEV("i", { id: "sidebar-toggle-icon", class: "fas fa-angles-left w-5 shrink-0 text-center" }),
+                  /* @__PURE__ */ jsxDEV("i", { id: "sidebar-toggle-icon", class: "fas fa-angles-left w-5 shrink-0 text-center", "aria-hidden": "true" }),
                   /* @__PURE__ */ jsxDEV("span", { id: "sidebar-toggle-label", class: "sidebar-text whitespace-nowrap", children: "Thu g\u1ECDn" })
                 ]
               }
@@ -9076,135 +9080,231 @@ var Layout = (props) => {
                 type: "button",
                 id: "sidebar-pin-btn",
                 title: "Ghim c\u1ED1 \u0111\u1ECBnh m\u1EDF r\u1ED9ng",
-                class: "sidebar-badge w-9 h-9 shrink-0 grid place-items-center rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer",
-                children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-thumbtack" })
+                "aria-label": "Ghim c\u1ED1 \u0111\u1ECBnh thanh b\xEAn",
+                class: "sidebar-badge w-9 h-9 shrink-0 grid place-items-center rounded-xl text-xs text-[#9492b8] hover:text-white hover:bg-white/10 transition cursor-pointer",
+                children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-thumbtack", "aria-hidden": "true" })
               }
             )
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { id: "main-content-wrap", class: "flex-1 lg:ml-[72px] flex flex-col min-h-screen transition-[margin] duration-200 overflow-x-clip", children: [
-          /* @__PURE__ */ jsxDEV("header", { id: "site-header", class: "sticky top-0 z-40 bg-[#0f0e26]/85 backdrop-blur border-b border-[#1f1b4b]", children: [
+          /* @__PURE__ */ jsxDEV("header", { id: "site-header", class: "sticky top-0 z-40 bg-[#0f0e24]/85 backdrop-blur border-b border-[#221e54]", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 sm:px-6", children: /* @__PURE__ */ jsxDEV("div", { class: "h-16 flex items-center justify-between gap-4", children: [
               /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex lg:hidden items-center gap-2 shrink-0 group", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-xs" }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-xs", "aria-hidden": "true" }) }),
                 /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-sm tracking-tight text-white", children: siteName })
               ] }),
-              /* @__PURE__ */ jsxDEV("nav", { id: "main-nav", class: "hidden lg:flex items-center gap-1.5", children: nav.map((n) => /* @__PURE__ */ jsxDEV(
+              /* @__PURE__ */ jsxDEV("nav", { id: "main-nav", "aria-label": "\u0110i\u1EC1u h\u01B0\u1EDBng ch\xEDnh", class: "hidden lg:flex items-center gap-1.5", children: nav.map((n) => /* @__PURE__ */ jsxDEV(
                 "a",
                 {
                   href: n.href,
                   "data-top-nav": n.key,
-                  class: `px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ${n.on ? "is-active text-indigo-400 bg-indigo-500/10" : "text-[#9f9dbb] hover:text-white hover:bg-white/5"}`,
+                  "aria-current": n.on ? "page" : void 0,
+                  class: `px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ${n.on ? "is-active text-indigo-300 bg-indigo-500/15 border border-indigo-500/30" : "text-[#b8b6d9] hover:text-white hover:bg-white/5 border border-transparent"}`,
                   children: n.label
                 }
               )) }),
-              /* @__PURE__ */ jsxDEV("form", { action: "/san-pham", method: "get", class: "hidden md:flex flex-1 max-w-xs ml-auto", children: /* @__PURE__ */ jsxDEV("div", { class: "relative w-full", children: [
+              /* @__PURE__ */ jsxDEV("form", { action: "/san-pham", method: "get", class: "hidden md:flex flex-1 max-w-xs ml-auto", role: "search", children: [
+                /* @__PURE__ */ jsxDEV("label", { for: "header-search", class: "sr-only", children: "T\xECm ki\u1EBFm s\u1EA3n ph\u1EA9m" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "relative w-full", children: [
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "text",
+                      name: "q",
+                      placeholder: "T\xECm s\u1EA3n ph\u1EA9m...",
+                      id: "header-search",
+                      class: "w-full h-9 pl-9 pr-10 rounded-lg bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-xs text-white placeholder-[#9492b8] outline-none transition"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[#9492b8] text-xs", "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsxDEV("kbd", { class: "hidden xl:inline-flex items-center px-1.5 py-0.5 rounded bg-[#0f0e24] border border-white/10 text-[10px] font-mono text-[#9492b8] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none", children: "/" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
                 /* @__PURE__ */ jsxDEV(
-                  "input",
+                  "a",
                   {
-                    type: "text",
-                    name: "q",
-                    placeholder: "T\xECm s\u1EA3n ph\u1EA9m...",
-                    id: "header-search",
-                    class: "w-full h-9 pl-9 pr-3 rounded-lg bg-[#16143c] border border-transparent focus:border-indigo-500/50 text-xs text-white placeholder-slate-500 outline-none transition"
+                    href: "/gio-hang",
+                    id: "cart-btn",
+                    "aria-label": `Gi\u1ECF h\xE0ng (${cartCount} s\u1EA3n ph\u1EA9m)`,
+                    title: "Gi\u1ECF h\xE0ng",
+                    class: "relative w-9 h-9 grid place-items-center rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-shopping text-sm", "aria-hidden": "true" }),
+                      /* @__PURE__ */ jsxDEV("span", { id: "cart-badge", class: `absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold tabular-nums grid place-items-center ${cartCount > 0 ? "" : "hidden"}`, children: cartCount })
+                    ]
                   }
                 ),
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs" })
-              ] }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
-                /* @__PURE__ */ jsxDEV("a", { href: "/gio-hang", id: "cart-btn", class: "relative w-9 h-9 grid place-items-center rounded-lg bg-[#16143c] hover:bg-white/5 text-[#b9b8d9] hover:text-white transition", children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-shopping text-sm" }),
-                  /* @__PURE__ */ jsxDEV("span", { id: "cart-badge", class: `absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold grid place-items-center ${cartCount > 0 ? "" : "hidden"}`, children: cartCount })
-                ] }),
                 user ? /* @__PURE__ */ jsxDEV("div", { class: "relative", id: "user-menu-wrap", children: [
-                  /* @__PURE__ */ jsxDEV("button", { id: "user-menu-btn", class: "flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg bg-[#16143c] hover:bg-white/5 text-[#b9b8d9] hover:text-white transition", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold uppercase shadow-sm", children: user.full_name.charAt(0).toUpperCase() }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "hidden sm:block text-xs font-medium max-w-[90px] truncate", children: user.full_name }),
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-down text-[9px] text-slate-500" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { id: "user-dropdown", class: "hidden absolute right-0 mt-2 w-52 bg-[#0f0e26] rounded-xl shadow-xl border border-[#1f1b4b] py-1.5 overflow-hidden", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "px-4 py-2 border-b border-[#1f1b4b]", children: [
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      id: "user-menu-btn",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": "false",
+                      "aria-controls": "user-dropdown",
+                      "aria-label": "Menu t\xE0i kho\u1EA3n",
+                      class: "flex items-center gap-2 h-9 pl-1 pr-2 rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxDEV("div", { class: "w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xs font-bold uppercase shadow-sm", children: user.full_name.charAt(0).toUpperCase() }),
+                        /* @__PURE__ */ jsxDEV("span", { class: "hidden sm:block text-xs font-medium max-w-[90px] truncate", children: user.full_name }),
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-down text-[9px] text-[#9492b8]", "aria-hidden": "true" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV("div", { id: "user-dropdown", role: "menu", class: "hidden absolute right-0 mt-2 w-52 bg-[#0f0e24] rounded-xl shadow-xl border border-[#221e54] py-1.5 overflow-hidden", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "px-4 py-2 border-b border-[#221e54]", children: [
                       /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white truncate", children: user.full_name }),
-                      /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-slate-500 truncate", children: user.email })
+                      /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] truncate", children: user.email })
                     ] }),
-                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#b9b8d9] hover:bg-white/5 hover:text-white", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gauge w-4 text-slate-500" }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gauge w-4 text-[#9492b8]", "aria-hidden": "true" }),
                       "T\u1ED5ng quan"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#b9b8d9] hover:bg-white/5 hover:text-white", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-archive w-4 text-slate-500" }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-archive w-4 text-[#9492b8]", "aria-hidden": "true" }),
                       "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/don-hang", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#b9b8d9] hover:bg-white/5 hover:text-white", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-receipt w-4 text-slate-500" }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/don-hang", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-receipt w-4 text-[#9492b8]", "aria-hidden": "true" }),
                       "\u0110\u01A1n h\xE0ng"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/affiliate", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#b9b8d9] hover:bg-white/5 hover:text-white", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake w-4 text-slate-500" }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/affiliate", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake w-4 text-[#9492b8]", "aria-hidden": "true" }),
                       "Affiliate"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/ho-so", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#b9b8d9] hover:bg-white/5 hover:text-white", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-gear w-4 text-slate-500" }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/ho-so", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-[#c2c0e0] hover:bg-white/5 hover:text-white", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-gear w-4 text-[#9492b8]", "aria-hidden": "true" }),
                       "H\u1ED3 s\u01A1"
                     ] }),
-                    user.role === "admin" && /* @__PURE__ */ jsxDEV("a", { href: "/admin", class: "flex items-center gap-2 px-4 py-2 text-xs text-amber-400 hover:bg-white/5 border-t border-[#1f1b4b]", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved w-4" }),
+                    user.role === "admin" && /* @__PURE__ */ jsxDEV("a", { href: "/admin", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-amber-400 hover:bg-white/5 border-t border-[#221e54]", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved w-4", "aria-hidden": "true" }),
                       "Qu\u1EA3n tr\u1ECB"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("a", { href: "/dang-xuat", class: "flex items-center gap-2 px-4 py-2 text-xs text-rose-400 hover:bg-white/5 border-t border-[#1f1b4b]", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-right-from-bracket w-4" }),
+                    /* @__PURE__ */ jsxDEV("a", { href: "/dang-xuat", role: "menuitem", class: "flex items-center gap-2 px-4 py-2 text-xs text-rose-400 hover:bg-white/5 border-t border-[#221e54]", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-right-from-bracket w-4", "aria-hidden": "true" }),
                       "\u0110\u0103ng xu\u1EA5t"
                     ] })
                   ] })
                 ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "hidden sm:block px-3 h-9 leading-9 rounded-lg text-xs font-semibold text-[#b9b8d9] hover:bg-white/5 transition", children: "\u0110\u0103ng nh\u1EADp" }),
-                  /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "px-3.5 h-9 leading-9 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:opacity-90 shadow-md shadow-indigo-600/20 transition", children: "\u0110\u0103ng k\xFD" })
+                  /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "hidden sm:inline-flex items-center px-3 h-9 rounded-lg text-xs font-semibold text-[#c2c0e0] hover:text-white hover:bg-white/5 transition", children: "\u0110\u0103ng nh\u1EADp" }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "inline-flex items-center px-3.5 h-9 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:opacity-95 shadow-md shadow-indigo-600/25 transition", children: "\u0110\u0103ng k\xFD" })
                 ] }),
-                /* @__PURE__ */ jsxDEV("button", { id: "mobile-menu-btn", class: "lg:hidden w-9 h-9 grid place-items-center rounded-lg bg-[#16143c] hover:bg-white/5 text-[#b9b8d9] hover:text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bars" }) })
+                /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    id: "mobile-menu-btn",
+                    "aria-label": "M\u1EDF menu \u0111i\u1EC1u h\u01B0\u1EDBng",
+                    "aria-expanded": "false",
+                    "aria-controls": "mobile-nav",
+                    class: "lg:hidden w-9 h-9 grid place-items-center rounded-lg bg-[#161436] border border-[#2a2559] hover:bg-white/10 text-[#c2c0e0] hover:text-white cursor-pointer",
+                    children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bars", "aria-hidden": "true" })
+                  }
+                )
               ] })
             ] }) }),
-            /* @__PURE__ */ jsxDEV("div", { id: "mobile-nav", class: "hidden lg:hidden border-t border-[#1f1b4b] bg-[#0f0e26]", children: /* @__PURE__ */ jsxDEV("div", { class: "px-4 py-3 flex flex-col gap-2", children: [
-              /* @__PURE__ */ jsxDEV("form", { action: "/san-pham", method: "get", class: "mb-2", children: /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-                /* @__PURE__ */ jsxDEV(
-                  "input",
-                  {
-                    type: "text",
-                    name: "q",
-                    placeholder: "T\xECm s\u1EA3n ph\u1EA9m...",
-                    class: "w-full h-10 pl-10 pr-3 rounded-lg bg-[#16143c] border border-transparent text-xs text-white placeholder-slate-500 outline-none"
-                  }
-                ),
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" })
-              ] }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1.5", children: nav.map((n) => /* @__PURE__ */ jsxDEV("a", { href: n.href, "data-mob-nav": n.key, class: `flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ${n.on ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25" : "text-[#b9b8d9] hover:bg-white/5"}`, children: [
-                /* @__PURE__ */ jsxDEV("i", { class: `fas ${n.icon} w-4 text-center ${n.on ? "text-indigo-400" : "text-slate-400"}` }),
-                n.label
-              ] })) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "pt-2 border-t border-[#1f1b4b] flex flex-wrap gap-1.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { id: "mobile-nav", class: "hidden lg:hidden border-t border-[#221e54] bg-[#0f0e24]", children: /* @__PURE__ */ jsxDEV("div", { class: "px-4 py-3 flex flex-col gap-2", children: [
+              /* @__PURE__ */ jsxDEV("form", { action: "/san-pham", method: "get", class: "mb-2", role: "search", children: [
+                /* @__PURE__ */ jsxDEV("label", { for: "mobile-search", class: "sr-only", children: "T\xECm ki\u1EBFm s\u1EA3n ph\u1EA9m" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "text",
+                      name: "q",
+                      id: "mobile-search",
+                      placeholder: "T\xECm s\u1EA3n ph\u1EA9m...",
+                      class: "w-full h-10 pl-10 pr-3 rounded-lg bg-[#161436] border border-[#2a2559] text-xs text-white placeholder-[#9492b8] outline-none"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9492b8]", "aria-hidden": "true" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1.5", children: [...nav, ...mobExtraNav].map((n) => /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: n.href,
+                  "data-mob-nav": n.key,
+                  "aria-current": n.on ? "page" : void 0,
+                  class: `flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ${n.on ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30" : "text-[#c2c0e0] hover:bg-white/5"}`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas ${n.icon} w-4 text-center ${n.on ? "text-indigo-400" : "text-[#9492b8]"}`, "aria-hidden": "true" }),
+                    n.label
+                  ]
+                }
+              )) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "pt-2 border-t border-[#221e54] flex flex-wrap gap-1.5", children: [
                 /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold", children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1" }),
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1", "aria-hidden": "true" }),
                   "Skill AI (\u0110ang b\xE1n)"
                 ] }),
-                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium", children: "Kh\xF3a h\u1ECDc (S\u1EAFp m\u1EDF)" }),
-                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium", children: "Chatbot (S\u1EAFp m\u1EDF)" }),
-                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "px-2.5 py-1.5 rounded-lg bg-[#16143c] text-slate-400 text-[11px] font-medium", children: "App Video AI (S\u1EAFp m\u1EDF)" })
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium", children: "Kh\xF3a h\u1ECDc (S\u1EAFp m\u1EDF)" }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium", children: "Chatbot (S\u1EAFp m\u1EDF)" }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium", children: "App Video AI (S\u1EAFp m\u1EDF)" })
               ] })
             ] }) })
           ] }),
-          /* @__PURE__ */ jsxDEV("main", { id: "main-content", class: "flex-1", children }),
-          /* @__PURE__ */ jsxDEV("footer", { id: "site-footer", class: "bg-[#0b0a19] text-[#9f9dbb] border-t border-[#1f1b4b] mt-16", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-12", children: [
+          /* @__PURE__ */ jsxDEV("main", { id: "main-content", tabindex: -1, class: "flex-1 outline-none", children }),
+          /* @__PURE__ */ jsxDEV("footer", { id: "site-footer", class: "bg-[#060512] text-[#9492b8] border-t border-[#221e54] mt-16", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-12", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8", children: [
               /* @__PURE__ */ jsxDEV("div", { children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 mb-4", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm", "aria-hidden": "true" }) }),
                   /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-base text-white", children: siteName })
                 ] }),
-                /* @__PURE__ */ jsxDEV("p", { class: "text-xs leading-relaxed mb-4", children: settings.site_tagline }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs leading-relaxed mb-4 text-[#b8b6d9]", children: settings.site_tagline }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
-                  settings.facebook && /* @__PURE__ */ jsxDEV("a", { href: settings.facebook, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-indigo-600 grid place-items-center transition text-slate-300 hover:text-white", title: "Facebook", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-facebook-f text-xs" }) }),
-                  settings.zalo && /* @__PURE__ */ jsxDEV("a", { href: `https://zalo.me/${settings.zalo}`, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-[#0068ff] grid place-items-center transition text-slate-300 hover:text-white text-[10px] font-bold", title: "Zalo", children: "Zalo" }),
-                  settings.youtube && /* @__PURE__ */ jsxDEV("a", { href: settings.youtube, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-red-600 grid place-items-center transition text-slate-300 hover:text-white", title: "YouTube", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-youtube text-xs" }) }),
-                  settings.tiktok && /* @__PURE__ */ jsxDEV("a", { href: settings.tiktok, target: "_blank", rel: "noopener", class: "w-8 h-8 rounded-lg bg-[#16143c] hover:bg-slate-900 grid place-items-center transition text-slate-300 hover:text-white", title: "TikTok", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-tiktok text-xs" }) })
+                  settings.facebook && /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: settings.facebook,
+                      target: "_blank",
+                      rel: "noopener",
+                      "aria-label": "Facebook",
+                      title: "Facebook",
+                      class: "w-9 h-9 rounded-lg bg-[#161436] hover:bg-indigo-600 grid place-items-center transition text-[#c2c0e0] hover:text-white",
+                      children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-facebook-f text-xs", "aria-hidden": "true" })
+                    }
+                  ),
+                  settings.zalo && /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: `https://zalo.me/${settings.zalo}`,
+                      target: "_blank",
+                      rel: "noopener",
+                      "aria-label": "Chat Zalo",
+                      title: "Zalo",
+                      class: "w-9 h-9 rounded-lg bg-[#161436] hover:bg-[#0068ff] grid place-items-center transition text-[#c2c0e0] hover:text-white text-[10px] font-bold",
+                      children: "Zalo"
+                    }
+                  ),
+                  settings.youtube && /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: settings.youtube,
+                      target: "_blank",
+                      rel: "noopener",
+                      "aria-label": "YouTube",
+                      title: "YouTube",
+                      class: "w-9 h-9 rounded-lg bg-[#161436] hover:bg-red-600 grid place-items-center transition text-[#c2c0e0] hover:text-white",
+                      children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-youtube text-xs", "aria-hidden": "true" })
+                    }
+                  ),
+                  settings.tiktok && /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: settings.tiktok,
+                      target: "_blank",
+                      rel: "noopener",
+                      "aria-label": "TikTok",
+                      title: "TikTok",
+                      class: "w-9 h-9 rounded-lg bg-[#161436] hover:bg-white/20 grid place-items-center transition text-[#c2c0e0] hover:text-white",
+                      children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-tiktok text-xs", "aria-hidden": "true" })
+                    }
+                  )
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
@@ -9216,19 +9316,19 @@ var Layout = (props) => {
                   ] }) }),
                   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "hover:text-indigo-400 transition", children: [
                     "Kh\xF3a h\u1ECDc Video AI ",
-                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-[#9492b8] ml-1", children: "(S\u1EAFp m\u1EDF)" })
                   ] }) }),
                   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "hover:text-indigo-400 transition", children: [
                     "Chatbot K\u1ECBch B\u1EA3n ",
-                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-[#9492b8] ml-1", children: "(S\u1EAFp m\u1EDF)" })
                   ] }) }),
                   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=app", class: "hover:text-indigo-400 transition", children: [
                     "App L\xE0m Video AI ",
-                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-[#9492b8] ml-1", children: "(S\u1EAFp m\u1EDF)" })
                   ] }) }),
                   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/combo", class: "hover:text-indigo-400 transition", children: [
                     "Combo Tr\u1ECDn B\u1ED9 ",
-                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-1", children: "(S\u1EAFp m\u1EDF)" })
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-[#9492b8] ml-1", children: "(S\u1EAFp m\u1EDF)" })
                   ] }) })
                 ] })
               ] }),
@@ -9246,34 +9346,30 @@ var Layout = (props) => {
                 /* @__PURE__ */ jsxDEV("h4", { class: "text-white font-bold mb-4 text-xs uppercase tracking-wider", children: "Li\xEAn h\u1EC7" }),
                 /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-xs", children: [
                   /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone-volume mt-0.5 text-indigo-400" }),
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone-volume mt-0.5 text-indigo-400", "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { children: [
                       "Hotline: ",
-                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: settings.hotline })
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white tabular-nums", children: settings.hotline })
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope mt-0.5 text-indigo-400" }),
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope mt-0.5 text-indigo-400", "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { children: settings.email })
                   ] }),
                   /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fab fa-facebook-messenger mt-0.5 text-indigo-400" }),
+                    /* @__PURE__ */ jsxDEV("i", { class: "fab fa-facebook-messenger mt-0.5 text-indigo-400", "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { children: "Chat Zalo/Messenger 24/7" })
                   ] })
                 ] })
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mt-10 pt-6 border-t border-[#1f1b4b] flex flex-col md:flex-row items-center justify-between gap-3 text-[10px]", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "mt-10 pt-6 border-t border-[#221e54] flex flex-col md:flex-row items-center justify-between gap-3 text-[11px]", children: [
               /* @__PURE__ */ jsxDEV("div", { children: [
                 "\xA9 2026 ",
                 siteName,
                 ". T\u1EA5t c\u1EA3 c\xE1c quy\u1EC1n \u0111\u01B0\u1EE3c b\u1EA3o l\u01B0u."
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { children: [
-                "Ph\xE1t tri\u1EC3n v\u1EDBi ",
-                /* @__PURE__ */ jsxDEV("span", { class: "text-rose-500", children: "\u2665" }),
-                " t\u1EA1i Vi\u1EC7t Nam"
-              ] })
+              /* @__PURE__ */ jsxDEV("div", { children: "Ph\xE1t tri\u1EC3n t\u1EA1i Vi\u1EC7t Nam" })
             ] })
           ] }) })
         ] })
@@ -9285,8 +9381,9 @@ var Layout = (props) => {
             href: `https://zalo.me/${settings.zalo}`,
             target: "_blank",
             rel: "noopener",
-            class: "w-11 h-11 rounded-full bg-[#0068ff] text-white grid place-items-center shadow-xl hover:scale-110 transition text-[10px] font-bold",
+            "aria-label": "Chat Zalo h\u1ED7 tr\u1EE3",
             title: "Chat Zalo",
+            class: "w-11 h-11 rounded-full bg-[#0068ff] text-white grid place-items-center shadow-xl hover:scale-110 transition text-[10px] font-bold",
             children: "Zalo"
           }
         ),
@@ -9294,27 +9391,38 @@ var Layout = (props) => {
           "a",
           {
             href: `tel:${(settings.hotline || "").replace(/\s/g, "")}`,
-            class: "w-11 h-11 rounded-full bg-emerald-500 text-white grid place-items-center shadow-xl hover:scale-110 transition text-sm",
+            "aria-label": `G\u1ECDi hotline ${settings.hotline || ""}`,
             title: "G\u1ECDi ngay",
-            children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone" })
+            class: "w-11 h-11 rounded-full bg-emerald-600 text-white grid place-items-center shadow-xl hover:scale-110 transition text-sm",
+            children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone", "aria-hidden": "true" })
           }
         ),
-        /* @__PURE__ */ jsxDEV("button", { id: "back-to-top", class: "w-11 h-11 rounded-full bg-[#16143c] border border-[#1f1b4b] text-white grid place-items-center shadow-xl hover:scale-110 transition opacity-0 pointer-events-none text-sm", title: "L\xEAn \u0111\u1EA7u trang", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up" }) })
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            id: "back-to-top",
+            "aria-label": "L\xEAn \u0111\u1EA7u trang",
+            title: "L\xEAn \u0111\u1EA7u trang",
+            class: "w-11 h-11 rounded-full bg-[#161436] border border-[#2a2559] text-white grid place-items-center shadow-xl hover:scale-110 transition opacity-0 pointer-events-none text-sm cursor-pointer",
+            children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up", "aria-hidden": "true" })
+          }
+        )
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { id: "toast-container", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
+      /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261116" })
     ] })
   ] });
 };
 
 // src/components/ui.tsx
-var Stars = ({ rating, size = "text-xs" }) => /* @__PURE__ */ jsxDEV("span", { class: `text-amber-400 ${size}`, children: [1, 2, 3, 4, 5].map((i) => /* @__PURE__ */ jsxDEV("i", { class: `fa-star ${rating >= i ? "fas" : rating >= i - 0.5 ? "fas fa-star-half-stroke" : "far"}` })) });
+var Stars = ({ rating, size = "text-xs" }) => /* @__PURE__ */ jsxDEV("span", { class: `text-amber-400 ${size}`, "aria-label": `\u0110\xE1nh gi\xE1 ${rating.toFixed(1)} tr\xEAn 5 sao`, children: [1, 2, 3, 4, 5].map((i) => /* @__PURE__ */ jsxDEV("i", { class: `fa-star ${rating >= i ? "fas" : rating >= i - 0.5 ? "fas fa-star-half-stroke" : "far"}`, "aria-hidden": "true" })) });
 var ProductCard = ({ p, compact }) => {
   const off = discountPercent(p.price, p.original_price);
   const comingSoon = p.status === "coming_soon";
-  return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-300 flex flex-col ${comingSoon ? "opacity-90" : ""}`, children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "product-card-media relative aspect-video overflow-hidden bg-[#080716]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
+  return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/15 hover:-translate-y-1 hover:border-indigo-500/40 transition-all duration-300 flex flex-col ${comingSoon ? "opacity-90" : ""}`, children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "product-card-media relative aspect-video overflow-hidden bg-[#070614]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
       p.thumbnail ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
         /* @__PURE__ */ jsxDEV(
           "div",
@@ -9334,79 +9442,79 @@ var ProductCard = ({ p, compact }) => {
           }
         )
       ] }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-4xl mb-2 opacity-95` }),
+        /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-4xl mb-2 opacity-95`, "aria-hidden": "true" }),
         /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold uppercase tracking-widest opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-amber-500 text-slate-950 text-[9px] font-black tracking-wider uppercase flex items-center gap-1 shadow-md", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[8px]" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 pointer-events-none", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black tracking-wider uppercase inline-flex items-center gap-1 shadow-md", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[9px]", "aria-hidden": "true" }),
         "Ch\u01B0a m\u1EDF b\xE1n"
       ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
-        p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-orange-500 text-white text-[9px] font-bold shadow-md flex items-center gap-0.5", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[8px]" }),
+        p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold shadow-md inline-flex items-center gap-1", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[9px]", "aria-hidden": "true" }),
           "HOT"
         ] }),
-        p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500 text-white text-[9px] font-bold shadow-md", children: "M\u1EDAI" }),
-        off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-rose-500 text-white text-[9px] font-bold shadow-md", children: [
+        p.is_hot !== 1 && p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md", children: "M\u1EDAI" }),
+        off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold tabular-nums shadow-md", children: [
           "-",
           off,
           "%"
         ] })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 right-3 z-10 pointer-events-none", children: /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-1 rounded bg-[#0068ff] text-white text-[9px] font-black tracking-wider uppercase shadow-md", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" }) }),
-      p.demo_video_url && /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-200 z-20 pointer-events-none", children: [
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            type: "button",
-            class: "pointer-events-auto w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition duration-200 cursor-pointer",
-            "data-video": p.demo_video_url,
-            "data-poster": p.thumbnail || "",
-            "data-title": p.name,
-            "data-aspect": "auto",
-            title: "Xem Demo",
-            children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-sm ml-0.5" })
-          }
-        ),
-        /* @__PURE__ */ jsxDEV("span", { class: "text-white text-xs font-semibold tracking-wide drop-shadow", children: "Xem Demo" })
-      ] }),
+      p.demo_video_url && /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          class: "absolute bottom-2.5 right-2.5 z-30 h-9 px-3 rounded-full bg-[#070614]/85 backdrop-blur-md border border-white/25 hover:bg-indigo-600 hover:border-indigo-400 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-lg transition cursor-pointer",
+          "data-video": p.demo_video_url,
+          "data-poster": p.thumbnail || "",
+          "data-title": p.name,
+          "data-aspect": "auto",
+          "aria-label": `Xem video demo ${p.name}`,
+          title: "Xem Demo",
+          children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-[10px]", "aria-hidden": "true" }),
+            /* @__PURE__ */ jsxDEV("span", { children: "Xem Demo" })
+          ]
+        }
+      ),
       /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "absolute inset-0 z-10", "aria-label": `Xem chi ti\u1EBFt ${p.name}` })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "p-4 flex flex-col flex-1", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mb-2 text-[10px] text-[#9f9dbb]", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-semibold uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
-        /* @__PURE__ */ jsxDEV("span", { children: p.version })
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mb-2 text-[11px] text-[#9492b8]", children: [
+        /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+        /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-[10px]", children: p.version })
       ] }),
-      /* @__PURE__ */ jsxDEV("h3", { class: "font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 group-hover:text-indigo-400 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, children: p.name }) }),
-      !compact && /* @__PURE__ */ jsxDEV("p", { class: "text-[12px] text-[#9f9dbb] line-clamp-2 mb-3 leading-relaxed", children: p.short_desc }),
-      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 text-[11px] text-[#9f9dbb] mb-4", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "text-amber-400 font-medium", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hourglass-half mr-1" }),
+      /* @__PURE__ */ jsxDEV("h3", { class: "font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 group-hover:text-indigo-300 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, children: p.name }) }),
+      !compact && /* @__PURE__ */ jsxDEV("p", { class: "text-[12px] text-[#b8b6d9] line-clamp-2 mb-3 leading-relaxed", children: p.short_desc }),
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 text-[11px] text-[#9492b8] mb-4", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300 font-medium", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hourglass-half mr-1", "aria-hidden": "true" }),
         "\u0110ang ho\xE0n thi\u1EC7n & s\u1EAFp ra m\u1EAFt"
       ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
         /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-1", children: [
           /* @__PURE__ */ jsxDEV(Stars, { rating: p.rating }),
-          /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: p.rating.toFixed(1) })
+          /* @__PURE__ */ jsxDEV("b", { class: "text-white tabular-nums", children: p.rating.toFixed(1) })
         ] }),
-        /* @__PURE__ */ jsxDEV("span", { children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-shopping mr-1 text-slate-500" }),
+        /* @__PURE__ */ jsxDEV("span", { class: "tabular-nums", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-shopping mr-1 text-[#9492b8]", "aria-hidden": "true" }),
           p.sold_count,
           " \u0111\xE3 b\xE1n"
         ] })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 border-t border-[#1f1b4b] flex items-end justify-between gap-2", children: [
-        /* @__PURE__ */ jsxDEV("div", { children: comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-amber-300", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 border-t border-[#221e54] flex items-end justify-between gap-2", children: [
+        /* @__PURE__ */ jsxDEV("div", { children: comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-amber-300 tabular-nums", children: [
           "D\u1EF1 ki\u1EBFn: ",
           formatVND(p.price)
         ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
-          p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-slate-500 line-through leading-none mb-0.5", children: formatVND(p.original_price) }),
-          /* @__PURE__ */ jsxDEV("div", { class: "text-base font-extrabold text-[#f43f5e] leading-none", children: formatVND(p.price) })
+          p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] line-through leading-none mb-0.5 tabular-nums", children: formatVND(p.original_price) }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-base font-extrabold text-rose-400 leading-none tabular-nums", children: formatVND(p.price) })
         ] }) }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: comingSoon ? /* @__PURE__ */ jsxDEV(
           "a",
           {
             href: `/san-pham/${p.slug}`,
-            class: "h-8 px-2.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 text-[11px] font-bold flex items-center gap-1 transition",
+            class: "h-9 px-3 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-300 hover:bg-amber-500/25 text-xs font-bold inline-flex items-center gap-1.5 transition",
             children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]", "aria-hidden": "true" }),
               "Ch\u01B0a m\u1EDF b\xE1n"
             ]
           }
@@ -9414,18 +9522,22 @@ var ProductCard = ({ p, compact }) => {
           /* @__PURE__ */ jsxDEV(
             "button",
             {
-              class: "btn-wishlist w-8 h-8 rounded-lg bg-white/5 border border-white/10 hover:border-rose-500 text-slate-400 hover:text-rose-500 flex items-center justify-center transition",
+              type: "button",
+              class: "btn-wishlist w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:border-rose-400 text-[#b8b6d9] hover:text-rose-400 flex items-center justify-center transition cursor-pointer",
               "data-id": p.id,
+              "aria-label": `Y\xEAu th\xEDch ${p.name}`,
               title: "Y\xEAu th\xEDch",
-              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-heart text-xs" })
+              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-heart text-xs", "aria-hidden": "true" })
             }
           ),
           /* @__PURE__ */ jsxDEV(
             "button",
             {
-              class: "btn-add-cart h-8 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition shadow-md shadow-indigo-600/10",
+              type: "button",
+              class: "btn-add-cart h-9 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer",
               "data-id": p.id,
               "data-name": p.name,
+              "aria-label": `Th\xEAm ${p.name} v\xE0o gi\u1ECF h\xE0ng`,
               children: "Th\xEAm"
             }
           )
@@ -9437,34 +9549,34 @@ var ProductCard = ({ p, compact }) => {
 var SectionTitle = ({ title: title2, subtitle, center, more }) => /* @__PURE__ */ jsxDEV("div", { class: `flex items-end justify-between gap-4 mb-7 ${center ? "flex-col items-center text-center" : ""}`, children: [
   /* @__PURE__ */ jsxDEV("div", { children: [
     /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight", children: title2 }),
-    subtitle && /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] mt-1.5 text-sm md:text-base", children: subtitle })
+    subtitle && /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-1.5 text-sm md:text-base", children: subtitle })
   ] }),
   more && /* @__PURE__ */ jsxDEV("a", { href: more.href, class: "shrink-0 text-sm font-semibold text-indigo-400 hover:text-indigo-300 hover:gap-2 flex items-center gap-1.5 transition-all", children: [
     more.label,
-    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs" })
+    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs", "aria-hidden": "true" })
   ] })
 ] });
 var CategoryCard = ({ c }) => {
   const count = c.product_count ?? 0;
-  return /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${c.slug}`, class: "group relative p-5 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] hover:border-indigo-500/30 hover:shadow-lg transition-all overflow-hidden flex flex-col", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon}` }) }),
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1 group-hover:text-indigo-400 transition", children: c.name }),
-    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#9f9dbb] line-clamp-2 leading-relaxed", children: c.description }),
-    /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 text-xs font-semibold", children: count > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: [
+  return /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${c.slug}`, class: "group relative p-5 rounded-2xl bg-[#0f0e24] border border-[#221e54] hover:border-indigo-500/40 hover:shadow-lg transition-all overflow-hidden flex flex-col", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon}`, "aria-hidden": "true" }) }),
+    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1 group-hover:text-indigo-300 transition", children: c.name }),
+    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#b8b6d9] line-clamp-2 leading-relaxed", children: c.description }),
+    /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 text-xs font-semibold", children: count > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400 tabular-nums", children: [
       count,
       " Skill \u0111ang m\u1EDF b\xE1n ",
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right ml-0.5 text-[10px]" })
-    ] }) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-semibold", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]" }),
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right ml-0.5 text-[10px]", "aria-hidden": "true" })
+    ] }) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[11px] font-semibold", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]", "aria-hidden": "true" }),
       "Ch\u01B0a m\u1EDF b\xE1n"
     ] }) })
   ] });
 };
-var Breadcrumb = ({ items }) => /* @__PURE__ */ jsxDEV("nav", { class: "text-[13px] text-[#9f9dbb] mb-5", "aria-label": "Breadcrumb", children: /* @__PURE__ */ jsxDEV("ol", { class: "flex flex-wrap items-center gap-1.5", children: [
-  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "hover:text-indigo-400 transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house" }) }) }),
+var Breadcrumb = ({ items }) => /* @__PURE__ */ jsxDEV("nav", { class: "text-[13px] text-[#9492b8] mb-5", "aria-label": "Breadcrumb", children: /* @__PURE__ */ jsxDEV("ol", { class: "flex flex-wrap items-center gap-1.5", children: [
+  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/", "aria-label": "Trang ch\u1EE7", class: "hover:text-indigo-300 transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house", "aria-hidden": "true" }) }) }),
   items.map((i) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
-    /* @__PURE__ */ jsxDEV("li", { class: "text-slate-600", children: "/" }),
-    /* @__PURE__ */ jsxDEV("li", { children: i.href ? /* @__PURE__ */ jsxDEV("a", { href: i.href, class: "hover:text-indigo-400 transition", children: i.label }) : /* @__PURE__ */ jsxDEV("span", { class: "text-white font-medium", children: i.label }) })
+    /* @__PURE__ */ jsxDEV("li", { class: "text-[#5c5980]", "aria-hidden": "true", children: "/" }),
+    /* @__PURE__ */ jsxDEV("li", { children: i.href ? /* @__PURE__ */ jsxDEV("a", { href: i.href, class: "hover:text-indigo-300 transition", children: i.label }) : /* @__PURE__ */ jsxDEV("span", { class: "text-white font-medium", children: i.label }) })
   ] }))
 ] }) });
 var Pagination = ({ page, totalPages, baseUrl }) => {
@@ -9474,60 +9586,64 @@ var Pagination = ({ page, totalPages, baseUrl }) => {
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || Math.abs(i - page) <= 1) pages.push(i);
   }
-  return /* @__PURE__ */ jsxDEV("nav", { class: "flex items-center justify-center gap-1.5 mt-10", children: [
-    page > 1 && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page - 1}`, class: "h-9 px-3 grid place-items-center rounded-lg bg-[#0f0e26] border border-[#1f1b4b] text-[#b9b8d9] hover:border-indigo-400 hover:text-white text-sm transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left text-xs" }) }),
+  return /* @__PURE__ */ jsxDEV("nav", { "aria-label": "Ph\xE2n trang", class: "flex items-center justify-center gap-1.5 mt-10", children: [
+    page > 1 && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page - 1}`, "aria-label": "Trang tr\u01B0\u1EDBc", class: "h-10 min-w-[40px] px-3 grid place-items-center rounded-lg bg-[#0f0e24] border border-[#221e54] text-[#c2c0e0] hover:border-indigo-400 hover:text-white text-sm transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left text-xs", "aria-hidden": "true" }) }),
     pages.map((p, idx) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
-      idx > 0 && pages[idx - 1] !== p - 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-1 text-slate-500", children: "\u2026" }),
+      idx > 0 && pages[idx - 1] !== p - 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-1 text-[#9492b8]", children: "\u2026" }),
       /* @__PURE__ */ jsxDEV(
         "a",
         {
           href: `${baseUrl}${sep}page=${p}`,
-          class: `h-9 min-w-[36px] px-2 grid place-items-center rounded-lg text-sm font-medium border transition ${p === page ? "bg-indigo-600 border-indigo-600 text-white" : "bg-[#0f0e26] border-[#1f1b4b] text-[#b9b8d9] hover:border-indigo-400 hover:text-white"}`,
+          "aria-current": p === page ? "page" : void 0,
+          class: `h-10 min-w-[40px] px-2.5 grid place-items-center rounded-lg text-sm font-medium tabular-nums border transition ${p === page ? "bg-indigo-600 border-indigo-500 text-white" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:border-indigo-400 hover:text-white"}`,
           children: p
         }
       )
     ] })),
-    page < totalPages && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page + 1}`, class: "h-9 px-3 grid place-items-center rounded-lg bg-[#0f0e26] border border-[#1f1b4b] text-[#b9b8d9] hover:border-indigo-400 hover:text-white text-sm transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-xs" }) })
+    page < totalPages && /* @__PURE__ */ jsxDEV("a", { href: `${baseUrl}${sep}page=${page + 1}`, "aria-label": "Trang sau", class: "h-10 min-w-[40px] px-3 grid place-items-center rounded-lg bg-[#0f0e24] border border-[#221e54] text-[#c2c0e0] hover:border-indigo-400 hover:text-white text-sm transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-xs", "aria-hidden": "true" }) })
   ] });
 };
-var EmptyState = ({ icon = "fa-box-open", title: title2, desc, action }) => /* @__PURE__ */ jsxDEV("div", { class: "text-center py-16 px-4 bg-[#0f0e26] border border-[#1f1b4b] rounded-2xl", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "w-16 h-16 rounded-2xl bg-[#16143c] border border-[#28235d] grid place-items-center text-indigo-400 text-2xl mx-auto mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon}` }) }),
+var EmptyState = ({ icon = "fa-box-open", title: title2, desc, action }) => /* @__PURE__ */ jsxDEV("div", { class: "text-center py-16 px-4 bg-[#0f0e24] border border-[#221e54] rounded-2xl", children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "w-16 h-16 rounded-2xl bg-[#161436] border border-[#2a2559] grid place-items-center text-indigo-400 text-2xl mx-auto mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon}`, "aria-hidden": "true" }) }),
   /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-lg text-white mb-1.5", children: title2 }),
-  desc && /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] text-sm mb-5 max-w-md mx-auto", children: desc }),
-  action && /* @__PURE__ */ jsxDEV("a", { href: action.href, class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition", children: action.label })
+  desc && /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] text-sm mb-5 max-w-md mx-auto", children: desc }),
+  action && /* @__PURE__ */ jsxDEV("a", { href: action.href, class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: action.label })
 ] });
 var StatusBadge = ({ status }) => {
   const map = {
-    pending: ["bg-amber-100 text-amber-800", "Ch\u1EDD thanh to\xE1n"],
-    paid: ["bg-emerald-100 text-emerald-800", "\u0110\xE3 thanh to\xE1n"],
-    cancelled: ["bg-slate-200 text-slate-700", "\u0110\xE3 hu\u1EF7"],
-    refunded: ["bg-rose-100 text-rose-800", "\u0110\xE3 ho\xE0n ti\u1EC1n"],
-    active: ["bg-emerald-100 text-emerald-800", "Ho\u1EA1t \u0111\u1ED9ng"],
-    banned: ["bg-rose-100 text-rose-800", "B\u1ECB kho\xE1"],
-    published: ["bg-emerald-100 text-emerald-800", "Hi\u1EC3n th\u1ECB"],
-    coming_soon: ["bg-amber-100 text-amber-800", "Ch\u01B0a m\u1EDF b\xE1n"],
-    draft: ["bg-slate-200 text-slate-700", "Nh\xE1p"],
-    open: ["bg-blue-100 text-blue-800", "\u0110ang m\u1EDF"],
-    closed: ["bg-slate-200 text-slate-700", "\u0110\xE3 \u0111\xF3ng"]
+    pending: ["fa-clock", "Ch\u1EDD thanh to\xE1n"],
+    paid: ["fa-circle-check", "\u0110\xE3 thanh to\xE1n"],
+    cancelled: ["fa-ban", "\u0110\xE3 hu\u1EF7"],
+    refunded: ["fa-rotate-left", "\u0110\xE3 ho\xE0n ti\u1EC1n"],
+    active: ["fa-circle-check", "Ho\u1EA1t \u0111\u1ED9ng"],
+    banned: ["fa-lock", "B\u1ECB kho\xE1"],
+    published: ["fa-eye", "Hi\u1EC3n th\u1ECB"],
+    coming_soon: ["fa-clock", "Ch\u01B0a m\u1EDF b\xE1n"],
+    draft: ["fa-file-pen", "Nh\xE1p"],
+    open: ["fa-envelope-open", "\u0110ang m\u1EDF"],
+    closed: ["fa-circle-check", "\u0110\xE3 \u0111\xF3ng"]
   };
-  const [cls, label] = map[status] || ["bg-slate-100 text-slate-700", status];
-  return /* @__PURE__ */ jsxDEV("span", { class: `inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${cls}`, children: label });
+  const [icon, label] = map[status] || ["fa-circle-info", status];
+  return /* @__PURE__ */ jsxDEV("span", { class: `status-badge status-${status}`, children: [
+    /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon} text-[10px] mr-1`, "aria-hidden": "true" }),
+    label
+  ] });
 };
-var PostCard = ({ p }) => /* @__PURE__ */ jsxDEV("article", { class: "group bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] overflow-hidden hover:border-indigo-500/30 hover:shadow-xl transition", children: [
-  /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, class: "block aspect-[16/9] relative", style: `background:${gradientFor(p.id + 3)}`, children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.title, loading: "lazy", class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/90 text-3xl", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-newspaper" }) }) }),
+var PostCard = ({ p }) => /* @__PURE__ */ jsxDEV("article", { class: "group bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden hover:border-indigo-500/40 hover:shadow-xl transition", children: [
+  /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, class: "block aspect-[16/9] relative", style: `background:${gradientFor(p.id + 3)}`, children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.title, loading: "lazy", class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/90 text-3xl", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-newspaper", "aria-hidden": "true" }) }) }),
   /* @__PURE__ */ jsxDEV("div", { class: "p-4", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9f9dbb] mb-2 flex items-center gap-3", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mb-2 flex items-center gap-3 tabular-nums", children: [
       /* @__PURE__ */ jsxDEV("span", { children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1", "aria-hidden": "true" }),
         formatDate(p.created_at)
       ] }),
       /* @__PURE__ */ jsxDEV("span", { children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye mr-1" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye mr-1", "aria-hidden": "true" }),
         p.view_count
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-indigo-400 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, children: p.title }) }),
-    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#9f9dbb] line-clamp-2 leading-relaxed", children: p.excerpt })
+    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-indigo-300 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/blog/${p.slug}`, children: p.title }) }),
+    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#b8b6d9] line-clamp-2 leading-relaxed", children: p.excerpt })
   ] })
 ] });
 
@@ -9630,39 +9746,43 @@ var HomePage = (props) => {
   const { categories, featured, hot, newest, comingSoon, posts, reviews, stats } = props;
   const siteName = props.settings?.site_name || "KhoSkill AI";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "home", children: [
-    /* @__PURE__ */ jsxDEV("section", { id: "hero-section", class: "relative bg-slate-950 text-white overflow-hidden", children: [
+    /* @__PURE__ */ jsxDEV("script", { id: "demo-videos-json", type: "application/json", dangerouslySetInnerHTML: { __html: JSON.stringify(DEMO_VIDEOS).replace(/</g, "\\u003c") } }),
+    /* @__PURE__ */ jsxDEV("section", { id: "hero-section", class: "relative bg-[#070614] text-white overflow-hidden", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 py-14 md:py-20", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-10 xl:gap-12 items-center", children: [
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-xs font-semibold mb-6", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" }),
+            /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-emerald-400", "aria-hidden": "true" }),
             "\u0110ang m\u1EDF b\xE1n ",
-            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300", children: [
+            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300 tabular-nums", children: [
               stats.products,
               " Skill AI"
             ] }),
             " \u2014 ",
-            stats.sold.toLocaleString("vi-VN"),
-            "+ l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
+            /* @__PURE__ */ jsxDEV("span", { class: "tabular-nums", children: [
+              stats.sold.toLocaleString("vi-VN"),
+              "+"
+            ] }),
+            " l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
           ] }),
           /* @__PURE__ */ jsxDEV("h1", { class: "text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5", children: [
             "Kho ",
-            /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-brand-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent", children: "Skill AI L\xE0m Video" }),
+            /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent", children: "Skill AI L\xE0m Video" }),
             " th\u1EF1c chi\u1EBFn s\u1ED1 1 Vi\u1EC7t Nam"
           ] }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl", children: "M\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn l\xE0m video 30s chu\u1EA9n viral: Muse AI Pro, Seedance 2.5, Thu\u1EF7 Sinh, DIY L\xE0m V\u01B0\u1EDDn, Affiliate Fitness. Mua m\u1ED9t l\u1EA7n \u2014 s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi \u2014 giao link t\u1EA3i t\u1EF1 \u0111\u1ED9ng 24/7." }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-base md:text-lg leading-relaxed mb-8 max-w-xl", children: "M\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn l\xE0m video 30s chu\u1EA9n viral: Muse AI Pro, Seedance 2.5, Thu\u1EF7 Sinh, DIY L\xE0m V\u01B0\u1EDDn, Affiliate Fitness. Mua m\u1ED9t l\u1EA7n \u2014 s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi \u2014 giao link t\u1EA3i t\u1EF1 \u0111\u1ED9ng 24/7." }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-3 mb-9", children: [
-            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 font-semibold shadow-xl shadow-brand-500/30 hover:opacity-90 transition", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }),
+            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 font-semibold shadow-xl shadow-indigo-500/30 hover:opacity-95 transition", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
               "Xem 5 Skill \u0111ang m\u1EDF b\xE1n"
             ] }),
             /* @__PURE__ */ jsxDEV("a", { href: "#theater", id: "heroTrailerBtn", class: "h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "w-6 h-6 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5" }) }),
+              /* @__PURE__ */ jsxDEV("span", { class: "w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5", "aria-hidden": "true" }) }),
               "Xem demo 30s"
             ] }),
-            comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("a", { href: "#coming-soon-section", class: "h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400" }),
+            comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("a", { href: "#coming-soon-section", class: "h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-[#c2c0e0] hover:text-white hover:bg-white/10 transition", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400", "aria-hidden": "true" }),
               "D\u1ECBch v\u1EE5 s\u1EAFp m\u1EDF"
             ] })
           ] }),
@@ -9671,16 +9791,16 @@ var HomePage = (props) => {
             ["fa-users", stats.users.toLocaleString("vi-VN") + "+", "Kh\xE1ch h\xE0ng"],
             ["fa-star", "4.9/5", "\u0110\xE1nh gi\xE1"]
           ].map(([icon, num, label]) => /* @__PURE__ */ jsxDEV("div", { class: "text-center p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon} text-brand-400 mb-1.5` }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xl font-extrabold", children: num }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400", children: label })
+            /* @__PURE__ */ jsxDEV("i", { class: `fas ${icon} text-indigo-400 mb-1.5`, "aria-hidden": "true" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xl font-extrabold tabular-nums", children: num }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: label })
           ] })) })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "hero-stage-wrapper relative", children: [
-          /* @__PURE__ */ jsxDEV("button", { id: "heroPrevPhoneBtn", class: "phone-nav-arrow phone-nav-prev", "aria-label": "Xem video tr\u01B0\u1EDBc", title: "Chuy\u1EC3n video tr\u01B0\u1EDBc (Tr\xE1i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left" }) }),
-          /* @__PURE__ */ jsxDEV("button", { id: "heroNextPhoneBtn", class: "phone-nav-arrow phone-nav-next", "aria-label": "Xem video ti\u1EBFp theo", title: "Chuy\u1EC3n video k\u1EBF ti\u1EBFp (Ph\u1EA3i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right" }) }),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", id: "heroPrevPhoneBtn", class: "phone-nav-arrow phone-nav-prev", "aria-label": "Xem video tr\u01B0\u1EDBc", title: "Chuy\u1EC3n video tr\u01B0\u1EDBc (Tr\xE1i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-left", "aria-hidden": "true" }) }),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", id: "heroNextPhoneBtn", class: "phone-nav-arrow phone-nav-next", "aria-label": "Xem video ti\u1EBFp theo", title: "Chuy\u1EC3n video k\u1EBF ti\u1EBFp (Ph\u1EA3i)", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right", "aria-hidden": "true" }) }),
           /* @__PURE__ */ jsxDEV("div", { class: "hero-stage frame-landscape", id: "heroStage", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-left", id: "heroLeftPhone", role: "button", tabindex: "0", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-left", id: "heroLeftPhone", role: "button", tabindex: 0, "aria-label": "Xem video m\u1EABu tr\u01B0\u1EDBc", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
                 "img",
@@ -9693,11 +9813,11 @@ var HomePage = (props) => {
                 }
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "phone-side-hint phone-side-hint-left", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right mr-1" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right mr-1", "aria-hidden": "true" }),
                 " Xem ti\u1EBFp"
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-right", id: "heroRightPhone", role: "button", tabindex: "0", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "phone phone-back phone-right", id: "heroRightPhone", role: "button", tabindex: 0, "aria-label": "Xem video m\u1EABu k\u1EBF ti\u1EBFp", title: "Nh\u1EA5p \u0111\u1EC3 xem video n\xE0y \u1EDF gi\u1EEFa", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "phone-notch" }),
               /* @__PURE__ */ jsxDEV(
                 "img",
@@ -9711,7 +9831,7 @@ var HomePage = (props) => {
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "phone-side-hint phone-side-hint-right", children: [
                 "Xem ti\u1EBFp ",
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left ml-1" })
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left ml-1", "aria-hidden": "true" })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "phone phone-front frame-landscape", id: "heroFrontPhone", children: [
@@ -9730,89 +9850,69 @@ var HomePage = (props) => {
                   preload: "metadata"
                 }
               ),
-              /* @__PURE__ */ jsxDEV("button", { id: "heroPlayCenterBtn", class: "phone-play-btn", "aria-label": "Ph\xE1t / t\u1EA1m d\u1EEBng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-white ml-0.5", id: "heroPlayCenterIcon" }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "short-gui-overlay", id: "shortGuiOverlay", "data-platform": "tiktok", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "short-top-bar", id: "shortTopBar", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-top-left", id: "shortTopLeft", children: [
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-badge-live", children: [
-                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-tower-broadcast mr-1 text-rose-500" }),
-                      "LIVE"
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "heroPlayCenterBtn", class: "phone-play-btn", "aria-label": "Ph\xE1t ho\u1EB7c t\u1EA1m d\u1EEBng video", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-white ml-0.5", id: "heroPlayCenterIcon", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "studio-overlay", id: "studioOverlay", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "studio-top-bar", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "studio-chip", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-2 h-2 rounded-full bg-emerald-400 shrink-0", "aria-hidden": "true" }),
+                    /* @__PURE__ */ jsxDEV("span", { id: "heroStudioLabel", class: "truncate", children: DEMO_VIDEOS[0].shortTitle }),
+                    /* @__PURE__ */ jsxDEV("span", { id: "heroAspectPill", class: "studio-aspect-pill", children: "16:9" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "studio-top-actions", children: [
+                    /* @__PURE__ */ jsxDEV("button", { type: "button", id: "heroSoundBtn", class: "studio-sound-btn", "aria-label": "B\u1EADt ti\u1EBFng", title: "B\u1EADt / t\u1EAFt ti\u1EBFng", children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-xmark", "aria-hidden": "true" }),
+                      /* @__PURE__ */ jsxDEV("span", { id: "heroSoundText", children: "B\u1EADt ti\u1EBFng" })
                     ] }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-top-pill", children: "D\xE0nh cho b\u1EA1n" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-top-right", children: /* @__PURE__ */ jsxDEV("button", { id: "heroSoundBtn", class: "short-sound-btn", "aria-label": "B\u1EADt ti\u1EBFng", title: "B\u1EADt / t\u1EAFt ti\u1EBFng", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-xmark mr-1" }),
-                    /* @__PURE__ */ jsxDEV("span", { id: "heroSoundText", children: "B\u1EADt ti\u1EBFng" })
-                  ] }) })
-                ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "short-actions", id: "shortActions", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-avatar-box", id: "shortAvatarBox", children: [
-                    /* @__PURE__ */ jsxDEV("img", { src: "https://api.dicebear.com/7.x/bottts/svg?seed=khoskill1", alt: "Avatar", class: "short-avatar-img", id: "shortAvatarImg" }),
-                    /* @__PURE__ */ jsxDEV("button", { class: "short-follow-plus", id: "shortFollowPlus", title: "Theo d\xF5i", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plus" }) })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortLikeBtn", role: "button", title: "Th\xEDch", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-heart text-white", id: "shortLikeIcon" }) }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortLikeCount", children: "142.8K" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortCommentBtn", role: "button", title: "B\xECnh lu\u1EADn", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-comment-dots text-white", id: "shortCommentIcon" }) }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortCommentCount", children: "2.5K" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortSaveBtn", role: "button", title: "L\u01B0u", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bookmark text-white", id: "shortSaveIcon" }) }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortSaveCount", children: "18.4K" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-action-btn", id: "shortShareBtn", role: "button", title: "Chia s\u1EBB", children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "action-icon-circle", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-share text-white", id: "shortShareIcon" }) }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "action-count", id: "shortShareCount", children: "3.9K" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-disc-box", id: "shortDiscBox", children: /* @__PURE__ */ jsxDEV("div", { class: "short-disc-spin", id: "shortDiscSpin", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-compact-disc text-white text-lg" }) }) })
-                ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "short-bottom-info", id: "shortBottomInfo", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-author-row", id: "shortAuthorRow", children: [
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-author-handle", id: "shortAuthorHandle", children: "@khoskill.ai" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-verified-badge", id: "shortVerifiedBadge", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-sky-400" }) }),
-                    /* @__PURE__ */ jsxDEV("button", { class: "short-follow-pill", id: "shortFollowPill", children: "Theo d\xF5i" })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("p", { class: "short-caption", id: "shortCaption", children: "Skill l\xE0m video AI 30s li\u1EC1n m\u1EA1ch ch\u1EC9 v\u1EDBi 1 prompt chu\u1EA9n viral \u{1F680} Kh\xF3a nh\xE2n v\u1EADt c\u1EF1c \u0111\u1EC9nh #MuseAI #AIVideo #SkillAI" }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "short-music-track", id: "shortMusicTrack", children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-music text-[10px] animate-pulse" }),
-                    /* @__PURE__ */ jsxDEV("span", { class: "short-music-title", id: "shortMusicTitle", children: "\u266B KhoSkill AI - \xC2m thanh g\u1ED1c" })
+                    /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${DEMO_VIDEOS[0].slug}`, id: "heroDetailLink", class: "studio-detail-link", title: "Xem chi ti\u1EBFt Skill", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: "Chi ti\u1EBFt" }),
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-[10px]", "aria-hidden": "true" })
+                    ] })
                   ] })
                 ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "short-progress-track", id: "heroProgressTrack", children: /* @__PURE__ */ jsxDEV("div", { class: "short-progress-fill", id: "heroProgressFill" }) })
+                /* @__PURE__ */ jsxDEV("div", { class: "studio-bottom-bar", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "studio-caption-text", id: "heroCaptionText", children: DEMO_VIDEOS[0].title }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "studio-aspect-pill tabular-nums", id: "heroDurBadge", children: DEMO_VIDEOS[0].dur })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "studio-progress-track", id: "heroProgressTrack", role: "slider", "aria-label": "Tua ti\u1EBFn \u0111\u1ED9 video", tabindex: 0, children: /* @__PURE__ */ jsxDEV("div", { class: "studio-progress-fill", id: "heroProgressFill" }) })
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "stage-nav-hint text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-2", children: /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300 backdrop-blur shadow-sm", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left-right text-brand-400" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "stage-nav-hint text-center text-xs text-[#9492b8] mt-4 flex items-center justify-center gap-2", children: /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-[#c2c0e0] backdrop-blur shadow-sm", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left-right text-indigo-400", "aria-hidden": "true" }),
             " B\u1EA5m ",
             /* @__PURE__ */ jsxDEV("b", { children: "Tr\xE1i / Ph\u1EA3i" }),
             " ho\u1EB7c ",
-            /* @__PURE__ */ jsxDEV("b", { children: "ch\u1EA1m \u0111i\u1EC7n tho\u1EA1i 2 b\xEAn" }),
-            " \u0111\u1EC3 \u0111\u1ED5i chi\u1EC1u xem video"
+            /* @__PURE__ */ jsxDEV("b", { children: "ch\u1EA1m th\u1EBB 2 b\xEAn" }),
+            " \u0111\u1EC3 chuy\u1EC3n video demo"
           ] }) })
         ] })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative border-t border-white/5 bg-[#080716]/60 backdrop-blur py-3 marquee-wrap overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "marquee-track flex gap-10 w-max text-slate-500 text-xs font-semibold whitespace-nowrap", children: [...Array(2)].map(() => /* @__PURE__ */ jsxDEV(Fragment, { children: ["Muse AI", "Seedance 2.5", "Veo 3", "Google Flow", "Kling AI", "ChatGPT", "Gemini", "CapCut", "Sora", "Runway"].map((b) => /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-nodes text-indigo-500/60" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative border-t border-white/5 bg-[#070614]/70 backdrop-blur py-3 marquee-wrap overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "marquee-track flex gap-10 w-max text-[#9492b8] text-xs font-semibold whitespace-nowrap", children: [...Array(2)].map(() => /* @__PURE__ */ jsxDEV(Fragment, { children: ["Muse AI", "Seedance 2.5", "Veo 3", "Google Flow", "Kling AI", "ChatGPT", "Gemini", "CapCut", "Sora", "Runway"].map((b) => /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-nodes text-indigo-500/70", "aria-hidden": "true" }),
         b
       ] })) })) }) })
     ] }),
     /* @__PURE__ */ jsxDEV("section", { class: "wall", id: "theater-wall", "aria-label": "Clip m\u1EABu l\xE0m b\u1EB1ng AI", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "wall-head", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "wall-kicker", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-brand-400" }),
-          "L\xE0m b\u1EB1ng Muse AI & Seedance"
+        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-3", children: [
+          /* @__PURE__ */ jsxDEV("span", { class: "wall-kicker", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-indigo-400", "aria-hidden": "true" }),
+            "L\xE0m b\u1EB1ng Muse AI & Seedance"
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { class: "wall-note", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-mouse-pointer text-[#9492b8] mr-1", "aria-hidden": "true" }),
+            "Clip th\u1EADt t\u1EEB kho d\u1EF1 \xE1n. R\xEA chu\u1ED9t ho\u1EB7c b\u1EA5m T\u1EA1m d\u1EEBng \xB7 Nh\u1EA5p \u0111\u1EC3 xem l\u1EDBn."
+          ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("span", { class: "wall-note", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-mouse-pointer text-slate-400 mr-1" }),
-          "Clip th\u1EADt t\u1EEB repo, kh\xF4ng d\u1EF1ng l\u1EA1i. R\xEA chu\u1ED9t \u0111\u1EC3 d\u1EEBng \xB7 B\u1EA5m \u0111\u1EC3 xem l\u1EDBn."
+        /* @__PURE__ */ jsxDEV("button", { type: "button", id: "wallToggleBtn", class: "wall-toggle-btn", "aria-pressed": "false", "aria-label": "T\u1EA1m d\u1EEBng d\u1EA3i video ch\u1EA1y t\u1EF1 \u0111\u1ED9ng", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-pause text-[11px]", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxDEV("span", { children: "T\u1EA1m d\u1EEBng" })
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "wall-track-wrapper", children: /* @__PURE__ */ jsxDEV("div", { class: "wall-track", id: "wallTrack", children: [...DEMO_VIDEOS, ...DEMO_VIDEOS].map((v, idx) => /* @__PURE__ */ jsxDEV(
-        "div",
+        "button",
         {
+          type: "button",
           class: `wall-card ${v.orient === "portrait" ? "wall-card-portrait" : "wall-card-landscape"}`,
           "data-video-index": idx % DEMO_VIDEOS.length,
           "data-src": v.videoUrl,
@@ -9821,15 +9921,16 @@ var HomePage = (props) => {
           "data-desc": v.desc,
           "data-poster": v.posterUrl,
           "data-orient": v.orient,
+          "aria-label": `Xem demo ${v.shortTitle}`,
           children: [
             /* @__PURE__ */ jsxDEV("img", { src: v.posterUrl, alt: v.shortTitle, loading: "lazy", decoding: "async", class: "wall-card-thumb" }),
             /* @__PURE__ */ jsxDEV("span", { class: "card-tag", children: v.tag }),
-            /* @__PURE__ */ jsxDEV("span", { class: "card-dur", children: v.dur }),
-            /* @__PURE__ */ jsxDEV("div", { class: "wall-card-play", children: /* @__PURE__ */ jsxDEV("div", { class: "wall-card-play-icon", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5" }) }) }),
+            /* @__PURE__ */ jsxDEV("span", { class: "card-dur tabular-nums", children: v.dur }),
+            /* @__PURE__ */ jsxDEV("span", { class: "wall-card-play", "aria-hidden": "true", children: /* @__PURE__ */ jsxDEV("span", { class: "wall-card-play-icon", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5" }) }) }),
             /* @__PURE__ */ jsxDEV("div", { class: "card-info", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "card-title", children: v.shortTitle }),
               /* @__PURE__ */ jsxDEV("div", { class: "card-action", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-play text-[10px]" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-play text-[10px]", "aria-hidden": "true" }),
                 "B\u1EA5m \u0111\u1EC3 xem video"
               ] })
             ] })
@@ -9839,12 +9940,12 @@ var HomePage = (props) => {
     ] }),
     /* @__PURE__ */ jsxDEV("section", { class: "theater-section reveal", id: "theater", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "text-center max-w-3xl mx-auto mb-10", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 font-mono text-xs uppercase font-bold tracking-wider mb-3", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs" }),
+        /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/25 text-indigo-300 font-mono text-xs uppercase font-bold tracking-wider mb-3", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs", "aria-hidden": "true" }),
           "Xem T\u1EADn M\u1EAFt \xB7 Video AI Th\u1EADt"
         ] }),
         /* @__PURE__ */ jsxDEV("h2", { class: "text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-3", children: "Xem Tr\u01B0\u1EDBc Khi S\u1EDF H\u1EEFu" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 text-sm md:text-base leading-relaxed", children: "Trailer 30s, video h\u1ECDc vi\xEAn v\xE0 clip demo c\xE1c ng\xE1ch t\u1EEB kho repo. B\u1EA5m ch\u1ECDn video b\xEAn ph\u1EA3i \u0111\u1EC3 chuy\u1EC3n ngay l\u1EADp t\u1EE9c." })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-sm md:text-base leading-relaxed", children: "Video demo th\u1EF1c t\u1EBF t\u1EEBng b\u1ED9 Skill AI. B\u1EA5m ch\u1ECDn video b\xEAn ph\u1EA3i \u0111\u1EC3 chuy\u1EC3n ngay l\u1EADp t\u1EE9c." })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "theater-layout", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "cinema-box", id: "cinemaScreenBox", children: [
@@ -9861,58 +9962,58 @@ var HomePage = (props) => {
                 preload: "metadata"
               }
             ),
-            /* @__PURE__ */ jsxDEV("button", { class: "player-big-play", id: "theaterBigPlayBtn", "aria-label": "Ph\xE1t video", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-white ml-1" }) }),
+            /* @__PURE__ */ jsxDEV("button", { type: "button", class: "player-big-play", id: "theaterBigPlayBtn", "aria-label": "Ph\xE1t video", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-white ml-1", "aria-hidden": "true" }) }),
             /* @__PURE__ */ jsxDEV("div", { class: "player-bar", children: [
-              /* @__PURE__ */ jsxDEV("button", { class: "theater-ctrl-btn", id: "theaterPlayBtn", "aria-label": "Ph\xE1t / t\u1EA1m d\u1EEBng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play", id: "theaterPlayIcon" }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "theater-progress", id: "theaterProgressTrack", children: /* @__PURE__ */ jsxDEV("div", { class: "theater-progress-fill", id: "theaterProgressFill" }) }),
-              /* @__PURE__ */ jsxDEV("span", { class: "theater-timecode", id: "theaterTimecode", children: "00:00 / 00:30" }),
-              /* @__PURE__ */ jsxDEV("button", { class: "theater-ctrl-btn", id: "theaterSoundBtn", "aria-label": "B\u1EADt / t\u1EAFt ti\u1EBFng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-high", id: "theaterSoundIcon" }) }),
-              /* @__PURE__ */ jsxDEV("button", { class: "theater-ctrl-btn", id: "theaterFullscreenBtn", "aria-label": "To\xE0n m\xE0n h\xECnh", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand" }) })
+              /* @__PURE__ */ jsxDEV("button", { type: "button", class: "theater-ctrl-btn", id: "theaterPlayBtn", "aria-label": "Ph\xE1t ho\u1EB7c t\u1EA1m d\u1EEBng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play", id: "theaterPlayIcon", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "theater-progress", id: "theaterProgressTrack", role: "slider", "aria-label": "Tua video", tabindex: 0, children: /* @__PURE__ */ jsxDEV("div", { class: "theater-progress-fill", id: "theaterProgressFill" }) }),
+              /* @__PURE__ */ jsxDEV("span", { class: "theater-timecode tabular-nums", id: "theaterTimecode", children: "00:00 / 00:30" }),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", class: "theater-ctrl-btn", id: "theaterSoundBtn", "aria-label": "B\u1EADt ho\u1EB7c t\u1EAFt ti\u1EBFng", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-volume-high", id: "theaterSoundIcon", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", class: "theater-ctrl-btn", id: "theaterFullscreenBtn", "aria-label": "To\xE0n m\xE0n h\xECnh", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand", "aria-hidden": "true" }) })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "player-info border-t border-[#1f1b4b]", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "player-info border-t border-[#221e54]", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-3 mb-2", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-brand-500/10 text-brand-400 text-xs font-bold uppercase tracking-wider", id: "activeVideoTag", children: DEMO_VIDEOS[0].tag }),
-              /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-xs text-slate-400", id: "activeVideoDur", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold uppercase tracking-wider", id: "activeVideoTag", children: DEMO_VIDEOS[0].tag }),
+              /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-xs text-[#9492b8] tabular-nums", id: "activeVideoDur", children: [
                 "Th\u1EDDi l\u01B0\u1EE3ng: ",
                 DEMO_VIDEOS[0].dur
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("h3", { class: "text-xl md:text-2xl font-extrabold text-white mb-2", id: "activeVideoTitle", children: DEMO_VIDEOS[0].title }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 text-sm leading-relaxed mb-5", id: "activeVideoDesc", children: DEMO_VIDEOS[0].desc }),
-            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5", children: [
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-sm leading-relaxed mb-5", id: "activeVideoDesc", children: DEMO_VIDEOS[0].desc }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/10", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex items-baseline gap-2", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-black text-white", id: "activeVideoPrice", children: formatVND(DEMO_VIDEOS[0].price) }),
-                /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-slate-500 line-through", id: "activeVideoOrigPrice", children: formatVND(DEMO_VIDEOS[0].originalPrice) })
+                /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-black text-white tabular-nums", id: "activeVideoPrice", children: formatVND(DEMO_VIDEOS[0].price) }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-[#9492b8] line-through tabular-nums", id: "activeVideoOrigPrice", children: formatVND(DEMO_VIDEOS[0].originalPrice) })
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${DEMO_VIDEOS[0].slug}`, id: "activeVideoLink", class: "h-10 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 text-white font-semibold text-xs hover:opacity-90 transition", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${DEMO_VIDEOS[0].slug}`, id: "activeVideoLink", class: "h-10 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-xs hover:opacity-95 transition", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt", "aria-hidden": "true" }),
                 "Mua s\u1EA3n ph\u1EA9m n\xE0y"
               ] }) })
             ] })
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "playlist-panel", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-4 pb-3 border-b border-[#1f1b4b]", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-4 pb-3 border-b border-[#221e54]", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-white flex items-center gap-2", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-list-ul text-brand-400" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-list-ul text-indigo-400", "aria-hidden": "true" }),
               "Danh s\xE1ch video (",
               DEMO_VIDEOS.length,
               ")"
             ] }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-slate-400 font-medium", children: "B\u1EA5m \u0111\u1EC3 \u0111\u1ED5i video" })
+            /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] font-medium", children: "B\u1EA5m \u0111\u1EC3 \u0111\u1ED5i video" })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "playlist", id: "theaterPlaylist", children: DEMO_VIDEOS.map((v, i) => /* @__PURE__ */ jsxDEV("div", { class: `playlist-item ${i === 0 ? "active" : ""}`, "data-index": i, children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "playlist", id: "theaterPlaylist", children: DEMO_VIDEOS.map((v, i) => /* @__PURE__ */ jsxDEV("button", { type: "button", class: `playlist-item ${i === 0 ? "active" : ""}`, "data-index": i, "aria-pressed": i === 0 ? "true" : "false", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "playlist-thumb-wrap", children: [
               /* @__PURE__ */ jsxDEV("img", { src: v.posterUrl, alt: v.shortTitle, loading: "lazy" }),
-              /* @__PURE__ */ jsxDEV("span", { class: "thumb-dur", children: v.dur })
+              /* @__PURE__ */ jsxDEV("span", { class: "thumb-dur tabular-nums", children: v.dur })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mb-1", children: /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] uppercase font-bold text-brand-400", children: v.tag }) }),
-              /* @__PURE__ */ jsxDEV("h4", { class: "text-xs font-bold text-white truncate group-hover:text-brand-300", children: v.shortTitle }),
-              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-1 flex items-center gap-2", children: /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-amber-400", children: formatVND(v.price) }) })
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mb-1", children: /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] uppercase font-bold text-indigo-400", children: v.tag }) }),
+              /* @__PURE__ */ jsxDEV("h4", { class: "text-xs font-bold text-white truncate", children: v.shortTitle }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mt-1 flex items-center gap-2", children: /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-amber-300 tabular-nums", children: formatVND(v.price) }) })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-slate-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play" }) })
+            /* @__PURE__ */ jsxDEV("span", { class: "w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs text-[#9492b8] shrink-0", "aria-hidden": "true", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play" }) })
           ] })) })
         ] })
       ] })
@@ -9921,79 +10022,90 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV(SectionTitle, { title: "Danh m\u1EE5c s\u1EA3n ph\u1EA9m", subtitle: "Ch\u1ECDn \u0111\xFAng c\xF4ng c\u1EE5 b\u1EA1n c\u1EA7n cho h\xE0nh tr\xECnh l\xE0m video AI", more: { href: "/san-pham", label: "T\u1EA5t c\u1EA3" } }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4", children: categories.map((c) => /* @__PURE__ */ jsxDEV(CategoryCard, { c })) })
     ] }),
-    featured.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "featured-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { title: "5 Skill AI \u0111ang m\u1EDF b\xE1n", subtitle: "B\u1ED9 5 Skill th\u1EF1c chi\u1EBFn t\u1EA1o video 30s \u2014 \u0111\xE3 test ra demo, mua l\xE0 d\xF9ng ngay", more: { href: "/san-pham?type=skill", label: "Xem t\u1EA5t c\u1EA3" } }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) })
+    /* @__PURE__ */ jsxDEV("section", { id: "catalog-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
+      /* @__PURE__ */ jsxDEV(
+        SectionTitle,
+        {
+          title: "Kho Skill AI th\u1EF1c chi\u1EBFn",
+          subtitle: "5 b\u1ED9 Skill l\xE0m video 30s \u0111ang m\u1EDF b\xE1n \u2014 l\u1ECDc nhanh theo m\u1EE9c \u0111\u1ED9 ph\u1ED5 bi\u1EBFn",
+          more: { href: "/san-pham?type=skill", label: "Xem t\u1EA5t c\u1EA3" }
+        }
+      ),
+      /* @__PURE__ */ jsxDEV("div", { role: "tablist", "aria-label": "L\u1ECDc danh s\xE1ch Skill AI", class: "flex flex-wrap items-center gap-2 mb-7", children: [
+        /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "true", class: "tab-btn active h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] transition cursor-pointer", "data-tab": "featured", "data-group": "hp", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1.5 text-indigo-300", "aria-hidden": "true" }),
+          "\u0110ang m\u1EDF b\xE1n (",
+          featured.length,
+          ")"
+        ] }),
+        /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "false", class: "tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer", "data-tab": "hot", "data-group": "hp", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire mr-1.5 text-orange-400", "aria-hidden": "true" }),
+          "B\xE1n ch\u1EA1y nh\u1EA5t"
+        ] }),
+        /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "false", class: "tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer", "data-tab": "new", "data-group": "hp", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt mr-1.5 text-emerald-400", "aria-hidden": "true" }),
+          "M\u1EDBi ra m\u1EAFt"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel", "data-tab": "featured", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "hot", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: hot.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "new", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: newest.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) })
     ] }),
-    comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "coming-soon-section", class: "max-w-7xl mx-auto px-4 py-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-br from-[#0f0e26] via-[#1a184c]/70 to-[#080716] p-7 md:p-10 text-white relative overflow-hidden border border-[#1f1b4b]", children: [
+    comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "coming-soon-section", class: "max-w-7xl mx-auto px-4 py-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-br from-[#0f0e24] via-[#17153d]/80 to-[#070614] p-7 md:p-10 text-white relative overflow-hidden border border-[#221e54]", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh opacity-30" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-end justify-between gap-4 mb-7", children: [
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold mb-3", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold mb-3", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
               "D\u1ECACH V\u1EE4 T\u1EA0M TH\u1EDCI CH\u01AFA M\u1EDE B\xC1N"
             ] }),
             /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold tracking-tight", children: "Kh\xF3a h\u1ECDc, Chatbot, App & Combo s\u1EAFp ra m\u1EAFt" }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] mt-1.5 text-sm md:text-base", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng ch\u1EC9 m\u1EDF b\xE1n 5 b\u1ED9 Skill AI. C\xE1c d\u1ECBch v\u1EE5 kh\xE1c s\u1EBD s\u1EDBm m\u1EDF b\xE1n trong th\u1EDDi gian t\u1EDBi." })
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-1.5 text-sm md:text-base", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng ch\u1EC9 m\u1EDF b\xE1n 5 b\u1ED9 Skill AI. C\xE1c d\u1ECBch v\u1EE5 kh\xE1c s\u1EBD s\u1EDBm m\u1EDF b\xE1n trong th\u1EDDi gian t\u1EDBi." })
           ] }),
           /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "cta-white h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition", children: [
             "Nh\u1EAFn Zalo nh\u1EADn l\u1ECBch m\u1EDF b\xE1n",
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs" })
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs", "aria-hidden": "true" })
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-4", children: comingSoon.slice(0, 4).map((c) => /* @__PURE__ */ jsxDEV(ProductCard, { p: c, compact: true })) })
       ] })
     ] }) }),
-    /* @__PURE__ */ jsxDEV("section", { id: "hot-new-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1 border-b border-[#1f1b4b] mb-7", children: [
-        /* @__PURE__ */ jsxDEV("button", { class: "tab-btn active px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 transition", "data-tab": "hot", "data-group": "hp", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire mr-1.5 text-orange-500" }),
-          "B\xE1n ch\u1EA1y nh\u1EA5t"
-        ] }),
-        /* @__PURE__ */ jsxDEV("button", { class: "tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 transition", "data-tab": "new", "data-group": "hp", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-sparkles mr-1.5 text-indigo-400" }),
-          "M\u1EDBi ra m\u1EAFt"
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "tab-panel", "data-tab": "hot", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: hot.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "tab-panel hidden", "data-tab": "new", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: newest.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) })
-    ] }),
-    /* @__PURE__ */ jsxDEV("section", { id: "benefits-section", class: "bg-[#0f0e26]/60 border-y border-[#1f1b4b] py-16 mt-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: `L\u1EE3i \xEDch khi mua t\u1EA1i ${siteName}`, subtitle: "Tr\u1EA3i nghi\u1EC7m tuy\u1EC7t v\u1EDDi c\xF9ng nh\u1EEFng \u01B0u \u0111i\u1EC3m v\u01B0\u1EE3t tr\u1ED9i" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8", children: BENEFITS.map((b) => /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl border border-[#1f1b4b] bg-[#0f0e26] hover:border-indigo-500/20 hover:shadow-lg transition group", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-lg mb-4 shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${b.icon}` }) }),
+    /* @__PURE__ */ jsxDEV("section", { id: "benefits-section", class: "bg-[#0f0e24]/60 border-y border-[#221e54] py-16 mt-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
+      /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: `L\u1EE3i \xEDch khi mua t\u1EA1i ${siteName}`, subtitle: "Tr\u1EA3i nghi\u1EC7m m\u01B0\u1EE3t m\xE0 c\xF9ng quy tr\xECnh h\u1ED7 tr\u1EE3 chu\u1EA9n th\u1EF1c chi\u1EBFn" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8", children: BENEFITS.map((b) => /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl border border-[#221e54] bg-[#0f0e24] hover:border-indigo-500/35 hover:shadow-lg transition group", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-lg mb-4 shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${b.icon}`, "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1.5", children: b.title }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#9f9dbb] leading-relaxed", children: b.desc })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#b8b6d9] leading-relaxed", children: b.desc })
       ] })) })
     ] }) }),
     /* @__PURE__ */ jsxDEV("section", { id: "how-section", class: "max-w-7xl mx-auto px-4 py-16 reveal", children: [
       /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "Mua h\xE0ng ch\u1EC9 4 b\u01B0\u1EDBc", subtitle: "\u0110\u01A1n gi\u1EA3n, nhanh ch\xF3ng, nh\u1EADn link t\u1EA3i & t\xE0i li\u1EC7u Skill ngay l\u1EADp t\u1EE9c" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8 relative", children: STEPS.map((s, i) => /* @__PURE__ */ jsxDEV("div", { class: "relative p-6 rounded-2xl bg-[#0f0e26] border border-[#1f1b4b] text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-slate-800 text-white text-xs font-bold", children: s.n }),
-        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 grid place-items-center text-xl mx-auto mt-2 mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${s.icon}` }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8 relative", children: STEPS.map((s, i) => /* @__PURE__ */ jsxDEV("div", { class: "relative p-6 rounded-2xl bg-[#0f0e24] border border-[#221e54] text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-bold font-mono", children: s.n }),
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-indigo-500/15 text-indigo-400 grid place-items-center text-xl mx-auto mt-2 mb-4", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${s.icon}`, "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1.5", children: s.title }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#9f9dbb] leading-relaxed", children: s.desc }),
-        i < STEPS.length - 1 && /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right absolute top-1/2 -right-4 text-slate-600 hidden lg:block" })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#b8b6d9] leading-relaxed", children: s.desc }),
+        i < STEPS.length - 1 && /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right absolute top-1/2 -right-4 text-[#5c5980] hidden lg:block", "aria-hidden": "true" })
       ] })) })
     ] }),
-    reviews.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "reviews-section", class: "bg-[#0f0e26] border-y border-[#1f1b4b] py-16 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
+    reviews.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "reviews-section", class: "bg-[#0f0e24] border-y border-[#221e54] py-16 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "text-center mb-10", children: [
         /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight", children: "Kh\xE1ch h\xE0ng n\xF3i g\xEC?" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-400 mt-2", children: "C\u1EA3m nh\u1EADn t\u1EEB nh\u1EEFng ng\u01B0\u1EDDi \u0111\xE3 tr\u1EA3i nghi\u1EC7m s\u1EA3n ph\u1EA9m c\u1EE7a ch\xFAng t\xF4i" })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-2", children: "C\u1EA3m nh\u1EADn t\u1EEB nh\u1EEFng ng\u01B0\u1EDDi \u0111\xE3 tr\u1EA3i nghi\u1EC7m s\u1EA3n ph\u1EA9m c\u1EE7a ch\xFAng t\xF4i" })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-2 lg:grid-cols-3 gap-5", children: reviews.slice(0, 6).map((r) => /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl bg-[#080716]/80 border border-[#1f1b4b]", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-2 lg:grid-cols-3 gap-5", children: reviews.slice(0, 6).map((r) => /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl bg-[#070614]/85 border border-[#221e54]", children: [
         /* @__PURE__ */ jsxDEV(Stars, { rating: r.rating, size: "text-sm" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 text-sm leading-relaxed my-4", children: [
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#d6d4ee] text-sm leading-relaxed my-4", children: [
           '"',
           r.comment,
           '"'
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 pt-4 border-t border-[#1f1b4b]", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-sm", children: (r.full_name || "K").charAt(0).toUpperCase() }),
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 pt-4 border-t border-[#221e54]", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-sm shrink-0", children: (r.full_name || "K").charAt(0).toUpperCase() }),
           /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm truncate", children: r.full_name }),
-            /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${r.product_slug}`, class: "text-xs text-slate-400 truncate block hover:text-indigo-400", children: r.product_name })
+            /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${r.product_slug}`, class: "text-xs text-[#9492b8] truncate block hover:text-indigo-300", children: r.product_name })
           ] })
         ] })
       ] })) })
@@ -10002,28 +10114,36 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV(SectionTitle, { title: "Ki\u1EBFn th\u1EE9c l\xE0m video AI", subtitle: "H\u01B0\u1EDBng d\u1EABn, m\u1EB9o hay v\xE0 case study th\u1EF1c t\u1EBF", more: { href: "/blog", label: "T\u1EA5t c\u1EA3 b\xE0i vi\u1EBFt" } }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: posts.slice(0, 4).map((p) => /* @__PURE__ */ jsxDEV(PostCard, { p })) })
     ] }),
-    /* @__PURE__ */ jsxDEV("section", { id: "faq-section", class: "bg-[#080716] border-t border-[#1f1b4b] py-16 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-3xl mx-auto px-4", children: [
+    /* @__PURE__ */ jsxDEV("section", { id: "faq-section", class: "bg-[#070614] border-t border-[#221e54] py-16 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-3xl mx-auto px-4", children: [
       /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "C\xE2u h\u1ECFi th\u01B0\u1EDDng g\u1EB7p", subtitle: "Nh\u1EEFng th\u1EAFc m\u1EAFc ph\u1ED5 bi\u1EBFn nh\u1EA5t t\u1EEB kh\xE1ch h\xE0ng" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "space-y-3 mt-8", children: FAQS.map((f, i) => /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl border border-[#1f1b4b] bg-[#0f0e26] overflow-hidden", children: [
-        /* @__PURE__ */ jsxDEV("button", { class: "faq-q w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/5 transition", children: [
-          /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-white text-[15px]", children: f.q }),
-          /* @__PURE__ */ jsxDEV("i", { class: "faq-icon fas fa-plus text-indigo-500 text-sm transition-transform shrink-0" })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: `faq-a px-5 pb-4 text-sm text-[#9f9dbb] leading-relaxed ${i === 0 ? "" : "hidden"}`, children: f.a })
+      /* @__PURE__ */ jsxDEV("div", { class: "space-y-3 mt-8", children: FAQS.map((f, i) => /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl border border-[#221e54] bg-[#0f0e24] overflow-hidden", children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            class: "faq-q w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/5 transition cursor-pointer",
+            "aria-expanded": i === 0 ? "true" : "false",
+            children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-white text-[15px]", children: f.q }),
+              /* @__PURE__ */ jsxDEV("i", { class: `faq-icon fas fa-plus text-indigo-400 text-sm transition-transform shrink-0 ${i === 0 ? "rotate-45" : ""}`, "aria-hidden": "true" })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxDEV("div", { class: `faq-a px-5 pb-4 text-sm text-[#b8b6d9] leading-relaxed ${i === 0 ? "" : "hidden"}`, children: f.a })
       ] })) })
     ] }) }),
-    /* @__PURE__ */ jsxDEV("section", { id: "cta-section", class: "max-w-7xl mx-auto px-4 py-14 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-fuchsia-600 p-8 md:p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-600/10", children: [
+    /* @__PURE__ */ jsxDEV("section", { id: "cta-section", class: "max-w-7xl mx-auto px-4 py-14 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-fuchsia-600 p-8 md:p-12 text-center text-white relative overflow-hidden shadow-2xl shadow-indigo-600/20", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid opacity-20" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-4xl font-extrabold mb-3 tracking-tight", children: "S\u1EB5n s\xE0ng b\u1EAFt \u0111\u1EA7u ki\u1EBFm ti\u1EC1n v\u1EDBi video AI?" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 mb-7 max-w-2xl mx-auto", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn ng\u01B0\u1EDDi \u0111ang d\xF9ng c\xF4ng c\u1EE5 c\u1EE7a ch\xFAng t\xF4i \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng m\u1ED7i ng\xE0y." }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-white/90 mb-7 max-w-2xl mx-auto", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn ng\u01B0\u1EDDi \u0111ang d\xF9ng b\u1ED9 Skill c\u1EE7a ch\xFAng t\xF4i \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng m\u1ED7i ng\xE0y." }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap justify-center gap-3", children: [
           /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "cta-white h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white text-indigo-900 font-bold hover:bg-slate-100 transition shadow-xl", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-plus" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user-plus", "aria-hidden": "true" }),
             "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED"
           ] }),
           /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "h-12 px-7 inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/30 backdrop-blur font-semibold hover:bg-white/25 transition", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye", "aria-hidden": "true" }),
             "Xem s\u1EA3n ph\u1EA9m"
           ] })
         ] })
@@ -10075,11 +10195,11 @@ var ProductListPage = (props) => {
       title: heading,
       description: headingDesc,
       children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] border-b border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-7", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] border-b border-[#221e54]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-7", children: [
           /* @__PURE__ */ jsxDEV(Breadcrumb, { items: currentCategory ? [{ label: "S\u1EA3n ph\u1EA9m", href: "/san-pham" }, { label: currentCategory.name }] : [{ label: heading }] }),
           /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight", children: heading }),
-          headingDesc && /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] mt-2 max-w-3xl text-sm leading-relaxed", children: headingDesc }),
-          /* @__PURE__ */ jsxDEV("div", { class: "mt-3 text-sm text-[#9f9dbb]", children: [
+          headingDesc && /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-2 max-w-3xl text-sm leading-relaxed", children: headingDesc }),
+          /* @__PURE__ */ jsxDEV("div", { class: "mt-3 text-sm text-[#9492b8] tabular-nums", children: [
             "T\xECm th\u1EA5y ",
             /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: total }),
             " s\u1EA3n ph\u1EA9m"
@@ -10089,67 +10209,88 @@ var ProductListPage = (props) => {
           /* @__PURE__ */ jsxDEV("aside", { class: "space-y-5", children: [
             /* @__PURE__ */ jsxDEV("form", { action: baseUrl, method: "get", id: "filter-form", class: "space-y-5", children: [
               sort && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "sort", value: sort }),
-              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
-                /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "T\xECm ki\u1EBFm" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+                /* @__PURE__ */ jsxDEV("label", { for: "filter-q", class: "block font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "T\xECm ki\u1EBFm" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
                   /* @__PURE__ */ jsxDEV(
                     "input",
                     {
+                      id: "filter-q",
                       type: "text",
                       name: "q",
                       value: q,
                       placeholder: "T\xEAn s\u1EA3n ph\u1EA9m...",
-                      class: "w-full h-10 pl-9 pr-3 rounded-lg bg-[#16143c] border border-transparent focus:border-indigo-500/50 text-white placeholder-slate-500 outline-none text-sm transition"
+                      class: "w-full h-11 pl-9 pr-3 rounded-lg bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm transition"
                     }
                   ),
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm" })
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
                 ] })
               ] }),
-              baseUrl === "/san-pham" && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
+              baseUrl === "/san-pham" && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
                 /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "Danh m\u1EE5c" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: `px-3 py-1.5 rounded-full text-xs font-semibold transition border ${!cat ? "bg-indigo-600 text-white border-transparent" : "bg-[#16143c]/80 border-[#1f1b4b] text-slate-300 hover:text-white hover:border-[#2e2a5e]"}`, children: "T\u1EA5t c\u1EA3" }),
-                  categories.map((c) => /* @__PURE__ */ jsxDEV("a", { href: `/san-pham?cat=${c.slug}`, class: `px-3 py-1.5 rounded-full text-xs font-semibold transition border ${cat === c.slug ? "bg-indigo-600 text-white border-transparent" : "bg-[#16143c]/80 border-[#1f1b4b] text-slate-300 hover:text-white hover:border-[#2e2a5e]"}`, children: [
-                    c.name,
-                    " ",
-                    /* @__PURE__ */ jsxDEV("span", { class: "opacity-60", children: [
-                      "(",
-                      c.product_count ?? 0,
-                      ")"
-                    ] })
-                  ] }))
+                  /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: "/san-pham",
+                      "aria-current": !cat ? "page" : void 0,
+                      class: `px-3 py-2 rounded-full text-xs font-semibold transition border ${!cat ? "bg-indigo-600 text-white border-transparent" : "bg-[#161436] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
+                      children: "T\u1EA5t c\u1EA3"
+                    }
+                  ),
+                  categories.map((c) => /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: `/san-pham?cat=${c.slug}`,
+                      "aria-current": cat === c.slug ? "page" : void 0,
+                      class: `px-3 py-2 rounded-full text-xs font-semibold transition border ${cat === c.slug ? "bg-indigo-600 text-white border-transparent" : "bg-[#161436] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
+                      children: [
+                        c.name,
+                        " ",
+                        /* @__PURE__ */ jsxDEV("span", { class: "opacity-70 tabular-nums", children: [
+                          "(",
+                          c.product_count ?? 0,
+                          ")"
+                        ] })
+                      ]
+                    }
+                  ))
                 ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
-                /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "Lo\u1EA1i s\u1EA3n ph\u1EA9m" }),
-                /* @__PURE__ */ jsxDEV("select", { name: "type", class: "w-full h-10 px-3 rounded-lg bg-[#16143c] border border-transparent focus:border-indigo-500/50 text-white outline-none text-sm", children: TYPES.map(([v, l]) => /* @__PURE__ */ jsxDEV("option", { class: "bg-[#0f0e26] text-white", value: v, selected: type === v, children: l })) })
+              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+                /* @__PURE__ */ jsxDEV("label", { for: "filter-type", class: "block font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "Lo\u1EA1i s\u1EA3n ph\u1EA9m" }),
+                /* @__PURE__ */ jsxDEV("select", { id: "filter-type", name: "type", class: "w-full h-11 px-3 rounded-lg bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white outline-none text-sm", children: TYPES.map(([v, l]) => /* @__PURE__ */ jsxDEV("option", { class: "bg-[#0f0e24] text-white", value: v, selected: type === v, children: l })) })
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
                 /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "Kho\u1EA3ng gi\xE1" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV("label", { for: "filter-min", class: "sr-only", children: "Gi\xE1 t\u1EEB" }),
                   /* @__PURE__ */ jsxDEV(
                     "input",
                     {
+                      id: "filter-min",
                       type: "number",
                       name: "min",
                       value: minPrice,
                       placeholder: "T\u1EEB",
                       min: "0",
                       step: "10000",
-                      class: "w-full h-10 px-3 rounded-lg bg-[#16143c] border border-transparent focus:border-indigo-500/50 text-white outline-none text-sm"
+                      class: "w-full h-11 px-3 rounded-lg bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white outline-none text-sm tabular-nums"
                     }
                   ),
-                  /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "\u2013" }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", "aria-hidden": "true", children: "\u2013" }),
+                  /* @__PURE__ */ jsxDEV("label", { for: "filter-max", class: "sr-only", children: "Gi\xE1 \u0111\u1EBFn" }),
                   /* @__PURE__ */ jsxDEV(
                     "input",
                     {
+                      id: "filter-max",
                       type: "number",
                       name: "max",
                       value: maxPrice,
                       placeholder: "\u0110\u1EBFn",
                       min: "0",
                       step: "10000",
-                      class: "w-full h-10 px-3 rounded-lg bg-[#16143c] border border-transparent focus:border-indigo-500/50 text-white outline-none text-sm"
+                      class: "w-full h-11 px-3 rounded-lg bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white outline-none text-sm tabular-nums"
                     }
                   )
                 ] }),
@@ -10157,37 +10298,37 @@ var ProductListPage = (props) => {
                   "a",
                   {
                     href: `${baseUrl}?min=${mn}${mx ? "&max=" + mx : ""}`,
-                    class: "px-2.5 py-1 rounded-md bg-[#16143c] border border-[#1f1b4b] text-slate-300 hover:text-white hover:border-indigo-500/30 text-[11px] font-medium transition",
+                    class: "px-2.5 py-1.5 rounded-md bg-[#161436] border border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40 text-[11px] font-medium tabular-nums transition",
                     children: lb
                   }
                 )) })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
-                /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "flex-1 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-md shadow-indigo-600/10", children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-filter mr-1.5" }),
+                /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "flex-1 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-md shadow-indigo-600/15 cursor-pointer", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-filter mr-1.5", "aria-hidden": "true" }),
                   "L\u1ECDc"
                 ] }),
-                /* @__PURE__ */ jsxDEV("a", { href: baseUrl, class: "h-10 px-4 grid place-items-center rounded-xl bg-[#16143c] hover:bg-white/5 text-[#b9b8d9] text-sm font-semibold transition", children: "Xo\xE1" })
+                /* @__PURE__ */ jsxDEV("a", { href: baseUrl, class: "h-11 px-4 grid place-items-center rounded-xl bg-[#161436] border border-[#221e54] hover:bg-white/10 text-[#c2c0e0] text-sm font-semibold transition", children: "Xo\xE1" })
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-5 text-white shadow-xl shadow-indigo-600/10", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gift text-2xl mb-2.5 opacity-90" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-5 text-white shadow-xl shadow-indigo-600/15", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gift text-2xl mb-2.5 opacity-90", "aria-hidden": "true" }),
               /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5", children: "Nh\u1EADn m\xE3 gi\u1EA3m 10%" }),
-              /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/85 mb-3.5 leading-relaxed", children: [
+              /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/90 mb-3.5 leading-relaxed", children: [
                 "D\xF9ng m\xE3 ",
                 /* @__PURE__ */ jsxDEV("b", { class: "bg-white/20 px-1.5 py-0.5 rounded font-mono", children: "WELCOME10" }),
                 " cho \u0111\u01A1n \u0111\u1EA7u ti\xEAn t\u1EEB 100k."
               ] }),
-              /* @__PURE__ */ jsxDEV("button", { "data-copy": "WELCOME10", class: "cta-white w-full h-9 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1" }),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": "WELCOME10", class: "cta-white w-full h-10 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
                 "Sao ch\xE9p m\xE3"
               ] })
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            (baseUrl === "/combo" || ["course", "chatbot", "app", "combo"].includes(type) || currentCategory && currentCategory.slug !== "skill-video-ai") && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3", children: [
+            (baseUrl === "/combo" || ["course", "chatbot", "app", "combo"].includes(type) || currentCategory && currentCategory.slug !== "skill-video-ai") && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/35 flex flex-wrap items-center justify-between gap-3", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "text-xs sm:text-sm text-amber-200 leading-relaxed", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400 mr-2" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400 mr-2", "aria-hidden": "true" }),
                 /* @__PURE__ */ jsxDEV("b", { children: "H\u1EA1ng m\u1EE5c n\xE0y t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n." }),
                 " Hi\u1EC7n t\u1EA1i c\u1EEDa h\xE0ng ch\u1EC9 m\u1EDF b\xE1n b\u1ED9 ",
                 /* @__PURE__ */ jsxDEV("b", { children: "5 Skill AI" }),
@@ -10197,13 +10338,13 @@ var ProductListPage = (props) => {
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-3 mb-5", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
-                q && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold", children: [
+                q && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold", children: [
                   "T\u1EEB kho\xE1: ",
                   q
                 ] }),
-                cat && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold", children: categories.find((c) => c.slug === cat)?.name }),
-                type && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold", children: TYPES.find((t) => t[0] === type)?.[1] }),
-                (minPrice || maxPrice) && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-semibold", children: [
+                cat && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold", children: categories.find((c) => c.slug === cat)?.name }),
+                type && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold", children: TYPES.find((t) => t[0] === type)?.[1] }),
+                (minPrice || maxPrice) && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold tabular-nums", children: [
                   minPrice ? formatVND(+minPrice) : "0\u0111",
                   " \u2013 ",
                   maxPrice ? formatVND(+maxPrice) : "\u221E"
@@ -10215,11 +10356,11 @@ var ProductListPage = (props) => {
                 type && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "type", value: type }),
                 minPrice && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "min", value: minPrice }),
                 maxPrice && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "max", value: maxPrice }),
-                /* @__PURE__ */ jsxDEV("label", { class: "text-xs text-[#9f9dbb] whitespace-nowrap", children: "S\u1EAFp x\u1EBFp:" }),
-                /* @__PURE__ */ jsxDEV("select", { name: "sort", "data-auto-submit": true, class: "h-9 px-3 pr-8 rounded-lg bg-[#16143c] border border-transparent text-white outline-none text-xs focus:border-indigo-500/50", children: SORTS.map(([v, l]) => /* @__PURE__ */ jsxDEV("option", { class: "bg-[#0f0e26] text-white", value: v, selected: sort === v, children: l })) })
+                /* @__PURE__ */ jsxDEV("label", { for: "sort-select", class: "text-xs text-[#9492b8] whitespace-nowrap", children: "S\u1EAFp x\u1EBFp:" }),
+                /* @__PURE__ */ jsxDEV("select", { id: "sort-select", name: "sort", "data-auto-submit": true, class: "h-10 px-3 pr-8 rounded-lg bg-[#161436] border border-[#2a2559] text-white outline-none text-xs focus:border-indigo-500", children: SORTS.map(([v, l]) => /* @__PURE__ */ jsxDEV("option", { class: "bg-[#0f0e24] text-white", value: v, selected: sort === v, children: l })) })
               ] })
             ] }),
-            products.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV(
+            products.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(
               EmptyState,
               {
                 icon: "fa-magnifying-glass",
@@ -10253,479 +10394,561 @@ var ProductDetailPage = (props) => {
   const replacedPoster = isMp4 ? p.demo_video_url.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, "/videos/posters/poster-$2.jpg") : void 0;
   const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : void 0;
   const comingSoon = p.status === "coming_soon";
-  return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "products", title: p.name, description: p.short_desc, ogImage: p.thumbnail || void 0, children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] border-b border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 pt-6 pb-8", children: [
-      /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [
-        { label: "S\u1EA3n ph\u1EA9m", href: "/san-pham" },
-        ...p.category_slug ? [{ label: p.category_name, href: `/danh-muc/${p.category_slug}` }] : [],
-        { label: p.name }
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[minmax(0,520px)_1fr] gap-8 mt-4 items-start", children: [
-        /* @__PURE__ */ jsxDEV("div", { children: [
-          p.demo_video_url ? /* @__PURE__ */ jsxDEV(
-            "div",
-            {
-              class: "adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#1f1b4b] bg-[#080716] shadow-2xl relative aspect-video w-full",
-              "data-poster": demoPoster || p.thumbnail || "",
-              "data-url": p.demo_video_url,
-              children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", style: demoPoster || p.thumbnail ? `background-image:url('${demoPoster || p.thumbnail}')` : "" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "relative z-[2] w-full h-full flex items-center justify-center", children: isMp4 ? /* @__PURE__ */ jsxDEV(
-                  "video",
-                  {
-                    src: p.demo_video_url,
-                    poster: demoPoster || p.thumbnail || void 0,
-                    class: "adaptive-demo-video w-full h-full object-contain bg-transparent",
-                    controls: true,
-                    playsinline: true,
-                    preload: "metadata"
-                  }
-                ) : /* @__PURE__ */ jsxDEV("iframe", { src: embedVideoUrl, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true }) }),
-                /* @__PURE__ */ jsxDEV("div", { class: "absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] font-bold text-white tracking-wider bg-black/65 backdrop-blur px-2.5 py-1 rounded-md border border-white/10", children: "VIDEO DEMO" }),
+  return /* @__PURE__ */ jsxDEV(
+    Layout,
+    {
+      ...props,
+      active: "products",
+      title: p.name,
+      description: p.short_desc,
+      ogImage: p.thumbnail || void 0,
+      bodyClass: !owned && !comingSoon ? "has-sticky-buy-bar" : "",
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] border-b border-[#221e54]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 pt-6 pb-8", children: [
+          /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [
+            { label: "S\u1EA3n ph\u1EA9m", href: "/san-pham" },
+            ...p.category_slug ? [{ label: p.category_name, href: `/danh-muc/${p.category_slug}` }] : [],
+            { label: p.name }
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[minmax(0,520px)_1fr] gap-8 mt-4 items-start", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              p.demo_video_url ? /* @__PURE__ */ jsxDEV(
+                "div",
+                {
+                  class: "adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl relative aspect-video w-full",
+                  "data-poster": demoPoster || p.thumbnail || "",
+                  "data-url": p.demo_video_url,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", style: demoPoster || p.thumbnail ? `background-image:url('${demoPoster || p.thumbnail}')` : "" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "relative z-[2] w-full h-full flex items-center justify-center", children: isMp4 ? /* @__PURE__ */ jsxDEV(
+                      "video",
+                      {
+                        src: p.demo_video_url,
+                        poster: demoPoster || p.thumbnail || void 0,
+                        class: "adaptive-demo-video w-full h-full object-contain bg-transparent",
+                        controls: true,
+                        playsinline: true,
+                        preload: "metadata"
+                      }
+                    ) : /* @__PURE__ */ jsxDEV("iframe", { src: embedVideoUrl, title: `Demo ${p.name}`, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true }) }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] font-bold text-white tracking-wider bg-black/70 backdrop-blur px-2.5 py-1 rounded-md border border-white/15", children: "VIDEO DEMO" }),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          "data-video": p.demo_video_url,
+                          "data-poster": demoPoster || p.thumbnail || "",
+                          "data-title": p.name,
+                          "data-aspect": "auto",
+                          class: "pointer-events-auto text-[10px] font-bold text-indigo-200 hover:text-white bg-black/70 hover:bg-indigo-600 backdrop-blur px-2.5 py-1 rounded-md border border-white/15 transition cursor-pointer",
+                          title: "M\u1EDF tr\xECnh ph\xE1t l\u1EDBn",
+                          "aria-label": `Ph\xF3ng to video demo ${p.name}`,
+                          children: [
+                            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand mr-1", "aria-hidden": "true" }),
+                            "Ph\xF3ng to"
+                          ]
+                        }
+                      )
+                    ] })
+                  ]
+                }
+              ) : p.thumbnail ? /* @__PURE__ */ jsxDEV("div", { class: "adaptive-thumb-wrapper mx-auto rounded-2xl overflow-hidden border border-[#221e54] bg-[#070614] aspect-video relative shadow-lg", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", style: `background-image:url('${p.thumbnail}')` }),
+                /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "relative z-[2] w-full h-full object-contain" })
+              ] }) : /* @__PURE__ */ jsxDEV(
+                "div",
+                {
+                  class: "rounded-2xl overflow-hidden border border-[#221e54] bg-[#070614] aspect-video grid place-items-center text-white/95 relative shadow-lg",
+                  style: `background:${gradientFor(p.id)}`,
+                  children: /* @__PURE__ */ jsxDEV("div", { class: "text-center p-4", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-6xl mb-3 opacity-90`, "aria-hidden": "true" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold uppercase tracking-[0.2em] opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] })
+                  ] })
+                }
+              ),
+              gallery.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-4 gap-2.5 mt-3", children: gallery.slice(0, 8).map((g, i) => /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  "data-image-preview": g,
+                  "data-title": `${p.name} \u2014 \u1EA2nh ${i + 1}`,
+                  "aria-label": `Xem l\u1EDBn \u1EA3nh ${i + 1} c\u1EE7a ${p.name}`,
+                  class: "aspect-video rounded-lg border border-[#221e54] bg-[#070614] overflow-hidden cursor-pointer hover:border-indigo-400 transition",
+                  children: /* @__PURE__ */ jsxDEV("img", { src: g, alt: `${p.name} \u1EA3nh ${i + 1}`, loading: "lazy", class: "w-full h-full object-contain" })
+                }
+              )) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3 mt-5", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "Giao h\xE0ng" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "T\u1EF1 \u0111\u1ED9ng 24/7" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "N\u1ED9i dung" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Full t\xE0i li\u1EC7u + HDSD" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-infinity", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "Truy c\u1EADp" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Tr\u1ECDn \u0111\u1EDDi + update free" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-rose-500/15 text-rose-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "H\u1ED7 tr\u1EE3" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "1-1 qua Zalo" })
+                  ] })
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col justify-start", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-3", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+                p.category_name && /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${p.category_slug}`, class: "px-2.5 py-1 rounded bg-[#161436] border border-[#221e54] text-[#c2c0e0] text-xs font-medium hover:text-white hover:border-indigo-500/40 transition", children: p.category_name }),
+                comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1", "aria-hidden": "true" }),
+                  "CH\u01AFA M\u1EDE B\xC1N"
+                ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                  p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-orange-500/15 text-orange-300 text-xs font-bold", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire mr-1", "aria-hidden": "true" }),
+                    "HOT"
+                  ] }),
+                  p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-300 text-xs font-bold", children: "M\u1EDAI" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3", children: p.name }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-4 text-xs mb-4 tabular-nums", children: [
+                /* @__PURE__ */ jsxDEV("a", { href: "#reviews", class: "flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV(Stars, { rating: p.rating, size: "text-xs" }),
+                  /* @__PURE__ */ jsxDEV("b", { class: "text-white text-sm", children: p.rating.toFixed(1) }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-[#b8b6d9]", children: [
+                    "(",
+                    p.rating_count,
+                    " \u0111\xE1nh gi\xE1)"
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#2a2559]", "aria-hidden": "true", children: "|" }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#b8b6d9]", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-shopping mr-1 text-[#9492b8]", "aria-hidden": "true" }),
+                  p.sold_count,
+                  " \u0111\xE3 b\xE1n"
+                ] }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#2a2559]", "aria-hidden": "true", children: "|" }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#b8b6d9]", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye mr-1 text-[#9492b8]", "aria-hidden": "true" }),
+                  p.view_count,
+                  " xem"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-sm leading-relaxed mb-5", children: p.short_desc }),
+              /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl border border-indigo-500/35 bg-gradient-to-br from-[#0f0e24] via-[#1a184c]/55 to-[#070614] p-5 mb-4 glow-brand relative overflow-hidden", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-end flex-wrap gap-3 mb-1.5 tabular-nums", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-3xl md:text-4xl font-extrabold text-rose-400 leading-none", children: formatVND(p.price) }),
+                  p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-base text-[#9492b8] line-through leading-none", children: formatVND(p.original_price) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold", children: [
+                      "-",
+                      off,
+                      "%"
+                    ] })
+                  ] })
+                ] }),
+                save > 0 && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-emerald-400 font-bold flex items-center gap-1 tabular-nums", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank text-sm", "aria-hidden": "true" }),
+                  "Ti\u1EBFt ki\u1EC7m ",
+                  formatVND(save)
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-3 border-t border-indigo-500/25 text-xs text-[#b8b6d9] flex flex-wrap gap-x-4 gap-y-1.5", children: [
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-infinity text-indigo-400 mr-1", "aria-hidden": "true" }),
+                    "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-indigo-400 mr-1", "aria-hidden": "true" }),
+                    "Giao t\u1EF1 \u0111\u1ED9ng"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rotate-left text-indigo-400 mr-1", "aria-hidden": "true" }),
+                    "Ho\xE0n ti\u1EC1n 7 ng\xE0y"
+                  ] })
+                ] })
+              ] }),
+              comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-amber-500/10 border border-amber-500/35 p-4 rounded-xl", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-amber-300 flex items-center gap-2 mb-1", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
+                  "S\u1EA3n ph\u1EA9m hi\u1EC7n \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n"
+                ] }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-amber-200/85 leading-relaxed", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng \u0111ang \u01B0u ti\xEAn m\u1EDF b\xE1n 5 b\u1ED9 Skill AI ho\xE0n thi\u1EC7n nh\u1EA5t. H\xE3y nh\u1EAFn Zalo ho\u1EB7c quay l\u1EA1i sau \u0111\u1EC3 c\u1EADp nh\u1EADt ng\xE0y ph\xE1t h\xE0nh ch\xEDnh th\u1EE9c." })
+              ] }) : /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-indigo-500/10 border border-indigo-500/25 p-4 rounded-xl flex items-center justify-between gap-3", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-indigo-200 flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-emerald-400", "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsxDEV("span", { children: "Thanh to\xE1n VietQR t\u1EF1 \u0111\u1ED9ng 24/7 \u2014 nh\u1EADn link t\u1EA3i Skill ngay l\u1EADp t\u1EE9c." })
+                ] }),
+                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-bold shrink-0", children: "C\xF2n h\xE0ng" })
+              ] }),
+              owned ? /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-5 mb-4", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-emerald-400 font-bold mb-2", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-lg", "aria-hidden": "true" }),
+                  "B\u1EA1n \u0111\xE3 s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0y"
+                ] }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-emerald-200/85 mb-3.5 leading-relaxed", children: "Truy c\u1EADp link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 t\xE0i li\u1EC7u h\u01B0\u1EDBng d\u1EABn trong khu v\u1EF1c t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
+                  "Truy c\u1EADp s\u1EA3n ph\u1EA9m"
+                ] })
+              ] }) : comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
+                /* @__PURE__ */ jsxDEV("button", { type: "button", disabled: true, class: "w-full h-12 rounded-xl bg-[#161436] border border-[#2a2559] text-amber-300 font-bold text-sm cursor-not-allowed", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1.5", "aria-hidden": "true" }),
+                  "T\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n"
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-2.5", children: [
                   /* @__PURE__ */ jsxDEV(
-                    "button",
+                    "a",
                     {
-                      type: "button",
-                      "data-video": p.demo_video_url,
-                      "data-poster": demoPoster || p.thumbnail || "",
-                      "data-title": p.name,
-                      "data-aspect": "auto",
-                      class: "pointer-events-auto text-[10px] font-bold text-indigo-300 hover:text-white bg-black/65 hover:bg-indigo-600/90 backdrop-blur px-2.5 py-1 rounded-md border border-white/10 transition cursor-pointer",
-                      title: "M\u1EDF tr\xECnh ph\xE1t l\u1EDBn",
+                      href: `https://zalo.me/${settings?.zalo || ""}`,
+                      target: "_blank",
+                      rel: "noopener",
+                      class: "flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-bold text-xs transition",
                       children: [
-                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand mr-1" }),
-                        "Ph\xF3ng to"
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bell", "aria-hidden": "true" }),
+                        "Nh\u1EAFn Zalo nh\u1EADn l\u1ECBch m\u1EDF b\xE1n"
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: "/san-pham?type=skill",
+                      class: "flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/35 bg-indigo-500/15 text-indigo-200 hover:bg-indigo-500/25 font-bold text-xs transition",
+                      children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
+                        "Xem 5 Skill \u0111ang b\xE1n"
                       ]
                     }
                   )
                 ] })
-              ]
-            }
-          ) : p.thumbnail ? /* @__PURE__ */ jsxDEV("div", { class: "adaptive-thumb-wrapper mx-auto rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video relative shadow-lg", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", style: `background-image:url('${p.thumbnail}')` }),
-            /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "relative z-[2] w-full h-full object-contain" })
-          ] }) : /* @__PURE__ */ jsxDEV(
-            "div",
-            {
-              class: "rounded-2xl overflow-hidden border border-[#1f1b4b] bg-[#080716] aspect-video grid place-items-center text-white/95 relative shadow-lg",
-              style: `background:${gradientFor(p.id)}`,
-              children: /* @__PURE__ */ jsxDEV("div", { class: "text-center p-4", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-6xl mb-3 opacity-90` }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold uppercase tracking-[0.2em] opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] })
-              ] })
-            }
-          ),
-          gallery.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-4 gap-2.5 mt-3", children: gallery.slice(0, 8).map((g, i) => /* @__PURE__ */ jsxDEV(
-            "img",
-            {
-              src: g,
-              alt: `${p.name} \u1EA3nh ${i + 1}`,
-              loading: "lazy",
-              class: "aspect-[9/16] object-cover rounded-lg border border-[#1f1b4b] cursor-pointer hover:border-indigo-500 transition"
-            }
-          )) }),
-          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3 mt-5", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt" }) }),
-              /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-slate-500 uppercase font-bold tracking-wider", children: "Giao h\xE0ng" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "T\u1EF1 \u0111\u1ED9ng 24/7" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes" }) }),
-              /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-slate-500 uppercase font-bold tracking-wider", children: "N\u1ED9i dung" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Full t\xE0i li\u1EC7u + HDSD" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-amber-500/10 text-amber-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-infinity" }) }),
-              /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-slate-500 uppercase font-bold tracking-wider", children: "Truy c\u1EADp" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Tr\u1ECDn \u0111\u1EDDi + update free" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e26] to-[#16143c] border border-[#1f1b4b] flex items-center gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-rose-500/10 text-rose-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset" }) }),
-              /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "text-[9px] text-slate-500 uppercase font-bold tracking-wider", children: "H\u1ED7 tr\u1EE3" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "1-1 qua Zalo" })
+              ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2.5", children: [
+                  /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-buy-now flex-1 min-w-[150px] h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 transition shadow-lg shadow-rose-500/15 cursor-pointer", "data-id": p.id, children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt mr-1.5", "aria-hidden": "true" }),
+                    "Mua ngay"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-add-cart flex-1 min-w-[150px] h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer", "data-id": p.id, "data-name": p.name, children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus mr-1.5", "aria-hidden": "true" }),
+                    "Th\xEAm v\xE0o gi\u1ECF"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      "aria-label": inWishlist ? "B\u1ECF kh\u1ECFi y\xEAu th\xEDch" : "Th\xEAm v\xE0o y\xEAu th\xEDch",
+                      class: `btn-wishlist w-12 h-12 rounded-xl border border-[#221e54] hover:border-rose-400 transition flex items-center justify-center cursor-pointer ${inWishlist ? "text-rose-400 bg-rose-500/15" : "text-[#c2c0e0] bg-white/5"}`,
+                      "data-id": p.id,
+                      title: "Y\xEAu th\xEDch",
+                      children: /* @__PURE__ */ jsxDEV("i", { class: `${inWishlist ? "fas" : "far"} fa-heart`, "aria-hidden": "true" })
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: `https://zalo.me/${settings?.zalo}`,
+                    target: "_blank",
+                    rel: "noopener",
+                    class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-indigo-500/35 bg-indigo-500/15 text-indigo-200 font-bold text-xs hover:bg-indigo-500/25 hover:text-white transition duration-200",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-comment-dots text-sm", "aria-hidden": "true" }),
+                      "Li\xEAn h\u1EC7 t\u01B0 v\u1EA5n Zalo nh\u1EADn khuy\u1EBFn m\xE3i th\xEAm"
+                    ]
+                  }
+                )
+              ] }),
+              p.demo_url && /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: p.demo_url,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "flex items-center justify-center gap-2 w-full h-11 rounded-xl border border-[#221e54] hover:border-indigo-400 text-indigo-300 hover:text-white hover:bg-[#161436] font-semibold text-xs transition mb-5",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up-right-from-square", "aria-hidden": "true" }),
+                    "Xem demo tr\u1EF1c ti\u1EBFp"
+                  ]
+                }
+              ),
+              features.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5 mb-4", children: [
+                /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3 text-xs uppercase tracking-wider", children: "B\u1EA1n nh\u1EADn \u0111\u01B0\u1EE3c" }),
+                /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2", children: features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5 text-xs text-[#d6d4ee]", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-400 mt-0.5 shrink-0", "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsxDEV("span", { children: f })
+                ] })) })
+              ] }),
+              tech.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+                /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3 text-xs uppercase tracking-wider", children: "C\xF4ng ngh\u1EC7 s\u1EED d\u1EE5ng" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: tech.map((t) => /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-lg bg-[#161436] text-[#f4f4fc] text-[11px] font-bold border border-[#2a2559]", children: t })) })
               ] })
             ] })
           ] })
+        ] }) }),
+        comboItems.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "max-w-7xl mx-auto px-4 py-10", children: [
+          /* @__PURE__ */ jsxDEV(SectionTitle, { title: "Combo n\xE0y bao g\u1ED3m", subtitle: `${comboItems.length} s\u1EA3n ph\u1EA9m \u2014 mua l\u1EBB t\u1ED1n ${formatVND(comboItems.reduce((s, i) => s + i.price, 0))}` }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: comboItems.map((i) => /* @__PURE__ */ jsxDEV(ProductCard, { p: i, compact: true })) })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col justify-start", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-3", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold", children: PRODUCT_TYPE_LABEL[p.product_type] }),
-            p.category_name && /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${p.category_slug}`, class: "px-2.5 py-1 rounded bg-[#16143c] text-slate-300 text-xs font-medium hover:text-white hover:bg-white/5 transition", children: p.category_name }),
-            comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1" }),
-              "CH\u01AFA M\u1EDE B\xC1N"
-            ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
-              p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-orange-500/15 text-orange-400 text-xs font-bold", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire mr-1 animate-pulse" }),
-                "HOT"
+        /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-10", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_320px] gap-8", children: [
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("div", { role: "tablist", "aria-label": "Th\xF4ng tin chi ti\u1EBFt s\u1EA3n ph\u1EA9m", class: "flex items-center gap-1.5 border-b border-[#221e54] mb-6 overflow-x-auto pb-2", children: [
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": "true",
+                  "aria-controls": "panel-desc",
+                  id: "tab-desc",
+                  class: "tab-btn active px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer",
+                  "data-tab": "desc",
+                  "data-group": "pd",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-file-lines mr-1.5", "aria-hidden": "true" }),
+                    "M\xF4 t\u1EA3 chi ti\u1EBFt"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": "false",
+                  "aria-controls": "panel-rev",
+                  id: "tab-rev",
+                  class: "tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer",
+                  "data-tab": "rev",
+                  "data-group": "pd",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star mr-1.5", "aria-hidden": "true" }),
+                    "\u0110\xE1nh gi\xE1 (",
+                    p.rating_count,
+                    ")"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": "false",
+                  "aria-controls": "panel-policy",
+                  id: "tab-policy",
+                  class: "tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer",
+                  "data-tab": "policy",
+                  "data-group": "pd",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved mr-1.5", "aria-hidden": "true" }),
+                    "Ch\xEDnh s\xE1ch"
+                  ]
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", id: "panel-desc", "aria-labelledby": "tab-desc", class: "tab-panel bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", "data-tab": "desc", "data-group": "pd", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: p.description || "<p>\u0110ang c\u1EADp nh\u1EADt m\xF4 t\u1EA3.</p>" } }) }),
+            /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", id: "panel-rev", "aria-labelledby": "tab-rev", class: "tab-panel hidden", "data-tab": "rev", "data-group": "pd", children: [
+              /* @__PURE__ */ jsxDEV("div", { id: "reviews", class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 mb-5", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-[180px_1fr] gap-7 items-center", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-center", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-5xl font-extrabold text-white tabular-nums", children: p.rating.toFixed(1) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "my-2", children: /* @__PURE__ */ jsxDEV(Stars, { rating: p.rating, size: "text-base" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] tabular-nums", children: [
+                    p.rating_count,
+                    " \u0111\xE1nh gi\xE1"
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "space-y-1.5", children: [5, 4, 3, 2, 1].map((star) => {
+                  const cnt = ratingBreakdown[star] || 0;
+                  const totalR = Object.values(ratingBreakdown).reduce((a, b) => a + b, 0) || 1;
+                  const pct = Math.round(cnt / totalR * 100);
+                  return /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs tabular-nums", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-10 text-[#b8b6d9] shrink-0", children: [
+                      star,
+                      " ",
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-amber-400", "aria-hidden": "true" })
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "flex-1 h-2 rounded-full bg-[#161436] overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "h-full bg-amber-400 rounded-full", style: `width:${pct}%` }) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-8 text-right text-[#b8b6d9]", children: cnt })
+                  ] });
+                }) })
+              ] }) }),
+              canReview && /* @__PURE__ */ jsxDEV("form", { action: "/api/reviews", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 mb-5", children: [
+                /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: "Vi\u1EBFt \u0111\xE1nh gi\xE1 c\u1EE7a b\u1EA1n" }),
+                /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "product_id", value: p.id }),
+                /* @__PURE__ */ jsxDEV("div", { class: "mb-4", children: [
+                  /* @__PURE__ */ jsxDEV("label", { for: "review-rating", class: "block text-xs font-semibold text-[#c2c0e0] mb-2", children: "S\u1ED1 sao" }),
+                  /* @__PURE__ */ jsxDEV("select", { id: "review-rating", name: "rating", class: "h-10 px-3 rounded-lg border border-[#2a2559] bg-[#161436] text-white outline-none focus:border-indigo-500 text-xs", children: [5, 4, 3, 2, 1].map((s) => /* @__PURE__ */ jsxDEV("option", { value: s, children: [
+                    s,
+                    " sao"
+                  ] })) })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "mb-4", children: [
+                  /* @__PURE__ */ jsxDEV("label", { for: "review-comment", class: "block text-xs font-semibold text-[#c2c0e0] mb-2", children: "Nh\u1EADn x\xE9t" }),
+                  /* @__PURE__ */ jsxDEV(
+                    "textarea",
+                    {
+                      id: "review-comment",
+                      name: "comment",
+                      rows: 4,
+                      required: true,
+                      placeholder: "Chia s\u1EBB tr\u1EA3i nghi\u1EC7m c\u1EE7a b\u1EA1n v\u1EC1 s\u1EA3n ph\u1EA9m n\xE0y...",
+                      class: "w-full p-3 rounded-lg border border-[#2a2559] bg-[#161436] text-white outline-none focus:border-indigo-500 text-xs resize-y"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden text-xs text-rose-400 mb-3", role: "alert" }),
+                /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-md shadow-indigo-600/15 cursor-pointer", children: "G\u1EEDi \u0111\xE1nh gi\xE1" })
               ] }),
-              p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 text-xs font-bold", children: "M\u1EDAI" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3 glow-text-brand", children: p.name }),
-          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-4 text-xs mb-4", children: [
-            /* @__PURE__ */ jsxDEV("a", { href: "#reviews", class: "flex items-center gap-1.5", children: [
-              /* @__PURE__ */ jsxDEV(Stars, { rating: p.rating, size: "text-xs" }),
-              /* @__PURE__ */ jsxDEV("b", { class: "text-white text-sm", children: p.rating.toFixed(1) }),
-              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400", children: [
-                "(",
-                p.rating_count,
-                " \u0111\xE1nh gi\xE1)"
+              !user && /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 mb-5 text-xs text-amber-200", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-info mr-1.5", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-bold underline", children: "\u0110\u0103ng nh\u1EADp" }),
+                " v\xE0 mua s\u1EA3n ph\u1EA9m \u0111\u1EC3 vi\u1EBFt \u0111\xE1nh gi\xE1."
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
+                reviews.length === 0 && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-10 text-center text-[#9492b8] text-xs", children: "Ch\u01B0a c\xF3 \u0111\xE1nh gi\xE1 n\xE0o. H\xE3y l\xE0 ng\u01B0\u1EDDi \u0111\u1EA7u ti\xEAn!" }),
+                reviews.map((r) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-xs shrink-0", children: (r.full_name || "K").charAt(0).toUpperCase() }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1", children: [
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-xs text-white", children: r.full_name }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold", children: "\u0110\xE3 mua" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] ml-auto", children: formatDate(r.created_at) })
+                    ] }),
+                    /* @__PURE__ */ jsxDEV(Stars, { rating: r.rating }),
+                    /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#c2c0e0] mt-2 leading-relaxed", children: r.comment })
+                  ] })
+                ] }) }))
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-[#1f1b4b]", children: "|" }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-shopping mr-1 text-slate-500" }),
-              p.sold_count,
-              " \u0111\xE3 b\xE1n"
-            ] }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-[#1f1b4b]", children: "|" }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye mr-1 text-slate-500" }),
-              p.view_count,
-              " xem"
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] text-sm leading-relaxed mb-5", children: p.short_desc }),
-          /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-[#0f0e26] via-[#1a184c]/50 to-[#0b0a19] p-5 mb-4 glow-brand relative overflow-hidden", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "flex items-end flex-wrap gap-3 mb-1.5", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "text-3xl md:text-4xl font-extrabold text-[#f43f5e] leading-none", children: formatVND(p.price) }),
-              p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV(Fragment, { children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-base text-slate-500 line-through leading-none", children: formatVND(p.original_price) }),
-                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-bold", children: [
-                  "-",
-                  off,
-                  "%"
-                ] })
-              ] })
-            ] }),
-            save > 0 && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-emerald-400 font-bold flex items-center gap-1", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank text-sm" }),
-              "Ti\u1EBFt ki\u1EC7m ",
-              formatVND(save)
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-3 border-t border-indigo-500/20 text-[11px] text-[#9f9dbb] flex flex-wrap gap-x-4 gap-y-1.5", children: [
-              /* @__PURE__ */ jsxDEV("span", { children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-infinity text-indigo-400 mr-1" }),
-                "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi"
+            /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", id: "panel-policy", "aria-labelledby": "tab-policy", class: "tab-panel hidden bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", "data-tab": "policy", "data-group": "pd", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", children: [
+              /* @__PURE__ */ jsxDEV("h3", { children: "Ch\xEDnh s\xE1ch giao h\xE0ng" }),
+              /* @__PURE__ */ jsxDEV("p", { children: [
+                "S\u1EA3n ph\u1EA9m s\u1ED1 \u0111\u01B0\u1EE3c giao ",
+                /* @__PURE__ */ jsxDEV("b", { children: "t\u1EF1 \u0111\u1ED9ng 100%" }),
+                '. Ngay sau khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n", link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 t\xE0i li\u1EC7u h\u01B0\u1EDBng d\u1EABn s\u1EBD xu\u1EA5t hi\u1EC7n trong m\u1EE5c ',
+                /* @__PURE__ */ jsxDEV("b", { children: "T\xE0i kho\u1EA3n \u2192 S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" }),
+                "."
               ] }),
-              /* @__PURE__ */ jsxDEV("span", { children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-indigo-400 mr-1" }),
-                "Giao t\u1EF1 \u0111\u1ED9ng"
+              /* @__PURE__ */ jsxDEV("h3", { children: "Ch\xEDnh s\xE1ch b\u1EA3o h\xE0nh" }),
+              /* @__PURE__ */ jsxDEV("ul", { children: [
+                /* @__PURE__ */ jsxDEV("li", { children: "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt mi\u1EC5n ph\xED 6-12 th\xE1ng tu\u1EF3 s\u1EA3n ph\u1EA9m" }),
+                /* @__PURE__ */ jsxDEV("li", { children: "Nh\u1EADn b\u1EA3n c\u1EADp nh\u1EADt mi\u1EC5n ph\xED tr\u1ECDn \u0111\u1EDDi" }),
+                /* @__PURE__ */ jsxDEV("li", { children: "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t qua Zalo/Ultraview khi c\u1EA7n" })
               ] }),
-              /* @__PURE__ */ jsxDEV("span", { children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rotate-left text-indigo-400 mr-1" }),
-                "Ho\xE0n ti\u1EC1n 7 ng\xE0y"
+              /* @__PURE__ */ jsxDEV("h3", { children: "Ch\xEDnh s\xE1ch ho\xE0n ti\u1EC1n" }),
+              /* @__PURE__ */ jsxDEV("p", { children: [
+                "Ho\xE0n ti\u1EC1n ",
+                /* @__PURE__ */ jsxDEV("b", { children: "100%" }),
+                " trong v\xF2ng ",
+                /* @__PURE__ */ jsxDEV("b", { children: "7 ng\xE0y" }),
+                " n\u1EBFu s\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 ho\u1EB7c kh\xF4ng th\u1EC3 c\xE0i \u0111\u1EB7t \u0111\u01B0\u1EE3c do l\u1ED7i t\u1EEB ph\xEDa ch\xFAng t\xF4i."
+              ] }),
+              /* @__PURE__ */ jsxDEV("h3", { children: "B\u1EA3n quy\u1EC1n s\u1EED d\u1EE5ng" }),
+              /* @__PURE__ */ jsxDEV("ul", { children: [
+                /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c d\xF9ng cho k\xEAnh c\xE1 nh\xE2n v\xE0 k\xEAnh b\xE1n h\xE0ng c\u1EE7a b\u1EA1n kh\xF4ng gi\u1EDBi h\u1EA1n" }),
+                /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c tu\u1EF3 bi\u1EBFn prompt, k\u1ECBch b\u1EA3n v\xE0 quy tr\xECnh theo ng\xE1ch ri\xEAng" }),
+                /* @__PURE__ */ jsxDEV("li", { children: "Kh\xF4ng \u0111\u01B0\u1EE3c chia s\u1EBB c\xF4ng khai ho\u1EB7c b\xE1n l\u1EA1i nguy\xEAn b\u1EA3n b\u1ED9 Skill cho b\xEAn th\u1EE9 ba" })
               ] })
-            ] })
+            ] }) })
           ] }),
-          comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-amber-300 flex items-center gap-2 mb-1", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
-              "S\u1EA3n ph\u1EA9m hi\u1EC7n \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n"
+          /* @__PURE__ */ jsxDEV("aside", { class: "space-y-4 lg:sticky-side", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "Cam k\u1EBFt c\u1EE7a ch\xFAng t\xF4i" }),
+              /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-xs", children: [
+                ["fa-bolt", "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"],
+                ["fa-infinity", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, update free"],
+                ["fa-headset", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
+                ["fa-shield-halved", "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"],
+                ["fa-lock", "Thanh to\xE1n an to\xE0n qua VietQR"]
+              ].map(([ic, t]) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5 text-[#c2c0e0]", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic} text-indigo-400 mt-0.5 w-4`, "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: t })
+              ] })) })
             ] }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-amber-200/80 leading-relaxed", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng \u0111ang \u01B0u ti\xEAn m\u1EDF b\xE1n 5 b\u1ED9 Skill AI ho\xE0n thi\u1EC7n nh\u1EA5t. H\xE3y nh\u1EAFn Zalo ho\u1EB7c quay l\u1EA1i sau \u0111\u1EC3 c\u1EADp nh\u1EADt ng\xE0y ph\xE1t h\xE0nh ch\xEDnh th\u1EE9c." })
-          ] }) : /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl flex items-center justify-between gap-3", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-indigo-200 flex items-center gap-2", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-emerald-400" }),
-              /* @__PURE__ */ jsxDEV("span", { children: "Thanh to\xE1n VietQR t\u1EF1 \u0111\u1ED9ng 24/7 \u2014 nh\u1EADn link t\u1EA3i Skill ngay l\u1EADp t\u1EE9c." })
-            ] }),
-            /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold shrink-0", children: "C\xF2n h\xE0ng" })
-          ] }),
-          owned ? /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 mb-4", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-emerald-400 font-bold mb-2", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-lg" }),
-              "B\u1EA1n \u0111\xE3 s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0y"
-            ] }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-emerald-300/80 mb-3.5 leading-relaxed", children: "Truy c\u1EADp link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 license key trong khu v\u1EF1c t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
-            /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download" }),
-              "Truy c\u1EADp s\u1EA3n ph\u1EA9m"
-            ] })
-          ] }) : comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
-            /* @__PURE__ */ jsxDEV("button", { type: "button", disabled: true, class: "w-full h-12 rounded-xl bg-[#16143c] border border-[#28235d] text-amber-300 font-bold text-sm cursor-not-allowed", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1.5" }),
-              "T\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n"
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-2.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl p-5 text-white border border-[#221e54]", children: [
+              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5 text-xs uppercase tracking-wider text-white", children: "C\u1EA7n t\u01B0 v\u1EA5n th\xEAm?" }),
+              /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mb-4 leading-relaxed", children: "\u0110\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 s\u1EB5n s\xE0ng gi\u1EA3i \u0111\xE1p m\u1ECDi th\u1EAFc m\u1EAFc c\u1EE7a b\u1EA1n 24/7." }),
               /* @__PURE__ */ jsxDEV(
                 "a",
                 {
-                  href: `https://zalo.me/${settings?.zalo || ""}`,
+                  href: `https://zalo.me/${settings?.zalo}`,
                   target: "_blank",
                   rel: "noopener",
-                  class: "flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-bold text-xs transition",
-                  children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bell" }),
-                    "Nh\u1EAFn Zalo nh\u1EADn l\u1ECBch m\u1EDF b\xE1n"
-                  ]
+                  class: "flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs transition mb-2",
+                  children: "Chat Zalo ngay"
                 }
               ),
               /* @__PURE__ */ jsxDEV(
                 "a",
                 {
-                  href: "/san-pham?type=skill",
-                  class: "flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 font-bold text-xs transition",
+                  href: `tel:${(settings?.hotline || "").replace(/\s/g, "")}`,
+                  class: "flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-[#161436] border border-[#2a2559] text-white font-bold text-xs hover:bg-white/10 transition tabular-nums",
                   children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }),
-                    "Xem 5 Skill \u0111ang b\xE1n"
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone", "aria-hidden": "true" }),
+                    settings?.hotline
                   ]
                 }
               )
             ] })
-          ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2.5", children: [
-              /* @__PURE__ */ jsxDEV("button", { class: "btn-buy-now flex-1 min-w-[150px] h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 transition shadow-lg shadow-rose-500/10", "data-id": p.id, children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt mr-1.5" }),
-                "Mua ngay"
-              ] }),
-              /* @__PURE__ */ jsxDEV("button", { class: "btn-add-cart flex-1 min-w-[150px] h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition shadow-md shadow-indigo-600/10", "data-id": p.id, "data-name": p.name, children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus mr-1.5" }),
-                "Th\xEAm v\xE0o gi\u1ECF"
-              ] }),
-              /* @__PURE__ */ jsxDEV(
-                "button",
-                {
-                  class: `btn-wishlist w-12 h-12 rounded-xl border border-[#1f1b4b] hover:border-rose-500 transition flex items-center justify-center ${inWishlist ? "text-rose-500 bg-rose-500/10" : "text-slate-400 bg-white/5"}`,
-                  "data-id": p.id,
-                  title: "Y\xEAu th\xEDch",
-                  children: /* @__PURE__ */ jsxDEV("i", { class: `${inWishlist ? "fas" : "far"} fa-heart` })
-                }
-              )
-            ] }),
+          ] })
+        ] }) }),
+        related.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "max-w-7xl mx-auto px-4 py-10", children: [
+          /* @__PURE__ */ jsxDEV(SectionTitle, { title: "S\u1EA3n ph\u1EA9m li\xEAn quan", subtitle: "C\xF3 th\u1EC3 b\u1EA1n c\u0169ng quan t\xE2m" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: related.map((r) => /* @__PURE__ */ jsxDEV(ProductCard, { p: r })) })
+        ] }),
+        !owned && !comingSoon && /* @__PURE__ */ jsxDEV("div", { class: "lg:hidden fixed inset-x-0 bottom-0 z-40 bg-[#0f0e24]/95 backdrop-blur-md border-t border-indigo-500/30 px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xl", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] truncate", children: p.name }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-baseline gap-2 tabular-nums", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-base font-extrabold text-rose-400", children: formatVND(p.price) }),
+              p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] line-through", children: formatVND(p.original_price) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 shrink-0", children: [
             /* @__PURE__ */ jsxDEV(
-              "a",
+              "button",
               {
-                href: `https://zalo.me/${settings?.zalo}`,
-                target: "_blank",
-                rel: "noopener",
-                class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold text-xs hover:bg-indigo-500/20 hover:text-white transition duration-200",
-                children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fab fa-whatsapp text-sm" }),
-                  "Li\xEAn h\u1EC7 t\u01B0 v\u1EA5n Zalo nh\u1EADn khuy\u1EBFn m\xE3i th\xEAm"
-                ]
+                type: "button",
+                class: "btn-add-cart w-11 h-11 rounded-xl bg-[#161436] border border-[#2a2559] text-indigo-300 grid place-items-center cursor-pointer",
+                "data-id": p.id,
+                "data-name": p.name,
+                "aria-label": "Th\xEAm v\xE0o gi\u1ECF h\xE0ng",
+                children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus", "aria-hidden": "true" })
               }
-            )
-          ] }),
-          p.demo_url && /* @__PURE__ */ jsxDEV(
-            "a",
-            {
-              href: p.demo_url,
-              target: "_blank",
-              rel: "noopener",
-              class: "flex items-center justify-center gap-2 w-full h-11 rounded-xl border border-[#1f1b4b] hover:border-indigo-500 text-indigo-400 hover:text-white hover:bg-[#16143c] font-semibold text-xs transition mb-5",
-              children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up-right-from-square" }),
-                "Xem demo tr\u1EF1c ti\u1EBFp"
-              ]
-            }
-          ),
-          features.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5 mb-4", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3 text-xs uppercase tracking-wider", children: "B\u1EA1n nh\u1EADn \u0111\u01B0\u1EE3c" }),
-            /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2", children: features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5 text-xs text-[#9f9dbb]", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-400 mt-0.5 shrink-0" }),
-              /* @__PURE__ */ jsxDEV("span", { children: f })
-            ] })) })
-          ] }),
-          tech.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3 text-xs uppercase tracking-wider", children: "C\xF4ng ngh\u1EC7 s\u1EED d\u1EE5ng" }),
-            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: tech.map((t) => /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-lg bg-[#16143c] text-[#e2e1f5] text-[10px] font-bold border border-[#1f1b4b]", children: t })) })
+            ),
+            /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-buy-now h-11 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-xs shadow-lg cursor-pointer", "data-id": p.id, children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt mr-1", "aria-hidden": "true" }),
+              "Mua ngay"
+            ] })
           ] })
         ] })
-      ] })
-    ] }) }),
-    comboItems.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "max-w-7xl mx-auto px-4 py-10", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { title: "Combo n\xE0y bao g\u1ED3m", subtitle: `${comboItems.length} s\u1EA3n ph\u1EA9m \u2014 mua l\u1EBB t\u1ED1n ${formatVND(comboItems.reduce((s, i) => s + i.price, 0))}` }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: comboItems.map((i) => /* @__PURE__ */ jsxDEV(ProductCard, { p: i, compact: true })) })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-10", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_320px] gap-8", children: [
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1 border-b border-[#1f1b4b] mb-6 overflow-x-auto", children: [
-          /* @__PURE__ */ jsxDEV("button", { class: "tab-btn active px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap", "data-tab": "desc", "data-group": "pd", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-file-lines mr-1.5" }),
-            "M\xF4 t\u1EA3 chi ti\u1EBFt"
-          ] }),
-          /* @__PURE__ */ jsxDEV("button", { class: "tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap", "data-tab": "rev", "data-group": "pd", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star mr-1.5" }),
-            "\u0110\xE1nh gi\xE1 (",
-            p.rating_count,
-            ")"
-          ] }),
-          /* @__PURE__ */ jsxDEV("button", { class: "tab-btn px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap", "data-tab": "policy", "data-group": "pd", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved mr-1.5" }),
-            "Ch\xEDnh s\xE1ch"
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "tab-panel bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 md:p-8", "data-tab": "desc", "data-group": "pd", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: p.description || "<p>\u0110ang c\u1EADp nh\u1EADt m\xF4 t\u1EA3.</p>" } }) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "tab-panel hidden", "data-tab": "rev", "data-group": "pd", id: "reviews", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 mb-5", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-[180px_1fr] gap-7 items-center", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-center", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "text-5xl font-extrabold text-white", children: p.rating.toFixed(1) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "my-2", children: /* @__PURE__ */ jsxDEV(Stars, { rating: p.rating, size: "text-base" }) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-400", children: [
-                p.rating_count,
-                " \u0111\xE1nh gi\xE1"
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "space-y-1.5", children: [5, 4, 3, 2, 1].map((star) => {
-              const cnt = ratingBreakdown[star] || 0;
-              const totalR = Object.values(ratingBreakdown).reduce((a, b) => a + b, 0) || 1;
-              const pct = Math.round(cnt / totalR * 100);
-              return /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "w-10 text-slate-400 shrink-0", children: [
-                  star,
-                  " ",
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-amber-400" })
-                ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "flex-1 h-2 rounded-full bg-[#16143c] overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "h-full bg-amber-400 rounded-full", style: `width:${pct}%` }) }),
-                /* @__PURE__ */ jsxDEV("span", { class: "w-8 text-right text-slate-400", children: cnt })
-              ] });
-            }) })
-          ] }) }),
-          canReview && /* @__PURE__ */ jsxDEV("form", { action: "/api/reviews", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 mb-5", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: "Vi\u1EBFt \u0111\xE1nh gi\xE1 c\u1EE7a b\u1EA1n" }),
-            /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "product_id", value: p.id }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mb-4", children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "block text-xs font-semibold text-[#9f9dbb] mb-2", children: "S\u1ED1 sao" }),
-              /* @__PURE__ */ jsxDEV("select", { name: "rating", class: "h-10 px-3 rounded-lg border border-[#1f1b4b] bg-[#16143c] text-white outline-none focus:border-indigo-500/50 text-xs", children: [5, 4, 3, 2, 1].map((s) => /* @__PURE__ */ jsxDEV("option", { value: s, children: [
-                s,
-                " sao"
-              ] })) })
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mb-4", children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "block text-xs font-semibold text-[#9f9dbb] mb-2", children: "Nh\u1EADn x\xE9t" }),
-              /* @__PURE__ */ jsxDEV(
-                "textarea",
-                {
-                  name: "comment",
-                  rows: 4,
-                  required: true,
-                  placeholder: "Chia s\u1EBB tr\u1EA3i nghi\u1EC7m c\u1EE7a b\u1EA1n v\u1EC1 s\u1EA3n ph\u1EA9m n\xE0y...",
-                  class: "w-full p-3 rounded-lg border border-[#1f1b4b] bg-[#16143c] text-white outline-none focus:border-indigo-500/50 text-xs resize-y"
-                }
-              )
-            ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden text-xs text-rose-500 mb-3" }),
-            /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-10 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-md shadow-indigo-600/10", children: "G\u1EEDi \u0111\xE1nh gi\xE1" })
-          ] }),
-          !user && /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-500/10 border border-amber-500/25 rounded-2xl p-5 mb-5 text-xs text-amber-300", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-info mr-1.5" }),
-            /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-bold underline", children: "\u0110\u0103ng nh\u1EADp" }),
-            " v\xE0 mua s\u1EA3n ph\u1EA9m \u0111\u1EC3 vi\u1EBFt \u0111\xE1nh gi\xE1."
-          ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
-            reviews.length === 0 && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-10 text-center text-[#9f9dbb] text-xs", children: "Ch\u01B0a c\xF3 \u0111\xE1nh gi\xE1 n\xE0o. H\xE3y l\xE0 ng\u01B0\u1EDDi \u0111\u1EA7u ti\xEAn!" }),
-            reviews.map((r) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-xs shrink-0", children: (r.full_name || "K").charAt(0).toUpperCase() }),
-              /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1", children: [
-                  /* @__PURE__ */ jsxDEV("b", { class: "text-xs text-white", children: r.full_name }),
-                  /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold", children: "\u0110\xE3 mua" }),
-                  /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-slate-500 ml-auto", children: formatDate(r.created_at) })
-                ] }),
-                /* @__PURE__ */ jsxDEV(Stars, { rating: r.rating }),
-                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9f9dbb] mt-2 leading-relaxed", children: r.comment })
-              ] })
-            ] }) }))
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "tab-panel hidden bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-6 md:p-8", "data-tab": "policy", "data-group": "pd", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", children: [
-          /* @__PURE__ */ jsxDEV("h3", { children: "Ch\xEDnh s\xE1ch giao h\xE0ng" }),
-          /* @__PURE__ */ jsxDEV("p", { children: [
-            "S\u1EA3n ph\u1EA9m s\u1ED1 \u0111\u01B0\u1EE3c giao ",
-            /* @__PURE__ */ jsxDEV("b", { children: "t\u1EF1 \u0111\u1ED9ng 100%" }),
-            '. Ngay sau khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n", link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 license key s\u1EBD xu\u1EA5t hi\u1EC7n trong m\u1EE5c ',
-            /* @__PURE__ */ jsxDEV("b", { children: "T\xE0i kho\u1EA3n \u2192 S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" }),
-            "."
-          ] }),
-          /* @__PURE__ */ jsxDEV("h3", { children: "Ch\xEDnh s\xE1ch b\u1EA3o h\xE0nh" }),
-          /* @__PURE__ */ jsxDEV("ul", { children: [
-            /* @__PURE__ */ jsxDEV("li", { children: "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt mi\u1EC5n ph\xED 6-12 th\xE1ng tu\u1EF3 s\u1EA3n ph\u1EA9m" }),
-            /* @__PURE__ */ jsxDEV("li", { children: "Nh\u1EADn b\u1EA3n c\u1EADp nh\u1EADt mi\u1EC5n ph\xED tr\u1ECDn \u0111\u1EDDi" }),
-            /* @__PURE__ */ jsxDEV("li", { children: "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t qua Zalo/Ultraview khi c\u1EA7n" })
-          ] }),
-          /* @__PURE__ */ jsxDEV("h3", { children: "Ch\xEDnh s\xE1ch ho\xE0n ti\u1EC1n" }),
-          /* @__PURE__ */ jsxDEV("p", { children: [
-            "Ho\xE0n ti\u1EC1n ",
-            /* @__PURE__ */ jsxDEV("b", { children: "100%" }),
-            " trong v\xF2ng ",
-            /* @__PURE__ */ jsxDEV("b", { children: "7 ng\xE0y" }),
-            " n\u1EBFu s\u1EA3n ph\u1EA9m kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 ho\u1EB7c kh\xF4ng th\u1EC3 c\xE0i \u0111\u1EB7t \u0111\u01B0\u1EE3c do l\u1ED7i t\u1EEB ph\xEDa ch\xFAng t\xF4i."
-          ] }),
-          /* @__PURE__ */ jsxDEV("h3", { children: "B\u1EA3n quy\u1EC1n s\u1EED d\u1EE5ng" }),
-          /* @__PURE__ */ jsxDEV("ul", { children: [
-            /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c d\xF9ng cho k\xEAnh c\xE1 nh\xE2n v\xE0 k\xEAnh b\xE1n h\xE0ng c\u1EE7a b\u1EA1n kh\xF4ng gi\u1EDBi h\u1EA1n" }),
-            /* @__PURE__ */ jsxDEV("li", { children: "\u0110\u01B0\u1EE3c tu\u1EF3 bi\u1EBFn prompt, k\u1ECBch b\u1EA3n v\xE0 quy tr\xECnh theo ng\xE1ch ri\xEAng" }),
-            /* @__PURE__ */ jsxDEV("li", { children: "Kh\xF4ng \u0111\u01B0\u1EE3c chia s\u1EBB c\xF4ng khai ho\u1EB7c b\xE1n l\u1EA1i nguy\xEAn b\u1EA3n b\u1ED9 Skill cho b\xEAn th\u1EE9 ba" })
-          ] })
-        ] }) })
-      ] }),
-      /* @__PURE__ */ jsxDEV("aside", { class: "space-y-4 lg:sticky-side", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "Cam k\u1EBFt c\u1EE7a ch\xFAng t\xF4i" }),
-          /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-xs", children: [
-            ["fa-bolt", "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"],
-            ["fa-infinity", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, update free"],
-            ["fa-headset", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
-            ["fa-shield-halved", "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"],
-            ["fa-lock", "Thanh to\xE1n an to\xE0n qua VietQR"]
-          ].map(([ic, t]) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5 text-[#9f9dbb]", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic} text-indigo-400 mt-0.5 w-4` }),
-            /* @__PURE__ */ jsxDEV("span", { children: t })
-          ] })) })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl p-5 text-white border border-[#1f1b4b]", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5 text-xs uppercase tracking-wider text-white", children: "C\u1EA7n t\u01B0 v\u1EA5n th\xEAm?" }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-[#9f9dbb] mb-4 leading-relaxed", children: "\u0110\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 s\u1EB5n s\xE0ng gi\u1EA3i \u0111\xE1p m\u1ECDi th\u1EAFc m\u1EAFc c\u1EE7a b\u1EA1n 24/7." }),
-          /* @__PURE__ */ jsxDEV(
-            "a",
-            {
-              href: `https://zalo.me/${settings?.zalo}`,
-              target: "_blank",
-              rel: "noopener",
-              class: "flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold text-xs transition mb-2",
-              children: "Chat Zalo ngay"
-            }
-          ),
-          /* @__PURE__ */ jsxDEV(
-            "a",
-            {
-              href: `tel:${(settings?.hotline || "").replace(/\s/g, "")}`,
-              class: "flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-[#16143c] border border-[#1f1b4b] text-[#e2e1f5] font-bold text-xs hover:bg-white/5 transition",
-              children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone" }),
-                settings?.hotline
-              ]
-            }
-          )
-        ] })
-      ] })
-    ] }) }),
-    related.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "max-w-7xl mx-auto px-4 py-10", children: [
-      /* @__PURE__ */ jsxDEV(SectionTitle, { title: "S\u1EA3n ph\u1EA9m li\xEAn quan", subtitle: "C\xF3 th\u1EC3 b\u1EA1n c\u0169ng quan t\xE2m" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: related.map((r) => /* @__PURE__ */ jsxDEV(ProductCard, { p: r })) })
-    ] })
-  ] });
+      ]
+    }
+  );
 };
 
 // src/pages/auth.tsx
 var AuthShell = ({ title: title2, subtitle, settings = {}, children }) => {
   const siteName = settings.site_name || "KhoSkill AI";
-  return /* @__PURE__ */ jsxDEV("div", { class: "min-h-[calc(100vh-64px)] grid lg:grid-cols-2 bg-[#080716]", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "hidden lg:flex relative bg-[#0b0a1f] border-r border-[#1f1b4b] text-white p-12 flex-col justify-between overflow-hidden", children: [
+  return /* @__PURE__ */ jsxDEV("div", { class: "min-h-[calc(100vh-64px)] grid lg:grid-cols-2 bg-[#070614]", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "hidden lg:flex relative bg-[#0a091b] border-r border-[#221e54] text-white p-12 flex-col justify-between overflow-hidden", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex items-center gap-2.5", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-lg", children: siteName })
       ] }) }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
@@ -10734,59 +10957,69 @@ var AuthShell = ({ title: title2, subtitle, settings = {}, children }) => {
           /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent", children: "Skill AI T\u1EA1o Video" }),
           " th\u1EF1c chi\u1EBFn"
         ] }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-[#b9b8d9] mb-8 max-w-md leading-relaxed", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn creator \u0111ang d\xF9ng b\u1ED9 Skill AI chu\u1EA9n h\xF3a \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng tri\u1EC7u view m\u1ED7i ng\xE0y." }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] mb-8 max-w-md leading-relaxed", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn creator \u0111ang d\xF9ng b\u1ED9 Skill AI chu\u1EA9n h\xF3a \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng tri\u1EC7u view m\u1ED7i ng\xE0y." }),
         /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3.5", children: [
           ["fa-bolt", "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"],
           ["fa-infinity", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, c\u1EADp nh\u1EADt mi\u1EC5n ph\xED"],
           ["fa-headset", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
           ["fa-shield-halved", "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"]
         ].map(([ic, t]) => /* @__PURE__ */ jsxDEV("li", { class: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-white/10 border border-white/15 grid place-items-center text-indigo-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-[#e2e1f5] text-sm", children: t })
+          /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-white/10 border border-white/15 grid place-items-center text-indigo-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
+          /* @__PURE__ */ jsxDEV("span", { class: "text-[#f4f4fc] text-sm", children: t })
         ] })) })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative text-xs text-slate-500", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "relative text-xs text-[#9492b8]", children: [
         "\xA9 2026 ",
         siteName,
         " \u2014 Ph\xE1t tri\u1EC3n t\u1EA1i Vi\u1EC7t Nam"
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-center p-6 md:p-12 bg-[#080716]", children: /* @__PURE__ */ jsxDEV("div", { class: "w-full max-w-md bg-[#0f0e26] border border-[#1f1b4b] rounded-3xl p-7 md:p-8 shadow-2xl", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-center p-6 md:p-12 bg-[#070614]", children: /* @__PURE__ */ jsxDEV("div", { class: "w-full max-w-md bg-[#0f0e24] border border-[#221e54] rounded-3xl p-7 md:p-8 shadow-2xl", children: [
       /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight", children: title2 }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-[#9f9dbb] text-sm mb-7", children: subtitle }),
+      /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] text-sm mb-7", children: subtitle }),
       children
     ] }) })
   ] });
 };
-var inputCls = "w-full h-12 px-4 rounded-xl bg-[#16143c] border border-[#28235d] text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none text-sm transition";
+var inputCls = "w-full h-12 px-4 rounded-xl bg-[#161436] border border-[#2a2559] text-white placeholder-[#9492b8] focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none text-sm transition";
 var LoginPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u0103ng nh\u1EADp", subtitle: "Ch\xE0o m\u1EEBng b\u1EA1n quay l\u1EA1i! \u0110\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp Skill \u0111\xE3 mua.", settings: props.settings, children: [
-  props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-sm text-emerald-300", children: [
-    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5" }),
+  props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-300", children: [
+    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
     "\u0110\u0103ng k\xFD th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp."
   ] }),
   /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/login", method: "post", "data-ajax": true, class: "space-y-4", children: [
     /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "next", value: props.next || "" }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "Email" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "login-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
         /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11", id: "login-email" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
       /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb]", children: "M\u1EADt kh\u1EA9u" }),
+        /* @__PURE__ */ jsxDEV("label", { for: "login-password", class: "block text-sm font-medium text-[#d6d4ee]", children: "M\u1EADt kh\u1EA9u" }),
         /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs text-indigo-400 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, autocomplete: "current-password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", class: inputCls + " pl-11", id: "login-password" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
+        /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, autocomplete: "current-password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", class: inputCls + " pl-11 pr-11", id: "login-password" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
+            "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
+            title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
+            children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+          }
+        )
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-300" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-indigo-500/25 transition", children: "\u0110\u0103ng nh\u1EADp" })
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng nh\u1EADp" })
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#9f9dbb]", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
     "Ch\u01B0a c\xF3 t\xE0i kho\u1EA3n? ",
     /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng k\xFD ngay" })
   ] })
@@ -10795,37 +11028,47 @@ var RegisterPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: 
   /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/register", method: "post", "data-ajax": true, class: "space-y-4", children: [
     /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "ref", value: props.ref || "" }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "reg-name", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "text", name: "full_name", required: true, placeholder: "Nguy\u1EC5n V\u0103n A", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
+        /* @__PURE__ */ jsxDEV("input", { id: "reg-name", type: "text", name: "full_name", required: true, autocomplete: "name", placeholder: "Nguy\u1EC5n V\u0103n A", class: inputCls + " pl-11" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "Email" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "reg-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
+        /* @__PURE__ */ jsxDEV("input", { id: "reg-email", type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: [
+      /* @__PURE__ */ jsxDEV("label", { for: "reg-phone", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: [
         "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i ",
-        /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500 font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+        /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "tel", name: "phone", placeholder: "0915967790", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
+        /* @__PURE__ */ jsxDEV("input", { id: "reg-phone", type: "tel", name: "phone", autocomplete: "tel", placeholder: "0915967790", class: inputCls + " pl-11" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-[#d4d3eb] mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "reg-password", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
+        /* @__PURE__ */ jsxDEV("input", { id: "reg-password", type: "password", name: "password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11 pr-11" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
+            "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
+            title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
+            children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+          }
+        )
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-[#9f9dbb] cursor-pointer", children: [
+    /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-[#b8b6d9] cursor-pointer", children: [
       /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 accent-indigo-500" }),
       /* @__PURE__ */ jsxDEV("span", { children: [
         "T\xF4i \u0111\u1ED3ng \xFD v\u1EDBi ",
@@ -10834,17 +11077,17 @@ var RegisterPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: 
         /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-indigo-400 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-300" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-indigo-500/25 transition", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#9f9dbb]", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
     "\u0110\xE3 c\xF3 t\xE0i kho\u1EA3n? ",
     /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
   ] })
 ] }) });
 var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Qu\xEAn m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "Qu\xEAn m\u1EADt kh\u1EA9u", subtitle: "Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng.", settings: props.settings, children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-[#16143c] border border-[#28235d] space-y-4", children: [
-    /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#b9b8d9] leading-relaxed", children: "Hi\u1EC7n t\u1EA1i vi\u1EC7c kh\xF4i ph\u1EE5c m\u1EADt kh\u1EA9u \u0111\u01B0\u1EE3c x\u1EED l\xFD th\u1EE7 c\xF4ng qua \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o an to\xE0n t\xE0i kho\u1EA3n. Vui l\xF2ng li\xEAn h\u1EC7 v\u1EDBi ch\xFAng t\xF4i k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD." }),
+  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-[#161436] border border-[#2a2559] space-y-4", children: [
+    /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#c2c0e0] leading-relaxed", children: "Hi\u1EC7n t\u1EA1i vi\u1EC7c kh\xF4i ph\u1EE5c m\u1EADt kh\u1EA9u \u0111\u01B0\u1EE3c x\u1EED l\xFD th\u1EE7 c\xF4ng qua \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o an to\xE0n t\xE0i kho\u1EA3n. Vui l\xF2ng li\xEAn h\u1EC7 v\u1EDBi ch\xFAng t\xF4i k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD." }),
     /* @__PURE__ */ jsxDEV(
       "a",
       {
@@ -10859,27 +11102,46 @@ var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Q
       "a",
       {
         href: `mailto:${props.settings?.email || ""}`,
-        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-[#28235d] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-sm transition",
+        class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-[#2a2559] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-sm transition",
         children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope", "aria-hidden": "true" }),
           "G\u1EEDi email h\u1ED7 tr\u1EE3"
         ]
       }
     )
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#9f9dbb]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: [
-    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left mr-1" }),
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: [
+    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left mr-1", "aria-hidden": "true" }),
     "Quay l\u1EA1i \u0111\u0103ng nh\u1EADp"
   ] }) })
 ] }) });
 
 // src/pages/cart.tsx
+var CheckoutSteps = ({ step }) => {
+  const steps = [
+    [1, "Gi\u1ECF h\xE0ng"],
+    [2, "X\xE1c nh\u1EADn & M\xE3 gi\u1EA3m gi\xE1"],
+    [3, "Thanh to\xE1n VietQR"]
+  ];
+  return /* @__PURE__ */ jsxDEV("nav", { "aria-label": "Ti\u1EBFn tr\xECnh thanh to\xE1n", class: "mb-7", children: /* @__PURE__ */ jsxDEV("ol", { class: "flex flex-wrap items-center gap-2 sm:gap-4", children: steps.map(([n, label], idx) => {
+    const done = step > n;
+    const cur = step === n;
+    return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+      /* @__PURE__ */ jsxDEV("li", { class: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxDEV("span", { class: `w-7 h-7 rounded-full grid place-items-center text-xs font-bold tabular-nums ${done ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300" : cur ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-[#161436] border border-[#2a2559] text-[#9492b8]"}`, children: done ? /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check text-[10px]", "aria-hidden": "true" }) : n }),
+        /* @__PURE__ */ jsxDEV("span", { class: `text-xs sm:text-sm font-semibold ${cur ? "text-white" : done ? "text-emerald-300" : "text-[#9492b8]"}`, children: label })
+      ] }),
+      idx < steps.length - 1 && /* @__PURE__ */ jsxDEV("li", { class: "text-[#5c5980]", "aria-hidden": "true", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-[10px]" }) })
+    ] });
+  }) }) });
+};
 var CartPage = (props) => {
   const { items, subtotal } = props;
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1ECF h\xE0ng", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng" }] }),
-    /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7", children: "Gi\u1ECF h\xE0ng c\u1EE7a b\u1EA1n" }),
-    items.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b]", children: /* @__PURE__ */ jsxDEV(
+    /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-5", children: "Gi\u1ECF h\xE0ng c\u1EE7a b\u1EA1n" }),
+    items.length > 0 && /* @__PURE__ */ jsxDEV(CheckoutSteps, { step: 1 }),
+    items.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(
       EmptyState,
       {
         icon: "fa-cart-shopping",
@@ -10889,72 +11151,82 @@ var CartPage = (props) => {
       }
     ) }) : /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-6", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
-        items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-4 flex gap-4", children: [
+        items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-4 flex gap-4", children: [
           /* @__PURE__ */ jsxDEV(
             "a",
             {
               href: `/san-pham/${p.slug}`,
-              class: "w-24 sm:w-32 aspect-video rounded-xl overflow-hidden shrink-0 grid place-items-center text-white",
+              class: "w-24 sm:w-32 aspect-video rounded-xl overflow-hidden shrink-0 grid place-items-center text-white bg-[#070614]",
               style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`,
-              children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${p.product_type === "skill" ? "fa-wand-magic-sparkles" : p.product_type === "chatbot" ? "fa-robot" : p.product_type === "combo" ? "fa-box-open" : "fa-code"} text-xl` })
+              children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${p.product_type === "skill" ? "fa-wand-magic-sparkles" : p.product_type === "chatbot" ? "fa-robot" : p.product_type === "combo" ? "fa-box-open" : "fa-code"} text-xl`, "aria-hidden": "true" })
             }
           ),
           /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-brand-600 font-bold mb-1", children: PRODUCT_TYPE_LABEL[p.product_type] }),
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 leading-snug line-clamp-2 mb-1.5", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "hover:text-brand-600", children: p.name }) }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 mb-2", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-indigo-400 font-bold mb-1 uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white leading-snug line-clamp-2 mb-1.5", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "hover:text-indigo-300 transition", children: p.name }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mb-2", children: [
               p.version,
               " \xB7 S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex items-end justify-between gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { children: [
-                p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-slate-400 line-through mr-2", children: formatVND(p.original_price) }),
-                /* @__PURE__ */ jsxDEV("span", { class: "text-lg font-extrabold text-rose-600", children: formatVND(p.price) })
+              /* @__PURE__ */ jsxDEV("div", { class: "tabular-nums", children: [
+                p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-[#9492b8] line-through mr-2", children: formatVND(p.original_price) }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-lg font-extrabold text-rose-400", children: formatVND(p.price) })
               ] }),
-              /* @__PURE__ */ jsxDEV("button", { class: "btn-remove-cart text-slate-400 hover:text-rose-500 text-sm transition", "data-id": p.id, title: "Xo\xE1", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can" }) })
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  class: "btn-remove-cart w-9 h-9 rounded-lg bg-white/5 hover:bg-rose-500/15 text-[#9492b8] hover:text-rose-400 grid place-items-center text-sm transition cursor-pointer",
+                  "data-id": p.id,
+                  "aria-label": `Xo\xE1 ${p.name} kh\u1ECFi gi\u1ECF h\xE0ng`,
+                  title: "Xo\xE1",
+                  children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can", "aria-hidden": "true" })
+                }
+              )
             ] })
           ] })
         ] })),
-        /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:underline mt-2", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left" }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:underline mt-2", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left", "aria-hidden": "true" }),
           "Ti\u1EBFp t\u1EE5c mua s\u1EAFm"
         ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "T\xF3m t\u1EAFt \u0111\u01A1n h\xE0ng" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm pb-4 border-b border-slate-100", children: [
+      /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: "T\xF3m t\u1EAFt \u0111\u01A1n h\xE0ng" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm pb-4 border-b border-[#221e54] tabular-nums", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "S\u1ED1 s\u1EA3n ph\u1EA9m" }),
-            /* @__PURE__ */ jsxDEV("b", { children: items.length })
+            /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "S\u1ED1 s\u1EA3n ph\u1EA9m" }),
+            /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: items.length })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "T\u1EA1m t\xEDnh" }),
-            /* @__PURE__ */ jsxDEV("b", { children: formatVND(subtotal) })
+            /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "T\u1EA1m t\xEDnh" }),
+            /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: formatVND(subtotal) })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Ph\xED giao h\xE0ng" }),
-            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-600", children: "Mi\u1EC5n ph\xED" })
+            /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Ph\xED giao h\xE0ng" }),
+            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: "Mi\u1EC5n ph\xED" })
           ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4", children: [
-          /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-slate-900", children: "T\u1ED5ng c\u1ED9ng" }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-extrabold text-rose-600", children: formatVND(subtotal) })
+        /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
+          /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng c\u1ED9ng" }),
+          /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-extrabold text-rose-400", children: formatVND(subtotal) })
         ] }),
-        /* @__PURE__ */ jsxDEV("a", { href: "/thanh-toan", class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock" }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/thanh-toan", class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock", "aria-hidden": "true" }),
           "Ti\u1EBFn h\xE0nh thanh to\xE1n"
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-[#1f1b4b] space-y-2 text-xs text-[#9f9dbb]", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-[#221e54] space-y-2 text-xs text-[#b8b6d9]", children: [
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-indigo-400 w-4" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-indigo-400 w-4", "aria-hidden": "true" }),
             "Nh\u1EADn link t\u1EA3i Skill ngay sau thanh to\xE1n"
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-indigo-400 w-4" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-indigo-400 w-4", "aria-hidden": "true" }),
             "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset text-indigo-400 w-4" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset text-indigo-400 w-4", "aria-hidden": "true" }),
             "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"
           ] })
         ] })
@@ -10967,28 +11239,29 @@ var CheckoutPage = (props) => {
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Thanh to\xE1n", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng", href: "/gio-hang" }, { label: "Thanh to\xE1n" }] }),
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7", children: "Thanh to\xE1n" }),
+      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-5", children: "Thanh to\xE1n" }),
+      /* @__PURE__ */ jsxDEV(CheckoutSteps, { step: 2 }),
       /* @__PURE__ */ jsxDEV("form", { id: "checkout-form", class: "grid lg:grid-cols-[1fr_380px] gap-6", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user mr-2 text-brand-500" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user mr-2 text-indigo-400", "aria-hidden": "true" }),
               "Th\xF4ng tin kh\xE1ch h\xE0ng"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "H\u1ECD t\xEAn" }),
-                /* @__PURE__ */ jsxDEV("input", { type: "text", value: props.user?.full_name, disabled: true, class: "w-full h-11 px-3.5 rounded-xl bg-slate-100 border border-slate-200 text-sm text-slate-600" })
+                /* @__PURE__ */ jsxDEV("label", { for: "co-name", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "H\u1ECD t\xEAn" }),
+                /* @__PURE__ */ jsxDEV("input", { id: "co-name", type: "text", value: props.user?.full_name, disabled: true, class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-sm text-[#c2c0e0]" })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { children: [
-                /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email nh\u1EADn s\u1EA3n ph\u1EA9m" }),
-                /* @__PURE__ */ jsxDEV("input", { type: "email", value: props.user?.email, disabled: true, class: "w-full h-11 px-3.5 rounded-xl bg-slate-100 border border-slate-200 text-sm text-slate-600" })
+                /* @__PURE__ */ jsxDEV("label", { for: "co-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email nh\u1EADn s\u1EA3n ph\u1EA9m" }),
+                /* @__PURE__ */ jsxDEV("input", { id: "co-email", type: "email", value: props.user?.email, disabled: true, class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-sm text-[#c2c0e0]" })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "mt-4", children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: [
+              /* @__PURE__ */ jsxDEV("label", { for: "checkout-note", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: [
                 "Ghi ch\xFA ",
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
               ] }),
               /* @__PURE__ */ jsxDEV(
                 "textarea",
@@ -10997,31 +11270,31 @@ var CheckoutPage = (props) => {
                   id: "checkout-note",
                   rows: 2,
                   placeholder: "Y\xEAu c\u1EA7u th\xEAm cho \u0111\u01A1n h\xE0ng...",
-                  class: "w-full p-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"
+                  class: "w-full p-3 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm resize-y"
                 }
               )
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border border-[#1f1b4b] p-5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
             /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-credit-card mr-2 text-indigo-400" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-credit-card mr-2 text-indigo-400", "aria-hidden": "true" }),
               "Ph\u01B0\u01A1ng th\u1EE9c thanh to\xE1n"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5", children: [
               /* @__PURE__ */ jsxDEV("label", { class: "flex items-center gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer", children: [
                 /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "bank", checked: true, class: "accent-indigo-500" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-[#16143c] border border-indigo-500/30 grid place-items-center text-indigo-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode" }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-[#161436] border border-indigo-500/30 grid place-items-center text-indigo-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode", "aria-hidden": "true" }) }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: "Chuy\u1EC3n kho\u1EA3n VietQR (Ng\xE2n h\xE0ng / MoMo)" }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9f9dbb]", children: "Qu\xE9t m\xE3 QR b\u1EB1ng app ng\xE2n h\xE0ng ho\u1EB7c v\xED \u0111i\u1EC7n t\u1EED \u2014 \u0111\u1ED1i so\xE1t t\u1EF1 \u0111\u1ED9ng 24/7" })
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#b8b6d9]", children: "Qu\xE9t m\xE3 QR b\u1EB1ng app ng\xE2n h\xE0ng ho\u1EB7c v\xED \u0111i\u1EC7n t\u1EED \u2014 \u0111\u1ED1i so\xE1t t\u1EF1 \u0111\u1ED9ng 24/7" })
                 ] }),
                 /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold", children: "KHUY\xCAN D\xD9NG" })
               ] }),
-              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? "border-[#28235d] bg-[#16143c]/50 hover:border-indigo-500/40" : "border-[#1f1b4b] bg-[#080716]/40 opacity-50 cursor-not-allowed"}`, children: [
+              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? "border-[#2a2559] bg-[#161436]/50 hover:border-indigo-500/40" : "border-[#221e54] bg-[#070614]/40 opacity-50 cursor-not-allowed"}`, children: [
                 /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "balance", disabled: balance < subtotal, class: "accent-indigo-500" }),
-                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-emerald-500/15 grid place-items-center text-emerald-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank" }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-emerald-500/15 grid place-items-center text-emerald-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank", "aria-hidden": "true" }) }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm tabular-nums", children: [
                     "S\u1ED1 d\u01B0 v\xED ",
                     /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: [
                       "(",
@@ -11029,14 +11302,14 @@ var CheckoutPage = (props) => {
                       ")"
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9f9dbb]", children: balance >= subtotal ? "Thanh to\xE1n t\u1EE9c th\xEC, nh\u1EADn link t\u1EA3i Skill ngay" : "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho \u0111\u01A1n h\xE0ng n\xE0y" })
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#b8b6d9]", children: balance >= subtotal ? "Thanh to\xE1n t\u1EE9c th\xEC, nh\u1EADn link t\u1EA3i Skill ngay" : "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho \u0111\u01A1n h\xE0ng n\xE0y" })
                 ] })
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ticket mr-2 text-brand-500" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "coupon-input", class: "block font-bold text-white mb-4", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ticket mr-2 text-indigo-400", "aria-hidden": "true" }),
               "M\xE3 gi\u1EA3m gi\xE1"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
@@ -11047,64 +11320,64 @@ var CheckoutPage = (props) => {
                   id: "coupon-input",
                   placeholder: "Nh\u1EADp m\xE3 gi\u1EA3m gi\xE1",
                   style: "text-transform:uppercase",
-                  class: "flex-1 h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                  class: "flex-1 h-11 px-3.5 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm font-mono"
                 }
               ),
-              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "apply-coupon", class: "h-11 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition", children: "\xC1p d\u1EE5ng" })
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "apply-coupon", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer", children: "\xC1p d\u1EE5ng" })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { id: "coupon-msg", class: "mt-2.5 text-sm hidden" }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mt-3 flex flex-wrap gap-1.5", children: ["WELCOME10", "SALE20", "GIAM100K"].map((c) => /* @__PURE__ */ jsxDEV("button", { type: "button", class: "coupon-quick px-2.5 py-1 rounded-md bg-slate-100 hover:bg-brand-100 hover:text-brand-700 text-xs font-semibold transition", "data-code": c, children: c })) })
+            /* @__PURE__ */ jsxDEV("div", { id: "coupon-msg", class: "mt-2.5 text-sm hidden", role: "status" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "mt-3 flex flex-wrap gap-1.5", children: ["WELCOME10", "SALE20", "GIAM100K"].map((c) => /* @__PURE__ */ jsxDEV("button", { type: "button", class: "coupon-quick px-2.5 py-1.5 rounded-md bg-[#161436] border border-[#2a2559] hover:border-indigo-400 text-[#c2c0e0] hover:text-white text-xs font-mono font-semibold transition cursor-pointer", "data-code": c, children: c })) })
           ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: [
+        /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4 tabular-nums", children: [
             "\u0110\u01A1n h\xE0ng (",
             items.length,
             ")"
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "space-y-3 max-h-64 overflow-y-auto pb-4 border-b border-slate-100", children: items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "space-y-3 max-h-64 overflow-y-auto pb-4 border-b border-[#221e54]", children: items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3", children: [
             /* @__PURE__ */ jsxDEV(
               "div",
               {
-                class: "w-14 aspect-video rounded-lg shrink-0 grid place-items-center text-white text-xs",
+                class: "w-14 aspect-video rounded-lg shrink-0 grid place-items-center text-white text-xs bg-[#070614]",
                 style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`,
-                children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: "", class: "w-full h-full object-cover rounded-lg" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code" })
+                children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: "", class: "w-full h-full object-cover rounded-lg" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code", "aria-hidden": "true" })
               }
             ),
             /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "text-[13px] font-semibold text-slate-800 line-clamp-2 leading-snug", children: p.name }),
-              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-rose-600 font-bold mt-0.5", children: formatVND(p.price) })
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[13px] font-semibold text-white line-clamp-2 leading-snug", children: p.name }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-rose-400 font-bold mt-0.5 tabular-nums", children: formatVND(p.price) })
             ] })
           ] })) }),
-          /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm py-4 border-b border-slate-100", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm py-4 border-b border-[#221e54] tabular-nums", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "T\u1EA1m t\xEDnh" }),
-              /* @__PURE__ */ jsxDEV("b", { id: "sum-subtotal", children: formatVND(subtotal) })
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "T\u1EA1m t\xEDnh" }),
+              /* @__PURE__ */ jsxDEV("b", { id: "sum-subtotal", class: "text-white", children: formatVND(subtotal) })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", id: "discount-row", style: "display:none", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Gi\u1EA3m gi\xE1" }),
-              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-600", id: "sum-discount", children: "-0\u0111" })
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Gi\u1EA3m gi\xE1" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", id: "sum-discount", children: "-0\u0111" })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-slate-900", children: "T\u1ED5ng thanh to\xE1n" }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-extrabold text-rose-600", id: "sum-total", "data-subtotal": subtotal, children: formatVND(subtotal) })
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng thanh to\xE1n" }),
+            /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-extrabold text-rose-400", id: "sum-total", "data-subtotal": subtotal, children: formatVND(subtotal) })
           ] }),
           /* @__PURE__ */ jsxDEV(
             "button",
             {
               type: "submit",
               id: "place-order-btn",
-              class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-90 shadow-lg shadow-rose-500/25 transition",
+              class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 shadow-lg shadow-rose-500/25 transition cursor-pointer",
               children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle", "aria-hidden": "true" }),
                 "\u0110\u1EB7t h\xE0ng ngay"
               ]
             }
           ),
-          /* @__PURE__ */ jsxDEV("p", { class: "mt-3 text-[11px] text-slate-400 text-center leading-relaxed", children: [
+          /* @__PURE__ */ jsxDEV("p", { class: "mt-3 text-[11px] text-[#9492b8] text-center leading-relaxed", children: [
             "B\u1EB1ng vi\u1EC7c \u0111\u1EB7t h\xE0ng, b\u1EA1n \u0111\u1ED3ng \xFD v\u1EDBi ",
-            /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-brand-600 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
+            /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-indigo-400 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
             " c\u1EE7a ch\xFAng t\xF4i."
           ] })
         ] }) })
@@ -11131,11 +11404,11 @@ var CheckoutPage = (props) => {
     try{
       var r=await axios.post('/api/coupons/check',{code:code, subtotal:subtotal});
       coupon=code; discount=r.data.discount; render();
-      msg.className='mt-2.5 text-sm text-emerald-600'; msg.innerHTML='<i class="fas fa-circle-check mr-1"></i>\xC1p d\u1EE5ng th\xE0nh c\xF4ng! Gi\u1EA3m '+fmt(discount);
+      msg.className='mt-2.5 text-sm text-emerald-400'; msg.innerHTML='<i class="fas fa-circle-check mr-1"></i>\xC1p d\u1EE5ng th\xE0nh c\xF4ng! Gi\u1EA3m '+fmt(discount);
       msg.classList.remove('hidden');
     }catch(e){
       coupon=null; discount=0; render();
-      msg.className='mt-2.5 text-sm text-rose-600';
+      msg.className='mt-2.5 text-sm text-rose-400';
       msg.innerHTML='<i class="fas fa-circle-xmark mr-1"></i>'+((e.response&&e.response.data&&e.response.data.error)||'M\xE3 kh\xF4ng h\u1EE3p l\u1EC7');
       msg.classList.remove('hidden');
     }
@@ -11166,24 +11439,25 @@ var OrderPage = (props) => {
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: `\u0110\u01A1n h\xE0ng ${order.order_code}`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "\u0110\u01A1n h\xE0ng", href: "/tai-khoan/don-hang" }, { label: order.order_code }] }),
+      order.status === "pending" && /* @__PURE__ */ jsxDEV(CheckoutSteps, { step: 3 }),
       order.status === "paid" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check" }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check", "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
         /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-200 mb-4", children: "B\u1ED9 Skill AI \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
-        /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download" }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
           "M\u1EDF & t\u1EA3i Skill ngay"
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-6", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
-          order.status === "pending" && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e26] rounded-2xl border-2 border-amber-500/40 overflow-hidden", children: [
+          order.status === "pending" && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border-2 border-amber-500/45 overflow-hidden", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-amber-300", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode mr-2" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode mr-2", "aria-hidden": "true" }),
               "Qu\xE9t m\xE3 QR \u0111\u1EC3 thanh to\xE1n"
             ] }) }),
             (!bank.bank_account || bank.bank_account === "0987654321") && /* @__PURE__ */ jsxDEV("div", { class: "mx-5 mt-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5 text-rose-400" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5 text-rose-400", "aria-hidden": "true" }),
               /* @__PURE__ */ jsxDEV("b", { children: "Th\xF4ng b\xE1o:" }),
               " T\xE0i kho\u1EA3n ng\xE2n h\xE0ng \u0111ang \u1EDF c\u1EA5u h\xECnh m\u1EABu. Vui l\xF2ng li\xEAn h\u1EC7 Zalo ",
               /* @__PURE__ */ jsxDEV("b", { children: props.settings?.zalo }),
@@ -11191,8 +11465,8 @@ var OrderPage = (props) => {
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "p-5 grid sm:grid-cols-[220px_1fr] gap-6", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "text-center", children: [
-                /* @__PURE__ */ jsxDEV("img", { src: qr, alt: "QR thanh to\xE1n", class: "w-full max-w-[220px] mx-auto rounded-xl border border-[#28235d] bg-white p-1.5" }),
-                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9f9dbb] mt-2", children: "M\u1EDF app ng\xE2n h\xE0ng v\xE0 qu\xE9t m\xE3" })
+                /* @__PURE__ */ jsxDEV("img", { src: qr, alt: "QR thanh to\xE1n VietQR", class: "w-full max-w-[220px] mx-auto rounded-xl border border-[#2a2559] bg-white p-1.5" }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#b8b6d9] mt-2", children: "M\u1EDF app ng\xE2n h\xE0ng v\xE0 qu\xE9t m\xE3" })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
                 [
@@ -11201,115 +11475,125 @@ var OrderPage = (props) => {
                   ["Ch\u1EE7 t\xE0i kho\u1EA3n", bank.bank_owner],
                   ["S\u1ED1 ti\u1EC1n", formatVND(order.total)],
                   ["N\u1ED9i dung CK", content]
-                ].map(([lb, val], i) => /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-3 pb-2.5 border-b border-[#1f1b4b]", children: [
-                  /* @__PURE__ */ jsxDEV("span", { class: "text-sm text-[#9f9dbb] shrink-0", children: lb }),
+                ].map(([lb, val], i) => /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-3 pb-2.5 border-b border-[#221e54]", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-sm text-[#9492b8] shrink-0", children: lb }),
                   /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 min-w-0", children: [
-                    /* @__PURE__ */ jsxDEV("b", { class: `text-sm truncate ${i === 3 ? "text-rose-400 text-base" : i === 4 ? "text-indigo-400" : "text-white"}`, children: val }),
-                    i >= 1 && /* @__PURE__ */ jsxDEV("button", { "data-copy": i === 3 ? String(order.total) : val, class: "shrink-0 w-7 h-7 rounded-md bg-[#16143c] hover:bg-indigo-600 text-slate-300 hover:text-white text-xs transition", children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" }) })
+                    /* @__PURE__ */ jsxDEV("b", { class: `text-sm truncate tabular-nums ${i === 3 ? "text-rose-400 text-base" : i === 4 ? "text-indigo-300 font-mono" : "text-white"}`, children: val }),
+                    i >= 1 && /* @__PURE__ */ jsxDEV(
+                      "button",
+                      {
+                        type: "button",
+                        "data-copy": i === 3 ? String(order.total) : val,
+                        "aria-label": `Sao ch\xE9p ${lb}`,
+                        title: `Sao ch\xE9p ${lb}`,
+                        class: "shrink-0 w-8 h-8 rounded-md bg-[#161436] hover:bg-indigo-600 text-[#c2c0e0] hover:text-white text-xs transition cursor-pointer",
+                        children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy", "aria-hidden": "true" })
+                      }
+                    )
                   ] })
                 ] })),
-                /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200 leading-relaxed", children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1 text-rose-400" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs text-rose-200 leading-relaxed", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1 text-rose-400", "aria-hidden": "true" }),
                   /* @__PURE__ */ jsxDEV("b", { children: "Quan tr\u1ECDng:" }),
                   " Vui l\xF2ng chuy\u1EC3n \u0111\xFAng s\u1ED1 ti\u1EC1n v\xE0 ghi \u0111\xFAng n\u1ED9i dung ",
-                  /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: content }),
+                  /* @__PURE__ */ jsxDEV("b", { class: "text-white font-mono", children: content }),
                   " \u0111\u1EC3 h\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng x\xE1c nh\u1EADn."
                 ] })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "px-5 pb-5", children: [
-              /* @__PURE__ */ jsxDEV("div", { id: "pay-status", class: "mb-3 p-3.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center gap-3", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "spinner shrink-0" }),
+              /* @__PURE__ */ jsxDEV("div", { id: "pay-status", class: "mb-3 p-3.5 rounded-xl bg-indigo-500/15 border border-indigo-500/35 flex items-center gap-3", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "spinner shrink-0", "aria-hidden": "true" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-bold text-white", children: "\u0110ang ch\u1EDD giao d\u1ECBch c\u1EE7a b\u1EA1n\u2026" }),
                   /* @__PURE__ */ jsxDEV("div", { id: "pay-status-msg", class: "text-xs text-indigo-200 mt-0.5", children: "H\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng ki\u1EC3m tra ng\xE2n h\xE0ng m\u1ED7i 5 gi\xE2y. Trang s\u1EBD t\u1EF1 chuy\u1EC3n khi nh\u1EADn \u0111\u01B0\u1EE3c ti\u1EC1n." })
                 ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("button", { id: "confirm-paid-btn", class: "w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-90 shadow-lg shadow-emerald-500/25 transition", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle mr-1.5" }),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "confirm-paid-btn", class: "w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-95 shadow-lg shadow-emerald-500/25 transition cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle mr-1.5", "aria-hidden": "true" }),
                 "T\xF4i \u0111\xE3 chuy\u1EC3n kho\u1EA3n"
               ] }),
-              /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-slate-400 text-center mt-2.5", children: "B\u1EA5m n\xFAt n\xE0y sau khi chuy\u1EC3n kho\u1EA3n \u0111\u1EC3 h\u1EC7 th\u1ED1ng ki\u1EC3m tra ngay l\u1EADp t\u1EE9c." })
+              /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-[#9492b8] text-center mt-2.5", children: "B\u1EA5m n\xFAt n\xE0y sau khi chuy\u1EC3n kho\u1EA3n \u0111\u1EC3 h\u1EC7 th\u1ED1ng ki\u1EC3m tra ngay l\u1EADp t\u1EE9c." })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-3.5 border-b border-slate-200 flex items-center justify-between", children: [
-              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Chi ti\u1EBFt \u0111\u01A1n h\xE0ng" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-3.5 border-b border-[#221e54] flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white", children: "Chi ti\u1EBFt \u0111\u01A1n h\xE0ng" }),
               /* @__PURE__ */ jsxDEV(StatusBadge, { status: order.status })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "p-5 space-y-3", children: items.map((it) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5 items-center pb-3 border-b border-slate-100 last:border-0 last:pb-0", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "p-5 space-y-3", children: items.map((it) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5 items-center pb-3 border-b border-[#221e54] last:border-0 last:pb-0", children: [
               /* @__PURE__ */ jsxDEV(
                 "div",
                 {
                   class: "w-16 aspect-video rounded-lg shrink-0 grid place-items-center text-white",
                   style: `background:${gradientFor(it.product_id)}`,
-                  children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code text-sm" })
+                  children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles text-sm", "aria-hidden": "true" })
                 }
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm line-clamp-2 leading-snug", children: it.product_name }),
-                it.slug && /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${it.slug}`, class: "text-xs text-brand-600 hover:underline", children: "Xem s\u1EA3n ph\u1EA9m" })
+                /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm line-clamp-2 leading-snug", children: it.product_name }),
+                it.slug && /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${it.slug}`, class: "text-xs text-indigo-400 hover:underline", children: "Xem s\u1EA3n ph\u1EA9m" })
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900 text-sm shrink-0", children: formatVND(it.price) })
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm shrink-0 tabular-nums", children: formatVND(it.price) })
             ] })) })
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("aside", { class: "space-y-4", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Th\xF4ng tin \u0111\u01A1n" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-4", children: "Th\xF4ng tin \u0111\u01A1n" }),
             /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 text-sm", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "M\xE3 \u0111\u01A1n" }),
-                /* @__PURE__ */ jsxDEV("b", { class: "text-brand-600", children: order.order_code })
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "M\xE3 \u0111\u01A1n" }),
+                /* @__PURE__ */ jsxDEV("b", { class: "text-indigo-300 font-mono", children: order.order_code })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Ng\xE0y t\u1EA1o" }),
-                /* @__PURE__ */ jsxDEV("b", { children: formatDateTime(order.created_at) })
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Ng\xE0y t\u1EA1o" }),
+                /* @__PURE__ */ jsxDEV("b", { class: "text-white tabular-nums", children: formatDateTime(order.created_at) })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Thanh to\xE1n" }),
-                /* @__PURE__ */ jsxDEV("b", { children: order.payment_method === "bank" ? "VietQR" : order.payment_method === "momo" ? "MoMo" : "S\u1ED1 d\u01B0 v\xED" })
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Thanh to\xE1n" }),
+                /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: order.payment_method === "bank" ? "VietQR" : order.payment_method === "momo" ? "MoMo" : "S\u1ED1 d\u01B0 v\xED" })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "Tr\u1EA1ng th\xE1i" }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Tr\u1EA1ng th\xE1i" }),
                 /* @__PURE__ */ jsxDEV(StatusBadge, { status: order.status })
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-slate-100 space-y-2.5 text-sm", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-[#221e54] space-y-2.5 text-sm tabular-nums", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: "T\u1EA1m t\xEDnh" }),
-                /* @__PURE__ */ jsxDEV("b", { children: formatVND(order.subtotal) })
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "T\u1EA1m t\xEDnh" }),
+                /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: formatVND(order.subtotal) })
               ] }),
               order.discount > 0 && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "text-slate-500", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: [
                   "Gi\u1EA3m gi\xE1 ",
                   order.coupon_code && `(${order.coupon_code})`
                 ] }),
-                /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-600", children: [
+                /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: [
                   "-",
                   formatVND(order.discount)
                 ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end pt-2.5 border-t border-slate-100", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-slate-900", children: "T\u1ED5ng c\u1ED9ng" }),
-                /* @__PURE__ */ jsxDEV("span", { class: "text-xl font-extrabold text-rose-600", children: formatVND(order.total) })
+              /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end pt-2.5 border-t border-[#221e54]", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng c\u1ED9ng" }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-xl font-extrabold text-rose-400", children: formatVND(order.total) })
               ] })
             ] }),
-            order.note && /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-slate-100", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 mb-1", children: "Ghi ch\xFA" }),
-              /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-700", children: order.note })
+            order.note && /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-[#221e54]", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mb-1", children: "Ghi ch\xFA" }),
+              /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#d6d4ee]", children: order.note })
             ] })
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-900 rounded-2xl p-5 text-white", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-indigo-500/30 p-5 text-white", children: [
             /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5 text-sm", children: "C\u1EA7n h\u1ED7 tr\u1EE3?" }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-400 mb-3.5", children: "Li\xEAn h\u1EC7 ngay n\u1EBFu b\u1EA1n g\u1EB7p v\u1EA5n \u0111\u1EC1 v\u1EDBi \u0111\u01A1n h\xE0ng." }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#b8b6d9] mb-3.5", children: "Li\xEAn h\u1EC7 ngay n\u1EBFu b\u1EA1n g\u1EB7p v\u1EA5n \u0111\u1EC1 v\u1EDBi \u0111\u01A1n h\xE0ng." }),
             /* @__PURE__ */ jsxDEV(
               "a",
               {
                 href: `https://zalo.me/${props.settings?.zalo}`,
                 target: "_blank",
                 rel: "noopener",
-                class: "flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-500 hover:bg-blue-600 font-semibold text-sm transition",
+                class: "flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-sm transition",
                 children: "Chat Zalo"
               }
             )
@@ -11401,84 +11685,92 @@ var MENU = [
   { href: "/tai-khoan/affiliate", icon: "fa-handshake", label: "Affiliate", key: "affiliate" },
   { href: "/tai-khoan/ho-so", icon: "fa-user-gear", label: "H\u1ED3 s\u01A1", key: "profile" }
 ];
-var AccountShell = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[240px_1fr] gap-6", children: [
+var AccountShell = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, bodyClass: "dark-portal bg-[#070614] text-slate-100", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[240px_1fr] gap-6", children: [
   /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4 mb-4", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0", children: props.user?.full_name.charAt(0).toUpperCase() }),
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-4 mb-4", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-lg shrink-0", children: props.user?.full_name.charAt(0).toUpperCase() }),
       /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900 truncate text-sm", children: props.user?.full_name }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 truncate", children: props.user?.email })
+        /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white truncate text-sm", children: props.user?.full_name }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] truncate", children: props.user?.email })
       ] })
     ] }) }),
-    /* @__PURE__ */ jsxDEV("nav", { class: "bg-white rounded-2xl border border-slate-200 p-2 space-y-0.5", children: [
-      MENU.map((m) => /* @__PURE__ */ jsxDEV("a", { href: m.href, class: `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? "bg-brand-600 text-white shadow-lg shadow-brand-500/20" : "text-slate-600 hover:bg-slate-50"}`, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon} w-4` }),
-        m.label
-      ] })),
-      props.user?.role === "admin" && /* @__PURE__ */ jsxDEV("a", { href: "/admin", class: "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-700 hover:bg-amber-50 transition", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved w-4" }),
+    /* @__PURE__ */ jsxDEV("nav", { "aria-label": "Menu t\xE0i kho\u1EA3n", class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-2 space-y-0.5", children: [
+      MENU.map((m) => /* @__PURE__ */ jsxDEV(
+        "a",
+        {
+          href: m.href,
+          "aria-current": props.activeKey === m.key ? "page" : void 0,
+          class: `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${props.activeKey === m.key ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "text-[#b8b6d9] hover:text-white hover:bg-[#161436]"}`,
+          children: [
+            /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon} w-4`, "aria-hidden": "true" }),
+            m.label
+          ]
+        }
+      )),
+      props.user?.role === "admin" && /* @__PURE__ */ jsxDEV("a", { href: "/admin", class: "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-300 hover:bg-amber-500/10 transition", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved w-4", "aria-hidden": "true" }),
         "Trang qu\u1EA3n tr\u1ECB"
       ] }),
-      /* @__PURE__ */ jsxDEV("a", { href: "/dang-xuat", class: "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-right-from-bracket w-4" }),
+      /* @__PURE__ */ jsxDEV("a", { href: "/dang-xuat", class: "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-right-from-bracket w-4", "aria-hidden": "true" }),
         "\u0110\u0103ng xu\u1EA5t"
       ] })
     ] })
   ] }),
   /* @__PURE__ */ jsxDEV("div", { children: [
     /* @__PURE__ */ jsxDEV("div", { class: "mb-6", children: [
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-slate-900 tracking-tight", children: props.heading }),
-      props.sub && /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 text-sm mt-1", children: props.sub })
+      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-white tracking-tight", children: props.heading }),
+      props.sub && /* @__PURE__ */ jsxDEV("p", { class: "text-[#9492b8] text-sm mt-1", children: props.sub })
     ] }),
     props.children
   ] })
 ] }) }) });
 var AccountDashboard = (props) => {
   const { stats, recentOrders, recentProducts } = props;
-  return /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "dash", title: "T\xE0i kho\u1EA3n", heading: `Xin ch\xE0o, ${props.user?.full_name}! \u{1F44B}`, sub: "\u0110\xE2y l\xE0 t\u1ED5ng quan ho\u1EA1t \u0111\u1ED9ng t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n.", children: [
+  return /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "dash", title: "T\xE0i kho\u1EA3n", heading: `Xin ch\xE0o, ${props.user?.full_name}`, sub: "\u0110\xE2y l\xE0 t\u1ED5ng quan ho\u1EA1t \u0111\u1ED9ng t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n.", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6", children: [
-      ["fa-box-archive", "S\u1EA3n ph\u1EA9m s\u1EDF h\u1EEFu", String(stats.products), "from-brand-500 to-brand-600"],
+      ["fa-box-archive", "S\u1EA3n ph\u1EA9m s\u1EDF h\u1EEFu", String(stats.products), "from-indigo-500 to-indigo-600"],
       ["fa-receipt", "T\u1ED5ng \u0111\u01A1n h\xE0ng", String(stats.orders), "from-fuchsia-500 to-purple-600"],
       ["fa-wallet", "\u0110\xE3 chi ti\xEAu", formatVND(stats.spent), "from-emerald-500 to-teal-600"],
       ["fa-piggy-bank", "S\u1ED1 d\u01B0 v\xED", formatVND(stats.balance), "from-amber-500 to-orange-600"]
-    ].map(([ic, lb, val, grad]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl bg-gradient-to-br ${grad} text-white grid place-items-center mb-3.5 shadow-lg`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-slate-900 leading-none mb-1", children: val }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: lb })
+    ].map(([ic, lb, val, grad]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl bg-gradient-to-br ${grad} text-white grid place-items-center mb-3.5 shadow-lg`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-white tabular-nums leading-none mb-1", children: val }),
+      /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8]", children: lb })
     ] })) }),
     /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-5", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "\u0110\u01A1n h\xE0ng g\u1EA7n \u0111\xE2y" }),
-          /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/don-hang", class: "text-xs font-semibold text-brand-600 hover:underline", children: "Xem t\u1EA5t c\u1EA3" })
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-[#221e54] flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base", children: "\u0110\u01A1n h\xE0ng g\u1EA7n \u0111\xE2y" }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/don-hang", class: "text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:underline", children: "Xem t\u1EA5t c\u1EA3" })
         ] }),
-        recentOrders.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-8 text-center text-sm text-slate-500", children: "Ch\u01B0a c\xF3 \u0111\u01A1n h\xE0ng n\xE0o" }) : /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-slate-100", children: recentOrders.map((o) => /* @__PURE__ */ jsxDEV("a", { href: `/don-hang/${o.order_code}`, class: "flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-brand-50 text-brand-600 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-receipt" }) }),
+        recentOrders.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-8 text-center text-sm text-[#9492b8]", children: "Ch\u01B0a c\xF3 \u0111\u01A1n h\xE0ng n\xE0o" }) : /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-[#221e54]", children: recentOrders.map((o) => /* @__PURE__ */ jsxDEV("a", { href: `/don-hang/${o.order_code}`, class: "flex items-center gap-3 px-5 py-3.5 hover:bg-[#161436] transition", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-receipt", "aria-hidden": "true" }) }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: o.order_code }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: formatDate(o.created_at) })
+            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm tabular-nums", children: o.order_code }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] tabular-nums", children: formatDate(o.created_at) })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900 text-sm", children: formatVND(o.total) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm tabular-nums mb-1", children: formatVND(o.total) }),
             /* @__PURE__ */ jsxDEV(StatusBadge, { status: o.status })
           ] })
         ] })) })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "S\u1EA3n ph\u1EA9m m\u1EDBi nh\u1EADn" }),
-          /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "text-xs font-semibold text-brand-600 hover:underline", children: "Xem t\u1EA5t c\u1EA3" })
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-[#221e54] flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base", children: "S\u1EA3n ph\u1EA9m m\u1EDBi nh\u1EADn" }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:underline", children: "Xem t\u1EA5t c\u1EA3" })
         ] }),
         recentProducts.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-8 text-center", children: [
-          /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-500 mb-3", children: "B\u1EA1n ch\u01B0a s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0o" }),
-          /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "inline-flex h-9 px-4 items-center rounded-lg bg-brand-600 text-white text-sm font-semibold", children: "Kh\xE1m ph\xE1 ngay" })
-        ] }) : /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-slate-100", children: recentProducts.map((p) => /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "w-14 aspect-video rounded-lg shrink-0 grid place-items-center text-white text-xs", style: `background:${gradientFor(p.product_id)}`, children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code" }) }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#9492b8] mb-3", children: "B\u1EA1n ch\u01B0a s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0o" }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "inline-flex h-10 px-4 items-center rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition", children: "Kh\xE1m ph\xE1 ngay" })
+        ] }) : /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-[#221e54]", children: recentProducts.map((p) => /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "flex items-center gap-3 px-5 py-3.5 hover:bg-[#161436] transition", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-14 aspect-video rounded-lg shrink-0 grid place-items-center text-white text-xs", style: `background:${gradientFor(p.product_id)}`, children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code", "aria-hidden": "true" }) }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm line-clamp-1", children: p.name }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: formatDate(p.created_at) })
+            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm line-clamp-1", children: p.name }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] tabular-nums", children: formatDate(p.created_at) })
           ] }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-slate-300 text-xs" })
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chevron-right text-[#9492b8] text-xs", "aria-hidden": "true" })
         ] })) })
       ] })
     ] })
@@ -11492,7 +11784,7 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
     title: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
     heading: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
     sub: "Truy c\u1EADp link t\u1EA3i s\u1EA3n ph\u1EA9m, t\xE0i li\u1EC7u v\xE0 license key c\u1EE7a c\xE1c s\u1EA3n ph\u1EA9m b\u1EA1n \u0111\xE3 mua.",
-    children: props.licenses.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200", children: /* @__PURE__ */ jsxDEV(
+    children: props.licenses.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(
       EmptyState,
       {
         icon: "fa-box-archive",
@@ -11500,46 +11792,55 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
         desc: "Sau khi thanh to\xE1n th\xE0nh c\xF4ng, link t\u1EA3i s\u1EA3n ph\u1EA9m s\u1EBD xu\u1EA5t hi\u1EC7n t\u1EA1i \u0111\xE2y.",
         action: { href: "/san-pham", label: "Kh\xE1m ph\xE1 s\u1EA3n ph\u1EA9m" }
       }
-    ) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: props.licenses.map((l) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "p-5 flex flex-col sm:flex-row gap-4", children: [
+    ) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: props.licenses.map((l) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "p-5 flex flex-col sm:flex-row gap-4", children: [
       /* @__PURE__ */ jsxDEV(
         "div",
         {
-          class: "sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white",
+          class: "sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white overflow-hidden",
           style: l.thumbnail ? "" : `background:${gradientFor(l.product_id)}`,
-          children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: "", class: "w-full h-full object-cover rounded-xl" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-2xl` })
+          children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: l.name, class: "w-full h-full object-cover rounded-xl", loading: "lazy" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-2xl`, "aria-hidden": "true" })
         }
       ),
       /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1.5", children: [
-          /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-brand-50 text-brand-700 text-[11px] font-bold", children: PRODUCT_TYPE_LABEL[l.product_type] }),
-          /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[11px] font-bold", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-0.5" }),
+          /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold", children: PRODUCT_TYPE_LABEL[l.product_type] }),
+          /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1", "aria-hidden": "true" }),
             "\u0110\xE3 k\xEDch ho\u1EA1t"
           ] }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-slate-400", children: l.version })
+          /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] font-mono", children: l.version })
         ] }),
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 leading-snug mb-2", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${l.slug}`, class: "hover:text-brand-600", children: l.name }) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 mb-3 flex flex-wrap gap-x-4 gap-y-1", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white leading-snug mb-2 text-base", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${l.slug}`, class: "hover:text-indigo-300 transition", children: l.name }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mb-3 flex flex-wrap gap-x-4 gap-y-1 tabular-nums", children: [
           /* @__PURE__ */ jsxDEV("span", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1", "aria-hidden": "true" }),
             "Mua ng\xE0y ",
             formatDate(l.created_at)
           ] }),
           /* @__PURE__ */ jsxDEV("span", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-1" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-1", "aria-hidden": "true" }),
             l.download_count,
             " l\u01B0\u1EE3t t\u1EA3i"
           ] }),
           l.file_size && l.file_size !== "\u2014" && /* @__PURE__ */ jsxDEV("span", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hard-drive mr-1" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hard-drive mr-1", "aria-hidden": "true" }),
             l.file_size
           ] })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-500 mb-1 font-semibold uppercase tracking-wide", children: "License Key" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-[#161436] border border-[#221e54] mb-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mb-1 font-semibold uppercase tracking-wide", children: "License Key" }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxDEV("code", { class: "flex-1 font-mono text-sm text-brand-700 font-bold tracking-wider truncate", children: l.license_key }),
-            /* @__PURE__ */ jsxDEV("button", { "data-copy": l.license_key, class: "shrink-0 w-8 h-8 rounded-lg bg-white border border-slate-200 hover:border-brand-400 hover:text-brand-600 text-slate-500 text-xs transition", children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" }) })
+            /* @__PURE__ */ jsxDEV("code", { class: "flex-1 font-mono text-sm text-indigo-300 font-bold tracking-wider truncate", children: l.license_key }),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                "data-copy": l.license_key,
+                "aria-label": "Sao ch\xE9p license key",
+                class: "shrink-0 w-9 h-9 rounded-lg bg-[#0f0e24] border border-[#2e2968] hover:border-indigo-400 hover:text-indigo-300 text-[#b8b6d9] text-xs transition grid place-items-center",
+                children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy", "aria-hidden": "true" })
+              }
+            )
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
@@ -11549,14 +11850,14 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
               href: `/tai-xuong/${l.id}`,
               target: "_blank",
               rel: "noopener",
-              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-brand-500/20 transition",
+              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-indigo-500/20 transition",
               children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
                 l.product_type === "skill" ? "T\u1EA3i b\u1ED9 Skill AI" : l.product_type === "chatbot" ? "M\u1EDF Chatbot" : "M\u1EDF & T\u1EA3i xu\u1ED1ng"
               ]
             }
-          ) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-50 text-amber-700 font-semibold text-sm", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
+          ) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-sm", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
             "\u0110ang chu\u1EA9n b\u1ECB link..."
           ] }),
           l.doc_url && /* @__PURE__ */ jsxDEV(
@@ -11565,9 +11866,9 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
               href: l.doc_url,
               target: "_blank",
               rel: "noopener",
-              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border-2 border-slate-200 hover:border-brand-400 hover:text-brand-600 font-semibold text-sm transition",
+              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-sm transition",
               children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-book" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-book", "aria-hidden": "true" }),
                 "T\xE0i li\u1EC7u"
               ]
             }
@@ -11576,9 +11877,9 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
             "a",
             {
               href: `/san-pham/${l.slug}#reviews`,
-              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border-2 border-slate-200 hover:border-amber-400 hover:text-amber-600 font-semibold text-sm transition",
+              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-amber-400 hover:text-amber-300 font-semibold text-sm transition",
               children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "far fa-star" }),
+                /* @__PURE__ */ jsxDEV("i", { class: "far fa-star", "aria-hidden": "true" }),
                 "\u0110\xE1nh gi\xE1"
               ]
             }
@@ -11588,47 +11889,48 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
     ] }) })) })
   }
 );
-var MyOrdersPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "orders", title: "\u0110\u01A1n h\xE0ng", heading: "L\u1ECBch s\u1EED \u0111\u01A1n h\xE0ng", sub: "Theo d\xF5i tr\u1EA1ng th\xE1i v\xE0 chi ti\u1EBFt c\xE1c \u0111\u01A1n h\xE0ng c\u1EE7a b\u1EA1n.", children: props.orders.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-receipt", title: "Ch\u01B0a c\xF3 \u0111\u01A1n h\xE0ng n\xE0o", action: { href: "/san-pham", label: "Mua s\u1EAFm ngay" } }) }) : /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
-  /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
-    /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "M\xE3 \u0111\u01A1n" }),
-    /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ng\xE0y" }),
-    /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "S\u1EA3n ph\u1EA9m" }),
-    /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "T\u1ED5ng ti\u1EC1n" }),
-    /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Tr\u1EA1ng th\xE1i" }),
-    /* @__PURE__ */ jsxDEV("th", {})
+var MyOrdersPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "orders", title: "\u0110\u01A1n h\xE0ng", heading: "L\u1ECBch s\u1EED \u0111\u01A1n h\xE0ng", sub: "Theo d\xF5i tr\u1EA1ng th\xE1i v\xE0 chi ti\u1EBFt c\xE1c \u0111\u01A1n h\xE0ng c\u1EE7a b\u1EA1n.", children: props.orders.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-receipt", title: "Ch\u01B0a c\xF3 \u0111\u01A1n h\xE0ng n\xE0o", action: { href: "/san-pham", label: "Mua s\u1EAFm ngay" } }) }) : /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-sm", children: [
+  /* @__PURE__ */ jsxDEV("thead", { class: "bg-[#161436] border-b border-[#221e54] text-[#b8b6d9] text-xs uppercase tracking-wider", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+    /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3.5 px-4 font-semibold", children: "M\xE3 \u0111\u01A1n" }),
+    /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3.5 px-4 font-semibold", children: "Ng\xE0y" }),
+    /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3.5 px-4 font-semibold", children: "S\u1EA3n ph\u1EA9m" }),
+    /* @__PURE__ */ jsxDEV("th", { class: "text-right py-3.5 px-4 font-semibold", children: "T\u1ED5ng ti\u1EC1n" }),
+    /* @__PURE__ */ jsxDEV("th", { class: "text-center py-3.5 px-4 font-semibold", children: "Tr\u1EA1ng th\xE1i" }),
+    /* @__PURE__ */ jsxDEV("th", { class: "py-3.5 px-4" })
   ] }) }),
-  /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.orders.map((o) => /* @__PURE__ */ jsxDEV("tr", { children: [
-    /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("b", { class: "text-brand-600", children: o.order_code }) }),
-    /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 whitespace-nowrap", children: formatDate(o.created_at) }),
-    /* @__PURE__ */ jsxDEV("td", { class: "text-slate-600 max-w-[240px]", children: /* @__PURE__ */ jsxDEV("div", { class: "line-clamp-1", children: o.product_names || "\u2014" }) }),
-    /* @__PURE__ */ jsxDEV("td", { class: "text-right font-bold text-slate-900 whitespace-nowrap", children: formatVND(o.total) }),
-    /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: o.status }) }),
-    /* @__PURE__ */ jsxDEV("td", { class: "text-right", children: /* @__PURE__ */ jsxDEV("a", { href: `/don-hang/${o.order_code}`, class: "inline-flex h-8 px-3 items-center rounded-lg bg-slate-100 hover:bg-brand-100 hover:text-brand-700 text-xs font-semibold transition", children: "Chi ti\u1EBFt" }) })
+  /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-[#221e54]", children: props.orders.map((o) => /* @__PURE__ */ jsxDEV("tr", { class: "hover:bg-[#161436]/60 transition", children: [
+    /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4", children: /* @__PURE__ */ jsxDEV("b", { class: "text-indigo-300 font-mono tabular-nums", children: o.order_code }) }),
+    /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-[#9492b8] whitespace-nowrap tabular-nums", children: formatDate(o.created_at) }),
+    /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-[#c2c0e0] max-w-[240px]", children: /* @__PURE__ */ jsxDEV("div", { class: "line-clamp-1", children: o.product_names || "\u2014" }) }),
+    /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-right font-bold text-white whitespace-nowrap tabular-nums", children: formatVND(o.total) }),
+    /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-center", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: o.status }) }),
+    /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-right", children: /* @__PURE__ */ jsxDEV("a", { href: `/don-hang/${o.order_code}`, class: "inline-flex h-9 px-3 items-center rounded-lg bg-[#161436] border border-[#2e2968] hover:border-indigo-400 hover:text-indigo-300 text-[#c2c0e0] text-xs font-semibold transition", children: "Chi ti\u1EBFt" }) })
   ] })) })
 ] }) }) }) });
-var WishlistPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "wishlist", title: "Y\xEAu th\xEDch", heading: "S\u1EA3n ph\u1EA9m y\xEAu th\xEDch", sub: "Danh s\xE1ch s\u1EA3n ph\u1EA9m b\u1EA1n \u0111\xE3 l\u01B0u \u0111\u1EC3 mua sau.", children: props.items.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-heart", title: "Ch\u01B0a c\xF3 s\u1EA3n ph\u1EA9m y\xEAu th\xEDch", action: { href: "/san-pham", label: "Kh\xE1m ph\xE1 s\u1EA3n ph\u1EA9m" } }) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: props.items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4 flex gap-4", children: [
+var WishlistPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "wishlist", title: "Y\xEAu th\xEDch", heading: "S\u1EA3n ph\u1EA9m y\xEAu th\xEDch", sub: "Danh s\xE1ch s\u1EA3n ph\u1EA9m b\u1EA1n \u0111\xE3 l\u01B0u \u0111\u1EC3 mua sau.", children: props.items.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-heart", title: "Ch\u01B0a c\xF3 s\u1EA3n ph\u1EA9m y\xEAu th\xEDch", action: { href: "/san-pham", label: "Kh\xE1m ph\xE1 s\u1EA3n ph\u1EA9m" } }) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: props.items.map((p) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-4 flex gap-4", children: [
   /* @__PURE__ */ jsxDEV(
     "a",
     {
       href: `/san-pham/${p.slug}`,
       class: "w-28 aspect-video rounded-xl shrink-0 grid place-items-center text-white",
       style: `background:${gradientFor(p.id)}`,
-      children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code" })
+      "aria-label": p.name,
+      children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-code", "aria-hidden": "true" })
     }
   ),
   /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 line-clamp-2 leading-snug mb-1.5", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "hover:text-brand-600", children: p.name }) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "text-lg font-extrabold text-rose-600 mb-2", children: formatVND(p.price) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
-      p.status === "coming_soon" ? /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "h-9 px-3.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center gap-1", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock" }),
+    /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white line-clamp-2 leading-snug mb-1.5 text-base", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "hover:text-indigo-300 transition", children: p.name }) }),
+    /* @__PURE__ */ jsxDEV("div", { class: "text-lg font-extrabold text-emerald-400 tabular-nums mb-2", children: formatVND(p.price) }),
+    /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
+      p.status === "coming_soon" ? /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "h-10 px-3.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold inline-flex items-center gap-1.5", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
         "Ch\u01B0a m\u1EDF b\xE1n"
-      ] }) : /* @__PURE__ */ jsxDEV("button", { class: "btn-add-cart h-9 px-3.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition", "data-id": p.id, "data-name": p.name, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus mr-1" }),
+      ] }) : /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-add-cart h-10 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition", "data-id": p.id, "data-name": p.name, children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus mr-1.5", "aria-hidden": "true" }),
         "Th\xEAm gi\u1ECF"
       ] }),
-      /* @__PURE__ */ jsxDEV("button", { class: "btn-wishlist h-9 px-3.5 rounded-lg border border-slate-200 text-rose-500 text-xs font-semibold hover:bg-rose-50 transition", "data-id": p.id, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-heart mr-1" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-wishlist h-10 px-3.5 rounded-xl border border-[#2e2968] text-rose-400 text-xs font-semibold hover:bg-rose-500/10 transition", "data-id": p.id, children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-heart mr-1.5", "aria-hidden": "true" }),
         "B\u1ECF th\xEDch"
       ] })
     ] })
@@ -11638,22 +11940,23 @@ var AffiliateDashboard = (props) => {
   const link2 = `${props.siteUrl}/dang-ky?ref=${props.affCode}`;
   return /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "affiliate", title: "Affiliate", heading: "Ch\u01B0\u01A1ng tr\xECnh Affiliate", sub: `Gi\u1EDBi thi\u1EC7u b\u1EA1n b\xE8 v\xE0 nh\u1EADn hoa h\u1ED3ng ${props.percent}% cho m\u1ED7i \u0111\u01A1n h\xE0ng th\xE0nh c\xF4ng.`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-4 mb-6", children: [
-      ["fa-percent", "Hoa h\u1ED3ng", props.percent + "%", "from-brand-500 to-brand-600"],
+      ["fa-percent", "Hoa h\u1ED3ng", props.percent + "%", "from-indigo-500 to-indigo-600"],
       ["fa-users", "Ng\u01B0\u1EDDi gi\u1EDBi thi\u1EC7u", String(props.refCount), "from-fuchsia-500 to-purple-600"],
       ["fa-coins", "T\u1ED5ng hoa h\u1ED3ng", formatVND(props.earned), "from-emerald-500 to-teal-600"]
-    ].map(([ic, lb, val, grad]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl bg-gradient-to-br ${grad} text-white grid place-items-center mb-3.5 shadow-lg`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-slate-900 leading-none mb-1", children: val }),
-      /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: lb })
+    ].map(([ic, lb, val, grad]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl bg-gradient-to-br ${grad} text-white grid place-items-center mb-3.5 shadow-lg`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-white tabular-nums leading-none mb-1", children: val }),
+      /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8]", children: lb })
     ] })) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-brand-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-6", children: [
-      /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-lg mb-1.5", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-white/80 mb-4", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-6 text-white mb-6 shadow-xl shadow-indigo-950/50", children: [
+      /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-lg mb-1.5", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
+      /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-white/85 mb-4", children: [
         "Chia s\u1EBB link n\xE0y, m\u1ED7i khi c\xF3 ng\u01B0\u1EDDi \u0111\u0103ng k\xFD v\xE0 mua h\xE0ng b\u1EA1n nh\u1EADn ",
         props.percent,
         "% hoa h\u1ED3ng."
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row gap-2", children: [
+        /* @__PURE__ */ jsxDEV("label", { for: "aff-link", class: "sr-only", children: "Link gi\u1EDBi thi\u1EC7u c\u1EE7a b\u1EA1n" }),
         /* @__PURE__ */ jsxDEV(
           "input",
           {
@@ -11661,154 +11964,191 @@ var AffiliateDashboard = (props) => {
             value: link2,
             readonly: true,
             id: "aff-link",
-            class: "flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur"
+            class: "flex-1 h-11 px-4 rounded-xl bg-white/15 border border-white/25 text-white text-sm outline-none backdrop-blur font-mono"
           }
         ),
-        /* @__PURE__ */ jsxDEV("button", { "data-copy": link2, class: "cta-white h-11 px-5 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1.5" }),
+        /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": link2, class: "cta-white h-11 px-5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1.5", "aria-hidden": "true" }),
           "Sao ch\xE9p link"
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-white/20 flex flex-wrap items-center gap-3 text-sm", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "text-white/80", children: "M\xE3 c\u1EE7a b\u1EA1n:" }),
+        /* @__PURE__ */ jsxDEV("span", { class: "text-white/85", children: "M\xE3 c\u1EE7a b\u1EA1n:" }),
         /* @__PURE__ */ jsxDEV("code", { class: "px-3 py-1 rounded-lg bg-white/20 font-mono font-bold tracking-widest", children: props.affCode }),
-        /* @__PURE__ */ jsxDEV("button", { "data-copy": props.affCode, class: "text-white/80 hover:text-white text-xs", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" }),
-          " Copy m\xE3"
+        /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": props.affCode, class: "text-white/85 hover:text-white text-xs font-medium", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+          "Copy m\xE3"
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Danh s\xE1ch ng\u01B0\u1EDDi b\u1EA1n gi\u1EDBi thi\u1EC7u" }) }),
-      props.referrals.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-10 text-center text-sm text-slate-500", children: "Ch\u01B0a c\xF3 ai \u0111\u0103ng k\xFD qua link c\u1EE7a b\u1EA1n. H\xE3y b\u1EAFt \u0111\u1EA7u chia s\u1EBB!" }) : /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
-        /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
-          /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Th\xE0nh vi\xEAn" }),
-          /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Ng\xE0y tham gia" }),
-          /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "\u0110\xE3 mua" }),
-          /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Hoa h\u1ED3ng" })
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-[#221e54]", children: /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base", children: "Danh s\xE1ch ng\u01B0\u1EDDi b\u1EA1n gi\u1EDBi thi\u1EC7u" }) }),
+      props.referrals.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "p-10 text-center text-sm text-[#9492b8]", children: "Ch\u01B0a c\xF3 ai \u0111\u0103ng k\xFD qua link c\u1EE7a b\u1EA1n. H\xE3y b\u1EAFt \u0111\u1EA7u chia s\u1EBB!" }) : /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-sm", children: [
+        /* @__PURE__ */ jsxDEV("thead", { class: "bg-[#161436] border-b border-[#221e54] text-[#b8b6d9] text-xs uppercase tracking-wider", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+          /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3.5 px-4 font-semibold", children: "Th\xE0nh vi\xEAn" }),
+          /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3.5 px-4 font-semibold", children: "Ng\xE0y tham gia" }),
+          /* @__PURE__ */ jsxDEV("th", { class: "text-right py-3.5 px-4 font-semibold", children: "\u0110\xE3 mua" }),
+          /* @__PURE__ */ jsxDEV("th", { class: "text-right py-3.5 px-4 font-semibold", children: "Hoa h\u1ED3ng" })
         ] }) }),
-        /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.referrals.map((r) => /* @__PURE__ */ jsxDEV("tr", { children: [
-          /* @__PURE__ */ jsxDEV("td", { children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900", children: r.full_name }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: r.email.replace(/(.{2}).*(@.*)/, "$1***$2") })
+        /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-[#221e54]", children: props.referrals.map((r) => /* @__PURE__ */ jsxDEV("tr", { class: "hover:bg-[#161436]/60 transition", children: [
+          /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white", children: r.full_name }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8]", children: r.email.replace(/(.{2}).*(@.*)/, "$1***$2") })
           ] }),
-          /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500", children: formatDate(r.created_at) }),
-          /* @__PURE__ */ jsxDEV("td", { class: "text-right font-semibold", children: formatVND(r.spent || 0) }),
-          /* @__PURE__ */ jsxDEV("td", { class: "text-right font-bold text-emerald-600", children: formatVND(Math.round((r.spent || 0) * props.percent / 100)) })
+          /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-[#9492b8] tabular-nums", children: formatDate(r.created_at) }),
+          /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-right font-semibold text-[#c2c0e0] tabular-nums", children: formatVND(r.spent || 0) }),
+          /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-4 text-right font-bold text-emerald-400 tabular-nums", children: formatVND(Math.round((r.spent || 0) * props.percent / 100)) })
         ] })) })
       ] }) })
     ] })
   ] });
 };
 var ProfilePage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "profile", title: "H\u1ED3 s\u01A1", heading: "H\u1ED3 s\u01A1 c\xE1 nh\xE2n", sub: "C\u1EADp nh\u1EADt th\xF4ng tin v\xE0 m\u1EADt kh\u1EA9u t\xE0i kho\u1EA3n.", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-5", children: [
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/account/profile", method: "post", "data-ajax": true, class: "bg-white rounded-2xl border border-slate-200 p-6", children: [
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-5", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user mr-2 text-brand-500" }),
+  /* @__PURE__ */ jsxDEV("form", { action: "/api/account/profile", method: "post", "data-ajax": true, class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6", children: [
+    /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-5 text-base", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user mr-2 text-indigo-400", "aria-hidden": "true" }),
       "Th\xF4ng tin c\xE1 nh\xE2n"
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
       /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
+        /* @__PURE__ */ jsxDEV("label", { for: "profile-name", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
         /* @__PURE__ */ jsxDEV(
           "input",
           {
+            id: "profile-name",
             type: "text",
             name: "full_name",
             value: props.profile.full_name,
             required: true,
-            class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+            autocomplete: "name",
+            class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
           }
         )
       ] }),
       /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email" }),
+        /* @__PURE__ */ jsxDEV("label", { for: "profile-email", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "Email" }),
         /* @__PURE__ */ jsxDEV(
           "input",
           {
+            id: "profile-email",
             type: "email",
             value: props.profile.email,
             disabled: true,
-            class: "w-full h-11 px-3.5 rounded-xl bg-slate-100 border border-slate-200 text-sm text-slate-500"
+            class: "w-full h-11 px-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-sm text-[#9492b8] cursor-not-allowed"
           }
         ),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-400 mt-1", children: "Email kh\xF4ng th\u1EC3 thay \u0111\u1ED5i" })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mt-1", children: "Email kh\xF4ng th\u1EC3 thay \u0111\u1ED5i" })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i" }),
+        /* @__PURE__ */ jsxDEV("label", { for: "profile-phone", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i" }),
         /* @__PURE__ */ jsxDEV(
           "input",
           {
+            id: "profile-phone",
             type: "tel",
             name: "phone",
             value: props.profile.phone || "",
-            class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+            autocomplete: "tel",
+            class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
           }
         )
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: "L\u01B0u thay \u0111\u1ED5i" })
+      /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: "L\u01B0u thay \u0111\u1ED5i" })
     ] })
   ] }),
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/account/password", method: "post", "data-ajax": true, class: "bg-white rounded-2xl border border-slate-200 p-6 self-start", children: [
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-5", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-key mr-2 text-brand-500" }),
+  /* @__PURE__ */ jsxDEV("form", { action: "/api/account/password", method: "post", "data-ajax": true, class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 self-start", children: [
+    /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-5 text-base", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-key mr-2 text-indigo-400", "aria-hidden": "true" }),
       "\u0110\u1ED5i m\u1EADt kh\u1EA9u"
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
       /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "M\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i" }),
-        /* @__PURE__ */ jsxDEV(
-          "input",
-          {
-            type: "password",
-            name: "current_password",
-            required: true,
-            autocomplete: "current-password",
-            class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
-          }
-        )
+        /* @__PURE__ */ jsxDEV("label", { for: "current-password", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "M\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              id: "current-password",
+              type: "password",
+              name: "current_password",
+              required: true,
+              autocomplete: "current-password",
+              class: "w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
+            }
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition",
+              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u hi\u1EC7n t\u1EA1i",
+              "aria-pressed": "false",
+              "data-target": "current-password",
+              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+            }
+          )
+        ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "M\u1EADt kh\u1EA9u m\u1EDBi" }),
-        /* @__PURE__ */ jsxDEV(
-          "input",
-          {
-            type: "password",
-            name: "new_password",
-            required: true,
-            minlength: 6,
-            autocomplete: "new-password",
-            class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
-          }
-        )
+        /* @__PURE__ */ jsxDEV("label", { for: "new-password", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "M\u1EADt kh\u1EA9u m\u1EDBi" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              id: "new-password",
+              type: "password",
+              name: "new_password",
+              required: true,
+              minlength: 6,
+              autocomplete: "new-password",
+              class: "w-full h-11 pl-3.5 pr-11 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
+            }
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center transition",
+              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u m\u1EDBi",
+              "aria-pressed": "false",
+              "data-target": "new-password",
+              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+            }
+          )
+        ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition", children: "\u0110\u1ED5i m\u1EADt kh\u1EA9u" })
+      /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
+      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: "\u0110\u1ED5i m\u1EADt kh\u1EA9u" })
     ] })
   ] })
 ] }) });
 
 // src/pages/static.tsx
 var BlogListPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "blog", title: "Blog", description: "Ki\u1EBFn th\u1EE9c, h\u01B0\u1EDBng d\u1EABn v\xE0 case study v\u1EC1 l\xE0m video AI", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-white border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] border-b border-[#221e54]", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Blog" }] }),
-    /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight", children: "Ki\u1EBFn th\u1EE9c l\xE0m video AI" }),
-    /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 mt-2 max-w-2xl", children: "H\u01B0\u1EDBng d\u1EABn chi ti\u1EBFt, m\u1EB9o hay v\xE0 case study th\u1EF1c t\u1EBF t\u1EEB c\u1ED9ng \u0111\u1ED3ng l\xE0m video AI." }),
-    /* @__PURE__ */ jsxDEV("form", { action: "/blog", method: "get", class: "mt-5 max-w-md", children: /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-      /* @__PURE__ */ jsxDEV(
-        "input",
-        {
-          type: "text",
-          name: "q",
-          value: props.q,
-          placeholder: "T\xECm b\xE0i vi\u1EBFt...",
-          class: "w-full h-11 pl-10 pr-3 rounded-xl bg-slate-100 focus:bg-white border border-transparent focus:border-brand-400 outline-none text-sm transition"
-        }
-      ),
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" })
-    ] }) })
+    /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight", children: "Ki\u1EBFn th\u1EE9c l\xE0m video AI" }),
+    /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-2 max-w-2xl", children: "H\u01B0\u1EDBng d\u1EABn chi ti\u1EBFt, m\u1EB9o hay v\xE0 case study th\u1EF1c t\u1EBF t\u1EEB c\u1ED9ng \u0111\u1ED3ng l\xE0m video AI." }),
+    /* @__PURE__ */ jsxDEV("form", { action: "/blog", method: "get", class: "mt-5 max-w-md", role: "search", children: [
+      /* @__PURE__ */ jsxDEV("label", { for: "blog-search", class: "sr-only", children: "T\xECm b\xE0i vi\u1EBFt" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+        /* @__PURE__ */ jsxDEV(
+          "input",
+          {
+            id: "blog-search",
+            type: "search",
+            name: "q",
+            value: props.q,
+            placeholder: "T\xECm b\xE0i vi\u1EBFt...",
+            class: "w-full h-11 pl-10 pr-3 rounded-xl bg-[#161436] text-white placeholder-[#9492b8] border border-[#221e54] focus:border-indigo-500 outline-none text-sm transition"
+          }
+        ),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+      ] })
+    ] })
   ] }) }),
-  /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: props.posts.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-newspaper", title: "Kh\xF4ng t\xECm th\u1EA5y b\xE0i vi\u1EBFt", action: { href: "/blog", label: "Xem t\u1EA5t c\u1EA3" } }) }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: props.posts.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-newspaper", title: "Kh\xF4ng t\xECm th\u1EA5y b\xE0i vi\u1EBFt", action: { href: "/blog", label: "Xem t\u1EA5t c\u1EA3" } }) }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5", children: props.posts.map((p) => /* @__PURE__ */ jsxDEV(PostCard, { p })) }),
     /* @__PURE__ */ jsxDEV(Pagination, { page: props.page, totalPages: props.totalPages, baseUrl: "/blog" + (props.q ? "?q=" + encodeURIComponent(props.q) : "") })
   ] }) })
@@ -11817,29 +12157,29 @@ var BlogDetailPage = (props) => {
   const { post } = props;
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "blog", title: post.title, description: post.excerpt, children: /* @__PURE__ */ jsxDEV("article", { class: "max-w-4xl mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Blog", href: "/blog" }, { label: post.title }] }),
-    /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight mb-4", children: post.title }),
-    /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-4 text-sm text-slate-500 pb-6 mb-7 border-b border-slate-200", children: [
+    /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight mb-4", children: post.title }),
+    /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-4 text-sm text-[#9492b8] pb-6 mb-7 border-b border-[#221e54] tabular-nums", children: [
       /* @__PURE__ */ jsxDEV("span", { children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1.5" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1.5", "aria-hidden": "true" }),
         formatDate(post.created_at)
       ] }),
       /* @__PURE__ */ jsxDEV("span", { children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye mr-1.5" }),
+        /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye mr-1.5", "aria-hidden": "true" }),
         post.view_count,
         " l\u01B0\u1EE3t xem"
       ] }),
-      post.tags && /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: post.tags.split(",").map((t) => /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 text-xs font-semibold", children: [
+      post.tags && /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: post.tags.split(",").map((t) => /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-semibold", children: [
         "#",
         t.trim()
       ] })) })
     ] }),
-    post.excerpt && /* @__PURE__ */ jsxDEV("p", { class: "text-lg text-slate-600 leading-relaxed mb-7 font-medium", children: post.excerpt }),
-    /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: post.content || "" } }),
-    /* @__PURE__ */ jsxDEV("div", { class: "mt-10 p-6 rounded-2xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white text-center", children: [
-      /* @__PURE__ */ jsxDEV("h3", { class: "text-xl font-extrabold mb-2", children: "B\u1EAFt \u0111\u1EA7u l\xE0m video AI ngay h\xF4m nay" }),
+    post.excerpt && /* @__PURE__ */ jsxDEV("p", { class: "text-lg text-[#c2c0e0] leading-relaxed mb-7 font-medium", children: post.excerpt }),
+    /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-9", dangerouslySetInnerHTML: { __html: post.content || "" } }),
+    /* @__PURE__ */ jsxDEV("div", { class: "mt-10 p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white text-center shadow-xl shadow-indigo-950/50", children: [
+      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold mb-2", children: "B\u1EAFt \u0111\u1EA7u l\xE0m video AI ngay h\xF4m nay" }),
       /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 text-sm mb-5", children: "Kh\xE1m ph\xE1 b\u1ED9 5 Skill AI l\xE0m video th\u1EF1c chi\u1EBFn \u0111\xE3 \u0111\u01B0\u1EE3c ki\u1EC3m ch\u1EE9ng b\u1EB1ng video demo th\u1EADt." }),
-      /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles" }),
+      /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
         "Xem Skill AI \u0111ang b\xE1n"
       ] })
     ] }),
@@ -11888,51 +12228,51 @@ var PLANS = [
   }
 ];
 var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: "B\u1EA3ng gi\xE1", description: "B\u1EA3ng gi\xE1 b\u1ED9 5 Skill AI l\xE0m video \u0111ang m\u1EDF b\xE1n v\xE0 l\u1ED9 tr\xECnh c\xE1c d\u1ECBch v\u1EE5 s\u1EAFp ra m\u1EAFt", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
     /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 py-16 text-center", children: [
       /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-3", children: "B\u1EA3ng gi\xE1 minh b\u1EA1ch" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 max-w-2xl mx-auto", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng m\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn. Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, kh\xF4ng ph\xED duy tr\xEC." })
+      /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] max-w-2xl mx-auto", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng m\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn. Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, kh\xF4ng ph\xED duy tr\xEC." })
     ] })
   ] }),
   /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 -mt-8 pb-14 relative", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-5", children: PLANS.map((pl) => /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl p-7 relative ${pl.highlight ? "bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-2xl shadow-brand-500/30 lg:-mt-4 lg:mb-4" : "bg-white border border-slate-200"}`, children: [
-      pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-900 text-xs font-extrabold whitespace-nowrap", children: [
-        "\u2B50 ",
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-5", children: PLANS.map((pl) => /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl p-7 relative ${pl.highlight ? "bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-indigo-500/30 lg:-mt-4 lg:mb-4" : "bg-[#0f0e24] border border-[#221e54]"}`, children: [
+      pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-[10px]", "aria-hidden": "true" }),
         pl.tag
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: `w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? "bg-white/20" : pl.available ? "bg-brand-50 text-brand-600" : "bg-amber-500/15 text-amber-400"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.icon}` }) }),
-      /* @__PURE__ */ jsxDEV("h3", { class: `text-xl font-extrabold mb-1 ${pl.highlight ? "" : "text-slate-900"}`, children: pl.name }),
-      !pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: `text-xs font-bold mb-3 ${pl.available ? "text-emerald-400" : "text-amber-400"}`, children: pl.tag }),
-      /* @__PURE__ */ jsxDEV("p", { class: `text-sm mb-5 leading-relaxed ${pl.highlight ? "text-white/85" : "text-slate-500"}`, children: pl.desc }),
+      /* @__PURE__ */ jsxDEV("div", { class: `w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? "bg-white/20 text-white" : pl.available ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30" : "bg-amber-500/15 text-amber-300 border border-amber-500/30"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.icon}`, "aria-hidden": "true" }) }),
+      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1", children: pl.name }),
+      !pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: `text-xs font-bold mb-3 ${pl.available ? "text-emerald-400" : "text-amber-300"}`, children: pl.tag }),
+      /* @__PURE__ */ jsxDEV("p", { class: `text-sm mb-5 leading-relaxed ${pl.highlight ? "text-white/90" : "text-[#b8b6d9]"}`, children: pl.desc }),
       /* @__PURE__ */ jsxDEV("div", { class: "mb-6", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: `text-3xl font-extrabold ${pl.highlight ? "" : "text-slate-900"}`, children: formatVND(pl.price) }),
-        /* @__PURE__ */ jsxDEV("span", { class: `text-sm ml-1.5 ${pl.highlight ? "text-white/70" : "text-slate-400"}`, children: pl.available ? "/ tr\u1ECDn \u0111\u1EDDi" : "/ d\u1EF1 ki\u1EBFn" })
+        /* @__PURE__ */ jsxDEV("span", { class: "text-3xl font-extrabold text-white tabular-nums", children: formatVND(pl.price) }),
+        /* @__PURE__ */ jsxDEV("span", { class: `text-sm ml-1.5 ${pl.highlight ? "text-white/80" : "text-[#9492b8]"}`, children: pl.available ? "/ tr\u1ECDn \u0111\u1EDDi" : "/ d\u1EF1 ki\u1EBFn" })
       ] }),
-      /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 mb-7", children: pl.features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: `flex gap-2.5 text-sm ${pl.highlight ? "text-white/90" : "text-slate-600"}`, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.available ? "fa-circle-check" : "fa-clock"} mt-0.5 shrink-0 ${pl.highlight ? "text-emerald-300" : pl.available ? "text-emerald-500" : "text-amber-400"}` }),
+      /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 mb-7", children: pl.features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: `flex gap-2.5 text-sm ${pl.highlight ? "text-white/95" : "text-[#c2c0e0]"}`, children: [
+        /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.available ? "fa-circle-check" : "fa-clock"} mt-0.5 shrink-0 ${pl.highlight ? "text-emerald-300" : pl.available ? "text-emerald-400" : "text-amber-400"}`, "aria-hidden": "true" }),
         f
       ] })) }),
       /* @__PURE__ */ jsxDEV(
         "a",
         {
           href: pl.href,
-          class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? "cta-white bg-white text-brand-700 hover:bg-slate-100" : pl.available ? "bg-brand-600 hover:bg-brand-700 text-white" : "bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25"}`,
+          class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? "cta-white bg-white text-indigo-700 hover:bg-slate-100" : pl.available ? "bg-indigo-600 hover:bg-indigo-500 text-white" : "bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25"}`,
           children: [
             pl.cta,
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs" })
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs", "aria-hidden": "true" })
           ]
         }
       )
     ] })) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "mt-12 bg-white rounded-2xl border border-slate-200 p-6 md:p-8", children: [
-      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-slate-900 mb-6 text-center", children: "So s\xE1nh chi ti\u1EBFt c\xE1c g\xF3i" }),
+    /* @__PURE__ */ jsxDEV("div", { class: "mt-12 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", children: [
+      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-6 text-center", children: "So s\xE1nh chi ti\u1EBFt c\xE1c g\xF3i" }),
       /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-sm min-w-[600px]", children: [
-        /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { class: "border-b-2 border-slate-200", children: [
-          /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3 font-bold text-slate-700", children: "T\xEDnh n\u0103ng" }),
-          PLANS.map((p) => /* @__PURE__ */ jsxDEV("th", { class: "py-3 px-3 font-bold text-slate-900 text-center", children: p.name }))
+        /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { class: "border-b-2 border-[#221e54]", children: [
+          /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3 font-bold text-[#c2c0e0]", children: "T\xEDnh n\u0103ng" }),
+          PLANS.map((p) => /* @__PURE__ */ jsxDEV("th", { class: "py-3 px-3 font-bold text-white text-center", children: p.name }))
         ] }) }),
-        /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: [
+        /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-[#221e54]", children: [
           ["Tr\u1EA1ng th\xE1i", "\u0110ang m\u1EDF b\xE1n", "\u0110ang m\u1EDF b\xE1n", "Ch\u01B0a m\u1EDF b\xE1n"],
           ["S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", true, true, true],
           ["C\u1EADp nh\u1EADt mi\u1EC5n ph\xED", true, true, true],
@@ -11942,8 +12282,8 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
           ["Skill AI theo ng\xE1ch / model", true, true, true],
           ["Kh\xF3a h\u1ECDc + Chatbot + App", false, false, "S\u1EAFp m\u1EDF"]
         ].map(([label, ...vals]) => /* @__PURE__ */ jsxDEV("tr", { children: [
-          /* @__PURE__ */ jsxDEV("td", { class: "py-3 text-slate-600 font-medium", children: label }),
-          vals.map((v) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-3 text-center", children: typeof v === "boolean" ? v ? /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-minus text-slate-500" }) : /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-slate-800", children: v }) }))
+          /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 text-[#c2c0e0] font-medium", children: label }),
+          vals.map((v) => /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-3 text-center", children: typeof v === "boolean" ? v ? /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-400", "aria-label": "C\xF3" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-minus text-[#9492b8]", "aria-label": "Kh\xF4ng" }) : /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-white", children: v }) }))
         ] })) })
       ] }) })
     ] })
@@ -11952,14 +12292,14 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
 var AboutPage = (props) => {
   const siteName = props.settings?.site_name || "KhoSkill AI";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1EDBi thi\u1EC7u", description: `V\u1EC1 ${siteName} \u2014 kho Skill AI l\xE0m video th\u1EF1c chi\u1EBFn h\xE0ng \u0111\u1EA7u Vi\u1EC7t Nam`, children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
         /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-4", children: [
           "V\u1EC1 ",
           siteName
         ] }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 leading-relaxed", children: "Ch\xFAng t\xF4i gi\xFAp ng\u01B0\u1EDDi Vi\u1EC7t l\xE0m video AI b\xE1n h\xE0ng m\u1ED9t c\xE1ch d\u1EC5 d\xE0ng nh\u1EA5t \u2014 b\u1EAFt \u0111\u1EA7u t\u1EEB b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn \u0111ang m\u1EDF b\xE1n, c\xF9ng h\u1EC7 sinh th\xE1i Kh\xF3a h\u1ECDc, Chatbot v\xE0 App s\u1EAFp ra m\u1EAFt." })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] leading-relaxed", children: "Ch\xFAng t\xF4i gi\xFAp ng\u01B0\u1EDDi Vi\u1EC7t l\xE0m video AI b\xE1n h\xE0ng m\u1ED9t c\xE1ch d\u1EC5 d\xE0ng nh\u1EA5t \u2014 b\u1EAFt \u0111\u1EA7u t\u1EEB b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn \u0111ang m\u1EDF b\xE1n, c\xF9ng h\u1EC7 sinh th\xE1i Kh\xF3a h\u1ECDc, Chatbot v\xE0 App s\u1EAFp ra m\u1EAFt." })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-14", children: [
@@ -11967,12 +12307,12 @@ var AboutPage = (props) => {
         ["fa-wand-magic-sparkles", props.stats.products + " Skill", "\u0110ang m\u1EDF b\xE1n"],
         ["fa-users", props.stats.users.toLocaleString("vi-VN") + "+", "Kh\xE1ch h\xE0ng"],
         ["fa-cart-shopping", props.stats.sold.toLocaleString("vi-VN") + "+", "L\u01B0\u1EE3t mua"]
-      ].map(([ic, num, lb]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center mx-auto mb-3.5 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-slate-900", children: num }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-slate-500 mt-1", children: lb })
+      ].map(([ic, num, lb]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center mx-auto mb-3.5 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-white tabular-nums", children: num }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-[#9492b8] mt-1", children: lb })
       ] })) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none bg-white rounded-2xl border border-slate-200 p-7 md:p-10", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 md:p-10", children: [
         /* @__PURE__ */ jsxDEV("h2", { children: "C\xE2u chuy\u1EC7n c\u1EE7a ch\xFAng t\xF4i" }),
         /* @__PURE__ */ jsxDEV("p", { children: [
           siteName,
@@ -12019,98 +12359,102 @@ var ContactPage = (props) => {
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "contact", title: "Li\xEAn h\u1EC7", description: `Li\xEAn h\u1EC7 h\u1ED7 tr\u1EE3 ${siteName}`, children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-6xl mx-auto px-4 py-10", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Li\xEAn h\u1EC7" }] }),
     /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-7", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-6 md:p-8", children: [
-        /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-slate-900 mb-2 tracking-tight", children: "G\u1EEDi y\xEAu c\u1EA7u h\u1ED7 tr\u1EE3" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 text-sm mb-6", children: "\u0110i\u1EC1n form b\xEAn d\u01B0\u1EDBi, ch\xFAng t\xF4i s\u1EBD ph\u1EA3n h\u1ED3i trong v\xF2ng 24 gi\u1EDD l\xE0m vi\u1EC7c." }),
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", children: [
+        /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-white mb-2 tracking-tight", children: "G\u1EEDi y\xEAu c\u1EA7u h\u1ED7 tr\u1EE3" }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] text-sm mb-6", children: "\u0110i\u1EC1n form b\xEAn d\u01B0\u1EDBi, ch\xFAng t\xF4i s\u1EBD ph\u1EA3n h\u1ED3i trong v\xF2ng 24 gi\u1EDD l\xE0m vi\u1EC7c." }),
         /* @__PURE__ */ jsxDEV("form", { action: "/api/tickets", method: "post", "data-ajax": true, class: "space-y-4", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
             /* @__PURE__ */ jsxDEV("div", { children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "H\u1ECD t\xEAn *" }),
+              /* @__PURE__ */ jsxDEV("label", { for: "contact-name", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "H\u1ECD t\xEAn *" }),
               /* @__PURE__ */ jsxDEV(
                 "input",
                 {
+                  id: "contact-name",
                   type: "text",
                   name: "name",
                   required: true,
                   value: props.user?.full_name || "",
-                  class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                  class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
                 }
               )
             ] }),
             /* @__PURE__ */ jsxDEV("div", { children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Email *" }),
+              /* @__PURE__ */ jsxDEV("label", { for: "contact-email", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "Email *" }),
               /* @__PURE__ */ jsxDEV(
                 "input",
                 {
+                  id: "contact-email",
                   type: "email",
                   name: "email",
                   required: true,
                   value: props.user?.email || "",
-                  class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                  class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
                 }
               )
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "Ti\xEAu \u0111\u1EC1 *" }),
+            /* @__PURE__ */ jsxDEV("label", { for: "contact-subject", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "Ti\xEAu \u0111\u1EC1 *" }),
             /* @__PURE__ */ jsxDEV(
               "input",
               {
+                id: "contact-subject",
                 type: "text",
                 name: "subject",
                 required: true,
                 placeholder: "V\u1EA5n \u0111\u1EC1 b\u1EA1n g\u1EB7p ph\u1EA3i",
-                class: "w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm"
+                class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm"
               }
             )
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("label", { class: "block text-sm font-medium text-slate-700 mb-1.5", children: "N\u1ED9i dung *" }),
+            /* @__PURE__ */ jsxDEV("label", { for: "contact-message", class: "block text-sm font-medium text-[#c2c0e0] mb-1.5", children: "N\u1ED9i dung *" }),
             /* @__PURE__ */ jsxDEV(
               "textarea",
               {
+                id: "contact-message",
                 name: "message",
                 rows: 6,
                 required: true,
                 placeholder: "M\xF4 t\u1EA3 chi ti\u1EBFt v\u1EA5n \u0111\u1EC1 c\u1EE7a b\u1EA1n...",
-                class: "w-full p-3.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-y"
+                class: "w-full p-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-white placeholder-[#9492b8] focus:border-indigo-500 outline-none text-sm resize-y"
               }
             )
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-12 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-brand-500/25 transition", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-1.5" }),
+          /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-sm text-rose-200" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-12 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-90 shadow-lg shadow-indigo-500/25 transition", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-1.5", "aria-hidden": "true" }),
             "G\u1EEDi y\xEAu c\u1EA7u"
           ] })
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("aside", { class: "space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5", children: [
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-4", children: "Th\xF4ng tin li\xEAn h\u1EC7" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+          /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-4 text-base", children: "Th\xF4ng tin li\xEAn h\u1EC7" }),
           /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
             ["fa-phone-volume", "Hotline", props.settings?.hotline, `tel:${(props.settings?.hotline || "").replace(/\s/g, "")}`],
             ["fa-envelope", "Email", props.settings?.email, `mailto:${props.settings?.email}`],
             ["fa-comment-dots", "Zalo", props.settings?.zalo, `https://zalo.me/${props.settings?.zalo}`],
             ["fa-clock", "Gi\u1EDD l\xE0m vi\u1EC7c", "8:00 \u2013 22:00 (T2\u2013CN)", ""]
           ].map(([ic, lb, val, href]) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-brand-50 text-brand-600 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
             /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500", children: lb }),
-              href ? /* @__PURE__ */ jsxDEV("a", { href, target: "_blank", rel: "noopener", class: "font-semibold text-slate-900 text-sm hover:text-brand-600 break-all", children: val }) : /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-sm", children: val })
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8]", children: lb }),
+              href ? /* @__PURE__ */ jsxDEV("a", { href, target: "_blank", rel: "noopener", class: "font-semibold text-white text-sm hover:text-indigo-300 break-all transition", children: val }) : /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: val })
             ] })
           ] })) })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-brand-600 to-fuchsia-600 rounded-2xl p-5 text-white", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-2xl mb-2.5" }),
-          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5", children: "C\u1EA7n h\u1ED7 tr\u1EE3 g\u1EA5p?" }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/85 mb-4 leading-relaxed", children: "Chat Zalo l\xE0 k\xEAnh ph\u1EA3n h\u1ED3i nhanh nh\u1EA5t, th\u01B0\u1EDDng d\u01B0\u1EDBi 5 ph\xFAt trong gi\u1EDD l\xE0m vi\u1EC7c." }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-5 text-white shadow-xl shadow-indigo-950/50", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-2xl mb-2.5", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxDEV("h2", { class: "font-bold mb-1.5 text-base", children: "C\u1EA7n h\u1ED7 tr\u1EE3 g\u1EA5p?" }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/90 mb-4 leading-relaxed", children: "Chat Zalo l\xE0 k\xEAnh ph\u1EA3n h\u1ED3i nhanh nh\u1EA5t, th\u01B0\u1EDDng d\u01B0\u1EDBi 5 ph\xFAt trong gi\u1EDD l\xE0m vi\u1EC7c." }),
           /* @__PURE__ */ jsxDEV(
             "a",
             {
               href: `https://zalo.me/${props.settings?.zalo}`,
               target: "_blank",
               rel: "noopener",
-              class: "cta-white flex items-center justify-center w-full h-11 rounded-xl bg-white text-brand-700 font-bold text-sm hover:bg-slate-100 transition",
+              class: "cta-white flex items-center justify-center w-full h-11 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition",
               children: "Chat Zalo ngay"
             }
           )
@@ -12122,11 +12466,11 @@ var ContactPage = (props) => {
 var AffiliateLandingPage = (props) => {
   const siteName = props.settings?.site_name || "KhoSkill AI";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "affiliate", title: "Ch\u01B0\u01A1ng tr\xECnh Affiliate", description: `Ki\u1EBFm hoa h\u1ED3ng khi gi\u1EDBi thi\u1EC7u s\u1EA3n ph\u1EA9m ${siteName}`, children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "bg-slate-950 text-white relative overflow-hidden", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold mb-5", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake text-amber-400" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-handshake text-amber-400", "aria-hidden": "true" }),
           "Ch\u01B0\u01A1ng tr\xECnh \u0111\u1ED1i t\xE1c"
         ] }),
         /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-5xl font-extrabold tracking-tight mb-4", children: [
@@ -12137,14 +12481,14 @@ var AffiliateLandingPage = (props) => {
           ] }),
           " m\u1ED7i \u0111\u01A1n h\xE0ng"
         ] }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-slate-300 max-w-2xl mx-auto mb-8", children: "Chia s\u1EBB link gi\u1EDBi thi\u1EC7u, ki\u1EBFm thu nh\u1EADp th\u1EE5 \u0111\u1ED9ng kh\xF4ng gi\u1EDBi h\u1EA1n. Kh\xF4ng c\u1EA7n v\u1ED1n, kh\xF4ng c\u1EA7n kho h\xE0ng." }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] max-w-2xl mx-auto mb-8", children: "Chia s\u1EBB link gi\u1EDBi thi\u1EC7u, ki\u1EBFm thu nh\u1EADp th\u1EE5 \u0111\u1ED9ng kh\xF4ng gi\u1EDBi h\u1EA1n. Kh\xF4ng c\u1EA7n v\u1ED1n, kh\xF4ng c\u1EA7n kho h\xE0ng." }),
         /* @__PURE__ */ jsxDEV(
           "a",
           {
             href: props.user ? "/tai-khoan/affiliate" : "/dang-ky",
-            class: "inline-flex h-12 px-7 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-bold hover:opacity-90 shadow-xl transition",
+            class: "inline-flex h-12 px-7 items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-bold hover:opacity-90 shadow-xl transition",
             children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket", "aria-hidden": "true" }),
               props.user ? "V\xE0o trang Affiliate" : "Tham gia ngay \u2014 Mi\u1EC5n ph\xED"
             ]
           }
@@ -12157,33 +12501,33 @@ var AffiliateLandingPage = (props) => {
         ["fa-user-plus", "1. \u0110\u0103ng k\xFD t\xE0i kho\u1EA3n", "T\u1EA1o t\xE0i kho\u1EA3n mi\u1EC5n ph\xED v\xE0 nh\u1EADn ngay m\xE3 gi\u1EDBi thi\u1EC7u ri\xEAng c\u1EE7a b\u1EA1n."],
         ["fa-share-nodes", "2. Chia s\u1EBB link", "\u0110\u0103ng link l\xEAn Facebook, TikTok, Zalo, group ho\u1EB7c g\u1EEDi tr\u1EF1c ti\u1EBFp cho b\u1EA1n b\xE8."],
         ["fa-coins", "3. Nh\u1EADn hoa h\u1ED3ng", `Nh\u1EADn ${props.percent}% gi\xE1 tr\u1ECB m\u1ED7i \u0111\u01A1n h\xE0ng ph\xE1t sinh t\u1EEB link c\u1EE7a b\u1EA1n.`]
-      ].map(([ic, t, d]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-fuchsia-500 text-white grid place-items-center text-xl mx-auto mb-4 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}` }) }),
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 mb-2", children: t }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-slate-500 leading-relaxed", children: d })
+      ].map(([ic, t, d]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-xl mx-auto mb-4 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-2", children: t }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#b8b6d9] leading-relaxed", children: d })
       ] })) }),
       /* @__PURE__ */ jsxDEV(SectionTitle, { center: true, title: "Thu nh\u1EADp tham kh\u1EA3o", subtitle: "\u01AF\u1EDBc t\xEDnh d\u1EF1a tr\xEAn s\u1ED1 \u0111\u01A1n gi\u1EDBi thi\u1EC7u m\u1ED7i th\xE1ng" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-5 mt-8", children: [[5, 89e4], [20, 89e4], [50, 89e4]].map(([n, avg]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-7 text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-slate-500 mb-1", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-3 gap-5 mt-8", children: [[5, 89e4], [20, 89e4], [50, 89e4]].map(([n, avg]) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-[#b8b6d9] mb-1 tabular-nums", children: [
           n,
           " \u0111\u01A1n / th\xE1ng"
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-emerald-600", children: formatVND(Math.round(n * avg * props.percent / 100)) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-400 mt-1.5", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-3xl font-extrabold text-emerald-400 tabular-nums", children: formatVND(Math.round(n * avg * props.percent / 100)) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-1.5 tabular-nums", children: [
           "Gi\xE1 tr\u1ECB \u0111\u01A1n TB ",
           formatVND(avg)
         ] })
       ] })) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "mt-14 bg-white rounded-2xl border border-slate-200 p-7 md:p-10", children: [
-        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-slate-900 mb-5", children: "\u0110i\u1EC1u kho\u1EA3n ch\u01B0\u01A1ng tr\xECnh" }),
-        /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-sm text-slate-600", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "mt-14 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 md:p-10", children: [
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-5", children: "\u0110i\u1EC1u kho\u1EA3n ch\u01B0\u01A1ng tr\xECnh" }),
+        /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3 text-sm text-[#c2c0e0]", children: [
           `Hoa h\u1ED3ng ${props.percent}% tr\xEAn gi\xE1 tr\u1ECB \u0111\u01A1n h\xE0ng th\u1EF1c thu (sau gi\u1EA3m gi\xE1)`,
           'Hoa h\u1ED3ng \u0111\u01B0\u1EE3c ghi nh\u1EADn khi \u0111\u01A1n h\xE0ng chuy\u1EC3n sang tr\u1EA1ng th\xE1i "\u0110\xE3 thanh to\xE1n"',
           "R\xFAt hoa h\u1ED3ng t\u1ED1i thi\u1EC3u 200.000\u0111, x\u1EED l\xFD trong 1-3 ng\xE0y l\xE0m vi\u1EC7c",
           "Kh\xF4ng \xE1p d\u1EE5ng cho \u0111\u01A1n h\xE0ng t\u1EF1 mua b\u1EB1ng m\xE3 c\u1EE7a ch\xEDnh m\xECnh",
           `Nghi\xEAm c\u1EA5m spam, ch\u1EA1y qu\u1EA3ng c\xE1o tr\xEAn th\u01B0\u01A1ng hi\u1EC7u ${siteName}`
         ].map((t) => /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-500 mt-0.5 shrink-0" }),
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-400 mt-0.5 shrink-0", "aria-hidden": "true" }),
           t
         ] })) })
       ] })
@@ -12192,20 +12536,20 @@ var AffiliateLandingPage = (props) => {
 };
 var DocPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: props.heading, children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-4xl mx-auto px-4 py-10", children: [
   /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: props.heading }] }),
-  /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-7", children: props.heading }),
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-6 md:p-9", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: props.html } }) })
+  /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-7", children: props.heading }),
+  /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-9", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: props.html } }) })
 ] }) });
 var NotFoundPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Kh\xF4ng t\xECm th\u1EA5y trang", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-lg mx-auto px-4 py-24 text-center", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "text-7xl font-extrabold bg-gradient-to-r from-brand-500 to-fuchsia-500 bg-clip-text text-transparent mb-4", children: "404" }),
-  /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-slate-900 mb-2", children: "Kh\xF4ng t\xECm th\u1EA5y trang" }),
-  /* @__PURE__ */ jsxDEV("p", { class: "text-slate-500 mb-7", children: "Trang b\u1EA1n t\xECm ki\u1EBFm kh\xF4ng t\u1ED3n t\u1EA1i ho\u1EB7c \u0111\xE3 b\u1ECB di chuy\u1EC3n." }),
+  /* @__PURE__ */ jsxDEV("div", { class: "text-7xl font-extrabold bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent mb-4 tabular-nums", children: "404" }),
+  /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-white mb-2", children: "Kh\xF4ng t\xECm th\u1EA5y trang" }),
+  /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mb-7", children: "Trang b\u1EA1n t\xECm ki\u1EBFm kh\xF4ng t\u1ED3n t\u1EA1i ho\u1EB7c \u0111\xE3 b\u1ECB di chuy\u1EC3n." }),
   /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap justify-center gap-3", children: [
-    /* @__PURE__ */ jsxDEV("a", { href: "/", class: "h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house" }),
+    /* @__PURE__ */ jsxDEV("a", { href: "/", class: "h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house", "aria-hidden": "true" }),
       "V\u1EC1 trang ch\u1EE7"
     ] }),
-    /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "h-11 px-5 inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 hover:border-brand-400 font-semibold text-sm transition", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes" }),
+    /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "h-11 px-5 inline-flex items-center gap-2 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-sm transition", children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes", "aria-hidden": "true" }),
       "Xem s\u1EA3n ph\u1EA9m"
     ] })
   ] })
@@ -12241,7 +12585,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     } }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap", rel: "stylesheet" }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261115", rel: "stylesheet" })
+    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261116", rel: "stylesheet" })
   ] }),
   /* @__PURE__ */ jsxDEV("body", { class: "bg-slate-100 text-slate-800 antialiased", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "flex min-h-screen", children: [
@@ -12294,8 +12638,8 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     ] }),
     /* @__PURE__ */ jsxDEV("div", { id: "toast-container", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
     /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261115" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261115" })
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261116" }),
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261116" })
   ] })
 ] });
 var AdminDashboard = (props) => {

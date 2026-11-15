@@ -25,10 +25,11 @@
     if (!box) return alert(msg);
     var pair = ICONS[type] || ICONS.info;
     var el = document.createElement('div');
+    el.setAttribute('role', type === 'error' ? 'alert' : 'status');
     el.className = 'toast bg-[#0f0e26] rounded-xl shadow-2xl border ' + pair[2] + ' px-4 py-3 flex items-start gap-3';
-    el.innerHTML = '<i class="fas ' + pair[0] + ' ' + pair[1] + ' mt-0.5"></i>' +
+    el.innerHTML = '<i class="fas ' + pair[0] + ' ' + pair[1] + ' mt-0.5" aria-hidden="true"></i>' +
       '<div class="text-sm text-[#e2e1f5] flex-1 leading-snug">' + msg + '</div>' +
-      '<button type="button" class="text-slate-500 hover:text-white"><i class="fas fa-xmark text-xs"></i></button>';
+      '<button type="button" aria-label="Đóng thông báo" class="text-[#9492b8] hover:text-white transition"><i class="fas fa-xmark text-xs" aria-hidden="true"></i></button>';
     el.querySelector('button').onclick = function () { removeToast(el); };
     box.appendChild(el);
     setTimeout(function () { removeToast(el); }, 3800);
@@ -246,6 +247,7 @@
   /* ---------- Adaptive Video Modal ---------- */
   window.openVideoModal = function (url, aspectHint, titleText, posterUrl) {
     if (!url) return;
+    var prevFocus = document.activeElement;
     var modal = document.getElementById('video-modal');
     if (modal) modal.remove();
 
@@ -255,6 +257,9 @@
 
     modal = document.createElement('div');
     modal.id = 'video-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', titleText || 'Video Demo');
     modal.className = 'fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6';
 
     var box = document.createElement('div');
@@ -267,14 +272,14 @@
     topBar.className = 'flex items-center justify-between gap-3 px-1';
     var titleEl = document.createElement('div');
     titleEl.className = 'text-xs sm:text-sm font-bold text-white/95 truncate flex items-center gap-2';
-    titleEl.innerHTML = '<i class="fas fa-circle-play text-indigo-400"></i><span></span>';
+    titleEl.innerHTML = '<i class="fas fa-circle-play text-indigo-400" aria-hidden="true"></i><span></span>';
     titleEl.querySelector('span').textContent = titleText || 'Video Demo';
 
     var closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'w-9 h-9 shrink-0 rounded-full bg-white/10 hover:bg-rose-500 text-white grid place-items-center transition border border-white/15 cursor-pointer';
     closeBtn.setAttribute('aria-label', 'Đóng video');
-    closeBtn.innerHTML = '<i class="fas fa-xmark"></i>';
+    closeBtn.innerHTML = '<i class="fas fa-xmark" aria-hidden="true"></i>';
 
     topBar.appendChild(titleEl);
     topBar.appendChild(closeBtn);
@@ -295,7 +300,6 @@
       vid.className = 'w-full h-full object-contain bg-black';
       frame.appendChild(vid);
 
-      // Probe poster aspect immediately so modal opens at right size before MP4 header arrives
       if (posterUrl && aspectHint !== 'vertical' && aspectHint !== 'landscape') {
         var pre = new Image();
         pre.onload = function () {
@@ -307,7 +311,6 @@
         pre.src = posterUrl;
       }
 
-      // Exact source of truth once MP4 metadata loads
       vid.addEventListener('loadedmetadata', function () {
         if (vid.videoWidth && vid.videoHeight) {
           applyModalContainerSize(box, vid.videoWidth, vid.videoHeight);
@@ -327,17 +330,77 @@
     box.appendChild(frame);
     modal.appendChild(box);
     document.body.appendChild(modal);
+    closeBtn.focus();
 
     function closeModal() {
       document.removeEventListener('keydown', onEsc);
       var v = modal.querySelector('video');
       if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) { } }
       modal.remove();
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
     }
     function onEsc(ev) { if (ev.key === 'Escape') closeModal(); }
     document.addEventListener('keydown', onEsc);
     closeBtn.onclick = closeModal;
     modal.onclick = function (e) { if (e.target === modal) closeModal(); };
+  };
+
+  /* ---------- Image Preview Lightbox ---------- */
+  window.openImageModal = function (src, titleText) {
+    if (!src) return;
+    var prevFocus = document.activeElement;
+    var existing = document.getElementById('image-modal');
+    if (existing) existing.remove();
+
+    var modal = document.createElement('div');
+    modal.id = 'image-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', titleText || 'Xem ảnh sản phẩm');
+    modal.className = 'fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6';
+
+    var box = document.createElement('div');
+    box.className = 'relative max-w-4xl w-full flex flex-col gap-2.5 items-center';
+
+    var topBar = document.createElement('div');
+    topBar.className = 'w-full flex items-center justify-between gap-3 px-1';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'text-xs sm:text-sm font-bold text-white/95 truncate flex items-center gap-2';
+    titleEl.innerHTML = '<i class="far fa-image text-indigo-400" aria-hidden="true"></i><span></span>';
+    titleEl.querySelector('span').textContent = titleText || 'Ảnh xem trước';
+
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'w-9 h-9 shrink-0 rounded-full bg-white/10 hover:bg-rose-500 text-white grid place-items-center transition border border-white/15 cursor-pointer';
+    closeBtn.setAttribute('aria-label', 'Đóng ảnh');
+    closeBtn.innerHTML = '<i class="fas fa-xmark" aria-hidden="true"></i>';
+
+    topBar.appendChild(titleEl);
+    topBar.appendChild(closeBtn);
+
+    var frame = document.createElement('div');
+    frame.className = 'w-full rounded-2xl overflow-hidden bg-[#070614] border border-[#28235d] shadow-2xl flex items-center justify-center p-2';
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = titleText || 'Ảnh sản phẩm';
+    img.className = 'max-h-[82vh] w-auto max-w-full object-contain rounded-xl';
+    frame.appendChild(img);
+
+    box.appendChild(topBar);
+    box.appendChild(frame);
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+    closeBtn.focus();
+
+    function closeImgModal() {
+      document.removeEventListener('keydown', onImgEsc);
+      modal.remove();
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
+    }
+    function onImgEsc(ev) { if (ev.key === 'Escape') closeImgModal(); }
+    document.addEventListener('keydown', onImgEsc);
+    closeBtn.onclick = closeImgModal;
+    modal.onclick = function (e) { if (e.target === modal) closeImgModal(); };
   };
 
   /* ---------- Cart & Wishlist ---------- */
@@ -418,10 +481,12 @@
 
     document.querySelectorAll('#sidebar a[data-nav]').forEach(function (a) {
       var on = a.dataset.nav === activeSide;
+      if (on) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
       a.className = 'sidebar-menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ' +
         (on
           ? 'is-active text-white bg-indigo-500/15 border border-indigo-500/30 shadow-sm shadow-indigo-500/10'
-          : 'text-[#b9b8d9] border border-transparent hover:text-white hover:bg-white/5');
+          : 'text-[#c2c0e0] border border-transparent hover:text-white hover:bg-white/5');
     });
 
     var activeTop = '';
@@ -435,14 +500,18 @@
 
     document.querySelectorAll('#main-nav a[data-top-nav]').forEach(function (a) {
       var on = a.dataset.topNav === activeTop;
-      a.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition ' +
-        (on ? 'is-active text-indigo-400 bg-indigo-500/10' : 'text-[#9f9dbb] hover:text-white hover:bg-white/5');
+      if (on) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+      a.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition whitespace-nowrap ' +
+        (on ? 'is-active text-indigo-300 bg-indigo-500/15' : 'text-[#b8b6d9] hover:text-white hover:bg-white/5');
     });
 
     document.querySelectorAll('#mobile-nav a[data-mob-nav]').forEach(function (a) {
       var on = a.dataset.mobNav === activeTop;
+      if (on) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
       a.className = 'flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold ' +
-        (on ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/25' : 'text-[#b9b8d9] hover:bg-white/5');
+        (on ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/25' : 'text-[#c2c0e0] hover:bg-white/5');
     });
   }
 
@@ -520,12 +589,21 @@
       return;
     }
 
-    // Close mobile nav & sidebar hover overlay immediately on navigation
+    // Close mobile nav, user dropdown & sidebar hover overlay immediately on navigation
     var mobNav = document.getElementById('mobile-nav');
     var mobBtn = document.getElementById('mobile-menu-btn');
     if (mobNav && !mobNav.classList.contains('hidden')) {
       mobNav.classList.add('hidden');
-      if (mobBtn && mobBtn.querySelector('i')) mobBtn.querySelector('i').className = 'fas fa-bars';
+      if (mobBtn) {
+        mobBtn.setAttribute('aria-expanded', 'false');
+        if (mobBtn.querySelector('i')) mobBtn.querySelector('i').className = 'fas fa-bars';
+      }
+    }
+    var userDd = document.getElementById('user-dropdown');
+    var userBtn = document.getElementById('user-menu-btn');
+    if (userDd && !userDd.classList.contains('hidden')) {
+      userDd.classList.add('hidden');
+      if (userBtn) userBtn.setAttribute('aria-expanded', 'false');
     }
     var sb = document.getElementById('sidebar');
     var bd = document.getElementById('sidebar-backdrop');
@@ -566,6 +644,9 @@
 
       runCleanups();
       curMain.innerHTML = newMain.innerHTML;
+      if (doc.body && doc.body.className) {
+        document.body.className = doc.body.className;
+      }
       document.title = doc.title || document.title;
 
       // Sync cart badge from server HTML
@@ -668,6 +749,38 @@
     }
   }
 
+  function prefersReducedMotion() {
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function getDemoVideos() {
+    var el = document.getElementById('demo-videos-json');
+    if (el && el.textContent) {
+      try {
+        var parsed = JSON.parse(el.textContent);
+        if (Array.isArray(parsed) && parsed.length) {
+          return parsed.map(function (v) {
+            return {
+              title: v.title || '',
+              studioLabel: v.studioLabel || v.shortTitle || v.tag || v.handle || 'Studio Demo',
+              caption: v.caption || v.desc || v.title || '',
+              desc: v.desc || v.caption || '',
+              orient: v.orient === 'portrait' || v.aspect === 'portrait' ? 'portrait' : 'landscape',
+              dur: v.dur || '0:30',
+              videoUrl: v.videoUrl || v.video || '',
+              posterUrl: v.posterUrl || v.poster || '',
+              slug: v.slug || '',
+              tag: v.tag || 'Skill AI',
+              price: v.price || '',
+              origPrice: v.originalPrice || v.origPrice || ''
+            };
+          });
+        }
+      } catch (e) { }
+    }
+    return [];
+  }
+
   function initHeroShowcase() {
     var stage = document.getElementById('heroStage');
     var frontPhone = document.getElementById('heroFrontPhone');
@@ -679,70 +792,10 @@
     var frontAmbient = document.getElementById('heroFrontAmbient');
     if (!stage || !frontPhone || !frontVideo) return;
 
-    var R2_BASE = 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev';
-    var HERO_VIDEOS = [
-      {
-        title: 'Skill Muse AI Pro 30s',
-        handle: '@museai.skill',
-        caption: 'Bộ Skill AI làm video 30s chuẩn viral từ prompt đến clip hoàn chỉnh #MuseAI #AIVideo #SkillAI',
-        music: '♫ KhoSkill AI - Muse AI Sound',
-        platform: 'tiktok',
-        orient: 'landscape',
-        likes: '142.8K', comments: '2.5K', saves: '18.4K', shares: '3.9K',
-        videoUrl: R2_BASE + '/videos/demo-khoa-hoc-muse-ai.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=museai1'
-      },
-      {
-        title: 'Skill Seedance 2.5 · 30s',
-        handle: '@seedance.pro',
-        caption: 'One-take 30 giây nhân vật giữ nguyên & âm thanh native trên Seedance 2.5 #Seedance25 #BuildPage',
-        music: '♫ Seedance Official - Trending Beat',
-        platform: 'reels',
-        orient: 'portrait',
-        likes: '189.2K', comments: '3.2K', saves: '24.6K', shares: '6.8K',
-        videoUrl: R2_BASE + '/videos/demo-khoa-hoc-seedance.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-seedance.jpg',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=seedance'
-      },
-      {
-        title: 'Skill Thuỷ Sinh 30s',
-        handle: '@thuysinh.ai',
-        caption: 'Công thức dựng video thuỷ sinh AI mượt mà build page Reels triệu view #ThuySinh #AIReels',
-        music: '♫ Zen Water Studio - Lo-Fi Ambient',
-        platform: 'instagram',
-        orient: 'landscape',
-        likes: '98.5K', comments: '1.1K', saves: '14.2K', shares: '2.8K',
-        videoUrl: R2_BASE + '/videos/demo-skill-thuy-sinh.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-skill-thuy-sinh.jpg',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=aquatic'
-      },
-      {
-        title: 'Skill Làm Vườn DIY 30s',
-        handle: '@lamvuondiy.ai',
-        caption: 'Kịch bản làm vườn DIY 30s cuốn hút từng khung hình #LamVuon #DIY #SkillAI',
-        music: '♫ Morning Garden - Acoustic Warm',
-        platform: 'tiktok',
-        orient: 'landscape',
-        likes: '115.6K', comments: '1.8K', saves: '19.3K', shares: '4.1K',
-        videoUrl: R2_BASE + '/videos/demo-skill-lam-vuon.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-skill-lam-vuon.jpg',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=garden'
-      },
-      {
-        title: 'Skill Affiliate Fitness 30s',
-        handle: '@fitness.affiliate',
-        caption: 'Skill dựng video Fitness chốt đơn Affiliate TikTok Shop chuyển đổi cao #FitnessAI #Affiliate',
-        music: '♫ Fitness Power - EDM Tempo',
-        platform: 'reels',
-        orient: 'landscape',
-        likes: '214.0K', comments: '4.9K', saves: '32.1K', shares: '9.4K',
-        videoUrl: R2_BASE + '/videos/demo-skill-fitness.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-skill-fitness.jpg',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=fitness'
-      }
-    ];
+    var HERO_VIDEOS = getDemoVideos();
+    if (!HERO_VIDEOS.length) return;
 
+    var reducedMotion = prefersReducedMotion();
     var currentIndex = 0;
     var isMuted = true;
     var soundBtn = document.getElementById('heroSoundBtn');
@@ -751,7 +804,6 @@
     var playIcon = document.getElementById('heroPlayCenterIcon');
     var progTrack = document.getElementById('heroProgressTrack');
     var progFill = document.getElementById('heroProgressFill');
-    var guiOverlay = document.getElementById('shortGuiOverlay');
 
     function setHeroOrientation(orient) {
       var isLand = orient !== 'portrait';
@@ -761,24 +813,23 @@
       frontPhone.classList.toggle('frame-portrait', !isLand);
     }
 
-    function updateGui(v) {
-      var hEl = document.getElementById('shortAuthorHandle');
-      var cEl = document.getElementById('shortCaption');
-      var mEl = document.getElementById('shortMusicTitle');
-      var aEl = document.getElementById('shortAvatarImg');
-      var lEl = document.getElementById('shortLikeCount');
-      var cmEl = document.getElementById('shortCommentCount');
-      var svEl = document.getElementById('shortSaveCount');
-      var shEl = document.getElementById('shortShareCount');
-      if (guiOverlay) guiOverlay.setAttribute('data-platform', v.platform);
-      if (hEl) hEl.textContent = v.handle;
-      if (cEl) cEl.textContent = v.caption;
-      if (mEl) mEl.textContent = v.music;
-      if (aEl) aEl.src = v.avatar;
-      if (lEl) lEl.textContent = v.likes;
-      if (cmEl) cmEl.textContent = v.comments;
-      if (svEl) svEl.textContent = v.saves;
-      if (shEl) shEl.textContent = v.shares;
+    function updateStudioOverlay(v) {
+      var studioEl = document.getElementById('heroStudioLabel');
+      var aspectEl = document.getElementById('heroAspectPill');
+      var capEl = document.getElementById('heroCaptionText');
+      var durEl = document.getElementById('heroDurBadge');
+      var detailEl = document.getElementById('heroDetailLink');
+      if (studioEl) studioEl.textContent = v.studioLabel;
+      if (aspectEl) aspectEl.textContent = v.orient === 'portrait' ? '9:16 Dọc' : '16:9 Ngang';
+      if (capEl) capEl.textContent = v.caption;
+      if (durEl) durEl.textContent = v.dur;
+      if (detailEl && v.slug) detailEl.href = '/san-pham/' + v.slug;
+    }
+
+    function syncPlayStateUI(paused) {
+      if (!playIcon) return;
+      playIcon.className = paused ? 'fas fa-play text-white ml-0.5' : 'fas fa-pause text-white';
+      if (playBtn) playBtn.setAttribute('aria-label', paused ? 'Phát video demo' : 'Tạm dừng video demo');
     }
 
     function applyHeroIndex(idx, instant) {
@@ -792,7 +843,7 @@
       if (leftImg) { leftImg.src = vLeft.posterUrl; leftImg.alt = vLeft.title; }
       if (rightImg) { rightImg.src = vRight.posterUrl; rightImg.alt = vRight.title; }
 
-      if (!instant) {
+      if (!instant && !reducedMotion) {
         frontPhone.style.opacity = '0.78';
         setTimeout(function () { frontPhone.style.opacity = '1'; }, 120);
       }
@@ -801,14 +852,21 @@
       frontVideo.poster = vFront.posterUrl;
       frontVideo.src = vFront.videoUrl;
       frontVideo.muted = isMuted;
-      frontVideo.play().catch(function () { });
-      updateGui(vFront);
-      if (playIcon) playIcon.className = 'fas fa-pause text-white';
+      if (!instant || !reducedMotion) {
+        frontVideo.play().catch(function () { });
+        syncPlayStateUI(false);
+      } else {
+        syncPlayStateUI(true);
+      }
+      updateStudioOverlay(vFront);
     }
 
     frontVideo.addEventListener('loadedmetadata', function () {
       if (frontVideo.videoWidth && frontVideo.videoHeight) {
-        setHeroOrientation(frontVideo.videoWidth >= frontVideo.videoHeight ? 'landscape' : 'portrait');
+        var isLand = frontVideo.videoWidth >= frontVideo.videoHeight;
+        setHeroOrientation(isLand ? 'landscape' : 'portrait');
+        var aspectEl = document.getElementById('heroAspectPill');
+        if (aspectEl) aspectEl.textContent = isLand ? '16:9 Ngang' : '9:16 Dọc';
       }
     });
 
@@ -823,10 +881,10 @@
         e.stopPropagation();
         if (frontVideo.paused) {
           frontVideo.play().catch(function () { });
-          if (playIcon) playIcon.className = 'fas fa-pause text-white';
+          syncPlayStateUI(false);
         } else {
           frontVideo.pause();
-          if (playIcon) playIcon.className = 'fas fa-play text-white ml-0.5';
+          syncPlayStateUI(true);
         }
       };
     }
@@ -839,6 +897,7 @@
         isMuted = !isMuted;
         frontVideo.muted = isMuted;
         soundBtn.classList.toggle('is-unmuted', !isMuted);
+        soundBtn.setAttribute('aria-pressed', isMuted ? 'false' : 'true');
         var ic = soundBtn.querySelector('i');
         if (ic) ic.className = 'fas ' + (isMuted ? 'fa-volume-xmark' : 'fa-volume-high') + ' mr-1';
         if (soundText) soundText.textContent = isMuted ? 'Bật tiếng' : 'Đang bật tiếng';
@@ -858,27 +917,27 @@
     var nextBtn = document.getElementById('heroNextPhoneBtn');
     if (prevBtn) prevBtn.onclick = function (e) { e.stopPropagation(); applyHeroIndex(currentIndex - 1); };
     if (nextBtn) nextBtn.onclick = function (e) { e.stopPropagation(); applyHeroIndex(currentIndex + 1); };
-    if (leftPhone) leftPhone.onclick = function () { applyHeroIndex(currentIndex - 1); };
-    if (rightPhone) rightPhone.onclick = function () { applyHeroIndex(currentIndex + 1); };
 
-    var likeBtn = document.getElementById('shortLikeBtn');
-    if (likeBtn) likeBtn.onclick = function (e) { e.stopPropagation(); likeBtn.classList.toggle('liked'); };
-    var saveBtn = document.getElementById('shortSaveBtn');
-    if (saveBtn) saveBtn.onclick = function (e) { e.stopPropagation(); saveBtn.classList.toggle('saved'); };
-    var followPill = document.getElementById('shortFollowPill');
-    var followPlus = document.getElementById('shortFollowPlus');
-    if (followPill) followPill.onclick = function (e) { e.stopPropagation(); followPill.textContent = followPill.textContent === 'Theo dõi' ? 'Đã follow ✓' : 'Theo dõi'; };
-    if (followPlus) followPlus.onclick = function (e) { e.stopPropagation(); followPlus.style.display = 'none'; toast('Đã theo dõi kênh!', 'success'); };
-    var shareBtn = document.getElementById('shortShareBtn');
-    if (shareBtn) {
-      shareBtn.onclick = function (e) {
-        e.stopPropagation();
-        if (navigator.share) navigator.share({ title: 'KhoSkill AI', url: location.href }).catch(function () { });
-        else { navigator.clipboard.writeText(location.href).catch(function () { }); toast('Đã sao chép link video!', 'success'); }
+    function bindSideTrigger(el, delta) {
+      if (!el) return;
+      el.onclick = function () { applyHeroIndex(currentIndex + delta); };
+      el.onkeydown = function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          applyHeroIndex(currentIndex + delta);
+        }
       };
     }
+    bindSideTrigger(leftPhone, -1);
+    bindSideTrigger(rightPhone, 1);
 
-    setHeroOrientation('landscape');
+    setHeroOrientation(HERO_VIDEOS[0].orient);
+    updateStudioOverlay(HERO_VIDEOS[0]);
+    if (reducedMotion) {
+      frontVideo.pause();
+      frontVideo.removeAttribute('autoplay');
+      syncPlayStateUI(true);
+    }
 
     registerCleanup(function () {
       try { frontVideo.pause(); } catch (e) { }
@@ -887,9 +946,34 @@
 
   function initVideoWall() {
     var cards = document.querySelectorAll('.wall-card');
-    if (!cards.length) return;
+    var walls = document.querySelectorAll('.wall');
+    var toggleBtn = document.getElementById('wallToggleBtn');
     var canHoverPreview = window.matchMedia && window.matchMedia('(hover: hover)').matches;
 
+    function setWallsPaused(paused) {
+      walls.forEach(function (w) { w.classList.toggle('is-paused', paused); });
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+        var ic = toggleBtn.querySelector('i');
+        var lbl = toggleBtn.querySelector('span');
+        if (ic) ic.className = 'fas ' + (paused ? 'fa-play' : 'fa-pause');
+        if (lbl) lbl.textContent = paused ? 'Tiếp tục' : 'Tạm dừng';
+      }
+    }
+
+    if (prefersReducedMotion()) {
+      setWallsPaused(true);
+    }
+
+    if (toggleBtn && !toggleBtn.dataset.boundWall) {
+      toggleBtn.dataset.boundWall = '1';
+      toggleBtn.addEventListener('click', function () {
+        var paused = walls.length ? !walls[0].classList.contains('is-paused') : false;
+        setWallsPaused(paused);
+      });
+    }
+
+    if (!cards.length) return;
     cards.forEach(function (card) {
       var hoverVid = null;
       var hoverDelay = null;
@@ -930,49 +1014,8 @@
     var cinemaBox = document.getElementById('cinemaScreenBox');
     if (!theaterPlaylistEl || !theaterVid || !cinemaBox) return;
 
-    var R2_BASE = 'https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev';
-    var THEATER_PLAYLIST = [
-      {
-        title: 'Skill Video Muse AI Pro — Từ Prompt Đến Video 10s Chuẩn Viral',
-        tag: 'Skill AI', dur: '0:30',
-        desc: 'Bộ Skill làm video AI bằng Muse AI từ A-Z: công thức prompt khóa nhân vật, render clip 10s lip-sync tiếng Việt tự nhiên.',
-        videoUrl: R2_BASE + '/videos/demo-khoa-hoc-muse-ai.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-muse-ai.jpg',
-        slug: 'khoa-hoc-video-muse-ai', price: '599.000đ', origPrice: '1.299.000đ'
-      },
-      {
-        title: 'Skill Video Seedance 2.5 — One-Take 30s Build Page',
-        tag: 'Skill AI', dur: '0:30',
-        desc: 'Bộ Skill làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — build page Reels/TikTok.',
-        videoUrl: R2_BASE + '/videos/demo-khoa-hoc-seedance.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-khoa-hoc-seedance.jpg',
-        slug: 'khoa-hoc-video-seedance-25-30s', price: '699.000đ', origPrice: '1.399.000đ'
-      },
-      {
-        title: 'Skill Video Thuỷ Sinh 30s — Build Page Reels',
-        tag: 'Skill AI', dur: '0:15',
-        desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
-        videoUrl: R2_BASE + '/videos/demo-skill-thuy-sinh.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-skill-thuy-sinh.jpg',
-        slug: 'skill-video-thuy-sinh-30s', price: '399.000đ', origPrice: '799.000đ'
-      },
-      {
-        title: 'Skill Video DIY Làm Vườn 30s — Build Page Reels',
-        tag: 'Skill AI', dur: '0:25',
-        desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
-        videoUrl: R2_BASE + '/videos/demo-skill-lam-vuon.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-skill-lam-vuon.jpg',
-        slug: 'skill-video-diy-lam-vuon-30s', price: '399.000đ', origPrice: '799.000đ'
-      },
-      {
-        title: 'Skill Video Affiliate Fitness — Video 30s Chốt Đơn',
-        tag: 'Skill AI', dur: '0:20',
-        desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
-        videoUrl: R2_BASE + '/videos/demo-skill-fitness.mp4',
-        posterUrl: R2_BASE + '/videos/posters/poster-skill-fitness.jpg',
-        slug: 'skill-video-affiliate-fitness', price: '449.000đ', origPrice: '899.000đ'
-      }
-    ];
+    var THEATER_PLAYLIST = getDemoVideos();
+    if (!THEATER_PLAYLIST.length) return;
 
     var playBtn = document.getElementById('theaterPlayBtn');
     var playIcon = document.getElementById('theaterPlayIcon');
@@ -1017,6 +1060,7 @@
     if (soundBtn) {
       soundBtn.onclick = function () {
         theaterVid.muted = !theaterVid.muted;
+        soundBtn.setAttribute('aria-pressed', theaterVid.muted ? 'false' : 'true');
         if (soundIcon) soundIcon.className = 'fas ' + (theaterVid.muted ? 'fa-volume-xmark' : 'fa-volume-high');
       };
     }
@@ -1041,8 +1085,12 @@
         var d = THEATER_PLAYLIST[idx];
         if (!d) return;
 
-        pItems.forEach(function (x) { x.classList.remove('active'); });
+        pItems.forEach(function (x) {
+          x.classList.remove('active');
+          x.removeAttribute('aria-current');
+        });
         item.classList.add('active');
+        item.setAttribute('aria-current', 'true');
 
         if (ambBg) ambBg.style.backgroundImage = "url('" + d.posterUrl + "')";
         theaterVid.poster = d.posterUrl;
@@ -1062,7 +1110,7 @@
         if (dscEl) dscEl.textContent = d.desc;
         if (prcEl) prcEl.textContent = d.price;
         if (orgEl) orgEl.textContent = d.origPrice;
-        if (lnkEl) lnkEl.href = '/san-pham/' + d.slug;
+        if (lnkEl && d.slug) lnkEl.href = '/san-pham/' + d.slug;
       });
     });
 
@@ -1145,17 +1193,52 @@
     // Dropdown & Mobile Menu
     var userBtn = e.target.closest('#user-menu-btn');
     var dd = document.getElementById('user-dropdown');
-    if (userBtn && dd) { dd.classList.toggle('hidden'); return; }
-    if (dd && !e.target.closest('#user-menu-wrap')) dd.classList.add('hidden');
+    if (userBtn && dd) {
+      dd.classList.toggle('hidden');
+      userBtn.setAttribute('aria-expanded', dd.classList.contains('hidden') ? 'false' : 'true');
+      return;
+    }
+    if (dd && !e.target.closest('#user-menu-wrap')) {
+      dd.classList.add('hidden');
+      var ub = document.getElementById('user-menu-btn');
+      if (ub) ub.setAttribute('aria-expanded', 'false');
+    }
 
     var mobBtn = e.target.closest('#mobile-menu-btn');
     if (mobBtn) {
       var n = document.getElementById('mobile-nav');
       if (n) {
         n.classList.toggle('hidden');
+        var isMobOpen = !n.classList.contains('hidden');
+        mobBtn.setAttribute('aria-expanded', isMobOpen ? 'true' : 'false');
         var ic = mobBtn.querySelector('i');
-        if (ic) ic.className = n.classList.contains('hidden') ? 'fas fa-bars' : 'fas fa-xmark';
+        if (ic) ic.className = isMobOpen ? 'fas fa-xmark' : 'fas fa-bars';
       }
+      return;
+    }
+
+    // Password visibility toggle
+    var pwBtn = e.target.closest('.toggle-password-btn');
+    if (pwBtn) {
+      e.preventDefault();
+      var targetId = pwBtn.dataset.target;
+      var pwInput = targetId ? document.getElementById(targetId) : pwBtn.parentElement && pwBtn.parentElement.querySelector('input');
+      if (pwInput) {
+        var reveal = pwInput.type === 'password';
+        pwInput.type = reveal ? 'text' : 'password';
+        pwBtn.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+        pwBtn.setAttribute('aria-label', reveal ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+        var pwIc = pwBtn.querySelector('i');
+        if (pwIc) pwIc.className = 'far ' + (reveal ? 'fa-eye-slash' : 'fa-eye') + ' text-sm';
+      }
+      return;
+    }
+
+    // Image Preview Lightbox trigger
+    var imgBtn = e.target.closest('[data-image-preview]');
+    if (imgBtn && imgBtn.dataset.imagePreview) {
+      e.preventDefault();
+      openImageModal(imgBtn.dataset.imagePreview, imgBtn.dataset.title || '');
       return;
     }
 
@@ -1235,20 +1318,26 @@
       return;
     }
 
-    // Smooth Tabs
+    // Smooth Tabs (with ARIA state sync)
     var tabBtn = e.target.closest('.tab-btn');
     if (tabBtn) {
       e.preventDefault();
       var group = tabBtn.dataset.group || 'default';
-      document.querySelectorAll('.tab-btn[data-group="' + group + '"]').forEach(function (t) { t.classList.remove('active'); });
-      document.querySelectorAll('.tab-panel[data-group="' + group + '"]').forEach(function (p) { p.classList.add('hidden'); });
+      document.querySelectorAll('.tab-btn[data-group="' + group + '"]').forEach(function (t) {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.tab-panel[data-group="' + group + '"]').forEach(function (p) {
+        p.classList.add('hidden');
+      });
       tabBtn.classList.add('active');
+      tabBtn.setAttribute('aria-selected', 'true');
       var panel = document.querySelector('.tab-panel[data-tab="' + tabBtn.dataset.tab + '"][data-group="' + group + '"]');
       if (panel) panel.classList.remove('hidden');
       return;
     }
 
-    // FAQ accordion
+    // FAQ accordion (with ARIA state sync)
     var faq = e.target.closest('.faq-q');
     if (faq) {
       var item = faq.parentElement;
@@ -1256,6 +1345,7 @@
       var icon = faq.querySelector('.faq-icon');
       var open = !body.classList.contains('hidden');
       body.classList.toggle('hidden', open);
+      faq.setAttribute('aria-expanded', open ? 'false' : 'true');
       if (icon) icon.style.transform = open ? '' : 'rotate(45deg)';
       return;
     }
@@ -1318,10 +1408,51 @@
     }
   });
 
+  // Global Keyboard Shortcuts: "/" or "Ctrl+K" focuses header search; "Escape" closes menus
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var dd = document.getElementById('user-dropdown');
+      var ub = document.getElementById('user-menu-btn');
+      if (dd && !dd.classList.contains('hidden')) {
+        dd.classList.add('hidden');
+        if (ub) { ub.setAttribute('aria-expanded', 'false'); ub.focus(); }
+      }
+      var mn = document.getElementById('mobile-nav');
+      var mb = document.getElementById('mobile-menu-btn');
+      if (mn && !mn.classList.contains('hidden')) {
+        mn.classList.add('hidden');
+        if (mb) {
+          mb.setAttribute('aria-expanded', 'false');
+          var mic = mb.querySelector('i');
+          if (mic) mic.className = 'fas fa-bars';
+          mb.focus();
+        }
+      }
+      return;
+    }
+
+    var isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey;
+    var isCmdK = (e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey);
+    if (!isSlash && !isCmdK) return;
+
+    var active = document.activeElement;
+    var tag = active ? active.tagName.toLowerCase() : '';
+    if (isSlash && (tag === 'input' || tag === 'textarea' || tag === 'select' || (active && active.isContentEditable))) return;
+
+    var searchInput = document.getElementById('header-search');
+    if (searchInput) {
+      e.preventDefault();
+      searchInput.focus();
+      if (searchInput.select) searchInput.select();
+    }
+  });
+
   // Back to top button scroll visibility
   var topBtn = document.getElementById('back-to-top');
   if (topBtn) {
-    topBtn.onclick = function () { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    topBtn.onclick = function () {
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    };
     window.addEventListener('scroll', function () {
       var show = window.scrollY > 500;
       topBtn.style.opacity = show ? '1' : '0';
