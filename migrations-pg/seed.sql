@@ -48,9 +48,9 @@ INSERT INTO categories (id, slug, name, description, icon, color, sort_order) VA
   (4, 'app-video-ai', 'App Làm Video AI', 'Phần mềm render video hàng loạt, tự động ghép voice - phụ đề - nhạc nền (Chưa mở bán)', 'fa-mobile-screen-button', 'cyan', 4),
   (5, 'combo', 'Combo Trọn Bộ', 'Gói combo tiết kiệm tới 60% so với mua lẻ (Chưa mở bán)', 'fa-box-open', 'amber', 5);
 
--- ---------- USERS (password: 123456) ----------
+-- ---------- USERS ----------
 INSERT INTO users (id, email, password_hash, full_name, phone, role, balance, affiliate_code, status) VALUES
-  (1, 'admin@webskill.ai', 'SEED$123456', 'Quản Trị Viên', '0987654321', 'admin', 0, 'ADMIN01', 'active'),
+  (1, 'leviettung01@gmail.com', 'pbkdf2$lMTfeF80hvxDrYW8/Ub68VubDaKT46BNVNWDtE92jo8=', 'Quản Trị Viên', '0987654321', 'admin', 0, 'ADMIN01', 'active'),
   (2, 'demo@webskill.ai',  'SEED$123456', 'Tài khoản Demo (Đã tắt)', '0912345678', 'user', 0, 'DEMO01', 'banned'),
   (3, 'minhduc@gmail.com','SEED$123456', 'Minh Đức', '0901111222', 'user', 0, 'MD2024', 'active'),
   (4, 'thuhang@gmail.com','SEED$123456', 'Thu Hằng', '0902222333', 'user', 0, 'TH2024', 'active'),

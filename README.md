@@ -15,11 +15,8 @@
 - **Dev (sandbox)**: https://3000-io1djtub3aoqcps5eqvoq-0e616f0a.sandbox.novita.ai
 - **Production**: (chưa deploy — xem mục Deployment)
 
-### Tài khoản demo
-| Vai trò | Email | Mật khẩu |
-|---|---|---|
-| Khách hàng | `demo@webskill.ai` | `123456` |
-| Quản trị viên | `admin@webskill.ai` | `123456` |
+### Tài khoản quản trị
+- **Admin**: `leviettung01@gmail.com` (mật khẩu đã mã hoá PBKDF2-SHA256 trong CSDL, không hiển thị công khai trong tài liệu).
 
 ### Thêm video demo mới cho sản phẩm
 1. Nén video dưới 25MB/file (giới hạn Cloudflare Pages), đặt vào `public/videos/` (VD: `demo-ten-san-pham.mp4`).
@@ -156,7 +153,7 @@ curl -X POST http://localhost:3000/api/webhook/bank \
 
 **Khách hàng**: Đăng ký → chọn sản phẩm → thêm giỏ → thanh toán (quét VietQR, ghi nội dung là **mã đơn**) → hệ thống tự xác nhận qua webhook ngân hàng trong ~10–60 giây → nhận link tải sản phẩm tại **Tài khoản → Sản phẩm của tôi**.
 
-**Admin**: Đăng nhập `admin@webskill.ai` → `/admin` → thêm sản phẩm (nhớ điền **Link tải/tài liệu** giao cho khách sau khi mua) → cấu hình webhook tại `/admin/giao-dich` → theo dõi đối soát và gán thủ công giao dịch lạc → cấu hình tài khoản ngân hàng tại `/admin/cai-dat`.
+**Admin**: Đăng nhập bằng tài khoản quản trị (`leviettung01@gmail.com`) → `/admin` → thêm sản phẩm (nhớ điền **Link tải/tài liệu** giao cho khách sau khi mua) → cấu hình webhook tại `/admin/giao-dich` → theo dõi đối soát và gán thủ công giao dịch lạc → cấu hình tài khoản ngân hàng tại `/admin/cai-dat`.
 
 ---
 
@@ -200,4 +197,4 @@ npm run deploy:prod
 # dán Webhook URL + API Key vào dashboard SePay/Casso,
 # rồi vào /admin/cai-dat bỏ tick "Bật chế độ DEMO".
 ```
-> ⚠️ Sau khi deploy, đổi mật khẩu tài khoản `admin@webskill.ai` và cập nhật thông tin ngân hàng tại `/admin/cai-dat`.
+> ⚠️ Sau khi deploy, kiểm tra đăng nhập quản trị (`leviettung01@gmail.com`) và cập nhật thông tin ngân hàng tại `/admin/cai-dat`.

@@ -771,8 +771,16 @@
               posterUrl: v.posterUrl || v.poster || '',
               slug: v.slug || '',
               tag: v.tag || 'Skill AI',
-              price: v.price || '',
-              origPrice: v.originalPrice || v.origPrice || ''
+              price: v.price || 0,
+              origPrice: v.originalPrice || v.origPrice || 0,
+              platform: v.platform || 'tiktok',
+              handle: v.handle || '@khoskill.ai',
+              music: v.music || 'Âm thanh gốc - KhoSkill AI',
+              avatar: v.avatar || '/static/logo-icon.png',
+              likes: v.likes || '12.4K',
+              comments: v.comments || '418',
+              saves: v.saves || '1.9K',
+              shares: v.shares || '326'
             };
           });
         }
@@ -798,12 +806,117 @@
     var reducedMotion = prefersReducedMotion();
     var currentIndex = 0;
     var isMuted = true;
+    var userPickedPlatform = false;
+    var currentPlatform = HERO_VIDEOS[0].platform || 'tiktok';
+    var likedMap = {};
+    var savedMap = {};
+    var followedMap = {};
+
     var soundBtn = document.getElementById('heroSoundBtn');
     var soundText = document.getElementById('heroSoundText');
     var playBtn = document.getElementById('heroPlayCenterBtn');
     var playIcon = document.getElementById('heroPlayCenterIcon');
     var progTrack = document.getElementById('heroProgressTrack');
     var progFill = document.getElementById('heroProgressFill');
+
+    var guiOverlay = document.getElementById('shortGuiOverlay');
+    var platformTabs = document.getElementById('heroPlatformTabs');
+    var platformBadge = document.getElementById('shortPlatformBadge');
+    var topModePill = document.getElementById('shortTopModePill');
+    var avatarImg = document.getElementById('shortAvatarImg');
+    var followPlus = document.getElementById('shortFollowPlus');
+    var followPill = document.getElementById('shortFollowPill');
+    var likeBtn = document.getElementById('shortLikeBtn');
+    var likeIcon = document.getElementById('shortLikeIcon');
+    var likeCountEl = document.getElementById('shortLikeCount');
+    var commentBtn = document.getElementById('shortCommentBtn');
+    var commentCountEl = document.getElementById('shortCommentCount');
+    var saveBtn = document.getElementById('shortSaveBtn');
+    var saveCountEl = document.getElementById('shortSaveCount');
+    var shareBtn = document.getElementById('shortShareBtn');
+    var shareCountEl = document.getElementById('shortShareCount');
+    var discSpin = document.getElementById('shortDiscSpin');
+    var handleEl = document.getElementById('shortAuthorHandle');
+    var captionEl = document.getElementById('shortCaption');
+    var musicEl = document.getElementById('shortMusicTitle');
+
+    var PLATFORM_META = {
+      tiktok: {
+        badgeHtml: '<i class="fab fa-tiktok mr-1" aria-hidden="true"></i>LIVE',
+        modeText: 'Dành cho bạn',
+        followText: 'Theo dõi',
+        followedText: 'Đang theo dõi',
+        likeIcon: 'fas fa-heart'
+      },
+      reels: {
+        badgeHtml: '<i class="fab fa-facebook mr-1" aria-hidden="true"></i>Reels',
+        modeText: 'Khám phá',
+        followText: 'Theo dõi',
+        followedText: 'Đang theo dõi',
+        likeIcon: 'fas fa-thumbs-up'
+      },
+      instagram: {
+        badgeHtml: '<i class="fab fa-instagram mr-1" aria-hidden="true"></i>Reels',
+        modeText: 'Đang theo dõi',
+        followText: 'Theo dõi',
+        followedText: 'Đang theo dõi',
+        likeIcon: 'fas fa-heart'
+      },
+      shorts: {
+        badgeHtml: '<i class="fab fa-youtube mr-1" aria-hidden="true"></i>Shorts',
+        modeText: 'Xu hướng',
+        followText: 'Đăng ký',
+        followedText: 'Đã đăng ký',
+        likeIcon: 'fas fa-thumbs-up'
+      }
+    };
+
+    function syncSocialInteractiveUI() {
+      var meta = PLATFORM_META[currentPlatform] || PLATFORM_META.tiktok;
+      var isLiked = Boolean(likedMap[currentIndex]);
+      var isSaved = Boolean(savedMap[currentIndex]);
+      var isFollowed = Boolean(followedMap[currentIndex]);
+
+      if (likeBtn) {
+        likeBtn.classList.toggle('liked', isLiked);
+        likeBtn.setAttribute('aria-pressed', isLiked ? 'true' : 'false');
+      }
+      if (saveBtn) {
+        saveBtn.classList.toggle('saved', isSaved);
+        saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
+      }
+      if (followPill) {
+        followPill.textContent = isFollowed ? meta.followedText : meta.followText;
+        followPill.classList.toggle('is-followed', isFollowed);
+        followPill.style.opacity = isFollowed ? '0.82' : '';
+      }
+      if (followPlus) {
+        var fIcon = followPlus.querySelector('i');
+        if (fIcon) fIcon.className = isFollowed ? 'fas fa-check' : 'fas fa-plus';
+        followPlus.setAttribute('aria-pressed', isFollowed ? 'true' : 'false');
+      }
+    }
+
+    function setPlatform(key) {
+      var safeKey = PLATFORM_META[key] ? key : 'tiktok';
+      var meta = PLATFORM_META[safeKey];
+      currentPlatform = safeKey;
+
+      if (guiOverlay) guiOverlay.setAttribute('data-platform', safeKey);
+      if (platformBadge) platformBadge.innerHTML = meta.badgeHtml;
+      if (topModePill) topModePill.textContent = meta.modeText;
+      if (likeIcon) likeIcon.className = meta.likeIcon;
+
+      if (platformTabs) {
+        var tabs = platformTabs.querySelectorAll('.platform-pill');
+        for (var i = 0; i < tabs.length; i++) {
+          var isMatch = tabs[i].getAttribute('data-platform') === safeKey;
+          tabs[i].classList.toggle('is-active', isMatch);
+          tabs[i].setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        }
+      }
+      syncSocialInteractiveUI();
+    }
 
     function setHeroOrientation(orient) {
       var isLand = orient !== 'portrait';
@@ -816,20 +929,41 @@
     function updateStudioOverlay(v) {
       var studioEl = document.getElementById('heroStudioLabel');
       var aspectEl = document.getElementById('heroAspectPill');
-      var capEl = document.getElementById('heroCaptionText');
-      var durEl = document.getElementById('heroDurBadge');
+      var priceEl = document.getElementById('heroActivePrice');
       var detailEl = document.getElementById('heroDetailLink');
+
       if (studioEl) studioEl.textContent = v.studioLabel;
       if (aspectEl) aspectEl.textContent = v.orient === 'portrait' ? '9:16 Dọc' : '16:9 Ngang';
-      if (capEl) capEl.textContent = v.caption;
-      if (durEl) durEl.textContent = v.dur;
+      if (priceEl && v.price) priceEl.textContent = Number(v.price).toLocaleString('vi-VN') + 'đ';
       if (detailEl && v.slug) detailEl.href = '/san-pham/' + v.slug;
+
+      if (handleEl) handleEl.textContent = v.handle;
+      if (captionEl) captionEl.textContent = v.caption;
+      if (musicEl) musicEl.textContent = v.music;
+      if (avatarImg && v.avatar) avatarImg.src = v.avatar;
+      if (likeCountEl) likeCountEl.textContent = v.likes;
+      if (commentCountEl) commentCountEl.textContent = v.comments;
+      if (saveCountEl) saveCountEl.textContent = v.saves;
+      if (shareCountEl) shareCountEl.textContent = v.shares;
+
+      if (!userPickedPlatform && v.platform) {
+        setPlatform(v.platform);
+      } else {
+        syncSocialInteractiveUI();
+      }
     }
 
     function syncPlayStateUI(paused) {
-      if (!playIcon) return;
-      playIcon.className = paused ? 'fas fa-play text-white ml-0.5' : 'fas fa-pause text-white';
-      if (playBtn) playBtn.setAttribute('aria-label', paused ? 'Phát video demo' : 'Tạm dừng video demo');
+      frontPhone.classList.toggle('is-paused', Boolean(paused));
+      if (playIcon) {
+        playIcon.className = paused ? 'fas fa-play text-white ml-0.5' : 'fas fa-pause text-white';
+      }
+      if (playBtn) {
+        playBtn.setAttribute('aria-label', paused ? 'Phát video demo' : 'Tạm dừng video demo');
+      }
+      if (discSpin) {
+        discSpin.style.animationPlayState = paused ? 'paused' : 'running';
+      }
     }
 
     function applyHeroIndex(idx, instant) {
@@ -876,6 +1010,15 @@
       }
     });
 
+    if (platformTabs) {
+      platformTabs.onclick = function (e) {
+        var btn = e.target.closest ? e.target.closest('.platform-pill') : null;
+        if (!btn) return;
+        userPickedPlatform = true;
+        setPlatform(btn.getAttribute('data-platform') || 'tiktok');
+      };
+    }
+
     if (playBtn) {
       playBtn.onclick = function (e) {
         e.stopPropagation();
@@ -901,6 +1044,51 @@
         var ic = soundBtn.querySelector('i');
         if (ic) ic.className = 'fas ' + (isMuted ? 'fa-volume-xmark' : 'fa-volume-high') + ' mr-1';
         if (soundText) soundText.textContent = isMuted ? 'Bật tiếng' : 'Đang bật tiếng';
+      };
+    }
+
+    if (likeBtn) {
+      likeBtn.onclick = function (e) {
+        e.stopPropagation();
+        likedMap[currentIndex] = !likedMap[currentIndex];
+        syncSocialInteractiveUI();
+      };
+    }
+    if (saveBtn) {
+      saveBtn.onclick = function (e) {
+        e.stopPropagation();
+        savedMap[currentIndex] = !savedMap[currentIndex];
+        syncSocialInteractiveUI();
+        if (typeof toast === 'function') {
+          toast(savedMap[currentIndex] ? 'Đã lưu video demo vào bộ sưu tập!' : 'Đã bỏ lưu video demo', 'info');
+        }
+      };
+    }
+    function toggleFollow(e) {
+      e.stopPropagation();
+      followedMap[currentIndex] = !followedMap[currentIndex];
+      syncSocialInteractiveUI();
+    }
+    if (followPill) followPill.onclick = toggleFollow;
+    if (followPlus) followPlus.onclick = toggleFollow;
+    if (commentBtn) {
+      commentBtn.onclick = function (e) {
+        e.stopPropagation();
+        if (typeof toast === 'function') {
+          toast('Bấm "Chi tiết" bên dưới để xem đánh giá thực tế của Skill này', 'info');
+        }
+      };
+    }
+    if (shareBtn) {
+      shareBtn.onclick = function (e) {
+        e.stopPropagation();
+        var v = HERO_VIDEOS[currentIndex];
+        var shareUrl = location.origin + (v && v.slug ? '/san-pham/' + v.slug : '/');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareUrl).then(function () {
+            if (typeof toast === 'function') toast('Đã sao chép link Skill demo!', 'success');
+          }).catch(function () { });
+        }
       };
     }
 
@@ -932,6 +1120,7 @@
     bindSideTrigger(rightPhone, 1);
 
     setHeroOrientation(HERO_VIDEOS[0].orient);
+    setPlatform(currentPlatform);
     updateStudioOverlay(HERO_VIDEOS[0]);
     if (reducedMotion) {
       frontVideo.pause();

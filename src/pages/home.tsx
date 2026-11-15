@@ -49,6 +49,15 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:30',
     orient: 'landscape' as const,
+    platform: 'tiktok' as const,
+    handle: '@museai.skill',
+    caption: 'Skill AI làm video 30s liền mạch từ prompt đến clip viral #MuseAI #AIVideo #SkillAI',
+    music: '♫ KhoSkill AI - Muse AI Sound',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=museai1',
+    likes: '142.8K',
+    comments: '2.5K',
+    saves: '18.4K',
+    shares: '3.9K',
     desc: 'Bộ Skill làm video AI bằng Muse AI từ A-Z: công thức prompt khóa nhân vật, render clip 10s lip-sync tiếng Việt tự nhiên, ghép thành video hoàn chỉnh.',
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-muse-ai.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-muse-ai.jpg`,
@@ -63,6 +72,15 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:30',
     orient: 'portrait' as const,
+    platform: 'reels' as const,
+    handle: '@seedance.pro',
+    caption: 'One-take 30 giây nhân vật giữ nguyên & âm thanh native trên Seedance 2.5 #Seedance25 #BuildPage',
+    music: '♫ Seedance Official - Trending Beat',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=seedance',
+    likes: '189.2K',
+    comments: '3.2K',
+    saves: '24.6K',
+    shares: '6.8K',
     desc: 'Bộ Skill làm chủ Seedance 2.5: quay one-take 30 giây nhân vật giữ nguyên, âm thanh native — công thức build page Reels/TikTok lên nhanh.',
     videoUrl: `${R2_BASE}/videos/demo-khoa-hoc-seedance.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-khoa-hoc-seedance.jpg`,
@@ -77,6 +95,15 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:15',
     orient: 'landscape' as const,
+    platform: 'instagram' as const,
+    handle: '@thuysinh.ai',
+    caption: 'Công thức dựng video thuỷ sinh AI mượt mà build page Reels triệu view #ThuySinh #AIReels',
+    music: '♫ Zen Water Studio - Lo-Fi Ambient',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=aquatic',
+    likes: '98.5K',
+    comments: '1.1K',
+    saves: '14.2K',
+    shares: '2.8K',
     desc: 'Bộ skill làm video thuỷ sinh 30s: prompt, quy trình render và checklist đăng bài để build page Reels ngách thuỷ sinh.',
     videoUrl: `${R2_BASE}/videos/demo-skill-thuy-sinh.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-thuy-sinh.jpg`,
@@ -91,6 +118,15 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:25',
     orient: 'landscape' as const,
+    platform: 'shorts' as const,
+    handle: '@lamvuondiy.ai',
+    caption: 'Kịch bản làm vườn DIY 30s cuốn hút từng khung hình #LamVuon #DIY #SkillAI',
+    music: '♫ Morning Garden - Acoustic Warm',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=garden',
+    likes: '115.6K',
+    comments: '1.8K',
+    saves: '19.3K',
+    shares: '4.1K',
     desc: 'Skill làm video DIY làm vườn 30s: công thức cảnh quay, prompt mẫu và lịch đăng để build page Reels ngách làm vườn.',
     videoUrl: `${R2_BASE}/videos/demo-skill-lam-vuon.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-lam-vuon.jpg`,
@@ -105,6 +141,15 @@ const DEMO_VIDEOS = [
     tag: 'Skill AI',
     dur: '0:20',
     orient: 'landscape' as const,
+    platform: 'tiktok' as const,
+    handle: '@fitness.affiliate',
+    caption: 'Skill dựng video Fitness chốt đơn Affiliate TikTok Shop chuyển đổi cao #FitnessAI #Affiliate',
+    music: '♫ Fitness Power - EDM Tempo',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=fitness',
+    likes: '214.0K',
+    comments: '4.9K',
+    saves: '32.1K',
+    shares: '9.4K',
     desc: 'Skill làm video fitness 30s bán hàng affiliate: kịch bản chuyển đổi cao, prompt và quy trình edit tay chi tiết.',
     videoUrl: `${R2_BASE}/videos/demo-skill-fitness.mp4`,
     posterUrl: `${R2_BASE}/videos/posters/poster-skill-fitness.jpg`,
@@ -170,104 +215,175 @@ export const HomePage: FC<Props> = (props) => {
               </div>
             </div>
 
-            {/* Hero 3D Multi-Device Studio Stage (Adaptive 16:9 <-> 9:16) */}
+            {/* Hero 3D Multi-Device MXH Phone Stage (TikTok / FB Reels / IG Reels / YT Shorts) */}
             <div class="hero-stage-wrapper relative min-w-0">
-              <button type="button" id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
-                <i class="fas fa-chevron-left" aria-hidden="true"></i>
-              </button>
-              <button type="button" id="heroNextPhoneBtn" class="phone-nav-arrow phone-nav-next" aria-label="Xem video tiếp theo" title="Chuyển video kế tiếp (Phải)">
-                <i class="fas fa-chevron-right" aria-hidden="true"></i>
-              </button>
-
-              <div class="hero-stage frame-landscape" id="heroStage">
-                {/* Back Left Preview Card (Poster-first for fast initial load) */}
-                <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex={0} aria-label="Xem video mẫu trước" title="Nhấp để xem video này ở giữa">
-                  <div class="phone-notch"></div>
-                  <img
-                    id="heroLeftImg"
-                    src={DEMO_VIDEOS[4].posterUrl}
-                    alt={DEMO_VIDEOS[4].shortTitle}
-                    class="w-full h-full object-cover"
-                    decoding="async"
-                  />
-                  <div class="phone-side-hint phone-side-hint-left">
-                    <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> Xem tiếp
-                  </div>
+              {/* Interactive MXH Platform Switcher */}
+              <div class="flex justify-center mb-4">
+                <div id="heroPlatformTabs" role="tablist" aria-label="Mô phỏng giao diện mạng xã hội"
+                  class="inline-flex flex-wrap items-center justify-center gap-1 p-1 rounded-2xl bg-[#0f0e24]/90 border border-[#221e54] shadow-xl backdrop-blur-md">
+                  {[
+                    { id: 'tiktok', label: 'TikTok', icon: 'fab fa-tiktok' },
+                    { id: 'reels', label: 'FB Reels', icon: 'fab fa-facebook' },
+                    { id: 'instagram', label: 'IG Reels', icon: 'fab fa-instagram' },
+                    { id: 'shorts', label: 'YT Shorts', icon: 'fab fa-youtube' }
+                  ].map((pf, idx) => (
+                    <button type="button" role="tab" data-platform={pf.id} aria-selected={idx === 0 ? 'true' : 'false'}
+                      class={`platform-pill ${idx === 0 ? 'is-active' : ''}`}>
+                      <i class={pf.icon} aria-hidden="true"></i>
+                      <span>{pf.label}</span>
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                {/* Back Right Preview Card */}
-                <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex={0} aria-label="Xem video mẫu kế tiếp" title="Nhấp để xem video này ở giữa">
-                  <div class="phone-notch"></div>
-                  <img
-                    id="heroRightImg"
-                    src={DEMO_VIDEOS[1].posterUrl}
-                    alt={DEMO_VIDEOS[1].shortTitle}
-                    class="w-full h-full object-cover"
-                    decoding="async"
-                  />
-                  <div class="phone-side-hint phone-side-hint-right">
-                    Xem tiếp <i class="fas fa-arrow-left ml-1" aria-hidden="true"></i>
+              <div class="relative">
+                <button type="button" id="heroPrevPhoneBtn" class="phone-nav-arrow phone-nav-prev" aria-label="Xem video trước" title="Chuyển video trước (Trái)">
+                  <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <button type="button" id="heroNextPhoneBtn" class="phone-nav-arrow phone-nav-next" aria-label="Xem video tiếp theo" title="Chuyển video kế tiếp (Phải)">
+                  <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+
+                <div class="hero-stage frame-landscape" id="heroStage">
+                  {/* Back Left Preview Card */}
+                  <div class="phone phone-back phone-left" id="heroLeftPhone" role="button" tabindex={0} aria-label="Xem video mẫu trước" title="Nhấp để xem video này ở giữa">
+                    <div class="phone-notch"></div>
+                    <img
+                      id="heroLeftImg"
+                      src={DEMO_VIDEOS[4].posterUrl}
+                      alt={DEMO_VIDEOS[4].shortTitle}
+                      class="w-full h-full object-cover"
+                      decoding="async"
+                    />
+                    <div class="phone-side-hint phone-side-hint-left">
+                      <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> Xem tiếp
+                    </div>
                   </div>
-                </div>
 
-                {/* Main Front Studio Showcase Frame (Auto morphs 16:9 Landscape <-> 9:16 Portrait) */}
-                <div class="phone phone-front frame-landscape" id="heroFrontPhone">
-                  <div class="phone-notch"></div>
-                  <div class="video-ambient-bg" id="heroFrontAmbient" style={`background-image:url('${DEMO_VIDEOS[0].posterUrl}')`}></div>
+                  {/* Back Right Preview Card */}
+                  <div class="phone phone-back phone-right" id="heroRightPhone" role="button" tabindex={0} aria-label="Xem video mẫu kế tiếp" title="Nhấp để xem video này ở giữa">
+                    <div class="phone-notch"></div>
+                    <img
+                      id="heroRightImg"
+                      src={DEMO_VIDEOS[1].posterUrl}
+                      alt={DEMO_VIDEOS[1].shortTitle}
+                      class="w-full h-full object-cover"
+                      decoding="async"
+                    />
+                    <div class="phone-side-hint phone-side-hint-right">
+                      Xem tiếp <i class="fas fa-arrow-left ml-1" aria-hidden="true"></i>
+                    </div>
+                  </div>
 
-                  <video
-                    id="heroFrontVideo"
-                    src={DEMO_VIDEOS[0].videoUrl}
-                    poster={DEMO_VIDEOS[0].posterUrl}
-                    playsinline
-                    muted
-                    loop
-                    autoplay
-                    preload="metadata"
-                  ></video>
+                  {/* Main Front MXH Smartphone Showcase Frame (Auto morphs 16:9 Landscape <-> 9:16 Portrait) */}
+                  <div class="phone phone-front frame-landscape" id="heroFrontPhone">
+                    <div class="phone-notch"></div>
+                    <div class="video-ambient-bg" id="heroFrontAmbient" style={`background-image:url('${DEMO_VIDEOS[0].posterUrl}')`}></div>
 
-                  <button type="button" id="heroPlayCenterBtn" class="phone-play-btn" aria-label="Phát hoặc tạm dừng video">
-                    <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon" aria-hidden="true"></i>
-                  </button>
+                    <video
+                      id="heroFrontVideo"
+                      src={DEMO_VIDEOS[0].videoUrl}
+                      poster={DEMO_VIDEOS[0].posterUrl}
+                      playsinline
+                      muted
+                      loop
+                      autoplay
+                      preload="metadata"
+                    ></video>
 
-                  {/* Clean Creative Studio Overlay */}
-                  <div class="studio-overlay" id="studioOverlay">
-                    <div class="studio-top-bar">
-                      <div class="studio-chip">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0" aria-hidden="true"></span>
-                        <span id="heroStudioLabel" class="truncate">{DEMO_VIDEOS[0].shortTitle}</span>
-                        <span id="heroAspectPill" class="studio-aspect-pill">16:9</span>
+                    <button type="button" id="heroPlayCenterBtn" class="phone-play-btn" aria-label="Phát hoặc tạm dừng video">
+                      <i class="fas fa-play text-white ml-0.5" id="heroPlayCenterIcon" aria-hidden="true"></i>
+                    </button>
+
+                    {/* Authentic MXH Short Video UI Overlay (TikTok / FB Reels / IG Reels / YT Shorts) */}
+                    <div class="short-gui-overlay" id="shortGuiOverlay" data-platform={DEMO_VIDEOS[0].platform}>
+                      <div class="short-top-bar" id="shortTopBar">
+                        <div class="short-top-left" id="shortTopLeft">
+                          <span class="short-badge-live" id="shortPlatformBadge"><i class="fab fa-tiktok mr-1" aria-hidden="true"></i>LIVE</span>
+                          <span class="short-top-pill" id="shortTopModePill">Dành cho bạn</span>
+                        </div>
+                        <div class="short-top-right">
+                          <button type="button" id="heroSoundBtn" class="short-sound-btn" aria-label="Bật tiếng" title="Bật / tắt tiếng">
+                            <i class="fas fa-volume-xmark" aria-hidden="true"></i>
+                            <span id="heroSoundText">Bật tiếng</span>
+                          </button>
+                        </div>
                       </div>
-                      <div class="studio-top-actions">
-                        <button type="button" id="heroSoundBtn" class="studio-sound-btn" aria-label="Bật tiếng" title="Bật / tắt tiếng">
-                          <i class="fas fa-volume-xmark" aria-hidden="true"></i>
-                          <span id="heroSoundText">Bật tiếng</span>
+
+                      {/* Right Social Interaction Stack (vertical on 9:16, compact horizontal pills on 16:9) */}
+                      <div class="short-actions" id="shortActions">
+                        <div class="short-avatar-box" id="shortAvatarBox">
+                          <img src={DEMO_VIDEOS[0].avatar} alt="Tác giả kênh" class="short-avatar-img" id="shortAvatarImg" />
+                          <button type="button" class="short-follow-plus" id="shortFollowPlus" aria-label="Theo dõi kênh" title="Theo dõi"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                        </div>
+
+                        <button type="button" class="short-action-btn" id="shortLikeBtn" aria-label="Thích video" title="Thích">
+                          <span class="action-icon-circle"><i class="fas fa-heart" id="shortLikeIcon" aria-hidden="true"></i></span>
+                          <span class="action-count tabular-nums" id="shortLikeCount">{DEMO_VIDEOS[0].likes}</span>
                         </button>
-                        <a href={`/san-pham/${DEMO_VIDEOS[0].slug}`} id="heroDetailLink" class="studio-detail-link" title="Xem chi tiết Skill">
-                          <span>Chi tiết</span>
-                          <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
-                        </a>
+
+                        <button type="button" class="short-action-btn" id="shortCommentBtn" aria-label="Xem bình luận" title="Bình luận">
+                          <span class="action-icon-circle"><i class="fas fa-comment-dots" id="shortCommentIcon" aria-hidden="true"></i></span>
+                          <span class="action-count tabular-nums" id="shortCommentCount">{DEMO_VIDEOS[0].comments}</span>
+                        </button>
+
+                        <button type="button" class="short-action-btn" id="shortSaveBtn" aria-label="Lưu video" title="Lưu">
+                          <span class="action-icon-circle"><i class="fas fa-bookmark" id="shortSaveIcon" aria-hidden="true"></i></span>
+                          <span class="action-count tabular-nums" id="shortSaveCount">{DEMO_VIDEOS[0].saves}</span>
+                        </button>
+
+                        <button type="button" class="short-action-btn" id="shortShareBtn" aria-label="Chia sẻ video" title="Chia sẻ">
+                          <span class="action-icon-circle"><i class="fas fa-share" id="shortShareIcon" aria-hidden="true"></i></span>
+                          <span class="action-count tabular-nums" id="shortShareCount">{DEMO_VIDEOS[0].shares}</span>
+                        </button>
+
+                        <div class="short-disc-box" id="shortDiscBox" aria-hidden="true">
+                          <div class="short-disc-spin" id="shortDiscSpin">
+                            <i class="fas fa-compact-disc text-white text-base"></i>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div class="studio-bottom-bar">
-                      <div class="studio-caption-text" id="heroCaptionText">{DEMO_VIDEOS[0].title}</div>
-                      <span class="studio-aspect-pill tabular-nums" id="heroDurBadge">{DEMO_VIDEOS[0].dur}</span>
-                    </div>
+                      {/* Bottom Author & Caption HUD */}
+                      <div class="short-bottom-info" id="shortBottomInfo">
+                        <div class="short-author-row" id="shortAuthorRow">
+                          <span class="short-author-handle" id="shortAuthorHandle">{DEMO_VIDEOS[0].handle}</span>
+                          <span class="short-verified-badge" id="shortVerifiedBadge" aria-label="Đã xác minh"><i class="fas fa-circle-check text-sky-400" aria-hidden="true"></i></span>
+                          <button type="button" class="short-follow-pill" id="shortFollowPill">Theo dõi</button>
+                        </div>
+                        <p class="short-caption" id="shortCaption">{DEMO_VIDEOS[0].caption}</p>
+                        <div class="short-music-track" id="shortMusicTrack">
+                          <i class="fas fa-music text-[10px]" aria-hidden="true"></i>
+                          <span class="short-music-title truncate" id="shortMusicTitle">{DEMO_VIDEOS[0].music}</span>
+                        </div>
+                      </div>
 
-                    <div class="studio-progress-track" id="heroProgressTrack" role="slider" aria-label="Tua tiến độ video" tabindex={0}>
-                      <div class="studio-progress-fill" id="heroProgressFill"></div>
+                      <div class="short-progress-track" id="heroProgressTrack" role="slider" aria-label="Tua tiến độ video" tabindex={0}>
+                        <div class="short-progress-fill" id="heroProgressFill"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Stage interaction hint */}
-              <div class="stage-nav-hint text-center text-xs text-[#9492b8] mt-4 flex items-center justify-center gap-2">
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-[#c2c0e0] backdrop-blur shadow-sm">
-                  <i class="fas fa-arrow-left-right text-indigo-400" aria-hidden="true"></i> Bấm <b>Trái / Phải</b> hoặc <b>chạm thẻ 2 bên</b> để chuyển video demo
-                </span>
+              {/* Clean Product Meta Strip outside Phone Frame (No cramped top bar) */}
+              <div id="heroMetaStrip" class="mt-4 mx-auto max-w-md rounded-2xl bg-[#0f0e24]/90 border border-[#221e54] px-3.5 py-2.5 flex items-center justify-between gap-3 backdrop-blur-md shadow-lg">
+                <div class="min-w-0 flex items-center gap-2.5">
+                  <span id="heroAspectPill" class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-mono text-[10px] font-bold shrink-0">16:9</span>
+                  <div class="min-w-0">
+                    <div id="heroStudioLabel" class="text-xs font-bold text-white truncate">{DEMO_VIDEOS[0].shortTitle}</div>
+                    <div class="text-[11px] text-[#9492b8] tabular-nums">Giá Skill: <b id="heroActivePrice" class="text-amber-300">{formatVND(DEMO_VIDEOS[0].price)}</b></div>
+                  </div>
+                </div>
+                <a href={`/san-pham/${DEMO_VIDEOS[0].slug}`} id="heroDetailLink"
+                  class="shrink-0 h-8 px-3 rounded-lg bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:opacity-95 text-white text-xs font-bold inline-flex items-center gap-1.5 transition">
+                  <span>Chi tiết</span>
+                  <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                </a>
               </div>
+              <p class="text-center text-[11px] text-[#9492b8] mt-2">
+                Chọn nền tảng MXH ở trên hoặc bấm <b>Trái / Phải</b> để đổi video demo
+              </p>
             </div>
           </div>
         </div>

@@ -55,6 +55,6 @@ npx wrangler pages deploy dist --project-name=webskill-ai
 ```
 
 ## Lưu ý
-- Tài khoản admin: `admin@webskill.ai` / `123456` (đổi mật khẩu sau khi đăng nhập)
+- Tài khoản quản trị viên: `leviettung01@gmail.com` (đã mã hoá PBKDF2-SHA256 trong CSDL — không dùng mật khẩu mặc định)
 - Vào `/admin` để dán **link tải thật** cho từng sản phẩm và cập nhật **thông tin ngân hàng** ở Cài đặt
 - Gói miễn phí Cloudflare: 100.000 request/ngày, D1 5GB — thoải mái cho shop mới
