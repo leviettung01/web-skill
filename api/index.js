@@ -9309,7 +9309,7 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261118", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261120", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
@@ -11448,47 +11448,149 @@ var ProductDetailPage = (props) => {
 };
 
 // src/pages/auth.tsx
-var AuthShell = ({ title: title2, subtitle, settings = {}, children }) => {
+var inputCls = "w-full h-11 rounded-xl bg-[#12102a] border border-[#2a2559] hover:border-[#3c367c] text-white placeholder-[#7d7ba6] focus:border-indigo-400 focus:bg-[#161436] focus:ring-4 focus:ring-indigo-500/15 outline-none text-sm transition";
+var primaryBtnCls = "w-full h-11 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:brightness-110 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition cursor-pointer flex items-center justify-center gap-2";
+var FEATURES = [
+  ["fa-bolt", "text-amber-300 bg-amber-500/15 border-amber-400/25", "Nh\u1EADn link sau 3 gi\xE2y", "Qu\xE9t VietQR k\xEDch ho\u1EA1t License Key t\u1EF1 \u0111\u1ED9ng 24/7"],
+  ["fa-key", "text-indigo-300 bg-indigo-500/15 border-indigo-400/25", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", "D\xF9ng kh\xF4ng gi\u1EDBi h\u1EA1n k\xEAnh, kh\xF4ng thu ph\xED gia h\u1EA1n"],
+  ["fa-rocket", "text-fuchsia-300 bg-fuchsia-500/15 border-fuchsia-400/25", "C\u1EADp nh\u1EADt mi\u1EC5n ph\xED", "Th\xF4ng b\xE1o t\u1EF1 \u0111\u1ED9ng khi n\xE2ng c\u1EA5p prompt & model m\u1EDBi"],
+  ["fa-headset", "text-emerald-300 bg-emerald-500/15 border-emerald-400/25", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1", "K\xE8m video demo th\u1EF1c chi\u1EBFn v\xE0 h\u01B0\u1EDBng d\u1EABn qua Zalo"]
+];
+var AuthShell = ({ title: title2, subtitle, mode, loginHref = "/dang-nhap", registerHref = "/dang-ky", settings = {}, children }) => {
   const siteName = settings.site_name || "KhoSkill AI";
-  return /* @__PURE__ */ jsxDEV("div", { class: "min-h-[calc(100vh-64px)] grid lg:grid-cols-2 bg-[#070614]", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "hidden lg:flex relative bg-[#0a091b] border-r border-[#221e54] text-white p-12 flex-col justify-between overflow-hidden", children: [
+  return /* @__PURE__ */ jsxDEV("div", { class: "min-h-[calc(100vh-64px)] grid lg:grid-cols-12 bg-[#070614]", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "hidden lg:flex lg:col-span-6 relative bg-[#09081b] border-r border-white/[0.06] p-10 xl:p-14 flex-col justify-between overflow-hidden", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: /* @__PURE__ */ jsxDEV("a", { href: "/", class: "flex items-center gap-2.5", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }) }),
-        /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-lg", children: siteName })
-      ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("h2", { class: "text-3xl xl:text-4xl font-extrabold leading-tight mb-4", children: [
-          "Kho ",
-          /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent", children: "Skill AI T\u1EA1o Video" }),
-          " th\u1EF1c chi\u1EBFn"
+      /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-grid opacity-80" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-600/20 blur-[120px]" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "pointer-events-none absolute -bottom-24 right-0 w-80 h-80 rounded-full bg-fuchsia-600/15 blur-[110px]" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative flex items-center justify-between gap-4", children: [
+        /* @__PURE__ */ jsxDEV("a", { href: "/", class: "inline-flex items-center gap-2.5 group", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center shadow-lg shadow-indigo-500/25 text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }) }),
+          /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-lg text-white tracking-tight", children: siteName })
         ] }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] mb-8 max-w-md leading-relaxed", children: "Tham gia c\xF9ng h\xE0ng ngh\xECn creator \u0111ang d\xF9ng b\u1ED9 Skill AI chu\u1EA9n h\xF3a \u0111\u1EC3 s\u1EA3n xu\u1EA5t video b\xE1n h\xE0ng tri\u1EC7u view m\u1ED7i ng\xE0y." }),
-        /* @__PURE__ */ jsxDEV("ul", { class: "space-y-3.5", children: [
-          ["fa-bolt", "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"],
-          ["fa-infinity", "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, c\u1EADp nh\u1EADt mi\u1EC5n ph\xED"],
-          ["fa-headset", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
-          ["fa-shield-halved", "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y"]
-        ].map(([ic, t]) => /* @__PURE__ */ jsxDEV("li", { class: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-white/10 border border-white/15 grid place-items-center text-indigo-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic}`, "aria-hidden": "true" }) }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-[#f4f4fc] text-sm", children: t })
+        /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-emerald-300 text-xs font-medium", children: [
+          /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-emerald-400" }),
+          "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative my-auto py-8", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-xs font-semibold mb-5", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-film text-[11px]", "aria-hidden": "true" }),
+          "B\u1ED9 Skill AI L\xE0m Video Chu\u1EA9n Viral"
+        ] }),
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight text-white mb-4", children: [
+          "S\u1EA3n xu\u1EA5t video tri\u1EC7u view v\u1EDBi ",
+          /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-indigo-400 via-violet-300 to-fuchsia-400 bg-clip-text text-transparent", children: "Skill AI th\u1EF1c chi\u1EBFn" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] text-sm xl:text-base mb-8 max-w-lg leading-relaxed", children: "Truy c\u1EADp ngay kho Skill Muse AI, Seedance 2.5, Google Flow Veo c\xF9ng quy tr\xECnh d\u1EF1ng k\xEAnh b\xE1n h\xE0ng t\u1ED1i \u01B0u s\u1EB5n cho creator Vi\u1EC7t." }),
+        /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3.5 max-w-xl", children: FEATURES.map(([ic, colorCls, heading, desc]) => /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-2xl bg-[#110f29]/80 border border-[#242054] backdrop-blur-xs", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: `w-9 h-9 rounded-xl border grid place-items-center mb-3 ${colorCls}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${ic} text-sm`, "aria-hidden": "true" }) }),
+          /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm mb-1", children: heading }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9e9cc2] leading-relaxed", children: desc })
         ] })) })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative text-xs text-[#9492b8]", children: [
-        "\xA9 2026 ",
-        siteName,
-        " \u2014 Ph\xE1t tri\u1EC3n t\u1EA1i Vi\u1EC7t Nam"
+      /* @__PURE__ */ jsxDEV("div", { class: "relative flex flex-wrap items-center justify-between gap-4 pt-5 border-t border-white/[0.06] text-xs text-[#9492b8]", children: [
+        /* @__PURE__ */ jsxDEV("span", { children: [
+          "\xA9 2026 ",
+          siteName,
+          " \u2014 Ph\xE1t tri\u1EC3n t\u1EA1i Vi\u1EC7t Nam"
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-4", children: [
+          /* @__PURE__ */ jsxDEV("span", { children: [
+            /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "1.500+" }),
+            " l\u01B0\u1EE3t mua"
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { children: [
+            /* @__PURE__ */ jsxDEV("b", { class: "text-amber-300", children: "4.9/5" }),
+            " \u0111\xE1nh gi\xE1"
+          ] })
+        ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-center p-6 md:p-12 bg-[#070614]", children: /* @__PURE__ */ jsxDEV("div", { class: "w-full max-w-md bg-[#0f0e24] border border-[#221e54] rounded-3xl p-7 md:p-8 shadow-2xl", children: [
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight", children: title2 }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] text-sm mb-7", children: subtitle }),
-      children
-    ] }) })
+    /* @__PURE__ */ jsxDEV("div", { class: "lg:col-span-6 relative flex items-center justify-center p-4 sm:p-8 lg:p-10 bg-[#070614] overflow-hidden", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full bg-indigo-600/15 blur-[120px]" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative w-full max-w-[440px] bg-[#0e0d22]/95 border border-[#29245e] ring-1 ring-white/[0.05] rounded-3xl p-6 sm:p-8 shadow-[0_24px_80px_-20px_rgba(79,70,229,0.32)]", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/75 to-transparent" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "lg:hidden flex items-center justify-between mb-5", children: [
+          /* @__PURE__ */ jsxDEV("a", { href: "/", class: "inline-flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 grid place-items-center text-white text-xs shadow-md shadow-indigo-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-sm text-white", children: siteName })
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-medium text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full", children: "T\u1EF1 \u0111\u1ED9ng 24/7" })
+        ] }),
+        mode && /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#070614] border border-[#231f52] mb-6", role: "tablist", "aria-label": "Ch\u1ECDn ch\u1EBF \u0111\u1ED9 t\xE0i kho\u1EA3n", children: [
+          /* @__PURE__ */ jsxDEV(
+            "a",
+            {
+              href: loginHref,
+              role: "tab",
+              "aria-selected": mode === "login",
+              class: mode === "login" ? "h-9 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-xs sm:text-sm grid place-items-center shadow-sm" : "h-9 rounded-lg text-[#9e9cc2] hover:text-white font-medium text-xs sm:text-sm grid place-items-center transition",
+              children: "\u0110\u0103ng nh\u1EADp"
+            }
+          ),
+          /* @__PURE__ */ jsxDEV(
+            "a",
+            {
+              href: registerHref,
+              role: "tab",
+              "aria-selected": mode === "register",
+              class: mode === "register" ? "h-9 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-xs sm:text-sm grid place-items-center shadow-sm" : "h-9 rounded-lg text-[#9e9cc2] hover:text-white font-medium text-xs sm:text-sm grid place-items-center transition",
+              children: "\u0110\u0103ng k\xFD"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl font-extrabold text-white mb-1.5 tracking-tight", children: title2 }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#a9a7ce] text-sm mb-5 leading-relaxed", children: subtitle }),
+        children,
+        /* @__PURE__ */ jsxDEV("div", { class: "mt-6 pt-4 border-t border-[#1e1a47] flex items-center justify-center gap-4 text-[11px] text-[#8b89b0]", children: [
+          /* @__PURE__ */ jsxDEV("span", { children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock text-emerald-400 mr-1", "aria-hidden": "true" }),
+            "B\u1EA3o m\u1EADt SSL"
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { "aria-hidden": "true", children: "\u2022" }),
+          /* @__PURE__ */ jsxDEV("span", { children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-indigo-400 mr-1", "aria-hidden": "true" }),
+            "Nh\u1EADn Skill ngay"
+          ] })
+        ] })
+      ] })
+    ] })
   ] });
 };
-var inputCls = "w-full h-12 px-4 rounded-xl bg-[#161436] border border-[#2a2559] text-white placeholder-[#9492b8] focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none text-sm transition";
+var PasswordField = ({ id, name, label, autocomplete, placeholder, minLength, rightSlot }) => /* @__PURE__ */ jsxDEV("div", { children: [
+  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
+    /* @__PURE__ */ jsxDEV("label", { for: id, class: "block text-xs font-semibold text-[#e2e1f5]", children: label }),
+    rightSlot
+  ] }),
+  /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+    /* @__PURE__ */ jsxDEV(
+      "input",
+      {
+        id,
+        type: "password",
+        name,
+        required: true,
+        minlength: minLength,
+        autocomplete,
+        placeholder,
+        class: inputCls + " pl-10 pr-10"
+      }
+    ),
+    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        class: "toggle-password-btn absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#8b89b0] hover:text-white grid place-items-center cursor-pointer transition",
+        "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
+        title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
+        children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+      }
+    )
+  ] })
+] });
 var OAUTH_ERROR_MAP = {
   banned: "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n \u0111\xE3 b\u1ECB kho\xE1.",
   unverified: "Email Google c\u1EE7a b\u1EA1n ch\u01B0a \u0111\u01B0\u1EE3c Google x\xE1c minh.",
@@ -11497,15 +11599,15 @@ var OAUTH_ERROR_MAP = {
   state_invalid: "Phi\xEAn \u0111\u0103ng nh\u1EADp Google \u0111\xE3 h\u1EBFt h\u1EA1n, vui l\xF2ng th\u1EED l\u1EA1i.",
   failed: "Kh\xF4ng th\u1EC3 k\u1EBFt n\u1ED1i Google l\xFAc n\xE0y, vui l\xF2ng th\u1EED l\u1EA1i."
 };
-var GoogleButton = ({ href, label }) => /* @__PURE__ */ jsxDEV("div", { class: "mb-5", children: [
+var GoogleButton = ({ href, label }) => /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-4 mb-5", children: [
   /* @__PURE__ */ jsxDEV(
     "a",
     {
       href,
       "data-no-pjax": true,
-      class: "cta-white flex items-center justify-center gap-3 w-full h-12 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-semibold text-sm shadow-md transition",
+      class: "cta-white flex items-center justify-center gap-3 w-full h-11 px-4 rounded-xl bg-white hover:bg-[#f6f7fb] text-[#111827] font-semibold text-sm border border-white/80 shadow-md shadow-black/20 transition",
       children: [
-        /* @__PURE__ */ jsxDEV("svg", { class: "w-5 h-5 shrink-0", viewBox: "0 0 24 24", "aria-hidden": "true", children: [
+        /* @__PURE__ */ jsxDEV("svg", { class: "w-4 h-4 shrink-0", viewBox: "0 0 24 24", "aria-hidden": "true", children: [
           /* @__PURE__ */ jsxDEV("path", { fill: "#4285F4", d: "M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z" }),
           /* @__PURE__ */ jsxDEV("path", { fill: "#34A853", d: "M12 24c3.3 0 6.08-1.09 8.1-2.96l-3.88-3.05c-1.08.73-2.46 1.16-4.22 1.16-3.24 0-5.99-2.19-6.97-5.13H1.03v3.14C3.04 21.15 7.2 24 12 24Z" }),
           /* @__PURE__ */ jsxDEV("path", { fill: "#FBBC05", d: "M5.03 14.02c-.25-.73-.39-1.51-.39-2.32s.14-1.59.39-2.32V6.24H1.03A11.98 11.98 0 0 0 0 11.7c0 1.94.46 3.77 1.03 5.46l4-3.14Z" }),
@@ -11515,183 +11617,260 @@ var GoogleButton = ({ href, label }) => /* @__PURE__ */ jsxDEV("div", { class: "
       ]
     }
   ),
-  /* @__PURE__ */ jsxDEV("div", { class: "relative flex items-center justify-center my-5", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "w-full border-t border-[#221e54]" }),
-    /* @__PURE__ */ jsxDEV("span", { class: "px-3 bg-[#0f0e24] text-xs text-[#9492b8] uppercase tracking-wider shrink-0", children: "Ho\u1EB7c b\u1EB1ng email" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "w-full border-t border-[#221e54]" })
+  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "h-px flex-1 bg-[#262258]" }),
+    /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-medium text-[#8b89b0] uppercase tracking-wider shrink-0", children: "Ho\u1EB7c b\u1EB1ng email" }),
+    /* @__PURE__ */ jsxDEV("div", { class: "h-px flex-1 bg-[#262258]" })
   ] })
 ] });
 var LoginPage = (props) => {
   const errMsg = props.oauthError ? OAUTH_ERROR_MAP[props.oauthError] || OAUTH_ERROR_MAP.failed : "";
   const googleHref = `/api/auth/google${props.next ? "?next=" + encodeURIComponent(props.next) : ""}`;
-  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u0103ng nh\u1EADp", subtitle: "Ch\xE0o m\u1EEBng b\u1EA1n quay l\u1EA1i! \u0110\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp Skill \u0111\xE3 mua.", settings: props.settings, children: [
-    props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-300", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
-      "\u0110\u0103ng k\xFD th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp."
-    ] }),
-    props.resetSuccess && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-sm text-emerald-300", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
-      "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp b\u1EB1ng m\u1EADt kh\u1EA9u m\u1EDBi."
-    ] }),
-    errMsg && /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "mb-5 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5", "aria-hidden": "true" }),
-      errMsg
-    ] }),
-    props.googleEnabled && /* @__PURE__ */ jsxDEV(GoogleButton, { href: googleHref, label: "Ti\u1EBFp t\u1EE5c v\u1EDBi Google" }),
-    /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/login", method: "post", "data-ajax": true, class: "space-y-4", children: [
-      /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "next", value: props.next || "" }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "login-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@example.com", class: inputCls + " pl-11", id: "login-email" }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
-          /* @__PURE__ */ jsxDEV("label", { for: "login-password", class: "block text-sm font-medium text-[#d6d4ee]", children: "M\u1EADt kh\u1EA9u" }),
-          /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs text-indigo-400 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
+  const loginHref = `/dang-nhap${props.next ? "?next=" + encodeURIComponent(props.next) : ""}`;
+  const regHref = `/dang-ky${props.next ? "?next=" + encodeURIComponent(props.next) : ""}`;
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng nh\u1EADp", children: /* @__PURE__ */ jsxDEV(
+    AuthShell,
+    {
+      title: "Ch\xE0o m\u1EEBng quay l\u1EA1i",
+      subtitle: "\u0110\u0103ng nh\u1EADp \u0111\u1EC3 t\u1EA3i Skill AI, xem License Key v\xE0 nh\u1EADn b\u1EA3n c\u1EADp nh\u1EADt m\u1EDBi nh\u1EA5t.",
+      mode: "login",
+      loginHref,
+      registerHref: regHref,
+      settings: props.settings,
+      children: [
+        props.registered && /* @__PURE__ */ jsxDEV("div", { class: "mb-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-xs sm:text-sm text-emerald-300", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
+          "\u0110\u0103ng k\xFD th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp."
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV("input", { type: "password", name: "password", required: true, autocomplete: "current-password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", class: inputCls + " pl-11 pr-11", id: "login-password" }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+        props.resetSuccess && /* @__PURE__ */ jsxDEV("div", { class: "mb-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-xs sm:text-sm text-emerald-300", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1.5", "aria-hidden": "true" }),
+          "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u th\xE0nh c\xF4ng! Vui l\xF2ng \u0111\u0103ng nh\u1EADp b\u1EB1ng m\u1EADt kh\u1EA9u m\u1EDBi."
+        ] }),
+        errMsg && /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs sm:text-sm text-rose-300", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5", "aria-hidden": "true" }),
+          errMsg
+        ] }),
+        props.googleEnabled && /* @__PURE__ */ jsxDEV(GoogleButton, { href: googleHref, label: "Ti\u1EBFp t\u1EE5c v\u1EDBi Google" }),
+        /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/login", method: "post", "data-ajax": true, class: "space-y-4", children: [
+          /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "next", value: props.next || "" }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "login-email", class: "block text-xs font-semibold text-[#e2e1f5] mb-1.5", children: "Email" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  type: "email",
+                  name: "email",
+                  required: true,
+                  autocomplete: "email",
+                  placeholder: "tenban@gmail.com",
+                  class: inputCls + " pl-10 pr-4",
+                  id: "login-email"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" })
+            ] })
+          ] }),
           /* @__PURE__ */ jsxDEV(
-            "button",
+            PasswordField,
             {
-              type: "button",
-              class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
-              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
-              title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
-              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+              id: "login-password",
+              name: "password",
+              label: "M\u1EADt kh\u1EA9u",
+              autocomplete: "current-password",
+              placeholder: "Nh\u1EADp m\u1EADt kh\u1EA9u",
+              rightSlot: /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "text-xs font-medium text-indigo-400 hover:text-indigo-300 hover:underline", children: "Qu\xEAn m\u1EADt kh\u1EA9u?" })
             }
-          )
+          ),
+          /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs sm:text-sm text-rose-300", role: "alert" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: primaryBtnCls, children: [
+            /* @__PURE__ */ jsxDEV("span", { children: "\u0110\u0103ng nh\u1EADp" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs", "aria-hidden": "true" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "mt-5 text-center text-xs sm:text-sm text-[#9e9cc2]", children: [
+          "Ch\u01B0a c\xF3 t\xE0i kho\u1EA3n? ",
+          /* @__PURE__ */ jsxDEV("a", { href: regHref, class: "font-semibold text-indigo-400 hover:text-indigo-300 hover:underline", children: "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED" })
         ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
-      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng nh\u1EADp" })
-    ] }),
-    /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
-      "Ch\u01B0a c\xF3 t\xE0i kho\u1EA3n? ",
-      /* @__PURE__ */ jsxDEV("a", { href: "/dang-ky", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng k\xFD ngay" })
-    ] })
-  ] }) });
+      ]
+    }
+  ) });
 };
 var RegisterPage = (props) => {
   const errMsg = props.oauthError ? OAUTH_ERROR_MAP[props.oauthError] || OAUTH_ERROR_MAP.failed : "";
   const googleHref = `/api/auth/google${props.ref ? "?ref=" + encodeURIComponent(props.ref) : ""}`;
-  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng k\xFD", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "T\u1EA1o t\xE0i kho\u1EA3n", subtitle: "\u0110\u0103ng k\xFD mi\u1EC5n ph\xED trong 30 gi\xE2y \u2014 kh\xF4ng c\u1EA7n ch\u1EDD OTP, mua v\xE0 nh\u1EADn Skill ngay.", settings: props.settings, children: [
-    errMsg && /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "mb-5 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5", "aria-hidden": "true" }),
-      errMsg
-    ] }),
-    props.googleEnabled && /* @__PURE__ */ jsxDEV(GoogleButton, { href: googleHref, label: "\u0110\u0103ng k\xFD nhanh v\u1EDBi Google" }),
-    /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/register", method: "post", "data-ajax": true, class: "space-y-4", children: [
-      /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "ref", value: props.ref || "" }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "reg-name", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV("input", { id: "reg-name", type: "text", name: "full_name", required: true, autocomplete: "name", placeholder: "Nguy\u1EC5n V\u0103n A", class: inputCls + " pl-11" }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "reg-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV("input", { id: "reg-email", type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@gmail.com", class: inputCls + " pl-11" }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+  const regHref = `/dang-ky${props.ref ? "?ref=" + encodeURIComponent(props.ref) : ""}`;
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u0103ng k\xFD", children: /* @__PURE__ */ jsxDEV(
+    AuthShell,
+    {
+      title: "T\u1EA1o t\xE0i kho\u1EA3n m\u1EDBi",
+      subtitle: "\u0110\u0103ng k\xFD nhanh trong 30 gi\xE2y \u2014 v\xE0o mua v\xE0 nh\u1EADn link t\u1EA3i Skill ngay.",
+      mode: "register",
+      loginHref: "/dang-nhap",
+      registerHref: regHref,
+      settings: props.settings,
+      children: [
+        errMsg && /* @__PURE__ */ jsxDEV("div", { role: "alert", class: "mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs sm:text-sm text-rose-300", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5", "aria-hidden": "true" }),
+          errMsg
         ] }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-[#9492b8] mt-1", children: "V\xE0o mua ngay kh\xF4ng c\u1EA7n OTP. C\xF3 th\u1EC3 x\xE1c minh email trong H\u1ED3 s\u01A1 \u0111\u1EC3 b\u1EADt Affiliate & nh\u1EADn th\xF4ng b\xE1o c\u1EADp nh\u1EADt." })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "reg-phone", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: [
-          "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i ",
-          /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+        /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-medium text-emerald-300 mb-4", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-[10px] shrink-0", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxDEV("span", { children: "Kh\xF4ng c\u1EA7n OTP \u2022 V\xE0o mua Skill ngay" })
         ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV("input", { id: "reg-phone", type: "tel", name: "phone", autocomplete: "tel", placeholder: "0915967790", class: inputCls + " pl-11" }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("label", { for: "reg-password", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "M\u1EADt kh\u1EA9u" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-          /* @__PURE__ */ jsxDEV("input", { id: "reg-password", type: "password", name: "password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11 pr-11" }),
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
+        props.googleEnabled && /* @__PURE__ */ jsxDEV(GoogleButton, { href: googleHref, label: "\u0110\u0103ng k\xFD nhanh v\u1EDBi Google" }),
+        /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/register", method: "post", "data-ajax": true, class: "space-y-3.5", children: [
+          /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "ref", value: props.ref || "" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-1 sm:grid-cols-2 gap-3.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { for: "reg-name", class: "block text-xs font-semibold text-[#e2e1f5] mb-1.5", children: "H\u1ECD v\xE0 t\xEAn" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+                /* @__PURE__ */ jsxDEV(
+                  "input",
+                  {
+                    id: "reg-name",
+                    type: "text",
+                    name: "full_name",
+                    required: true,
+                    autocomplete: "name",
+                    placeholder: "Nguy\u1EC5n V\u0103n A",
+                    class: inputCls + " pl-10 pr-3"
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { for: "reg-phone", class: "block text-xs font-semibold text-[#e2e1f5] mb-1.5", children: [
+                "S\u1ED1 \u0111i\u1EC7n tho\u1EA1i ",
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#7c79a6] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+                /* @__PURE__ */ jsxDEV(
+                  "input",
+                  {
+                    id: "reg-phone",
+                    type: "tel",
+                    name: "phone",
+                    autocomplete: "tel",
+                    placeholder: "0901 234 567",
+                    class: inputCls + " pl-10 pr-3"
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "reg-email", class: "block text-xs font-semibold text-[#e2e1f5] mb-1.5", children: "Email" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  id: "reg-email",
+                  type: "email",
+                  name: "email",
+                  required: true,
+                  autocomplete: "email",
+                  placeholder: "tenban@gmail.com",
+                  class: inputCls + " pl-10 pr-4"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" })
+            ] })
+          ] }),
           /* @__PURE__ */ jsxDEV(
-            "button",
+            PasswordField,
             {
-              type: "button",
-              class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
-              "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
-              title: "Hi\u1EC7n / \u1EA9n m\u1EADt kh\u1EA9u",
-              children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+              id: "reg-password",
+              name: "password",
+              label: "M\u1EADt kh\u1EA9u",
+              autocomplete: "new-password",
+              placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1",
+              minLength: 6
             }
-          )
+          ),
+          /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 pt-0.5 text-xs text-[#a6a4ca] cursor-pointer leading-relaxed", children: [
+            /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 w-4 h-4 rounded accent-indigo-500 shrink-0" }),
+            /* @__PURE__ */ jsxDEV("span", { children: [
+              "T\xF4i \u0111\u1ED3ng \xFD v\u1EDBi ",
+              /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-indigo-400 hover:text-indigo-300 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
+              " v\xE0 ",
+              /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-indigo-400 hover:text-indigo-300 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs sm:text-sm text-rose-300", role: "alert" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: primaryBtnCls, children: [
+            /* @__PURE__ */ jsxDEV("span", { children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" }),
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs", "aria-hidden": "true" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "mt-5 text-center text-xs sm:text-sm text-[#9e9cc2]", children: [
+          "\u0110\xE3 c\xF3 t\xE0i kho\u1EA3n? ",
+          /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:text-indigo-300 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
         ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-2.5 text-sm text-[#b8b6d9] cursor-pointer", children: [
-        /* @__PURE__ */ jsxDEV("input", { type: "checkbox", required: true, class: "mt-0.5 accent-indigo-500" }),
-        /* @__PURE__ */ jsxDEV("span", { children: [
-          "T\xF4i \u0111\u1ED3ng \xFD v\u1EDBi ",
-          /* @__PURE__ */ jsxDEV("a", { href: "/dieu-khoan", class: "text-indigo-400 hover:underline", children: "\u0110i\u1EC1u kho\u1EA3n s\u1EED d\u1EE5ng" }),
-          " v\xE0 ",
-          /* @__PURE__ */ jsxDEV("a", { href: "/chinh-sach", class: "text-indigo-400 hover:underline", children: "Ch\xEDnh s\xE1ch b\u1EA3o m\u1EADt" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
-      /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n" })
-    ] }),
-    /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: [
-      "\u0110\xE3 c\xF3 t\xE0i kho\u1EA3n? ",
-      /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: "\u0110\u0103ng nh\u1EADp" })
-    ] })
-  ] }) });
+      ]
+    }
+  ) });
 };
 var ForgotPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Qu\xEAn m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "Qu\xEAn m\u1EADt kh\u1EA9u", subtitle: "Nh\u1EADp email \u0111\xE3 \u0111\u0103ng k\xFD \u0111\u1EC3 nh\u1EADn li\xEAn k\u1EBFt \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u m\u1EDBi.", settings: props.settings, children: [
-  props.emailEnabled ? /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/forgot-password", method: "post", "data-ajax": true, class: "space-y-4 mb-6", children: [
+  props.emailEnabled ? /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/forgot-password", method: "post", "data-ajax": true, class: "space-y-4 mb-5", children: [
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "forgot-email", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Email t\xE0i kho\u1EA3n" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "forgot-email", class: "block text-xs font-semibold text-[#e2e1f5] mb-1.5", children: "Email t\xE0i kho\u1EA3n" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "forgot-email", type: "email", name: "email", required: true, autocomplete: "email", placeholder: "email@gmail.com", class: inputCls + " pl-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
+        /* @__PURE__ */ jsxDEV(
+          "input",
+          {
+            id: "forgot-email",
+            type: "email",
+            name: "email",
+            required: true,
+            autocomplete: "email",
+            placeholder: "tenban@gmail.com",
+            class: inputCls + " pl-10 pr-4"
+          }
+        ),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane mr-2", "aria-hidden": "true" }),
-      "G\u1EEDi link \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u"
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs sm:text-sm text-rose-300", role: "alert" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: primaryBtnCls, children: [
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-paper-plane text-xs", "aria-hidden": "true" }),
+      /* @__PURE__ */ jsxDEV("span", { children: "G\u1EEDi link \u0111\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u" })
     ] })
   ] }) : null,
-  /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-[#161436] border border-[#2a2559] space-y-3", children: [
-    /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#c2c0e0] leading-relaxed", children: props.emailEnabled ? "Kh\xF4ng th\u1EA5y email trong h\u1ED9p th\u01B0 ch\xEDnh (h\xE3y ki\u1EC3m tra th\xEAm m\u1EE5c Spam)? B\u1EA1n c\xF3 th\u1EC3 li\xEAn h\u1EC7 tr\u1EF1c ti\u1EBFp \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3:" : "Vui l\xF2ng li\xEAn h\u1EC7 \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng:" }),
-    /* @__PURE__ */ jsxDEV(
-      "a",
-      {
-        href: `https://zalo.me/${props.settings?.zalo || ""}`,
-        target: "_blank",
-        rel: "noopener",
-        class: "flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-semibold text-sm transition",
-        children: "Chat Zalo h\u1ED7 tr\u1EE3"
-      }
-    ),
-    /* @__PURE__ */ jsxDEV(
-      "a",
-      {
-        href: `mailto:${props.settings?.email || ""}`,
-        class: "flex items-center justify-center gap-2 w-full h-11 rounded-xl border border-[#2a2559] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-sm transition",
-        children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope", "aria-hidden": "true" }),
-          "G\u1EEDi email h\u1ED7 tr\u1EE3"
-        ]
-      }
-    )
+  /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-2xl bg-[#12102a] border border-[#262258] space-y-2.5", children: [
+    /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#a9a7ce] leading-relaxed", children: props.emailEnabled ? "Kh\xF4ng th\u1EA5y email trong h\u1ED9p th\u01B0 ch\xEDnh (h\xE3y ki\u1EC3m tra th\xEAm m\u1EE5c Spam)? B\u1EA1n c\xF3 th\u1EC3 nh\u1EAFn tr\u1EF1c ti\u1EBFp h\u1ED7 tr\u1EE3:" : "Vui l\xF2ng li\xEAn h\u1EC7 \u0111\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 k\xE8m email \u0111\xE3 \u0111\u0103ng k\xFD \u0111\u1EC3 \u0111\u01B0\u1EE3c c\u1EA5p l\u1EA1i m\u1EADt kh\u1EA9u nhanh ch\xF3ng:" }),
+    /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-2.5", children: [
+      /* @__PURE__ */ jsxDEV(
+        "a",
+        {
+          href: `https://zalo.me/${props.settings?.zalo || ""}`,
+          target: "_blank",
+          rel: "noopener",
+          class: "flex items-center justify-center gap-2 h-10 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-semibold text-xs transition",
+          children: "Chat Zalo h\u1ED7 tr\u1EE3"
+        }
+      ),
+      /* @__PURE__ */ jsxDEV(
+        "a",
+        {
+          href: `mailto:${props.settings?.email || ""}`,
+          class: "flex items-center justify-center gap-2 h-10 rounded-xl border border-[#2a2559] text-white hover:border-indigo-400 hover:bg-white/5 font-semibold text-xs transition",
+          children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-envelope", "aria-hidden": "true" }),
+            "G\u1EEDi email"
+          ]
+        }
+      )
+    ] })
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-5 text-center text-xs sm:text-sm text-[#9e9cc2]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:text-indigo-300 hover:underline", children: [
     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left mr-1", "aria-hidden": "true" }),
     "Quay l\u1EA1i \u0111\u0103ng nh\u1EADp"
   ] }) })
 ] }) });
-var ResetPasswordPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u", subtitle: "T\u1EA1o m\u1EADt kh\u1EA9u m\u1EDBi cho t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n.", settings: props.settings, children: [
+var ResetPasswordPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u", children: /* @__PURE__ */ jsxDEV(AuthShell, { title: "\u0110\u1EB7t l\u1EA1i m\u1EADt kh\u1EA9u", subtitle: "T\u1EA1o m\u1EADt kh\u1EA9u m\u1EDBi an to\xE0n cho t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n.", settings: props.settings, children: [
   props.invalidReason ? /* @__PURE__ */ jsxDEV("div", { class: "p-5 rounded-2xl bg-rose-500/15 border border-rose-500/35 space-y-4", children: [
     /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-rose-200 leading-relaxed", children: [
       /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-xmark mr-1.5", "aria-hidden": "true" }),
@@ -11700,33 +11879,43 @@ var ResetPasswordPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, ti
     /* @__PURE__ */ jsxDEV("a", { href: "/quen-mat-khau", class: "flex items-center justify-center w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition", children: "Y\xEAu c\u1EA7u link m\u1EDBi" })
   ] }) : /* @__PURE__ */ jsxDEV("form", { action: "/api/auth/reset-password", method: "post", "data-ajax": true, class: "space-y-4", children: [
     /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "token", value: props.token || "" }),
+    /* @__PURE__ */ jsxDEV(
+      PasswordField,
+      {
+        id: "reset-new-pw",
+        name: "new_password",
+        label: "M\u1EADt kh\u1EA9u m\u1EDBi",
+        autocomplete: "new-password",
+        placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1",
+        minLength: 6
+      }
+    ),
     /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "reset-new-pw", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "M\u1EADt kh\u1EA9u m\u1EDBi" }),
+      /* @__PURE__ */ jsxDEV("label", { for: "reset-confirm-pw", class: "block text-xs font-semibold text-[#e2e1f5] mb-1.5", children: "Nh\u1EADp l\u1EA1i m\u1EADt kh\u1EA9u" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "reset-new-pw", type: "password", name: "new_password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "T\u1ED1i thi\u1EC3u 6 k\xFD t\u1EF1", class: inputCls + " pl-11 pr-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" }),
         /* @__PURE__ */ jsxDEV(
-          "button",
+          "input",
           {
-            type: "button",
-            class: "toggle-password-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[#9492b8] hover:text-white grid place-items-center cursor-pointer",
-            "aria-label": "Hi\u1EC7n m\u1EADt kh\u1EA9u",
-            children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-eye text-sm", "aria-hidden": "true" })
+            id: "reset-confirm-pw",
+            type: "password",
+            name: "confirm_password",
+            required: true,
+            minlength: 6,
+            autocomplete: "new-password",
+            placeholder: "Nh\u1EADp l\u1EA1i m\u1EADt kh\u1EA9u m\u1EDBi",
+            class: inputCls + " pl-10 pr-4"
           }
-        )
+        ),
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7c79a6] text-xs", "aria-hidden": "true" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { for: "reset-confirm-pw", class: "block text-sm font-medium text-[#d6d4ee] mb-1.5", children: "Nh\u1EADp l\u1EA1i m\u1EADt kh\u1EA9u" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
-        /* @__PURE__ */ jsxDEV("input", { id: "reset-confirm-pw", type: "password", name: "confirm_password", required: true, minlength: 6, autocomplete: "new-password", placeholder: "Nh\u1EADp l\u1EA1i m\u1EADt kh\u1EA9u m\u1EDBi", class: inputCls + " pl-11 pr-11" }),
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-check absolute left-4 top-1/2 -translate-y-1/2 text-[#9492b8] text-sm", "aria-hidden": "true" })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-sm text-rose-300", role: "alert" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition cursor-pointer", children: "L\u01B0u m\u1EADt kh\u1EA9u m\u1EDBi" })
+    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs sm:text-sm text-rose-300", role: "alert" }),
+    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: primaryBtnCls, children: [
+      /* @__PURE__ */ jsxDEV("span", { children: "L\u01B0u m\u1EADt kh\u1EA9u m\u1EDBi" }),
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check text-xs", "aria-hidden": "true" })
+    ] })
   ] }),
-  /* @__PURE__ */ jsxDEV("p", { class: "mt-6 text-center text-sm text-[#b8b6d9]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:underline", children: [
+  /* @__PURE__ */ jsxDEV("p", { class: "mt-5 text-center text-xs sm:text-sm text-[#9e9cc2]", children: /* @__PURE__ */ jsxDEV("a", { href: "/dang-nhap", class: "font-semibold text-indigo-400 hover:text-indigo-300 hover:underline", children: [
     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-left mr-1", "aria-hidden": "true" }),
     "Quay l\u1EA1i \u0111\u0103ng nh\u1EADp"
   ] }) })

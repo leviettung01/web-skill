@@ -73,7 +73,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         {props.ogImage && <meta property="og:image" content={props.ogImage} />}
         {canonical && <link rel="canonical" href={canonical} />}
         <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
-        <link href="/static/tailwind.css?v=20261118" rel="stylesheet" />
+        <link href="/static/tailwind.css?v=20261120" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
