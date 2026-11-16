@@ -12490,7 +12490,7 @@ var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
         l.latest_changelog && /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-indigo-300", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rocket mr-1", "aria-hidden": "true" }),
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-sparkles mr-1", "aria-hidden": "true" }),
               "C\u1EADp nh\u1EADt ",
               l.latest_version || l.version
             ] }),
@@ -12670,7 +12670,7 @@ var AffiliateDashboard = (props) => {
   const link2 = `${props.siteUrl}/dang-ky?ref=${props.affCode}`;
   return /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "affiliate", title: "Affiliate", heading: "Ch\u01B0\u01A1ng tr\xECnh Affiliate", sub: `Gi\u1EDBi thi\u1EC7u b\u1EA1n b\xE8 v\xE0 nh\u1EADn hoa h\u1ED3ng ${props.percent}% cho m\u1ED7i \u0111\u01A1n h\xE0ng th\xE0nh c\xF4ng.`, children: [
     !props.emailVerified && /* @__PURE__ */ jsxDEV("div", { class: "mb-6 p-5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-100", children: /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 grid place-items-center text-amber-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-lg", "aria-hidden": "true" }) }),
+      /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 grid place-items-center text-amber-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-exclamation text-lg", "aria-hidden": "true" }) }),
       /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
         /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base mb-1", children: "C\u1EA7n x\xE1c minh Email \u0111\u1EC3 b\u1EADt Affiliate" }),
         /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-amber-100/90 leading-relaxed mb-3", children: [
@@ -12783,7 +12783,7 @@ var ProfilePage = (props) => {
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: `mb-5 rounded-2xl border p-5 ${isVerified ? "bg-[#0f0e24] border-emerald-500/35" : "bg-amber-500/10 border-amber-500/35"}`, children: /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row sm:items-center justify-between gap-4", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "flex items-start gap-3.5", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl grid place-items-center shrink-0 ${isVerified ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/35"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${isVerified ? "fa-shield-halved" : "fa-envelope-circle-check"} text-lg`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl grid place-items-center shrink-0 ${isVerified ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/35"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${isVerified ? "fa-shield-check" : "fa-envelope-circle-check"} text-lg`, "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1", children: [
             /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white text-base", children: "X\xE1c minh Email / Gmail" }),
@@ -15637,17 +15637,21 @@ async function issueEmailToken(db, opts) {
     `SELECT created_at FROM email_tokens WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1`
   ).bind(opts.userId, opts.purpose).first();
   if (recent?.created_at) {
-    const diffMs = Date.now() - new Date(recent.created_at).getTime();
-    if (diffMs >= 0 && diffMs < 6e4) {
-      return { waitSeconds: Math.max(1, Math.ceil((6e4 - diffMs) / 1e3)) };
+    const createdMs = parseSafeDate(recent.created_at)?.getTime() ?? NaN;
+    if (Number.isFinite(createdMs)) {
+      const diffMs = Date.now() - createdMs;
+      if (diffMs > -3e4 && diffMs < 6e4) {
+        return { waitSeconds: Math.min(60, Math.max(1, Math.ceil((6e4 - Math.max(0, diffMs)) / 1e3))) };
+      }
     }
   }
   const rawToken = genTokenHex(32);
   const tokenHash = await sha256Hex(rawToken);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
   const expiresAt = new Date(Date.now() + (opts.ttlMinutes || 30) * 6e4).toISOString();
   await db.prepare(
-    `INSERT INTO email_tokens (user_id, email, purpose, token_hash, expires_at) VALUES (?,?,?,?,?)`
-  ).bind(opts.userId, opts.email, opts.purpose, tokenHash, expiresAt).run();
+    `INSERT INTO email_tokens (user_id, email, purpose, token_hash, expires_at, created_at) VALUES (?,?,?,?,?,?)`
+  ).bind(opts.userId, opts.email, opts.purpose, tokenHash, expiresAt, nowIso).run();
   return { rawToken };
 }
 async function consumeEmailToken(db, rawToken, purpose) {
@@ -15658,7 +15662,7 @@ async function consumeEmailToken(db, rawToken, purpose) {
   ).bind(tokenHash, purpose).first();
   if (!tok) return { ok: false, reason: "Li\xEAn k\u1EBFt kh\xF4ng t\u1ED3n t\u1EA1i ho\u1EB7c kh\xF4ng h\u1EE3p l\u1EC7." };
   if (tok.used_at) return { ok: false, reason: "Li\xEAn k\u1EBFt n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c s\u1EED d\u1EE5ng tr\u01B0\u1EDBc \u0111\xF3." };
-  if (new Date(tok.expires_at).getTime() < Date.now()) {
+  if ((parseSafeDate(tok.expires_at)?.getTime() ?? 0) < Date.now()) {
     return { ok: false, reason: "Li\xEAn k\u1EBFt \u0111\xE3 h\u1EBFt h\u1EA1n (30 ph\xFAt). Vui l\xF2ng y\xEAu c\u1EA7u g\u1EEDi l\u1EA1i link m\u1EDBi." };
   }
   await db.prepare(`UPDATE email_tokens SET used_at=? WHERE id=? AND used_at IS NULL`).bind((/* @__PURE__ */ new Date()).toISOString(), tok.id).run();
@@ -15705,7 +15709,7 @@ app.get("/api/auth/google", async (c) => {
   const nonce = genTokenHex(16);
   const signedState = await signOAuthState(
     { nonce, next, ...ref ? { ref } : {}, exp: Date.now() + 6e5 },
-    getSecret(c.env)
+    getSecret(c)
   );
   setCookie(c, "oauth_state", signedState, {
     httpOnly: true,
@@ -15732,7 +15736,7 @@ app.get("/api/auth/google/callback", async (c) => {
   const state = c.req.query("state") || "";
   const stateCookie = getCookie(c, "oauth_state") || "";
   deleteCookie(c, "oauth_state", { path: "/" });
-  const verified = await verifyOAuthState(stateCookie, getSecret(c.env));
+  const verified = await verifyOAuthState(stateCookie, getSecret(c));
   if (!code || !state || !verified || verified.nonce !== state) {
     return c.redirect("/dang-nhap?oauth_error=state_invalid");
   }

@@ -8,7 +8,7 @@ export function discountPercent(price: number, original?: number | null): number
   return Math.round(((original - price) / original) * 100)
 }
 
-function parseSafeDate(s?: string | null): Date | null {
+export function parseSafeDate(s?: string | null): Date | null {
   if (!s) return null
   const trimmed = String(s).trim()
   if (!trimmed) return null

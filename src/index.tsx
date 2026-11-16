@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import type { Bindings, Variables, SessionUser } from './lib/types'
 import { getSession, setSession, clearSession, getSecret, hashPassword, verifyPassword, genCode, genLicenseKey } from './lib/auth'
-import { slugify, formatVND } from './lib/utils'
+import { slugify, formatVND, parseSafeDate } from './lib/utils'
 import {
   genTokenHex, sha256Hex, isEmailConfigured, getEmailConfig, sendEmail, sendBatchEmails,
   buildVerificationEmail, buildPasswordResetEmail, buildOrderPaidEmail, buildProductUpdateEmail, buildAdminDirectEmail
@@ -358,17 +358,21 @@ async function issueEmailToken(
     `SELECT created_at FROM email_tokens WHERE user_id=? AND purpose=? ORDER BY id DESC LIMIT 1`
   ).bind(opts.userId, opts.purpose).first<any>()
   if (recent?.created_at) {
-    const diffMs = Date.now() - new Date(recent.created_at).getTime()
-    if (diffMs >= 0 && diffMs < 60_000) {
-      return { waitSeconds: Math.max(1, Math.ceil((60_000 - diffMs) / 1000)) }
+    const createdMs = parseSafeDate(recent.created_at)?.getTime() ?? NaN
+    if (Number.isFinite(createdMs)) {
+      const diffMs = Date.now() - createdMs
+      if (diffMs > -30_000 && diffMs < 60_000) {
+        return { waitSeconds: Math.min(60, Math.max(1, Math.ceil((60_000 - Math.max(0, diffMs)) / 1000))) }
+      }
     }
   }
   const rawToken = genTokenHex(32)
   const tokenHash = await sha256Hex(rawToken)
+  const nowIso = new Date().toISOString()
   const expiresAt = new Date(Date.now() + (opts.ttlMinutes || 30) * 60_000).toISOString()
   await db.prepare(
-    `INSERT INTO email_tokens (user_id, email, purpose, token_hash, expires_at) VALUES (?,?,?,?,?)`
-  ).bind(opts.userId, opts.email, opts.purpose, tokenHash, expiresAt).run()
+    `INSERT INTO email_tokens (user_id, email, purpose, token_hash, expires_at, created_at) VALUES (?,?,?,?,?,?)`
+  ).bind(opts.userId, opts.email, opts.purpose, tokenHash, expiresAt, nowIso).run()
   return { rawToken }
 }
 
@@ -384,7 +388,7 @@ async function consumeEmailToken(
   ).bind(tokenHash, purpose).first<any>()
   if (!tok) return { ok: false, reason: 'Liên kết không tồn tại hoặc không hợp lệ.' }
   if (tok.used_at) return { ok: false, reason: 'Liên kết này đã được sử dụng trước đó.' }
-  if (new Date(tok.expires_at).getTime() < Date.now()) {
+  if ((parseSafeDate(tok.expires_at)?.getTime() ?? 0) < Date.now()) {
     return { ok: false, reason: 'Liên kết đã hết hạn (30 phút). Vui lòng yêu cầu gửi lại link mới.' }
   }
   await db.prepare(`UPDATE email_tokens SET used_at=? WHERE id=? AND used_at IS NULL`)
@@ -424,7 +428,7 @@ app.get('/api/auth/google', async (c) => {
   const nonce = genTokenHex(16)
   const signedState = await signOAuthState(
     { nonce, next, ...(ref ? { ref } : {}), exp: Date.now() + 600_000 },
-    getSecret(c.env)
+    getSecret(c)
   )
   setCookie(c, 'oauth_state', signedState, {
     httpOnly: true,
@@ -454,7 +458,7 @@ app.get('/api/auth/google/callback', async (c) => {
   const stateCookie = getCookie(c, 'oauth_state') || ''
   deleteCookie(c, 'oauth_state', { path: '/' })
 
-  const verified = await verifyOAuthState(stateCookie, getSecret(c.env))
+  const verified = await verifyOAuthState(stateCookie, getSecret(c))
   if (!code || !state || !verified || verified.nonce !== state) {
     return c.redirect('/dang-nhap?oauth_error=state_invalid')
   }

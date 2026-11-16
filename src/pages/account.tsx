@@ -206,7 +206,7 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[] }> = (props) => 
                 {l.latest_changelog && (
                   <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]">
                     <div class="flex items-center justify-between gap-2 mb-1">
-                      <span class="font-bold text-indigo-300"><i class="fas fa-rocket mr-1" aria-hidden="true"></i>Cập nhật {l.latest_version || l.version}</span>
+                      <span class="font-bold text-indigo-300"><i class="fas fa-sparkles mr-1" aria-hidden="true"></i>Cập nhật {l.latest_version || l.version}</span>
                       {l.latest_release_at && <span class="text-[11px] text-[#9492b8]">{formatDate(l.latest_release_at)}</span>}
                     </div>
                     <p class="whitespace-pre-line text-[#c2c0e0] leading-relaxed">{l.latest_changelog}</p>
@@ -413,7 +413,7 @@ export const AffiliateDashboard: FC<LayoutProps & {
         <div class="mb-6 p-5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-100">
           <div class="flex items-start gap-3">
             <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 grid place-items-center text-amber-300 shrink-0">
-              <i class="fas fa-shield-halved text-lg" aria-hidden="true"></i>
+              <i class="fas fa-shield-exclamation text-lg" aria-hidden="true"></i>
             </div>
             <div class="flex-1 min-w-0">
               <h2 class="font-bold text-white text-base mb-1">Cần xác minh Email để bật Affiliate</h2>
@@ -542,7 +542,7 @@ export const ProfilePage: FC<LayoutProps & { profile: any; googleEnabled?: boole
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-start gap-3.5">
             <div class={`w-11 h-11 rounded-xl grid place-items-center shrink-0 ${isVerified ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/35'}`}>
-              <i class={`fas ${isVerified ? 'fa-shield-halved' : 'fa-envelope-circle-check'} text-lg`} aria-hidden="true"></i>
+              <i class={`fas ${isVerified ? 'fa-shield-check' : 'fa-envelope-circle-check'} text-lg`} aria-hidden="true"></i>
             </div>
             <div>
               <div class="flex flex-wrap items-center gap-2 mb-1">
