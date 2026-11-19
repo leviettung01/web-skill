@@ -62,12 +62,13 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
   try {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
 
-    const [flag04, flag05] = await Promise.all([
+    const [flag04, flag05, flag06] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null)
     ])
 
-    if (flag04?.value === '1' && flag05?.value === '1') {
+    if (flag04?.value === '1' && flag05?.value === '1' && flag06?.value === '1') {
       _done = true
       return
     }
@@ -206,6 +207,27 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       await db.prepare(
         `INSERT INTO settings (key, value) VALUES ('mcp_migration_0005_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
       ).run()
+      mutated = true
+    }
+
+    // ---- Stage 3: Migration 0006 (Before/After Raw vs Edited video URL for Talking Head skills) ----
+    if (flag06?.value !== '1') {
+      await db.prepare('ALTER TABLE products ADD COLUMN raw_video_url TEXT').run().catch(() => null)
+
+      for (const p of REAL_MCP_VIDEO_SKILLS) {
+        if (!p.raw_video_url) continue
+        await db.prepare(
+          `UPDATE products SET raw_video_url=?, file_size=?, mcp_skill_prompt=? WHERE slug=?`
+        ).bind(p.raw_video_url, p.file_size, p.mcp_skill_prompt, p.slug).run().catch(() => null)
+      }
+
+      await db.prepare(
+        `INSERT INTO settings (key, value) VALUES ('mcp_migration_0006_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+      ).run().catch(async () => {
+        await db.prepare(
+          `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0006_done', '1')`
+        ).run().catch(() => null)
+      })
       mutated = true
     }
 

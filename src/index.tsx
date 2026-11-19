@@ -1669,6 +1669,7 @@ function productFields(b: any) {
     original_price: b.original_price ? +b.original_price : null,
     thumbnail: b.thumbnail || null,
     demo_video_url: b.demo_video_url || null,
+    raw_video_url: b.raw_video_url || null,
     demo_url: b.demo_url || null,
     download_url: b.download_url || null,
     doc_url: b.doc_url || null,
@@ -1694,12 +1695,12 @@ app.post('/api/admin/products', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare(`INSERT INTO products
     (name,slug,category_id,short_desc,description,features,tech_stack,version,price,original_price,thumbnail,
-     demo_video_url,demo_url,download_url,doc_url,file_size,product_type,
+     demo_video_url,raw_video_url,demo_url,download_url,doc_url,file_size,product_type,
      mcp_endpoint,mcp_server_name,mcp_clients,mcp_tools,mcp_skill_prompt,mcp_render_webhook,
      is_featured,is_hot,is_new,status)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
-      f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
+      f.price, f.original_price, f.thumbnail, f.demo_video_url, f.raw_video_url, f.demo_url, f.download_url, f.doc_url,
       f.file_size, f.product_type,
       f.mcp_endpoint, f.mcp_server_name, f.mcp_clients, f.mcp_tools, f.mcp_skill_prompt, f.mcp_render_webhook,
       f.is_featured, f.is_hot, f.is_new, f.status).run()
@@ -1716,12 +1717,12 @@ app.post('/api/admin/products/:id/update', requireAdmin, async (c) => {
   const dup = await db.prepare('SELECT 1 x FROM products WHERE slug=? AND id!=?').bind(f.slug, id).first<any>()
   if (dup) return c.json({ error: 'Slug đã được dùng cho sản phẩm khác' }, 400)
   await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
-    tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
+    tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,raw_video_url=?,demo_url=?,download_url=?,
     doc_url=?,file_size=?,product_type=?,
     mcp_endpoint=?,mcp_server_name=?,mcp_clients=?,mcp_tools=?,mcp_skill_prompt=?,mcp_render_webhook=?,
     is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
-      f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
+      f.price, f.original_price, f.thumbnail, f.demo_video_url, f.raw_video_url, f.demo_url, f.download_url, f.doc_url,
       f.file_size, f.product_type,
       f.mcp_endpoint, f.mcp_server_name, f.mcp_clients, f.mcp_tools, f.mcp_skill_prompt, f.mcp_render_webhook,
       f.is_featured, f.is_hot, f.is_new, f.status, id).run()

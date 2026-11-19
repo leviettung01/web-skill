@@ -1382,8 +1382,253 @@
     });
   }
 
+  /* ---------- Before / After (Raw vs Edited) Synchronized Video Comparison ---------- */
+  function initBeforeAfterPlayers() {
+    document.querySelectorAll('[data-ba-player]').forEach(function (card) {
+      var stage = card.querySelector('[data-ba-stage]');
+      var rawVid = card.querySelector('.ba-vid-raw');
+      var edVid = card.querySelector('.ba-vid-edited');
+      var playBtn = card.querySelector('[data-ba-play]');
+      var bigPlay = card.querySelector('[data-ba-bigplay]');
+      var seekTrack = card.querySelector('[data-ba-seek]');
+      var seekFill = card.querySelector('.ba-seek-fill');
+      var seekThumb = card.querySelector('.ba-seek-thumb');
+      var timeEl = card.querySelector('[data-ba-time]');
+      var handle = card.querySelector('[data-ba-handle]');
+      var pillRaw = card.querySelector('.ba-audio-pill-raw');
+      var pillEd = card.querySelector('.ba-audio-pill-edited');
+      var modeBtns = card.querySelectorAll('[data-ba-mode-btn]');
+      var audioBtns = card.querySelectorAll('[data-ba-audio]');
+
+      if (!stage || !rawVid || !edVid) return;
+
+      var audioMode = 'edited'; // 'edited' | 'raw' | 'mute'
+      var isScrubbing = false;
+      var isDraggingWipe = false;
+      var wipePct = 50;
+
+      function fmtSec(sec) {
+        if (!sec || !isFinite(sec)) return '00:00';
+        var m = Math.floor(sec / 60);
+        var s = Math.floor(sec % 60);
+        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      }
+
+      function applyAudioMode(mode) {
+        audioMode = mode;
+        if (mode === 'edited') {
+          edVid.muted = false;
+          rawVid.muted = true;
+        } else if (mode === 'raw') {
+          edVid.muted = true;
+          rawVid.muted = false;
+        } else {
+          edVid.muted = true;
+          rawVid.muted = true;
+        }
+        audioBtns.forEach(function (b) {
+          b.classList.toggle('active', b.dataset.baAudio === mode);
+        });
+        if (pillRaw) pillRaw.classList.toggle('hidden', mode !== 'raw');
+        if (pillEd) pillEd.classList.toggle('hidden', mode !== 'edited');
+      }
+
+      function setWipePos(pct) {
+        wipePct = Math.max(2, Math.min(98, pct));
+        stage.style.setProperty('--ba-pos', wipePct.toFixed(2) + '%');
+        if (handle) handle.setAttribute('aria-valuenow', String(Math.round(wipePct)));
+      }
+
+      function syncPlayState() {
+        var playing = !edVid.paused && !edVid.ended;
+        card.classList.toggle('is-playing', playing);
+        if (playBtn) {
+          playBtn.innerHTML = playing
+            ? '<i class="fas fa-pause text-xs" aria-hidden="true"></i>'
+            : '<i class="fas fa-play text-xs ml-0.5" aria-hidden="true"></i>';
+        }
+      }
+
+      function updateTimeline() {
+        var dur = edVid.duration || rawVid.duration || 0;
+        var cur = edVid.currentTime || 0;
+        var pct = dur > 0 ? Math.min(100, Math.max(0, (cur / dur) * 100)) : 0;
+        if (seekFill) seekFill.style.width = pct + '%';
+        if (seekThumb) seekThumb.style.left = pct + '%';
+        if (seekTrack) seekTrack.setAttribute('aria-valuenow', String(Math.round(pct)));
+        if (timeEl) timeEl.textContent = fmtSec(cur) + ' / ' + fmtSec(dur);
+      }
+
+      function playBoth() {
+        applyAudioMode(audioMode);
+        if (edVid.ended || (edVid.duration && edVid.currentTime >= edVid.duration - 0.15)) {
+          edVid.currentTime = 0;
+          rawVid.currentTime = 0;
+        } else if (Math.abs(rawVid.currentTime - edVid.currentTime) > 0.12) {
+          try { rawVid.currentTime = edVid.currentTime; } catch (e) { }
+        }
+        var p1 = edVid.play();
+        var p2 = rawVid.play();
+        if (p1 && typeof p1.catch === 'function') p1.catch(function () { });
+        if (p2 && typeof p2.catch === 'function') p2.catch(function () { });
+        syncPlayState();
+      }
+
+      function pauseBoth() {
+        edVid.pause();
+        rawVid.pause();
+        syncPlayState();
+      }
+
+      function toggleBoth() {
+        if (edVid.paused || edVid.ended) playBoth();
+        else pauseBoth();
+      }
+
+      function seekToRatio(ratio) {
+        var dur = edVid.duration || rawVid.duration || 0;
+        if (!dur) return;
+        var target = Math.max(0, Math.min(dur, ratio * dur));
+        try {
+          edVid.currentTime = target;
+          rawVid.currentTime = Math.min(rawVid.duration || dur, target);
+        } catch (e) { }
+        updateTimeline();
+      }
+
+      // Initial state
+      applyAudioMode('edited');
+      setWipePos(50);
+
+      // Mode switching (Split <-> Wipe) without stopping video
+      modeBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var mode = btn.dataset.baModeBtn || 'split';
+          card.dataset.mode = mode;
+          modeBtns.forEach(function (b) {
+            var act = b === btn;
+            b.classList.toggle('active', act);
+            b.setAttribute('aria-selected', act ? 'true' : 'false');
+          });
+        });
+      });
+
+      // Audio source switching live during playback
+      audioBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          applyAudioMode(btn.dataset.baAudio || 'edited');
+        });
+      });
+
+      // Play triggers
+      if (playBtn) playBtn.addEventListener('click', toggleBoth);
+      if (bigPlay) bigPlay.addEventListener('click', function (e) { e.stopPropagation(); playBoth(); });
+
+      // Click video panes in Split mode toggles play/pause
+      [rawVid, edVid].forEach(function (v) {
+        v.addEventListener('click', function () {
+          if (card.dataset.mode === 'split') toggleBoth();
+        });
+      });
+
+      // Pause comparison player when opening fullscreen modal button
+      card.querySelectorAll('[data-video]').forEach(function (btn) {
+        btn.addEventListener('click', pauseBoth);
+      });
+
+      // Sync drift guard & timeline updates
+      edVid.addEventListener('loadedmetadata', updateTimeline);
+      rawVid.addEventListener('loadedmetadata', updateTimeline);
+      edVid.addEventListener('play', syncPlayState);
+      edVid.addEventListener('pause', syncPlayState);
+      edVid.addEventListener('ended', function () {
+        rawVid.pause();
+        syncPlayState();
+      });
+      edVid.addEventListener('timeupdate', function () {
+        if (!isScrubbing) updateTimeline();
+        if (!edVid.paused && !rawVid.paused && rawVid.readyState >= 2) {
+          var drift = Math.abs(rawVid.currentTime - edVid.currentTime);
+          if (drift > 0.18 && (!rawVid.duration || edVid.currentTime < rawVid.duration - 0.1)) {
+            try { rawVid.currentTime = edVid.currentTime; } catch (e) { }
+          }
+        }
+      });
+
+      // Keep both waiting smoothly if one buffers
+      edVid.addEventListener('waiting', function () { if (!rawVid.paused) rawVid.pause(); });
+      edVid.addEventListener('playing', function () {
+        if (!edVid.paused && rawVid.paused && (!rawVid.duration || edVid.currentTime < rawVid.duration - 0.1)) {
+          try { rawVid.currentTime = edVid.currentTime; } catch (e) { }
+          var pr = rawVid.play();
+          if (pr && typeof pr.catch === 'function') pr.catch(function () { });
+        }
+      });
+
+      // Scrub bar pointer interaction
+      if (seekTrack) {
+        function ratioFromEvent(ev) {
+          var rect = seekTrack.getBoundingClientRect();
+          if (!rect.width) return 0;
+          return Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        }
+        seekTrack.addEventListener('pointerdown', function (ev) {
+          isScrubbing = true;
+          try { seekTrack.setPointerCapture(ev.pointerId); } catch (e) { }
+          seekToRatio(ratioFromEvent(ev));
+        });
+        seekTrack.addEventListener('pointermove', function (ev) {
+          if (!isScrubbing) return;
+          seekToRatio(ratioFromEvent(ev));
+        });
+        var stopScrub = function () { isScrubbing = false; };
+        seekTrack.addEventListener('pointerup', stopScrub);
+        seekTrack.addEventListener('pointercancel', stopScrub);
+        seekTrack.addEventListener('keydown', function (ev) {
+          var dur = edVid.duration || 0;
+          if (!dur) return;
+          if (ev.key === 'ArrowRight') { ev.preventDefault(); seekToRatio((edVid.currentTime + 5) / dur); }
+          if (ev.key === 'ArrowLeft') { ev.preventDefault(); seekToRatio((edVid.currentTime - 5) / dur); }
+        });
+      }
+
+      // Wipe Slider pointer + keyboard interaction
+      function wipeFromClientX(clientX) {
+        var rect = stage.getBoundingClientRect();
+        if (!rect.width) return;
+        setWipePos(((clientX - rect.left) / rect.width) * 100);
+      }
+      stage.addEventListener('pointerdown', function (ev) {
+        if (card.dataset.mode !== 'wipe') return;
+        if (ev.target && ev.target.closest && ev.target.closest('[data-ba-bigplay]')) return;
+        isDraggingWipe = true;
+        try { stage.setPointerCapture(ev.pointerId); } catch (e) { }
+        wipeFromClientX(ev.clientX);
+      });
+      stage.addEventListener('pointermove', function (ev) {
+        if (!isDraggingWipe || card.dataset.mode !== 'wipe') return;
+        wipeFromClientX(ev.clientX);
+      });
+      var stopWipe = function () { isDraggingWipe = false; };
+      stage.addEventListener('pointerup', stopWipe);
+      stage.addEventListener('pointercancel', stopWipe);
+
+      if (handle) {
+        handle.addEventListener('keydown', function (ev) {
+          if (ev.key === 'ArrowLeft') { ev.preventDefault(); setWipePos(wipePct - 5); }
+          if (ev.key === 'ArrowRight') { ev.preventDefault(); setWipePos(wipePct + 5); }
+        });
+      }
+
+      registerCleanup(function () {
+        pauseBoth();
+      });
+    });
+  }
+
   function reinitPage() {
     reinitMediaFrames();
+    initBeforeAfterPlayers();
     initHeroShowcase();
     initVideoWall();
     initTheater();

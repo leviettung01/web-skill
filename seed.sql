@@ -1004,6 +1004,9 @@ python "$SKILL/scripts/qa_rendered_mp4.py" "$PROJ/out/final.mp4" --cols 6 --rows
    - **Crisp consecutive cel motion** (`0px` bar flicker) and rich visual variety (`photoDocCard` archival photos + diagrams + dynamic motion UI).', '');
 
 INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0005_done', '1');
+UPDATE products SET raw_video_url='/static/demos/raw-video-talking-head.mp4', file_size='16.7 MB Kit + MCP' WHERE slug='video-talking-head';
+UPDATE products SET raw_video_url='/static/demos/raw-viral-talking-head-video-edit.mp4' WHERE slug='viral-talking-head-video-edit';
+INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0006_done', '1');
 
 -- Đặt 4 dịch vụ chưa mở bán sang trạng thái coming_soon (mở bán Skill tự tải + Skill AI Agent MCP)
 UPDATE products SET status='coming_soon' WHERE slug IN (

@@ -50,6 +50,11 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
                   <i class="fas fa-plug-circle-bolt text-[9px]" aria-hidden="true"></i>MCP LIVE
                 </span>
               )}
+              {p.raw_video_url && (
+                <span class="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1">
+                  <i class="fas fa-columns text-[9px]" aria-hidden="true"></i>RAW ↔ EDIT
+                </span>
+              )}
               {p.is_hot === 1 && <span class="px-2 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold shadow-md inline-flex items-center gap-1"><i class="fas fa-fire text-[9px]" aria-hidden="true"></i>HOT</span>}
               {!mcp && p.is_hot !== 1 && p.is_new === 1 && <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md">MỚI</span>}
               {off > 0 && <span class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold tabular-nums shadow-md">-{off}%</span>}

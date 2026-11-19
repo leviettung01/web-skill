@@ -1005,6 +1005,9 @@ python "$SKILL/scripts/qa_rendered_mp4.py" "$PROJ/out/final.mp4" --cols 6 --rows
    - **Crisp consecutive cel motion** (`0px` bar flicker) and rich visual variety (`photoDocCard` archival photos + diagrams + dynamic motion UI).', '') ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, category_id=EXCLUDED.category_id, short_desc=EXCLUDED.short_desc, description=EXCLUDED.description, features=EXCLUDED.features, tech_stack=EXCLUDED.tech_stack, version=EXCLUDED.version, price=EXCLUDED.price, original_price=EXCLUDED.original_price, thumbnail=EXCLUDED.thumbnail, demo_video_url=EXCLUDED.demo_video_url, download_url=EXCLUDED.download_url, doc_url=EXCLUDED.doc_url, file_size=EXCLUDED.file_size, product_type='mcp_skill', status='published', mcp_server_name=EXCLUDED.mcp_server_name, mcp_clients=EXCLUDED.mcp_clients, mcp_tools=EXCLUDED.mcp_tools, mcp_skill_prompt=EXCLUDED.mcp_skill_prompt;
 
 INSERT INTO settings (key, value) VALUES ('mcp_migration_0005_done', '1') ON CONFLICT (key) DO UPDATE SET value='1';
+UPDATE products SET raw_video_url='/static/demos/raw-video-talking-head.mp4', file_size='16.7 MB Kit + MCP' WHERE slug='video-talking-head';
+UPDATE products SET raw_video_url='/static/demos/raw-viral-talking-head-video-edit.mp4' WHERE slug='viral-talking-head-video-edit';
+INSERT INTO settings (key, value) VALUES ('mcp_migration_0006_done', '1') ON CONFLICT (key) DO UPDATE SET value='1';
 
 -- Đặt 4 dịch vụ chưa mở bán sang trạng thái coming_soon (mở bán Skill tự tải + Skill AI Agent MCP)
 UPDATE products SET status='coming_soon' WHERE slug IN (

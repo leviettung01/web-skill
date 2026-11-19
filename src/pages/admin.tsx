@@ -313,9 +313,14 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
                 <input type="url" name="thumbnail" value={p.thumbnail || ''} placeholder="https://..." class={fieldCls} />
               </div>
               <div>
-                <label class={labelCls}>Video Demo sản phẩm (YouTube hoặc link R2 MP4)</label>
-                <input type="url" name="demo_video_url" value={p.demo_video_url || ''} placeholder="https://youtu.be/... hoặc https://pub-...r2.dev/videos/demo.mp4" class={fieldCls} />
-                <p class="text-[11px] text-slate-400 mt-1">Hỗ trợ link YouTube (thường, Shorts, embed) hoặc file MP4 trực tiếp từ Cloudflare R2.</p>
+                <label class={labelCls}>Video Demo sản phẩm (YouTube hoặc link MP4)</label>
+                <input type="text" name="demo_video_url" value={p.demo_video_url || ''} placeholder="/static/demos/demo.mp4 hoặc https://youtu.be/..." class={fieldCls} />
+                <p class="text-[11px] text-slate-400 mt-1">Video thành phẩm sau edit (MP4, YouTube, hoặc Google Drive preview).</p>
+              </div>
+              <div class="sm:col-span-2">
+                <label class={labelCls}>Video Raw gốc trước khi Edit (Tuỳ chọn — bật giao diện So sánh Trước / Sau)</label>
+                <input type="text" name="raw_video_url" value={p.raw_video_url || ''} placeholder="/static/demos/raw-talking-head.mp4 (để trống nếu không cần so sánh Trước/Sau)" class={fieldCls} />
+                <p class="text-[11px] text-slate-400 mt-1">Dành cho Skill Talking Head / Walking Talking Head: khi có link MP4 Raw, trang chi tiết tự động bật trình phát so sánh đồng bộ <b>Song song (Raw | Sau Edit)</b> và <b>Kéo gạt Trước/Sau</b>.</p>
               </div>
             </div>
           </div>

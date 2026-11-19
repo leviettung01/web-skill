@@ -28,7 +28,12 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const isMp4 = isDirectVideoUrl(p.demo_video_url) || !!p.demo_video_url?.includes('/videos/')
   const embedVideoUrl = isMp4 ? p.demo_video_url : toEmbedVideoUrl(p.demo_video_url)
   const replacedPoster = isMp4 ? p.demo_video_url!.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, '/videos/posters/poster-$2.jpg') : undefined
-  const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : undefined
+  const demoPoster = p.thumbnail || (replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : undefined)
+  const hasBeforeAfter = Boolean(p.raw_video_url && p.demo_video_url && isDirectVideoUrl(p.raw_video_url) && isMp4)
+  const rawPoster = hasBeforeAfter
+    ? p.raw_video_url!.replace(/\/raw-([^/?]+)\.mp4(\?.*)?$/i, '/poster-raw-$1.jpg')
+    : undefined
+  const isWalkingDepth = p.slug === 'viral-talking-head-video-edit'
   const comingSoon = p.status === 'coming_soon'
   const mcp = isMcpSkill(p.product_type)
   const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : []
@@ -53,10 +58,154 @@ export const ProductDetailPage: FC<Props> = (props) => {
             { label: p.name }
           ]} />
 
-          <div class="grid lg:grid-cols-[minmax(0,520px)_1fr] gap-8 mt-4 items-start">
-            {/* COLUMN 1: Adaptive Video Player (Auto 16:9 Landscape / 9:16 Portrait) & Specs Grid */}
+          <div class={`grid ${hasBeforeAfter ? 'lg:grid-cols-[minmax(0,580px)_1fr]' : 'lg:grid-cols-[minmax(0,520px)_1fr]'} gap-8 mt-4 items-start`}>
+            {/* COLUMN 1: Before/After Synced Comparison Player (for Talking Head) OR Adaptive Video Player */}
             <div>
-              {p.demo_video_url ? (
+              {hasBeforeAfter ? (
+                <div class="ba-compare-card rounded-2xl border-2 border-cyan-500/40 bg-[#070614] shadow-2xl shadow-cyan-950/30 overflow-hidden mb-4"
+                  data-ba-player data-mode="split">
+                  {/* Top Bar: Title & Mode Switcher */}
+                  <div class="px-3.5 py-2.5 bg-gradient-to-r from-[#0d1129] via-[#101233] to-[#0a1c2e] border-b border-[#221e54] flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" aria-hidden="true"></span>
+                      <span class="text-[11px] font-extrabold uppercase tracking-wider text-cyan-200 truncate">
+                        So sánh Raw gốc vs Sau AI Edit
+                      </span>
+                    </div>
+                    <div class="inline-flex items-center p-0.5 rounded-lg bg-[#070614] border border-[#2a2559]" role="tablist" aria-label="Chế độ xem so sánh video">
+                      <button type="button" role="tab" aria-selected="true" data-ba-mode-btn="split"
+                        class="ba-mode-btn active h-7 px-2.5 rounded-md text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1.5">
+                        <i class="fas fa-columns text-[10px]" aria-hidden="true"></i>Song song
+                      </button>
+                      <button type="button" role="tab" aria-selected="false" data-ba-mode-btn="wipe"
+                        class="ba-mode-btn h-7 px-2.5 rounded-md text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1.5">
+                        <i class="fas fa-sliders text-[10px]" aria-hidden="true"></i>Kéo gạt
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive Stage (Uses 2 synced <video> tags shared across both Split & Wipe modes) */}
+                  <div class="ba-stage-wrap relative p-3 sm:p-3.5 bg-[#060511]">
+                    <div class="ba-stage" data-ba-stage style="--ba-pos: 50%;">
+                      {/* RAW (Before) Pane */}
+                      <div class="ba-pane ba-pane-raw">
+                        <video class="ba-video ba-vid-raw" src={p.raw_video_url!} poster={rawPoster}
+                          playsinline preload="metadata" muted></video>
+                        <div class="ba-badge ba-badge-raw">
+                          <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                          <span>RAW GỐC</span>
+                        </div>
+                        <span class="ba-audio-pill ba-audio-pill-raw hidden">
+                          <i class="fas fa-volume-high text-[9px]" aria-hidden="true"></i>Đang nghe Raw
+                        </span>
+                      </div>
+
+                      {/* Center Transformation Arrow (visible in Split mode) */}
+                      <div class="ba-split-arrow" aria-hidden="true">
+                        <i class="fas fa-arrow-right text-[11px]"></i>
+                      </div>
+
+                      {/* EDITED (After) Pane */}
+                      <div class="ba-pane ba-pane-edited">
+                        <video class="ba-video ba-vid-edited" src={p.demo_video_url!} poster={demoPoster}
+                          playsinline preload="metadata"></video>
+                        <div class="ba-badge ba-badge-edited">
+                          <i class="fas fa-wand-magic-sparkles text-[9px]" aria-hidden="true"></i>
+                          <span>SAU AI EDIT</span>
+                        </div>
+                        <span class="ba-audio-pill ba-audio-pill-edited">
+                          <i class="fas fa-volume-high text-[9px]" aria-hidden="true"></i>-14 LUFS
+                        </span>
+                      </div>
+
+                      {/* Wipe Divider & Draggable Knob (visible in Wipe mode) */}
+                      <div class="ba-wipe-divider" data-ba-handle role="slider" tabindex={0}
+                        aria-label="Kéo trái phải để so sánh Raw và Sau Edit" aria-valuemin={0} aria-valuemax={100} aria-valuenow={50}>
+                        <div class="ba-wipe-line"></div>
+                        <div class="ba-wipe-knob">
+                          <i class="fas fa-arrows-left-right text-xs" aria-hidden="true"></i>
+                        </div>
+                      </div>
+
+                      {/* Big Center Play Trigger (shown when paused) */}
+                      <button type="button" class="ba-big-play" data-ba-bigplay aria-label="Phát đồng bộ Raw và Sau Edit">
+                        <span class="ba-big-play-ring">
+                          <i class="fas fa-play ml-0.5 text-lg" aria-hidden="true"></i>
+                        </span>
+                        <span class="ba-big-play-label">Phát đồng bộ Raw → Sau Edit</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Unified Synced Control Dock */}
+                  <div class="ba-controls px-3.5 py-3 bg-[#0c0b20] border-t border-[#221e54] space-y-2.5">
+                    <div class="flex items-center gap-2.5">
+                      <button type="button" class="ba-btn-play w-9 h-9 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-95 text-white grid place-items-center shrink-0 shadow-md shadow-cyan-500/20 transition cursor-pointer"
+                        data-ba-play aria-label="Phát hoặc tạm dừng cả 2 video">
+                        <i class="fas fa-play text-xs ml-0.5" aria-hidden="true"></i>
+                      </button>
+
+                      <div class="flex-1 min-w-0 flex items-center gap-2.5">
+                        <div class="ba-seek-track flex-1 h-2 rounded-full bg-[#1b1844] relative cursor-pointer group" data-ba-seek
+                          role="slider" tabindex={0} aria-label="Tua tiến độ cả 2 video" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
+                          <div class="ba-seek-fill h-full rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 w-0 pointer-events-none"></div>
+                          <div class="ba-seek-thumb absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md border-2 border-cyan-400 pointer-events-none" style="left:0%"></div>
+                        </div>
+                        <span class="ba-time text-[11px] font-mono text-[#c2c0e0] tabular-nums shrink-0" data-ba-time>00:00 / 00:00</span>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                      {/* Audio source selector: Edited vs Raw vs Mute */}
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-[#9492b8] uppercase tracking-wider mr-0.5">Âm thanh:</span>
+                        <button type="button" data-ba-audio="edited"
+                          class="ba-audio-btn active h-7 px-2.5 rounded-lg border text-[11px] font-bold transition cursor-pointer">
+                          <i class="fas fa-sparkles mr-1 text-[9px]" aria-hidden="true"></i>Sau Edit
+                        </button>
+                        <button type="button" data-ba-audio="raw"
+                          class="ba-audio-btn h-7 px-2.5 rounded-lg border text-[11px] font-bold transition cursor-pointer">
+                          <i class="fas fa-microphone mr-1 text-[9px]" aria-hidden="true"></i>Raw gốc
+                        </button>
+                        <button type="button" data-ba-audio="mute" aria-label="Tắt tiếng"
+                          class="ba-audio-btn h-7 w-7 rounded-lg border text-[11px] grid place-items-center transition cursor-pointer">
+                          <i class="fas fa-volume-xmark" aria-hidden="true"></i>
+                        </button>
+                      </div>
+
+                      {/* Expand Fullscreen triggers */}
+                      <div class="flex items-center gap-1.5">
+                        <button type="button" data-video={p.raw_video_url!} data-poster={rawPoster || ''} data-title={`${p.name} — Video Raw gốc`} data-aspect="vertical"
+                          class="h-7 px-2.5 rounded-lg bg-[#161436] hover:bg-[#221e54] border border-[#2a2559] text-[#b8b6d9] hover:text-white text-[11px] font-semibold transition cursor-pointer">
+                          <i class="fas fa-expand mr-1 text-[9px]" aria-hidden="true"></i>Raw lớn
+                        </button>
+                        <button type="button" data-video={p.demo_video_url!} data-poster={demoPoster || ''} data-title={`${p.name} — Video Sau Edit`} data-aspect="vertical"
+                          class="h-7 px-2.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 hover:text-white text-[11px] font-bold transition cursor-pointer">
+                          <i class="fas fa-expand mr-1 text-[9px]" aria-hidden="true"></i>Sau Edit lớn
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Diff Highlights Strip */}
+                  <div class="px-3.5 py-2.5 bg-[#09081b] border-t border-[#1e1a4a] grid grid-cols-3 gap-2 text-center">
+                    {(isWalkingDepth ? [
+                      ['fa-layer-group', 'Tách nền 3-Plane', 'Chữ sau lưng speaker'],
+                      ['fa-chart-line', 'KPI & B-Roll Strip', '14 component GSAP'],
+                      ['fa-waveform-lines', 'Audio -14 LUFS', 'Lọc giọng + SFX']
+                    ] : [
+                      ['fa-scissors', 'Cắt lặng & Màu da', 'Chuẩn 1/30s + Denoise'],
+                      ['fa-window-restore', 'Headroom UI & PiP', 'B-roll khớp ngữ cảnh'],
+                      ['fa-closed-captioning', 'Phụ đề Whisper', 'Khớp từng từ 0.01s']
+                    ]).map(([ic, title, sub]) => (
+                      <div class="p-2 rounded-xl bg-[#0f0e26] border border-[#221e54]">
+                        <div class="text-[11px] font-bold text-cyan-300 truncate"><i class={`fas ${ic} mr-1 text-[10px]`} aria-hidden="true"></i>{title}</div>
+                        <div class="text-[10px] text-[#9492b8] truncate mt-0.5">{sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : p.demo_video_url ? (
                 <div class="adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl relative aspect-video w-full"
                   data-poster={demoPoster || p.thumbnail || ''}
                   data-url={p.demo_video_url}>
