@@ -60,10 +60,15 @@ export const BlogDetailPage: FC<LayoutProps & { post: any; related: any[] }> = (
 
         <div class="mt-10 p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white text-center shadow-xl shadow-indigo-950/50">
           <h2 class="text-xl font-extrabold mb-2">Bắt đầu làm video AI ngay hôm nay</h2>
-          <p class="text-white/85 text-sm mb-5">Khám phá bộ 5 Skill AI làm video thực chiến đã được kiểm chứng bằng video demo thật.</p>
-          <a href="/san-pham?type=skill" class="cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition">
-            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem Skill AI đang bán
-          </a>
+          <p class="text-white/85 text-sm mb-5">Khám phá kho Skill AI tự tải và dòng mới Skill AI Agent (MCP) kết nối trực tiếp Claude, Codex, Antigravity.</p>
+          <div class="flex flex-wrap justify-center gap-2.5">
+            <a href="/san-pham?type=skill" class="cta-white inline-flex h-11 px-5 items-center gap-2 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition">
+              <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem Skill tự tải
+            </a>
+            <a href="/san-pham?type=mcp_skill" class="inline-flex h-11 px-5 items-center gap-2 rounded-xl bg-black/25 border border-white/30 text-white font-bold text-sm hover:bg-black/35 transition">
+              <i class="fas fa-plug-circle-bolt text-cyan-300" aria-hidden="true"></i>Xem Skill AI Agent (MCP)
+            </a>
+          </div>
         </div>
 
         {props.related.length > 0 && (
@@ -80,42 +85,42 @@ export const BlogDetailPage: FC<LayoutProps & { post: any; related: any[] }> = (
 /* ---------------- PRICING ---------------- */
 const PLANS = [
   {
-    name: 'Skill Ngách', price: 399000, tag: 'Đang mở bán', icon: 'fa-seedling', highlight: false, available: true,
-    desc: 'Chọn 1 Skill theo ngách (Thuỷ Sinh, Làm Vườn, Affiliate Fitness) để bắt đầu dựng kênh.',
-    features: ['Trọn bộ prompt & quy trình 30s', 'Video demo thật xem trước khi mua', 'Truy cập trọn đời + update free', 'Hỗ trợ kỹ thuật qua Zalo'],
-    cta: 'Xem Skill ngách', href: '/san-pham?type=skill'
+    name: 'Skill AI (Tự tải)', price: 399000, tag: 'Đang mở bán · Tự làm theo', icon: 'fa-download', highlight: false, available: true, isMcp: false,
+    desc: 'Chọn Skill theo ngách (Thuỷ Sinh, Làm Vườn, Fitness) hoặc Muse AI / Seedance 2.5 để tự tải về & thao tác từng bước.',
+    features: ['Trọn bộ prompt, quy trình 30s & file mẫu', 'Tự tải về máy, làm chủ thủ công từng cảnh', 'Video demo thật xem trước khi mua', 'Truy cập trọn đời + update free', 'Hỗ trợ kỹ thuật 1-1 qua Zalo'],
+    cta: 'Xem Skill tự tải', href: '/san-pham?type=skill'
   },
   {
-    name: 'Skill Nâng Cao', price: 599000, tag: 'Phổ biến · Đang bán', icon: 'fa-rocket', highlight: true, available: true,
-    desc: 'Skill Muse AI Pro 30s hoặc Seedance 2.5 One-Take 30s — nhân vật giữ nguyên & lip-sync tiếng Việt.',
-    features: ['Bộ Skill Muse AI / Seedance 2.5 hoàn chỉnh', 'Công thức khóa nhân vật 30s liền mạch', 'Video demo thực tế từng cảnh', 'Hỗ trợ 1-1 qua Zalo', 'Truy cập trọn đời + update free'],
-    cta: 'Xem Skill đang bán', href: '/san-pham?type=skill'
+    name: 'Skill AI Agent (MCP)', price: 890000, tag: 'MỚI · Kết nối MCP trực tiếp', icon: 'fa-plug-circle-bolt', highlight: true, available: true, isMcp: true,
+    desc: 'Dành cho người dùng Claude, Codex, Antigravity: kết nối trực tiếp MCP bằng License Key, AI Agent tự gọi tool tạo video theo Skill.',
+    features: ['Kết nối trực tiếp MCP cho Claude, Codex, Antigravity', 'AI Agent tự gọi tool xuất storyboard, prompt & pipeline video', 'Không cần tải file hay thao tác copy-paste thủ công', 'Tự động đồng bộ bản Skill mới nhất trên server', 'Kèm License Key riêng & nút test MCP trực tiếp', 'Hỗ trợ cài đặt MCP 1-1 qua Zalo / Ultraview'],
+    cta: 'Xem Skill AI Agent (MCP)', href: '/san-pham?type=mcp_skill'
   },
   {
-    name: 'Combo & Chatbot / App', price: 1999000, tag: 'Chưa mở bán', icon: 'fa-clock', highlight: false, available: false,
+    name: 'Combo & Chatbot / App', price: 1999000, tag: 'Chưa mở bán', icon: 'fa-clock', highlight: false, available: false, isMcp: false,
     desc: 'Khóa học chuyên sâu, Chatbot kịch bản, App render tự động và gói Combo All-In-One.',
-    features: ['Khóa học Video AI (sắp mở)', 'Chatbot viết kịch bản + App render (sắp mở)', 'Combo tiết kiệm trọn bộ (sắp mở)', 'Tạm thời đóng giỏ — ưu tiên hoàn thiện 5 Skill'],
+    features: ['Khóa học Video AI (sắp mở)', 'Chatbot viết kịch bản + App render (sắp mở)', 'Combo tiết kiệm trọn bộ (sắp mở)', 'Tạm thời đóng giỏ — tập trung 2 dòng Skill chính'],
     cta: 'Chưa mở bán', href: '/combo'
   }
 ]
 
 export const PricingPage: FC<LayoutProps> = (props) => (
-  <Layout {...props} active="pricing" title="Bảng giá" description="Bảng giá bộ 5 Skill AI làm video đang mở bán và lộ trình các dịch vụ sắp ra mắt">
+  <Layout {...props} active="pricing" title="Bảng giá" description="Bảng giá dòng Skill AI tự tải và Skill AI Agent (MCP) kết nối trực tiếp Claude, Codex, Antigravity">
     <div class="bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3">Bảng giá minh bạch</h1>
-        <p class="text-[#c2c0e0] max-w-2xl mx-auto">Hiện tại hệ thống mở bán trọn bộ 5 Skill AI thực chiến. Mua một lần, sở hữu trọn đời, không phí duy trì.</p>
+        <p class="text-[#c2c0e0] max-w-2xl mx-auto">Chọn giữa <b>Skill AI (tự tải về làm theo)</b> hoặc <b>Skill AI Agent (MCP)</b> kết nối trực tiếp Claude, Codex, Antigravity. Mua một lần, sở hữu trọn đời.</p>
       </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 -mt-8 pb-14 relative">
       <div class="grid lg:grid-cols-3 gap-5">
         {PLANS.map(pl => (
-          <div class={`rounded-2xl p-7 relative ${pl.highlight ? 'bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-indigo-500/30 lg:-mt-4 lg:mb-4' : 'bg-[#0f0e24] border border-[#221e54]'}`}>
+          <div class={`rounded-2xl p-7 relative ${pl.highlight ? 'bg-gradient-to-br from-cyan-600 via-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-cyan-500/25 lg:-mt-4 lg:mb-4' : 'bg-[#0f0e24] border border-[#221e54]'}`}>
             {pl.highlight && (
-              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1">
-                <i class="fas fa-star text-[10px]" aria-hidden="true"></i>{pl.tag}
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-cyan-300 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1">
+                <i class="fas fa-plug-circle-bolt text-[10px]" aria-hidden="true"></i>{pl.tag}
               </div>
             )}
             <div class={`w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? 'bg-white/20 text-white' : pl.available ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'}`}>
@@ -133,7 +138,7 @@ export const PricingPage: FC<LayoutProps> = (props) => (
             <ul class="space-y-2.5 mb-7">
               {pl.features.map(f => (
                 <li class={`flex gap-2.5 text-sm ${pl.highlight ? 'text-white/95' : 'text-[#c2c0e0]'}`}>
-                  <i class={`fas ${pl.available ? 'fa-circle-check' : 'fa-clock'} mt-0.5 shrink-0 ${pl.highlight ? 'text-emerald-300' : pl.available ? 'text-emerald-400' : 'text-amber-400'}`} aria-hidden="true"></i>{f}
+                  <i class={`fas ${pl.available ? 'fa-circle-check' : 'fa-clock'} mt-0.5 shrink-0 ${pl.highlight ? 'text-cyan-200' : pl.available ? 'text-emerald-400' : 'text-amber-400'}`} aria-hidden="true"></i>{f}
                 </li>
               ))}
             </ul>
@@ -146,7 +151,7 @@ export const PricingPage: FC<LayoutProps> = (props) => (
       </div>
 
       <div class="mt-12 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8">
-        <h2 class="text-xl font-extrabold text-white mb-6 text-center">So sánh chi tiết các gói</h2>
+        <h2 class="text-xl font-extrabold text-white mb-6 text-center">So sánh Skill tự tải vs Skill AI Agent (MCP)</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-sm min-w-[600px]">
             <thead>
@@ -158,12 +163,12 @@ export const PricingPage: FC<LayoutProps> = (props) => (
             <tbody class="divide-y divide-[#221e54]">
               {[
                 ['Trạng thái', 'Đang mở bán', 'Đang mở bán', 'Chưa mở bán'],
+                ['Hình thức sử dụng', 'Tự tải file & làm theo', 'AI Agent gọi MCP trực tiếp', 'Trọn gói'],
+                ['Tương thích Claude / Codex / Antigravity', false, true, 'Tuỳ gói'],
+                ['Tự động đồng bộ bản Skill từ server', false, true, true],
                 ['Sở hữu trọn đời', true, true, true],
                 ['Cập nhật miễn phí', true, true, true],
-                ['Hỗ trợ Zalo', true, true, true],
-                ['Hỗ trợ ưu tiên 1-1', false, true, true],
-                ['Video demo xem trước', true, true, false],
-                ['Skill AI theo ngách / model', true, true, true],
+                ['Hỗ trợ 1-1 qua Zalo', true, true, true],
                 ['Khóa học + Chatbot + App', false, false, 'Sắp mở']
               ].map(([label, ...vals]) => (
                 <tr>
@@ -191,12 +196,12 @@ export const PricingPage: FC<LayoutProps> = (props) => (
 export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => {
   const siteName = props.settings?.site_name || 'KhoSkill AI'
   return (
-  <Layout {...props} title="Giới thiệu" description={`Về ${siteName} — kho Skill AI làm video thực chiến hàng đầu Việt Nam`}>
+  <Layout {...props} title="Giới thiệu" description={`Về ${siteName} — kho Skill AI & Skill AI Agent (MCP) làm video thực chiến hàng đầu Việt Nam`}>
     <div class="bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]">
       <div class="absolute inset-0 hero-mesh"></div>
       <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">Về {siteName}</h1>
-        <p class="text-[#c2c0e0] leading-relaxed">Chúng tôi giúp người Việt làm video AI bán hàng một cách dễ dàng nhất — bắt đầu từ bộ 5 Skill AI thực chiến đang mở bán, cùng hệ sinh thái Khóa học, Chatbot và App sắp ra mắt.</p>
+        <p class="text-[#c2c0e0] leading-relaxed">Chúng tôi giúp người Việt làm video AI bán hàng dễ dàng nhất — với 2 dòng sản phẩm đang mở bán: <b>Skill AI tự tải</b> và <b>Skill AI Agent (MCP)</b> kết nối trực tiếp vào Claude, Codex, Antigravity.</p>
       </div>
     </div>
 
@@ -220,10 +225,11 @@ export const AboutPage: FC<LayoutProps & { stats: any }> = (props) => {
       <div class="prose-vn max-w-none bg-[#0f0e24] rounded-2xl border border-[#221e54] p-7 md:p-10">
         <h2>Câu chuyện của chúng tôi</h2>
         <p>{siteName} ra đời từ nhu cầu thực tế: rất nhiều người muốn làm video bán hàng bằng AI nhưng không biết viết prompt chuẩn, không giữ được nhân vật xuyên suốt 30 giây và tốn nhiều thời gian thử sai.</p>
-        <p>Chúng tôi đóng gói sẵn từng <b>Skill tạo video AI theo ngách &amp; công cụ</b> (Muse AI Pro, Seedance 2.5, Thuỷ Sinh 30s, DIY Làm Vườn, Affiliate Fitness) — tất cả đều đã chạy thực tế ra video demo để bạn kiểm chứng trước khi mua.</p>
+        <p>Chúng tôi đóng gói sẵn cả <b>Skill tự tải về làm theo</b> lẫn dòng <b>Skill AI Agent (MCP)</b> thế hệ mới để các AI Agent như <b>Claude, Codex, Antigravity</b> có thể kết nối trực tiếp về MCP Server và tự động thực thi quy trình tạo video theo Skill.</p>
         <h2>Trạng thái dịch vụ hiện tại</h2>
         <ul>
-          <li><b>Skill tạo video AI (5 bộ đang mở bán):</b> mua và nhận link tải tự động 24/7 ngay trên hệ thống.</li>
+          <li><b>Skill AI tự tải (Đang mở bán):</b> nhận link tải bộ prompt, quy trình &amp; checklist tự động 24/7 ngay sau thanh toán.</li>
+          <li><b>Skill AI Agent MCP (Đang mở bán):</b> nhận ngay MCP Endpoint + License Key + cấu hình 1-click cho Claude, Codex, Antigravity.</li>
           <li><b>Khóa học, Chatbot, App Video AI &amp; Combo (Chưa mở bán):</b> đang trong giai đoạn hoàn thiện và nâng cấp, sẽ sớm công bố mở bán.</li>
         </ul>
         <h2>Cam kết</h2>

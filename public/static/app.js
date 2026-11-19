@@ -469,6 +469,7 @@
     else if (path === '/san-pham' && !qType && !qSort) activeSide = 'all';
     else if (path === '/san-pham' && (qSort === 'bestseller' || qSort === 'hot')) activeSide = 'bestseller';
     else if ((path === '/san-pham' && qType === 'skill') || path === '/danh-muc/skill-video-ai') activeSide = 'skill';
+    else if ((path === '/san-pham' && qType === 'mcp_skill') || path === '/danh-muc/skill-ai-agent-mcp') activeSide = 'mcp_skill';
     else if ((path === '/san-pham' && qType === 'course') || path === '/danh-muc/khoa-hoc-video-ai') activeSide = 'course';
     else if ((path === '/san-pham' && qType === 'chatbot') || path === '/danh-muc/chatbot-kich-ban') activeSide = 'chatbot';
     else if ((path === '/san-pham' && qType === 'app') || path === '/danh-muc/app-video-ai') activeSide = 'app';
@@ -1512,6 +1513,67 @@
         var i = cpBtn.querySelector('i');
         if (i) { var old = i.className; i.className = 'fas fa-check'; setTimeout(function () { i.className = old; }, 1500); }
       }).catch(function () { toast('Không thể sao chép', 'error'); });
+      return;
+    }
+
+    // Copy multi-line content from element ID (MCP configs / sample prompts)
+    var cpTargetBtn = e.target.closest('[data-copy-target]');
+    if (cpTargetBtn) {
+      e.preventDefault();
+      var targetNode = document.getElementById(cpTargetBtn.dataset.copyTarget);
+      var txt = targetNode ? (targetNode.textContent || '').trim() : '';
+      if (!txt) return;
+      navigator.clipboard.writeText(txt).then(function () {
+        toast('Đã sao chép cấu hình MCP!', 'success');
+        var i = cpTargetBtn.querySelector('i');
+        if (i) { var old = i.className; i.className = 'fas fa-check'; setTimeout(function () { i.className = old; }, 1500); }
+      }).catch(function () { toast('Không thể sao chép', 'error'); });
+      return;
+    }
+
+    // Test MCP Connection button in My Products
+    var mcpTestBtn = e.target.closest('.btn-test-mcp');
+    if (mcpTestBtn) {
+      e.preventDefault();
+      var licId = Number(mcpTestBtn.dataset.licenseId);
+      var outBox = document.getElementById('mcp-test-result-' + licId);
+      var origHtml = mcpTestBtn.innerHTML;
+      mcpTestBtn.disabled = true;
+      mcpTestBtn.innerHTML = '<span class="spinner"></span> Đang kiểm tra MCP...';
+      axios.post('/api/account/mcp/test', { license_id: licId })
+        .then(function (r) {
+          var d = r.data || {};
+          var esc = function (s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+          };
+          if (outBox) {
+            outBox.className = 'rounded-xl p-3.5 text-xs bg-emerald-500/15 border border-emerald-500/35 text-emerald-100 space-y-2';
+            var toolsHtml = (d.tools || []).map(function (t) {
+              return '<span class="inline-block px-2 py-0.5 rounded bg-black/35 border border-emerald-400/30 font-mono text-[11px] text-cyan-200">' + esc(t && t.name) + '</span>';
+            }).join(' ');
+            var srvName = esc(d.serverInfo && d.serverInfo.name ? d.serverInfo.name : 'MCP Server');
+            var protoVer = esc(d.protocolVersion || '2025-03-26');
+            outBox.innerHTML =
+              '<div class="font-bold text-emerald-300 flex items-center gap-1.5"><i class="fas fa-circle-check"></i>Kết nối MCP thành công! (' + srvName + ' · Protocol ' + protoVer + ')</div>' +
+              '<div class="text-[#d6d4ee]">Endpoint: <code class="font-mono text-cyan-200 break-all">' + esc(d.endpoint) + '</code></div>' +
+              (toolsHtml ? '<div class="flex flex-wrap gap-1.5 items-center"><span class="text-emerald-200 font-semibold">Tools sẵn sàng (' + (d.tools || []).length + '):</span> ' + toolsHtml + '</div>' : '');
+            outBox.classList.remove('hidden');
+          }
+          toast('Kết nối MCP hoạt động tốt!', 'success');
+        })
+        .catch(function (err) {
+          var msg = (err.response && err.response.data && err.response.data.error) || 'Không thể kết nối MCP Server';
+          if (outBox) {
+            outBox.className = 'rounded-xl p-3 text-xs bg-rose-500/15 border border-rose-500/35 text-rose-200';
+            outBox.textContent = 'Lỗi kiểm tra MCP: ' + msg;
+            outBox.classList.remove('hidden');
+          }
+          toast(msg, 'error');
+        })
+        .finally(function () {
+          mcpTestBtn.disabled = false;
+          mcpTestBtn.innerHTML = origHtml;
+        });
       return;
     }
 

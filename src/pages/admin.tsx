@@ -1,6 +1,6 @@
 import type { FC, PropsWithChildren } from 'hono/jsx'
 import { StatusBadge, Pagination, EmptyState } from '../components/ui'
-import { formatVND, formatDate, formatDateTime, PRODUCT_TYPE_LABEL } from '../lib/utils'
+import { formatVND, formatDate, formatDateTime, PRODUCT_TYPE_LABEL, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
 import type { SessionUser } from '../lib/types'
 
 interface AdminProps {
@@ -39,7 +39,7 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
       }}></script>
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
-      <link href="/static/style.css?v=20261116" rel="stylesheet" />
+      <link href="/static/style.css?v=20261121" rel="stylesheet" />
     </head>
     <body class="bg-slate-100 text-slate-800 antialiased">
       <div class="flex min-h-screen">
@@ -99,8 +99,8 @@ export const AdminShell: FC<PropsWithChildren<AdminProps>> = (props) => (
 
       <div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
       <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-      <script src="/static/app.js?v=20261119"></script>
-      <script src="/static/admin.js?v=20261116"></script>
+      <script src="/static/app.js?v=20261121"></script>
+      <script src="/static/admin.js?v=20261121"></script>
     </body>
   </html>
 )
@@ -235,7 +235,10 @@ export const AdminProducts: FC<AdminProps & { products: any[]; categories: any[]
                 <td>
                   <div class="font-semibold text-slate-900 line-clamp-1 max-w-xs">{p.name}</div>
                   <div class="text-xs text-slate-500 flex gap-2 mt-0.5">
-                    <span class="px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
+                    <span class={`px-1.5 py-0.5 rounded font-medium ${isMcpSkill(p.product_type) ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-brand-50 text-brand-700'}`}>
+                      {isMcpSkill(p.product_type) && <i class="fas fa-plug-circle-bolt mr-1 text-[10px]"></i>}
+                      {PRODUCT_TYPE_LABEL[p.product_type]}
+                    </span>
                     <span>{p.version}</span>
                     {p.is_hot === 1 && <span class="text-orange-600 font-semibold">HOT</span>}
                     {p.is_featured === 1 && <span class="text-amber-600 font-semibold">★</span>}
@@ -320,7 +323,7 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
           <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
             <h3 class="font-bold text-slate-900">Nội dung bàn giao</h3>
             <div>
-              <label class={labelCls}>🔗 Link tải Skill / Tài liệu bàn giao (chỉ hiện sau khi mua) *</label>
+              <label class={labelCls}>🔗 Link tải Skill / Tài liệu bàn giao <span class="text-slate-400 font-normal">(tuỳ chọn nếu là Skill AI Agent MCP)</span></label>
               <input type="url" name="download_url" value={p.download_url || ''} placeholder="https://drive.google.com/..." class={fieldCls} />
             </div>
             <div class="grid sm:grid-cols-2 gap-4">
@@ -329,13 +332,55 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
                 <input type="url" name="doc_url" value={p.doc_url || ''} class={fieldCls} />
               </div>
               <div>
-                <label class={labelCls}>Dung lượng file</label>
-                <input type="text" name="file_size" value={p.file_size || ''} placeholder="248 MB" class={fieldCls} />
+                <label class={labelCls}>Dung lượng file / Định dạng</label>
+                <input type="text" name="file_size" value={p.file_size || ''} placeholder="248 MB hoặc MCP Live API" class={fieldCls} />
               </div>
             </div>
             <div>
               <label class={labelCls}>Link demo trực tiếp</label>
               <input type="url" name="demo_url" value={p.demo_url || ''} class={fieldCls} />
+            </div>
+          </div>
+
+          <div id="mcp-config-card" class={`rounded-2xl border p-5 space-y-4 transition ${isMcpSkill(p.product_type) ? 'bg-cyan-50/40 border-cyan-300 ring-2 ring-cyan-200/60' : 'bg-white border-slate-200'}`}>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                <i class="fas fa-plug-circle-bolt text-cyan-600"></i>Cấu hình MCP cho AI Agent (Claude / Codex / Antigravity)
+              </h3>
+              <span id="mcp-mode-badge" class={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isMcpSkill(p.product_type) ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                {isMcpSkill(p.product_type) ? 'Đang kích hoạt chế độ MCP' : 'Dành cho loại Skill AI Agent (MCP)'}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Khi chọn loại sản phẩm <b>Skill AI Agent (MCP)</b>, khách mua xong sẽ nhận ngay cấu hình MCP + License Key để cắm trực tiếp vào Claude, Codex, Antigravity. Để trống <b>MCP Endpoint</b> để dùng luôn endpoint tích hợp sẵn <code class="font-mono bg-slate-100 px-1 rounded">/api/mcp/{p.slug || 'slug-san-pham'}</code>.
+            </p>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class={labelCls}>Tên MCP Server Key</label>
+                <input type="text" name="mcp_server_name" value={p.mcp_server_name || ''} placeholder="khoskill-video-viral" class={fieldCls} />
+              </div>
+              <div>
+                <label class={labelCls}>AI Agent hỗ trợ (phân cách dấu phẩy)</label>
+                <input type="text" name="mcp_clients_text" value={p.mcp_clients ? parseMcpClients(p.mcp_clients).join(', ') : 'Claude, Codex, Antigravity'} placeholder="Claude, Codex, Antigravity" class={fieldCls} />
+              </div>
+            </div>
+            <div>
+              <label class={labelCls}>MCP Server Endpoint tuỳ chỉnh <span class="text-slate-400 font-normal">(để trống = dùng /api/mcp/slug có sẵn)</span></label>
+              <input type="url" name="mcp_endpoint" value={p.mcp_endpoint || ''} placeholder="https://mcp.domain-cua-ban.com/mcp (tuỳ chọn)" class={fieldCls} />
+            </div>
+            <div>
+              <label class={labelCls}>Danh sách MCP Tools hiển thị &amp; expose (mỗi dòng: <code>ten_tool | Mô tả</code>)</label>
+              <textarea name="mcp_tools_text" rows={4} placeholder={'list_licensed_skills | Liệt kê Skill MCP đã kích hoạt\nget_skill_blueprint | Nạp quy trình & công thức Skill\ngenerate_video_storyboard | Sinh storyboard 30s + prompt từng cảnh\ncreate_video_from_skill | Chạy pipeline tạo video theo Skill'}
+                class="w-full p-3 rounded-xl border border-slate-200 focus:border-cyan-500 outline-none text-xs font-mono resize-y">{p.mcp_tools ? parseMcpTools(p.mcp_tools).map(t => `${t.name} | ${t.description}`).join('\n') : ''}</textarea>
+            </div>
+            <div>
+              <label class={labelCls}>Nội dung Skill Blueprint / System Prompt trả về qua MCP (Markdown)</label>
+              <textarea name="mcp_skill_prompt" rows={8} placeholder="# SKILL BLUEPRINT&#10;Nhập toàn bộ quy trình, luật khóa nhân vật, công thức Hook-Body-CTA mà AI Agent sẽ nạp khi gọi tool get_skill_blueprint / create_video_from_skill..."
+                class="w-full p-3 rounded-xl border border-slate-200 focus:border-cyan-500 outline-none text-xs font-mono resize-y">{p.mcp_skill_prompt || ''}</textarea>
+            </div>
+            <div>
+              <label class={labelCls}>Webhook / API Render Video bên ngoài <span class="text-slate-400 font-normal">(tuỳ chọn — nếu nhập, tool create_video_from_skill sẽ POST job sang đây)</span></label>
+              <input type="url" name="mcp_render_webhook" value={p.mcp_render_webhook || ''} placeholder="https://worker.domain.com/render-video (tuỳ chọn)" class={fieldCls} />
             </div>
           </div>
 
@@ -548,11 +593,19 @@ export const AdminOrderDetail: FC<AdminProps & {
                       </div>
                       <div class="flex items-center gap-2 mt-1">
                         <code class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-bold">{l.license_key}</code>
-                        <span class="text-xs text-slate-500">· {l.download_count || 0} lượt tải</span>
+                        {isMcpSkill(l.product_type) ? (
+                          <span class="text-xs text-cyan-700 font-medium">· {l.mcp_call_count || 0} lượt gọi MCP</span>
+                        ) : (
+                          <span class="text-xs text-slate-500">· {l.download_count || 0} lượt tải</span>
+                        )}
                       </div>
                     </div>
                     <div class="text-right shrink-0">
-                      {l.download_url ? (
+                      {isMcpSkill(l.product_type) ? (
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 text-xs font-semibold">
+                          <i class="fas fa-plug-circle-bolt"></i>MCP Live
+                        </span>
+                      ) : l.download_url ? (
                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold">
                           <i class="fas fa-link"></i>Đã có link tải
                         </span>

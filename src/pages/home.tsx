@@ -7,35 +7,38 @@ import type { Product, Category } from '../lib/types'
 interface Props extends LayoutProps {
   categories: Category[]
   featured: Product[]
+  mcpSkills: Product[]
+  manualSkills: Product[]
   hot: Product[]
   newest: Product[]
   comingSoon: Product[]
   posts: any[]
   reviews: any[]
-  stats: { products: number; users: number; sold: number }
+  stats: { products: number; users: number; sold: number; manualSkills?: number; mcpSkills?: number }
 }
 
 const BENEFITS = [
-  { icon: 'fa-bolt', title: 'Giao hàng tự động 24/7', desc: 'Thanh toán xong nhận ngay bộ tài liệu Skill, prompt chuẩn và quy trình chi tiết trong tài khoản, không cần chờ admin.' },
+  { icon: 'fa-bolt', title: 'Kích hoạt tự động 24/7', desc: 'Thanh toán xong nhận ngay link tải bộ Skill hoặc License Key + cấu hình kết nối MCP trực tiếp trong tài khoản.' },
+  { icon: 'fa-plug-circle-bolt', title: 'Hỗ trợ MCP cho AI Agent', desc: 'Dòng Skill AI Agent (MCP) cắm thẳng vào Claude, Codex, Antigravity — Agent tự gọi tool và dựng video theo Skill.' },
   { icon: 'fa-infinity', title: 'Sở hữu trọn đời', desc: 'Mua một lần dùng mãi mãi, không phí ẩn, nhận mọi bản cập nhật prompt & quy trình mới hoàn toàn miễn phí.' },
-  { icon: 'fa-wand-magic-sparkles', title: 'Skill thực chiến, test kỹ', desc: 'Tất cả 5 bộ Skill AI đang mở bán đều đã chạy thực tế ra video demo xem ngay trên trang sản phẩm.' },
-  { icon: 'fa-headset', title: 'Hỗ trợ 1-1 qua Zalo', desc: 'Đội ngũ hỗ trợ cầm tay chỉ việc đến khi bạn áp dụng Skill để tạo được video đầu tiên.' },
-  { icon: 'fa-shield-halved', title: 'Bảo hành & hoàn tiền', desc: 'Hoàn tiền 100% trong 7 ngày nếu nội dung Skill không đúng như mô tả hoặc video demo.' },
-  { icon: 'fa-rocket', title: 'Cập nhật theo model mới', desc: 'Bộ Skill được tinh chỉnh liên tục theo Muse AI, Seedance 2.5, Veo 3, Flow... hoàn toàn miễn phí.' }
+  { icon: 'fa-wand-magic-sparkles', title: 'Skill thực chiến, test kỹ', desc: 'Toàn bộ Skill tự tải và Skill AI Agent (MCP) đều đã chạy thực tế ra video demo xem ngay trên trang sản phẩm.' },
+  { icon: 'fa-headset', title: 'Hỗ trợ 1-1 qua Zalo', desc: 'Đội ngũ hỗ trợ cầm tay chỉ việc cài đặt MCP và áp dụng Skill đến khi bạn tạo được video đầu tiên.' },
+  { icon: 'fa-shield-halved', title: 'Bảo hành & hoàn tiền', desc: 'Hoàn tiền 100% trong 7 ngày nếu nội dung Skill hoặc kết nối MCP không đúng như mô tả.' }
 ]
 
 const STEPS = [
-  { n: '01', icon: 'fa-user-plus', title: 'Đăng ký tài khoản', desc: 'Tạo tài khoản miễn phí chỉ với email trong 30 giây.' },
-  { n: '02', icon: 'fa-cart-shopping', title: 'Chọn bộ Skill AI', desc: 'Xem video demo thực tế, đọc chi tiết ngách rồi thêm vào giỏ.' },
+  { n: '01', icon: 'fa-user-plus', title: 'Đăng ký tài khoản', desc: 'Tạo tài khoản miễn phí chỉ với email hoặc Google trong 30 giây.' },
+  { n: '02', icon: 'fa-cart-shopping', title: 'Chọn loại Skill phù hợp', desc: 'Chọn Skill tự tải về làm tay hoặc Skill AI Agent (MCP) cho Claude, Codex, Antigravity.' },
   { n: '03', icon: 'fa-qrcode', title: 'Thanh toán VietQR', desc: 'Quét mã VietQR chuyển khoản, hệ thống tự động xác nhận 24/7.' },
-  { n: '04', icon: 'fa-download', title: 'Nhận link tải Skill', desc: 'Link tải + mã kích hoạt xuất hiện ngay trong "Sản phẩm của tôi".' }
+  { n: '04', icon: 'fa-plug-circle-bolt', title: 'Tải Skill hoặc Cắm MCP', desc: 'Nhận link tải ngay hoặc copy config MCP + License Key dán vào AI Agent dùng liền.' }
 ]
 
 const FAQS = [
-  { q: 'Mua Skill AI thì tôi nhận được những gì?', a: 'Bạn nhận trọn bộ tài liệu số của Skill: file cấu hình/prompt chuẩn hoá theo ngách, quy trình từng bước tạo video 30s, checklist dựng clip & đăng page, cùng link hướng dẫn thực hành. Giao tự động ngay sau khi thanh toán.' },
-  { q: 'Tôi chưa từng làm video AI thì có dùng được Skill không?', a: 'Hoàn toàn được. Mỗi bộ Skill đều viết sẵn công thức từng bước cho người mới, kèm ví dụ prompt thực tế và hỗ trợ qua Zalo nếu bạn gặp vướng mắc.' },
-  { q: 'Các dịch vụ Khóa học, Chatbot, App Video AI khi nào mở bán?', a: 'Hiện tại hệ thống tập trung mở bán trước 5 bộ Skill AI hoàn thiện nhất. Các hạng mục Khóa học Video AI, Chatbot viết kịch bản, App làm video và Combo đang ở trạng thái Chưa mở bán để hoàn thiện chất lượng trước khi phát hành.' },
-  { q: 'Thanh toán xong bao lâu thì nhận được hàng?', a: 'Hệ thống giao tự động 24/7. Ngay khi chuyển khoản đúng mã đơn hàng và hệ thống xác nhận thành công, link tải xuất hiện lập tức trong mục "Sản phẩm của tôi".' },
+  { q: 'Skill AI Agent (MCP) khác gì so với Skill AI tự tải thông thường?', a: 'Với Skill AI thông thường, bạn tải file tài liệu/prompt về máy rồi tự làm theo từng bước. Còn với Skill AI Agent (MCP), bạn chỉ cần copy cấu hình MCP + License Key dán 1 lần vào Claude, Codex hoặc Antigravity — AI Agent sẽ tự gọi trực tiếp về server MCP để nạp quy trình Skill, sinh kịch bản khóa nhân vật và tạo video ngay trong cuộc hội thoại.' },
+  { q: 'Mua Skill AI / Skill AI Agent (MCP) thì tôi nhận được những gì?', a: 'Với Skill tự tải: bạn nhận trọn bộ tài liệu số, prompt chuẩn hoá theo ngách, quy trình từng bước & checklist dựng clip. Với Skill AI Agent (MCP): bạn nhận MCP Endpoint URL, License Key riêng, snippet cấu hình copy 1-click cho Claude / Codex / Antigravity và nút kiểm tra kết nối trực tiếp trong "Sản phẩm của tôi".' },
+  { q: 'Tôi chưa từng làm video AI hoặc chưa dùng MCP bao giờ thì có dùng được không?', a: 'Hoàn toàn được. Với Skill tự tải có hướng dẫn từng bước cho người mới; với Skill MCP chỉ cần copy-paste đúng 1 đoạn cấu hình có sẵn (hoặc 1 dòng lệnh CLI) vào Claude, Codex, Antigravity là chạy ngay — kèm hỗ trợ 1-1 qua Zalo nếu bạn cần.' },
+  { q: 'Các dịch vụ Khóa học, Chatbot, App Video AI khi nào mở bán?', a: 'Hiện tại hệ thống tập trung mở bán 2 dòng sản phẩm cốt lõi là Skill AI (tự tải) và Skill AI Agent (MCP). Các hạng mục Khóa học Video AI, Chatbot viết kịch bản, App làm video và Combo đang ở trạng thái Chưa mở bán để hoàn thiện chất lượng trước khi phát hành.' },
+  { q: 'Thanh toán xong bao lâu thì nhận được hàng?', a: 'Hệ thống giao tự động 24/7. Ngay khi chuyển khoản đúng mã đơn hàng và hệ thống xác nhận thành công, link tải hoặc cấu hình MCP + License Key xuất hiện lập tức trong mục "Sản phẩm của tôi".' },
   { q: 'Tôi có thể dùng Skill cho nhiều kênh TikTok/Reels không?', a: 'Có. Skill mua một lần sử dụng không giới hạn cho mọi kênh cá nhân và kênh bán hàng của chính bạn.' }
 ]
 
@@ -160,7 +163,7 @@ const DEMO_VIDEOS = [
 ]
 
 export const HomePage: FC<Props> = (props) => {
-  const { categories, featured, hot, newest, comingSoon, posts, reviews, stats } = props
+  const { categories, featured, mcpSkills = [], manualSkills = [], hot, newest, comingSoon, posts, reviews, stats } = props
   const siteName = props.settings?.site_name || 'KhoSkill AI'
   return (
     <Layout {...props} active="home">
@@ -177,28 +180,25 @@ export const HomePage: FC<Props> = (props) => {
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true"></span>
                 <span>Đang mở bán <b class="text-emerald-300 tabular-nums">{stats.products} Skill AI</b></span>
                 <span class="text-white/40" aria-hidden="true">·</span>
-                <span><span class="tabular-nums">{stats.sold.toLocaleString('vi-VN')}+</span> lượt mua thành công</span>
+                <span class="text-cyan-300 font-bold"><i class="fas fa-plug-circle-bolt mr-1 text-[10px]" aria-hidden="true"></i>Mới: Skill AI Agent (MCP)</span>
               </div>
               <h1 class="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5">
                 Kho <span class="bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">Skill AI Làm Video</span> thực chiến số 1 Việt Nam
               </h1>
               <p class="text-[#c2c0e0] text-base md:text-lg leading-relaxed mb-8 max-w-xl">
-                Mở bán trọn bộ 5 Skill AI thực chiến làm video 30s chuẩn viral: Muse AI Pro, Seedance 2.5, Thuỷ Sinh, DIY Làm Vườn, Affiliate Fitness.
-                Mua một lần — sở hữu trọn đời — giao link tải tự động 24/7.
+                Đầy đủ 2 dòng sản phẩm: <b>Skill AI tự tải về làm theo</b> (Muse AI, Seedance 2.5, Thuỷ Sinh, Làm Vườn, Fitness) và dòng mới <b class="text-cyan-300">Skill AI Agent (MCP)</b> kết nối trực tiếp vào <b>Claude, Codex, Antigravity</b> để AI tự gọi tool tạo video ngay.
               </p>
               <div class="flex flex-wrap items-center gap-3 mb-9">
-                <a href="/san-pham?type=skill" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 font-semibold shadow-xl shadow-indigo-500/30 hover:opacity-95 transition">
-                  <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem 5 Skill đang mở bán
+                <a href="/san-pham" class="h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 font-semibold shadow-xl shadow-indigo-500/30 hover:opacity-95 transition">
+                  <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Khám phá {stats.products} Skill đang bán
                 </a>
-                <a href="#theater" id="heroTrailerBtn" class="h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg">
-                  <span class="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow"><i class="fas fa-play ml-0.5" aria-hidden="true"></i></span>
-                  Xem demo 30s
+                <a href="/san-pham?type=mcp_skill" class="h-12 px-5 inline-flex items-center gap-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/45 text-cyan-200 font-semibold backdrop-blur transition shadow-lg">
+                  <i class="fas fa-plug-circle-bolt text-cyan-300" aria-hidden="true"></i>Skill AI Agent (MCP)
                 </a>
-                {comingSoon.length > 0 && (
-                  <a href="#coming-soon-section" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-[#c2c0e0] hover:text-white hover:bg-white/10 transition">
-                    <i class="fas fa-clock text-amber-400" aria-hidden="true"></i>Dịch vụ sắp mở
-                  </a>
-                )}
+                <a href="#theater" id="heroTrailerBtn" class="h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur font-semibold text-white transition">
+                  <span class="w-5 h-5 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-[9px] text-white"><i class="fas fa-play ml-0.5" aria-hidden="true"></i></span>
+                  Demo 30s
+                </a>
               </div>
               <div class="grid grid-cols-3 gap-4 max-w-md">
                 {[
@@ -393,7 +393,7 @@ export const HomePage: FC<Props> = (props) => {
           <div class="marquee-track flex gap-10 w-max text-[#9492b8] text-xs font-semibold whitespace-nowrap">
             {[...Array(2)].map(() => (
               <>
-                {['Muse AI', 'Seedance 2.5', 'Veo 3', 'Google Flow', 'Kling AI', 'ChatGPT', 'Gemini', 'CapCut', 'Sora', 'Runway'].map(b => (
+                {['MCP Protocol', 'Claude', 'Codex', 'Antigravity', 'Muse AI', 'Seedance 2.5', 'Veo 3', 'Google Flow', 'Kling AI', 'CapCut', 'Runway'].map(b => (
                   <span class="flex items-center gap-2"><i class="fas fa-circle-nodes text-indigo-500/70" aria-hidden="true"></i>{b}</span>
                 ))}
               </>
@@ -567,16 +567,106 @@ export const HomePage: FC<Props> = (props) => {
         </div>
       </section>
 
+      {/* ============ MCP AI AGENT SKILL SPOTLIGHT & COMPARISON ============ */}
+      <section id="mcp-agent-section" class="max-w-7xl mx-auto px-4 py-10 reveal">
+        <div class="rounded-3xl bg-gradient-to-br from-[#0b1228] via-[#0f0e28] to-[#130b29] border border-cyan-500/35 p-6 md:p-10 relative overflow-hidden shadow-2xl shadow-cyan-950/30">
+          <div class="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-cyan-500/15 blur-[100px]"></div>
+          <div class="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-indigo-500/15 blur-[100px]"></div>
+
+          <div class="relative">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+              <div class="max-w-3xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider mb-3">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                  Loại Sản Phẩm Mới · MCP Live Protocol
+                </div>
+                <h2 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+                  Skill AI Agent <span class="bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-300 bg-clip-text text-transparent">(Kết nối trực tiếp MCP)</span>
+                </h2>
+                <p class="text-[#c2c0e0] mt-2 text-sm md:text-base leading-relaxed">
+                  Khác hoàn toàn với Skill tự tải về làm thủ công: bạn chỉ cần dán cấu hình MCP + License Key vào <b>Claude, Codex hoặc Antigravity</b> — AI Agent sẽ gọi trực tiếp về server, nạp Skill và tạo video theo đúng quy trình ngay lập tức.
+                </p>
+              </div>
+              <a href="/san-pham?type=mcp_skill"
+                class="h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-cyan-500/20 transition shrink-0">
+                <i class="fas fa-plug-circle-bolt" aria-hidden="true"></i>Xem tất cả Skill MCP
+              </a>
+            </div>
+
+            {/* Side-by-side comparison: Manual Downloadable Skill vs MCP AI Agent Skill */}
+            <div class="grid lg:grid-cols-2 gap-5 mb-8">
+              <div class="p-6 rounded-2xl bg-[#0a091c]/85 border border-[#242054]">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/35 text-indigo-300 grid place-items-center">
+                      <i class="fas fa-download" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-white text-base">Skill AI (Tự tải &amp; làm theo)</h3>
+                      <div class="text-[11px] text-[#9492b8]">Dòng tiêu chuẩn · Từ 399.000đ</div>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold">Thủ công</span>
+                </div>
+                <ul class="space-y-2.5 text-xs sm:text-sm text-[#c2c0e0]">
+                  <li class="flex gap-2.5"><i class="fas fa-check text-indigo-400 mt-1 shrink-0" aria-hidden="true"></i><span>Tải bộ file ZIP / Google Drive gồm prompt, quy trình và checklist về máy.</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-check text-indigo-400 mt-1 shrink-0" aria-hidden="true"></i><span>Bạn tự copy prompt, tự chạy từng bước trên Muse AI, Seedance 2.5, CapCut.</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-check text-indigo-400 mt-1 shrink-0" aria-hidden="true"></i><span>Phù hợp người mới muốn nắm rõ quy trình và tự kiểm soát thủ công từng cảnh.</span></li>
+                </ul>
+              </div>
+
+              <div class="p-6 rounded-2xl bg-gradient-to-br from-cyan-950/55 via-[#111033] to-indigo-950/60 border border-cyan-400/45 shadow-lg shadow-cyan-950/30">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white grid place-items-center shadow-md shadow-cyan-500/25">
+                      <i class="fas fa-plug-circle-bolt" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-white text-base">Skill AI Agent (MCP Live)</h3>
+                      <div class="text-[11px] text-cyan-300 font-semibold">Kết nối trực tiếp · Từ 890.000đ</div>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black uppercase">AI Agent tự chạy</span>
+                </div>
+                <ul class="space-y-2.5 text-xs sm:text-sm text-[#e2e1f5] mb-4">
+                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span><b>Kết nối trực tiếp qua MCP</b> vào Claude, Codex, Antigravity bằng License Key.</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span>Ra lệnh 1 câu — AI Agent tự gọi tool nạp Skill, khóa nhân vật &amp; xuất gói tạo video 30s.</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span>Không cần tải lại file khi có bản mới — Agent luôn gọi phiên bản Skill mới nhất trên server.</span></li>
+                </ul>
+                <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-cyan-500/20 text-[11px]">
+                  <span class="text-[#9492b8] font-semibold">Tương thích sẵn:</span>
+                  {['Claude Code / Desktop', 'OpenAI Codex', 'Antigravity'].map(cl => (
+                    <span class="px-2.5 py-1 rounded-lg bg-[#070614]/80 border border-cyan-400/30 text-cyan-200 font-bold">{cl}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {mcpSkills.length > 0 && (
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {mcpSkills.slice(0, 3).map(p => <ProductCard p={p} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* ============ UNIFIED CATALOG SHOWCASE (Single De-duplicated Grid + Filter Tabs) ============ */}
       <section id="catalog-section" class="max-w-7xl mx-auto px-4 py-8 reveal">
         <SectionTitle
           title="Kho Skill AI thực chiến"
-          subtitle="5 bộ Skill làm video 30s đang mở bán — lọc nhanh theo mức độ phổ biến"
-          more={{ href: '/san-pham?type=skill', label: 'Xem tất cả' }}
+          subtitle={`Đang mở bán ${stats.products} bộ Skill (gồm Skill tự tải & Skill AI Agent MCP) — lọc nhanh theo dòng sản phẩm`}
+          more={{ href: '/san-pham', label: 'Xem tất cả' }}
         />
         <div role="tablist" aria-label="Lọc danh sách Skill AI" class="flex flex-wrap items-center gap-2 mb-7">
           <button type="button" role="tab" aria-selected="true" class="tab-btn active h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] transition cursor-pointer" data-tab="featured" data-group="hp">
-            <i class="fas fa-wand-magic-sparkles mr-1.5 text-indigo-300" aria-hidden="true"></i>Đang mở bán ({featured.length})
+            <i class="fas fa-wand-magic-sparkles mr-1.5 text-indigo-300" aria-hidden="true"></i>Tất cả đang bán ({featured.length})
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="tab-btn h-10 px-4 rounded-xl border border-cyan-500/35 bg-[#0f0e24] text-sm font-bold text-cyan-200 hover:text-white transition cursor-pointer" data-tab="mcp" data-group="hp">
+            <i class="fas fa-plug-circle-bolt mr-1.5 text-cyan-400" aria-hidden="true"></i>Skill AI Agent MCP ({mcpSkills.length})
+          </button>
+          <button type="button" role="tab" aria-selected="false" class="tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer" data-tab="manual" data-group="hp">
+            <i class="fas fa-download mr-1.5 text-indigo-300" aria-hidden="true"></i>Skill tự tải ({manualSkills.length})
           </button>
           <button type="button" role="tab" aria-selected="false" class="tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer" data-tab="hot" data-group="hp">
             <i class="fas fa-fire mr-1.5 text-orange-400" aria-hidden="true"></i>Bán chạy nhất
@@ -589,6 +679,16 @@ export const HomePage: FC<Props> = (props) => {
         <div role="tabpanel" class="tab-panel" data-tab="featured" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {featured.slice(0, 8).map(p => <ProductCard p={p} />)}
+          </div>
+        </div>
+        <div role="tabpanel" class="tab-panel hidden" data-tab="mcp" data-group="hp">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {mcpSkills.slice(0, 8).map(p => <ProductCard p={p} />)}
+          </div>
+        </div>
+        <div role="tabpanel" class="tab-panel hidden" data-tab="manual" data-group="hp">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {manualSkills.slice(0, 8).map(p => <ProductCard p={p} />)}
           </div>
         </div>
         <div role="tabpanel" class="tab-panel hidden" data-tab="hot" data-group="hp">
@@ -615,7 +715,7 @@ export const HomePage: FC<Props> = (props) => {
                     <i class="fas fa-clock" aria-hidden="true"></i>DỊCH VỤ TẠM THỜI CHƯA MỞ BÁN
                   </div>
                   <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Khóa học, Chatbot, App &amp; Combo sắp ra mắt</h2>
-                  <p class="text-[#b8b6d9] mt-1.5 text-sm md:text-base">Hiện tại hệ thống chỉ mở bán 5 bộ Skill AI. Các dịch vụ khác sẽ sớm mở bán trong thời gian tới.</p>
+                  <p class="text-[#b8b6d9] mt-1.5 text-sm md:text-base">Hiện tại hệ thống đang mở bán Skill AI (tự tải) &amp; Skill AI Agent (MCP). Các dịch vụ khác sẽ sớm mở bán trong thời gian tới.</p>
                 </div>
                 <a href="/lien-he" class="cta-white h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition">
                   Nhắn Zalo nhận lịch mở bán<i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>

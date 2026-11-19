@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#070614"/>
+      <stop offset="50%" stop-color="#0f0d2b"/>
+      <stop offset="100%" stop-color="#081326"/>
+    </linearGradient>
+    <radialGradient id="glowCyan" cx="0.25" cy="0.3" r="0.55">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowIndigo" cx="0.78" cy="0.65" r="0.55">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="50%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#e879f9"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(129,140,248,0.08)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#grid)"/>
+  <rect width="1280" height="720" fill="url(#glowCyan)"/>
+  <rect width="1280" height="720" fill="url(#glowIndigo)"/>
+
+  <!-- Top badge -->
+  <rect x="76" y="64" width="332" height="44" rx="22" fill="rgba(6,182,212,0.14)" stroke="rgba(34,211,238,0.45)" stroke-width="1.5"/>
+  <circle cx="104" cy="86" r="6" fill="#22d3ee"/>
+  <text x="122" y="92" fill="#a5f3fc" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="18" font-weight="700" letter-spacing="1.2">MCP LIVE · AI AGENT SKILL</text>
+
+  <!-- Main Heading -->
+  <text x="76" y="186" fill="#ffffff" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="56" font-weight="800">Tự Động Tạo Video Viral 30s</text>
+  <text x="76" y="246" fill="url(#accent)" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="40" font-weight="800">Kết Nối Trực Tiếp Qua MCP Server</text>
+  <text x="76" y="294" fill="#b8b6d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="23" font-weight="500">Không cần tải file làm tay — AI Agent tự gọi tool tạo kịch bản, prompt khóa nhân vật &amp; render video</text>
+
+  <!-- Architecture Flow Cards -->
+  <!-- Node 1: Clients -->
+  <rect x="76" y="362" width="320" height="236" rx="24" fill="#11102a" stroke="rgba(34,211,238,0.35)" stroke-width="2"/>
+  <text x="106" y="406" fill="#67e8f9" font-family="ui-monospace, Consolas, monospace" font-size="16" font-weight="700">01 · AI AGENT CLIENTS</text>
+  <rect x="106" y="428" width="260" height="42" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  <circle cx="132" cy="449" r="6" fill="#fb923c"/>
+  <text x="150" y="456" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700">Claude Code / Desktop</text>
+  <rect x="106" y="482" width="260" height="42" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  <circle cx="132" cy="503" r="6" fill="#34d399"/>
+  <text x="150" y="510" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700">OpenAI Codex</text>
+  <rect x="106" y="536" width="260" height="42" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  <circle cx="132" cy="557" r="6" fill="#a78bfa"/>
+  <text x="150" y="564" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700">Antigravity IDE</text>
+
+  <!-- Arrow 1 -->
+  <path d="M 404 480 L 474 480" stroke="url(#accent)" stroke-width="4" stroke-dasharray="8 6"/>
+  <polygon points="472,470 490,480 472,490" fill="#22d3ee"/>
+
+  <!-- Node 2: MCP Hub -->
+  <rect x="496" y="362" width="320" height="236" rx="24" fill="#141338" stroke="rgba(129,140,248,0.55)" stroke-width="2"/>
+  <text x="526" y="406" fill="#a5b4fc" font-family="ui-monospace, Consolas, monospace" font-size="16" font-weight="700">02 · KHOSKILL MCP API</text>
+  <rect x="526" y="428" width="260" height="36" rx="10" fill="rgba(99,102,241,0.2)"/>
+  <text x="542" y="452" fill="#e0e7ff" font-family="ui-monospace, Consolas, monospace" font-size="15" font-weight="700">POST /api/mcp (JSON-RPC)</text>
+  <text x="526" y="492" fill="#cbd5e1" font-family="ui-monospace, Consolas, monospace" font-size="15">• get_skill_blueprint</text>
+  <text x="526" y="520" fill="#cbd5e1" font-family="ui-monospace, Consolas, monospace" font-size="15">• generate_video_storyboard</text>
+  <text x="526" y="548" fill="#67e8f9" font-family="ui-monospace, Consolas, monospace" font-size="15" font-weight="700">• create_video_from_skill</text>
+  <text x="526" y="578" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14">Bearer License Key · Auto Sync</text>
+
+  <!-- Arrow 2 -->
+  <path d="M 824 480 L 894 480" stroke="url(#accent)" stroke-width="4" stroke-dasharray="8 6"/>
+  <polygon points="892,470 910,480 892,490" fill="#e879f9"/>
+
+  <!-- Node 3: Video Output -->
+  <rect x="916" y="362" width="288" height="236" rx="24" fill="#11102a" stroke="rgba(217,70,239,0.45)" stroke-width="2"/>
+  <text x="946" y="406" fill="#f0abfc" font-family="ui-monospace, Consolas, monospace" font-size="16" font-weight="700">03 · OUTPUT VIDEO 30S</text>
+  <rect x="946" y="430" width="96" height="142" rx="14" fill="#070614" stroke="rgba(232,121,249,0.55)" stroke-width="2"/>
+  <polygon points="984,484 1012,501 984,518" fill="#e879f9"/>
+  <text x="969" y="556" fill="#f0abfc" font-family="ui-monospace, monospace" font-size="13" font-weight="700">9:16 HD</text>
+  <text x="1058" y="456" fill="#ffffff" font-family="system-ui, sans-serif" font-size="18" font-weight="700">4 Cảnh Viral</text>
+  <text x="1058" y="486" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="15">✓ Khóa nhân vật</text>
+  <text x="1058" y="514" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="15">✓ Prompt đa model</text>
+  <text x="1058" y="542" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="15">✓ Voice + Sub SRT</text>
+  <text x="1058" y="570" fill="#34d399" font-family="system-ui, sans-serif" font-size="15" font-weight="700">✓ Sẵn đăng Reels</text>
+
+  <!-- Footer bar -->
+  <text x="76" y="666" fill="#9492b8" font-family="system-ui, sans-serif" font-size="18" font-weight="600">KhoSkill AI · Streamable HTTP MCP Protocol · Sở hữu trọn đời</text>
+</svg>

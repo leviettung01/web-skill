@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" fill="none">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#070614"/>
+      <stop offset="50%" stop-color="#110b2e"/>
+      <stop offset="100%" stop-color="#071923"/>
+    </linearGradient>
+    <radialGradient id="glowEmerald" cx="0.22" cy="0.72" r="0.52">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCyan2" cx="0.78" cy="0.26" r="0.52">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="50%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <pattern id="grid2" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(56,189,248,0.08)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg2)"/>
+  <rect width="1280" height="720" fill="url(#grid2)"/>
+  <rect width="1280" height="720" fill="url(#glowEmerald)"/>
+  <rect width="1280" height="720" fill="url(#glowCyan2)"/>
+
+  <!-- Top badge -->
+  <rect x="76" y="64" width="370" height="44" rx="22" fill="rgba(16,185,129,0.14)" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
+  <circle cx="104" cy="86" r="6" fill="#34d399"/>
+  <text x="122" y="92" fill="#a7f3d0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="18" font-weight="700" letter-spacing="1.1">MCP AFFILIATE AGENT · TIKTOK SHOP</text>
+
+  <!-- Main Heading -->
+  <text x="76" y="186" fill="#ffffff" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="54" font-weight="800">AI Agent Tự Dựng Video Chốt Đơn</text>
+  <text x="76" y="246" fill="url(#accent2)" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="38" font-weight="800">Đưa Tên Sản Phẩm → Gọi MCP → Ra Kịch Bản &amp; Clip</text>
+  <text x="76" y="294" fill="#b8b6d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="23" font-weight="500">Tích hợp trực tiếp Claude, Codex, Antigravity · 25 công thức Hook 3s &amp; 3 biến thể A/B Test</text>
+
+  <!-- Terminal Mockup -->
+  <rect x="76" y="346" width="700" height="270" rx="22" fill="#0b0a1f" stroke="rgba(34,211,238,0.4)" stroke-width="2"/>
+  <circle cx="110" cy="378" r="7" fill="#fb7185"/>
+  <circle cx="134" cy="378" r="7" fill="#fbbf24"/>
+  <circle cx="158" cy="378" r="7" fill="#34d399"/>
+  <text x="188" y="384" fill="#94a3b8" font-family="ui-monospace, Consolas, monospace" font-size="15">Claude / Codex / Antigravity — MCP Connected</text>
+  <line x1="76" y1="404" x2="776" y2="404" stroke="rgba(255,255,255,0.08)"/>
+
+  <text x="104" y="440" fill="#94a3b8" font-family="ui-monospace, Consolas, monospace" font-size="16">&gt; Tạo video affiliate 30s cho máy ép chậm mini, giá 499k</text>
+  <text x="104" y="476" fill="#22d3ee" font-family="ui-monospace, Consolas, monospace" font-size="16" font-weight="700">⚡ MCP Call: khoskill-affiliate-agent.create_video_from_skill()</text>
+  <text x="104" y="510" fill="#34d399" font-family="ui-monospace, Consolas, monospace" font-size="15">✓ Nạp 25 công thức Hook TikTok Shop + khóa sản phẩm UGC</text>
+  <text x="104" y="540" fill="#e2e8f0" font-family="ui-monospace, Consolas, monospace" font-size="15">✓ Sinh 3 biến thể Hook 3s + 4 cảnh quay 9:16 chuẩn Muse/Seedance</text>
+  <text x="104" y="570" fill="#e2e8f0" font-family="ui-monospace, Consolas, monospace" font-size="15">✓ Xuất Voiceover tiếng Việt + Phụ đề SRT + CTA giỏ hàng góc trái</text>
+  <text x="104" y="600" fill="#a5b4fc" font-family="ui-monospace, Consolas, monospace" font-size="15" font-weight="700">→ Sẵn sàng xuất 10-30 video chốt đơn mỗi ngày!</text>
+
+  <!-- Right Feature Stack -->
+  <rect x="812" y="346" width="392" height="270" rx="22" fill="#121130" stroke="rgba(52,211,153,0.35)" stroke-width="2"/>
+  <text x="844" y="392" fill="#34d399" font-family="ui-monospace, Consolas, monospace" font-size="16" font-weight="700">TƯƠNG THÍCH SẴN</text>
+  <rect x="844" y="414" width="102" height="40" rx="10" fill="rgba(251,146,60,0.16)" stroke="rgba(251,146,60,0.45)"/>
+  <text x="866" y="440" fill="#fed7aa" font-family="system-ui, sans-serif" font-size="17" font-weight="700">Claude</text>
+  <rect x="958" y="414" width="96" height="40" rx="10" fill="rgba(52,211,153,0.16)" stroke="rgba(52,211,153,0.45)"/>
+  <text x="979" y="440" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="17" font-weight="700">Codex</text>
+  <rect x="1066" y="414" width="110" height="40" rx="10" fill="rgba(167,139,250,0.18)" stroke="rgba(167,139,250,0.5)"/>
+  <text x="1076" y="440" fill="#ddd6fe" font-family="system-ui, sans-serif" font-size="16" font-weight="700">Antigravity</text>
+
+  <text x="844" y="492" fill="#ffffff" font-family="system-ui, sans-serif" font-size="20" font-weight="700">Gói MCP bao gồm:</text>
+  <text x="844" y="524" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="16">• Endpoint MCP + License Key riêng</text>
+  <text x="844" y="554" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="16">• Config copy 1-click cho 3 nền tảng</text>
+  <text x="844" y="584" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="16">• Auto update công thức chốt đơn mới</text>
+
+  <!-- Footer -->
+  <text x="76" y="666" fill="#9492b8" font-family="system-ui, sans-serif" font-size="18" font-weight="600">KhoSkill AI · MCP Skill cho AI Agent · Không cần tải file thủ công</text>
+</svg>

@@ -33,7 +33,8 @@ const SORTS = [
 
 const TYPES: [string, string][] = [
   ['', 'Tất cả loại'],
-  ['skill', 'Skill AI (Đang mở bán)'],
+  ['skill', 'Skill AI tự tải (Đang mở bán)'],
+  ['mcp_skill', 'Skill AI Agent MCP (Đang mở bán)'],
   ['course', 'Khóa học (Sắp mở)'],
   ['chatbot', 'Chatbot (Sắp mở)'],
   ['app', 'App Video AI (Sắp mở)'],
@@ -43,9 +44,13 @@ const TYPES: [string, string][] = [
 export const ProductListPage: FC<ListProps> = (props) => {
   const { products, categories, total, page, totalPages, q, cat, sort, minPrice, maxPrice, type,
     heading, headingDesc, baseUrl, currentCategory } = props
+  const isMcpView = type === 'mcp_skill' || cat === 'skill-ai-agent-mcp' || currentCategory?.slug === 'skill-ai-agent-mcp'
+  const isComingSoonView = baseUrl === '/combo'
+    || ['course', 'chatbot', 'app', 'combo'].includes(type)
+    || (!!currentCategory && currentCategory.slug !== 'skill-video-ai' && currentCategory.slug !== 'skill-ai-agent-mcp')
 
   return (
-    <Layout {...props} active={currentCategory ? 'products' : (baseUrl === '/combo' ? 'combo' : 'products')}
+    <Layout {...props} active={isMcpView ? 'mcp_skill' : (baseUrl === '/combo' ? 'combo' : 'products')}
       title={heading} description={headingDesc}>
       <div class="bg-[#0f0e24] border-b border-[#221e54]">
         <div class="max-w-7xl mx-auto px-4 py-7">
@@ -137,14 +142,48 @@ export const ProductListPage: FC<ListProps> = (props) => {
 
           {/* Grid */}
           <div>
-            {(baseUrl === '/combo' || ['course', 'chatbot', 'app', 'combo'].includes(type) || (currentCategory && currentCategory.slug !== 'skill-video-ai')) && (
+            {baseUrl === '/san-pham' && (
+              <div class="flex flex-wrap items-center gap-2 mb-5">
+                <a href="/san-pham"
+                  class={`h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${!type && !cat ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20' : 'bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40'}`}>
+                  <i class="fas fa-cubes text-[11px]" aria-hidden="true"></i>Tất cả đang bán
+                </a>
+                <a href="/san-pham?type=skill"
+                  class={`h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${type === 'skill' || cat === 'skill-video-ai' ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20' : 'bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40'}`}>
+                  <i class="fas fa-download text-[11px]" aria-hidden="true"></i>Skill AI tự tải
+                </a>
+                <a href="/san-pham?type=mcp_skill"
+                  class={`h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${isMcpView ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white border-cyan-400 shadow-md shadow-cyan-600/25' : 'bg-cyan-500/10 border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/20 hover:text-white'}`}>
+                  <i class="fas fa-plug-circle-bolt text-[11px]" aria-hidden="true"></i>Skill AI Agent (MCP)
+                  <span class="px-1.5 py-0.5 rounded bg-cyan-400 text-slate-950 text-[9px] font-black leading-none">MỚI</span>
+                </a>
+              </div>
+            )}
+            {isMcpView && (
+              <div class="mb-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-[#121134] to-indigo-950/60 border border-cyan-400/40 flex flex-wrap items-center justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                  <div class="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1">
+                    <i class="fas fa-plug-circle-bolt" aria-hidden="true"></i>Skill AI Agent · Kết nối trực tiếp MCP
+                  </div>
+                  <p class="text-xs sm:text-sm text-[#d6d4ee] leading-relaxed">
+                    Khác với dòng Skill tự tải về làm thủ công: dòng này kết nối thẳng qua <b>MCP</b> vào <b>Claude, Codex, Antigravity</b> bằng License Key để AI Agent tự gọi tool và tạo video theo Skill ngay.
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-1.5 shrink-0">
+                  {['Claude', 'Codex', 'Antigravity'].map(cl => (
+                    <span class="px-2.5 py-1 rounded-lg bg-[#070614]/80 border border-cyan-400/35 text-cyan-200 text-[11px] font-bold">{cl}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {isComingSoonView && (
               <div class="mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/35 flex flex-wrap items-center justify-between gap-3">
                 <div class="text-xs sm:text-sm text-amber-200 leading-relaxed">
                   <i class="fas fa-clock text-amber-400 mr-2" aria-hidden="true"></i>
-                  <b>Hạng mục này tạm thời chưa mở bán.</b> Hiện tại cửa hàng chỉ mở bán bộ <b>5 Skill AI</b> làm video hoàn thiện bên dưới.
+                  <b>Hạng mục này tạm thời chưa mở bán.</b> Hiện tại cửa hàng đang mở bán dòng <b>Skill AI (tự tải)</b> và <b>Skill AI Agent (MCP)</b>.
                 </div>
-                <a href="/san-pham?type=skill" class="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition shrink-0">
-                  Xem 5 Skill đang bán →
+                <a href="/san-pham" class="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition shrink-0">
+                  Xem Skill đang bán →
                 </a>
               </div>
             )}

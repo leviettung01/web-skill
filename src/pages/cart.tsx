@@ -46,8 +46,8 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
         {items.length === 0 ? (
           <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54]">
             <EmptyState icon="fa-cart-shopping" title="Giỏ hàng đang trống"
-              desc="Khám phá bộ 5 Skill AI làm video đang mở bán của chúng tôi."
-              action={{ href: '/san-pham?type=skill', label: 'Xem 5 Skill đang bán' }} />
+              desc="Khám phá kho Skill AI (tự tải) và Skill AI Agent (MCP) đang mở bán của chúng tôi."
+              action={{ href: '/san-pham', label: 'Xem sản phẩm đang bán' }} />
           </div>
         ) : (
           <div class="grid lg:grid-cols-[1fr_360px] gap-6">
@@ -57,10 +57,10 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
                   <a href={`/san-pham/${p.slug}`} class="w-24 sm:w-32 aspect-video rounded-xl overflow-hidden shrink-0 grid place-items-center text-white bg-[#070614]"
                     style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
                     {p.thumbnail ? <img src={p.thumbnail} alt={p.name} class="w-full h-full object-cover" />
-                      : <i class={`fas ${p.product_type === 'skill' ? 'fa-wand-magic-sparkles' : p.product_type === 'chatbot' ? 'fa-robot' : p.product_type === 'combo' ? 'fa-box-open' : 'fa-code'} text-xl`} aria-hidden="true"></i>}
+                      : <i class={`fas ${p.product_type === 'mcp_skill' ? 'fa-plug-circle-bolt' : p.product_type === 'skill' ? 'fa-wand-magic-sparkles' : p.product_type === 'chatbot' ? 'fa-robot' : p.product_type === 'combo' ? 'fa-box-open' : 'fa-code'} text-xl`} aria-hidden="true"></i>}
                   </a>
                   <div class="flex-1 min-w-0">
-                    <div class="text-[11px] text-indigo-400 font-bold mb-1 uppercase">{PRODUCT_TYPE_LABEL[p.product_type]}</div>
+                    <div class={`text-[11px] font-bold mb-1 uppercase ${p.product_type === 'mcp_skill' ? 'text-cyan-300' : 'text-indigo-400'}`}>{PRODUCT_TYPE_LABEL[p.product_type]}</div>
                     <h3 class="font-bold text-white leading-snug line-clamp-2 mb-1.5">
                       <a href={`/san-pham/${p.slug}`} class="hover:text-indigo-300 transition">{p.name}</a>
                     </h3>
@@ -293,9 +293,9 @@ export const OrderPage: FC<LayoutProps & {
               <i class="fas fa-check" aria-hidden="true"></i>
             </div>
             <h2 class="text-xl font-extrabold text-white mb-1.5">Thanh toán thành công!</h2>
-            <p class="text-sm text-emerald-200 mb-4">Bộ Skill AI đã được kích hoạt trong tài khoản của bạn.</p>
+            <p class="text-sm text-emerald-200 mb-4">Bộ Skill AI / cấu hình kết nối MCP đã được kích hoạt trong tài khoản của bạn.</p>
             <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
-              <i class="fas fa-download" aria-hidden="true"></i>Mở &amp; tải Skill ngay
+              <i class="fas fa-box-open" aria-hidden="true"></i>Mở Sản phẩm của tôi ngay
             </a>
           </div>
         )}

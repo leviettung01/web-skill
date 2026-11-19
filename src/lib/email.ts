@@ -246,8 +246,8 @@ export function buildOrderPaidEmail(opts: {
       bodyHtml: `<p>Xin chào <b>${escHtml(opts.fullName)}</b>,</p>
         <p>Đơn hàng <b>${escHtml(opts.orderCode)}</b> trị giá <b>${escHtml(opts.totalFormatted)}</b> đã được xác nhận và kích hoạt bản quyền trọn đời:</p>
         <ul style="list-style:none;padding:0;margin:14px 0;">${itemsHtml}</ul>
-        <p>Mỗi khi sản phẩm có phiên bản mới hoặc bổ sung prompt/link tải, bạn cũng sẽ nhận được thông báo trực tiếp.</p>`,
-      ctaLabel: 'Mở Sản phẩm của tôi & Tải về',
+        <p>Truy cập mục <b>Sản phẩm của tôi</b> để tải bộ Skill hoặc lấy cấu hình kết nối <b>MCP (Claude / Codex / Antigravity)</b> cùng License Key của bạn. Khi có phiên bản mới, bạn cũng sẽ nhận được thông báo tự động.</p>`,
+      ctaLabel: 'Mở Sản phẩm của tôi',
       ctaUrl: opts.accountUrl
     }),
     text: `Don hang ${opts.orderCode} (${opts.totalFormatted}) da duoc kich hoat. Truy cap ${opts.accountUrl} de tai san pham.`

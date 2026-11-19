@@ -32,6 +32,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
   const isProductsAll = (path === '/san-pham' && !currentQueryType && !currentQuerySort) || active === 'products'
   const isBestseller = path === '/san-pham' && (currentQuerySort === 'bestseller' || currentQuerySort === 'hot')
   const isSkill = (path === '/san-pham' && currentQueryType === 'skill') || path === '/danh-muc/skill-video-ai' || active === 'skill'
+  const isMcpSkill = (path === '/san-pham' && currentQueryType === 'mcp_skill') || path === '/danh-muc/skill-ai-agent-mcp' || active === 'mcp_skill'
   const isCourse = (path === '/san-pham' && currentQueryType === 'course') || path === '/danh-muc/khoa-hoc-video-ai' || active === 'course'
   const isChatbot = (path === '/san-pham' && currentQueryType === 'chatbot') || path === '/danh-muc/chatbot-kich-ban' || active === 'chatbot'
   const isApp = (path === '/san-pham' && currentQueryType === 'app') || path === '/danh-muc/app-video-ai' || active === 'app'
@@ -73,12 +74,12 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         {props.ogImage && <meta property="og:image" content={props.ogImage} />}
         {canonical && <link rel="canonical" href={canonical} />}
         <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
-        <link href="/static/tailwind.css?v=20261120" rel="stylesheet" />
+        <link href="/static/tailwind.css?v=20261121" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
-        <link href="/static/style.css?v=20261118" rel="stylesheet" />
+        <link href="/static/style.css?v=20261121" rel="stylesheet" />
         <script dangerouslySetInnerHTML={{
           __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
         }}></script>
@@ -125,11 +126,18 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                 <div>
                   <div class="sidebar-group-label px-3 text-[10px] uppercase font-bold text-[#9492b8] tracking-wider mb-1.5 sidebar-text">Danh mục</div>
                   <nav class="flex flex-col gap-1" aria-label="Danh mục sản phẩm">
-                    <a href="/san-pham?type=skill" title="Skill AI (Đang bán)" data-nav="skill" aria-current={isSkill ? 'page' : undefined} class={sbCls(isSkill)}>
+                    <a href="/san-pham?type=skill" title="Skill AI tự tải (Đang bán)" data-nav="skill" aria-current={isSkill ? 'page' : undefined} class={sbCls(isSkill)}>
                       <i class={`fas fa-wand-magic-sparkles w-5 shrink-0 text-center ${isSkill ? 'text-indigo-400' : 'text-indigo-400/80'}`} aria-hidden="true"></i>
                       <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
                         <span class="truncate">Skill AI</span>
                         <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold leading-none shrink-0">Đang bán</span>
+                      </span>
+                    </a>
+                    <a href="/san-pham?type=mcp_skill" title="Skill AI Agent (MCP) — Claude, Codex, Antigravity" data-nav="mcp_skill" aria-current={isMcpSkill ? 'page' : undefined} class={sbCls(isMcpSkill)}>
+                      <i class={`fas fa-plug-circle-bolt w-5 shrink-0 text-center ${isMcpSkill ? 'text-cyan-300' : 'text-cyan-400/85'}`} aria-hidden="true"></i>
+                      <span class="sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+                        <span class="truncate">Skill Agent MCP</span>
+                        <span class="sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold leading-none shrink-0">MCP Mới</span>
                       </span>
                     </a>
                     <a href="/san-pham?type=course" title="Khóa học Video AI (Sắp mở)" data-nav="course" aria-current={isCourse ? 'page' : undefined} class={sbCls(isCourse)}>
@@ -326,7 +334,10 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                   </div>
                   <div class="pt-2 border-t border-[#221e54] flex flex-wrap gap-1.5">
                     <a href="/san-pham?type=skill" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
-                      <i class="fas fa-wand-magic-sparkles mr-1" aria-hidden="true"></i>Skill AI (Đang bán)
+                      <i class="fas fa-wand-magic-sparkles mr-1" aria-hidden="true"></i>Skill AI (Tự tải)
+                    </a>
+                    <a href="/san-pham?type=mcp_skill" class="px-2.5 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 text-[11px] font-bold">
+                      <i class="fas fa-plug-circle-bolt mr-1" aria-hidden="true"></i>Skill Agent MCP
                     </a>
                     <a href="/san-pham?type=course" class="px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium">Khóa học (Sắp mở)</a>
                     <a href="/san-pham?type=chatbot" class="px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium">Chatbot (Sắp mở)</a>
@@ -374,6 +385,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
                     <h4 class="text-white font-bold mb-4 text-xs uppercase tracking-wider">Sản phẩm</h4>
                     <ul class="space-y-2 text-xs">
                       <li><a href="/san-pham?type=skill" class="text-white font-semibold hover:text-indigo-400 transition">Skill Tạo Video AI <span class="text-[10px] text-emerald-400 ml-1">(Đang bán)</span></a></li>
+                      <li><a href="/san-pham?type=mcp_skill" class="text-cyan-300 font-semibold hover:text-cyan-200 transition">Skill AI Agent (MCP) <span class="text-[10px] text-cyan-400 ml-1">(Mới · Đang bán)</span></a></li>
                       <li><a href="/san-pham?type=course" class="hover:text-indigo-400 transition">Khóa học Video AI <span class="text-[10px] text-[#9492b8] ml-1">(Sắp mở)</span></a></li>
                       <li><a href="/san-pham?type=chatbot" class="hover:text-indigo-400 transition">Chatbot Kịch Bản <span class="text-[10px] text-[#9492b8] ml-1">(Sắp mở)</span></a></li>
                       <li><a href="/san-pham?type=app" class="hover:text-indigo-400 transition">App Làm Video AI <span class="text-[10px] text-[#9492b8] ml-1">(Sắp mở)</span></a></li>
@@ -425,7 +437,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         <div id="toast-container" aria-live="polite" aria-atomic="true" role="status" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-        <script src="/static/app.js?v=20261119"></script>
+        <script src="/static/app.js?v=20261121"></script>
       </body>
     </html>
   )

@@ -35,6 +35,11 @@ import {
 import { POLICY_DOCS } from './lib/docs'
 import { pgDb, pgConnectionString } from './lib/pg'
 import { cached, invalidateCache } from './lib/cache'
+import {
+  extractLicenseKey, authenticateMcpLicense, handleMcpJsonRpc,
+  resolveMcpEndpoint, resolveMcpServerName
+} from './lib/mcp'
+import { ensureMcpMigration } from './lib/mcp-bootstrap'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -45,9 +50,25 @@ app.use('*', async (c, next) => {
     const cs = (c.env as any).POSTGRES_URL || pgConnectionString()
     if (cs) (c.env as any).DB = pgDb
   }
+  const pathname = new URL(c.req.url).pathname
+  if (c.env.DB && !pathname.startsWith('/static/') && pathname !== '/favicon.ico' && !pathname.startsWith('/videos/')) {
+    await ensureMcpMigration(c.env.DB)
+  }
   await next()
 })
 
+app.use('/api/mcp', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'X-License-Key', 'X-Api-Key'],
+  exposeHeaders: ['Mcp-Session-Id']
+}))
+app.use('/api/mcp/*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'X-License-Key', 'X-Api-Key'],
+  exposeHeaders: ['Mcp-Session-Id']
+}))
 app.use('/api/*', cors())
 
 async function fetchSettings(db: D1Database): Promise<Record<string, string>> {
@@ -60,7 +81,7 @@ async function fetchSettings(db: D1Database): Promise<Record<string, string>> {
 /* ============ GLOBAL MIDDLEWARE ============ */
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url)
-  if (url.pathname.startsWith('/static/') || url.pathname === '/favicon.ico' || url.pathname === '/robots.txt' || url.pathname.startsWith('/videos/')) {
+  if (url.pathname.startsWith('/static/') || url.pathname === '/favicon.ico' || url.pathname === '/robots.txt' || url.pathname.startsWith('/videos/') || url.pathname === '/api/mcp' || url.pathname.startsWith('/api/mcp/')) {
     return next()
   }
 
@@ -152,11 +173,15 @@ async function requireAdmin(c: any, next: any) {
 app.get('/', async (c) => {
   const db = c.env.DB
   const data = await cached('home:bundle', 30000, async () => {
-    const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
+    const [cats, featured, mcpSkills, manualSkills, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
       db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                   FROM categories c ORDER BY c.sort_order`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.is_featured=1 ORDER BY p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.is_featured DESC, p.id DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' AND p.product_type='skill' ORDER BY p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                   WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -168,13 +193,17 @@ app.get('/', async (c) => {
                   FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
                   WHERE r.rating>=4 ORDER BY r.id DESC LIMIT 6`).all(),
       db.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
+                         (SELECT COUNT(*) FROM products WHERE status='published' AND product_type='skill') manualSkills,
+                         (SELECT COUNT(*) FROM products WHERE status='published' AND product_type='mcp_skill') mcpSkills,
                          (SELECT COUNT(*) FROM users) users,
                          (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first<any>()
     ])
-    return { cats, featured, hot, newest, comingSoon, posts, reviews, stats }
+    return { cats, featured, mcpSkills, manualSkills, hot, newest, comingSoon, posts, reviews, stats }
   })
   return c.html(<HomePage {...base(c)}
-    categories={data.cats.results as any} featured={data.featured.results as any} hot={data.hot.results as any}
+    categories={data.cats.results as any} featured={data.featured.results as any}
+    mcpSkills={data.mcpSkills.results as any} manualSkills={data.manualSkills.results as any}
+    hot={data.hot.results as any}
     newest={data.newest.results as any} comingSoon={data.comingSoon.results as any} posts={data.posts.results as any}
     reviews={data.reviews.results as any} stats={data.stats as any} />)
 })
@@ -191,7 +220,7 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   const page = Math.max(1, parseInt(c.req.query('page') || '1'))
   const perPage = 12
 
-  const includeComingSoon = opts.comboOnly || ['course', 'chatbot', 'app', 'combo'].includes(type) || (!!cat && cat !== 'skill-video-ai')
+  const includeComingSoon = opts.comboOnly || ['course', 'chatbot', 'app', 'combo'].includes(type) || (!!cat && cat !== 'skill-video-ai' && cat !== 'skill-ai-agent-mcp')
   const where: string[] = [includeComingSoon ? `p.status IN ('published','coming_soon')` : `p.status='published'`]
   const binds: any[] = []
   if (q) { where.push(`(p.name LIKE ? OR p.short_desc LIKE ?)`); binds.push(`%${q}%`, `%${q}%`) }
@@ -222,10 +251,17 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
     : await fetchList()
 
   const total = cntRow?.n || 0
-  const heading = opts.comboOnly ? 'Combo Trọn Bộ' : currentCat ? currentCat.name : q ? `Kết quả cho "${q}"` : 'Tất cả sản phẩm'
+  const heading = opts.comboOnly ? 'Combo Trọn Bộ'
+    : currentCat ? currentCat.name
+      : q ? `Kết quả cho "${q}"`
+        : type === 'mcp_skill' ? 'Skill AI Agent (MCP)'
+          : type === 'skill' ? 'Skill AI (Tự tải & làm theo)'
+            : 'Tất cả sản phẩm'
   const headingDesc = opts.comboOnly ? 'Gói combo tiết kiệm tới 60% so với mua lẻ từng sản phẩm — Hiện đang tạm thời chưa mở bán'
     : currentCat ? currentCat.description
-      : 'Khám phá 5 bộ Skill AI tạo video chuyên nghiệp đang mở bán cùng các dịch vụ sắp ra mắt'
+      : type === 'mcp_skill' ? 'Skill kết nối trực tiếp dạng MCP cho Claude, Codex, Antigravity — AI Agent tự gọi tool và tạo video theo Skill'
+        : type === 'skill' ? 'Bộ Skill đóng gói theo ngách & công cụ: tự tải tài liệu, prompt chuẩn và làm theo từng bước'
+          : 'Khám phá kho Skill AI tự tải và dòng mới Skill AI Agent (MCP) kết nối trực tiếp Claude, Codex, Antigravity'
   const baseUrl = opts.comboOnly ? '/combo' : opts.catSlug ? `/danh-muc/${opts.catSlug}` : '/san-pham'
 
   return c.html(<ProductListPage {...base(c)}
@@ -282,7 +318,8 @@ app.get('/san-pham/:slug', async (c) => {
 
   return c.html(<ProductDetailPage {...base(c)} product={p} related={bundle.related.results as any}
     comboItems={bundle.comboItems.results as any} reviews={bundle.reviews.results as any}
-    owned={owned} inWishlist={!!wishRow} canReview={canReview} ratingBreakdown={rb} />)
+    owned={owned} inWishlist={!!wishRow} canReview={canReview} ratingBreakdown={rb}
+    origin={getRequestOrigin(c)} />)
 })
 
 /* -------- Blog -------- */
@@ -1175,12 +1212,176 @@ app.get('/tai-khoan/san-pham', requireAuth, async (c) => {
   const u = c.get('user')!
   const rows = await c.env.DB.prepare(
     `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
+       p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
        (SELECT r.changelog FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_changelog,
        (SELECT r.version FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_version,
        (SELECT r.created_at FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_release_at
      FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
-  ).bind(u.id).all()
-  return c.html(<MyProductsPage {...base(c)} licenses={rows.results as any} />)
+  ).bind(u.id).all().catch(() =>
+    c.env.DB.prepare(
+      `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size
+       FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
+    ).bind(u.id).all()
+  )
+  return c.html(<MyProductsPage {...base(c)} licenses={rows.results as any} origin={getRequestOrigin(c)} />)
+})
+
+/* ============================================================
+ *  BUILT-IN MCP SERVER (Streamable HTTP JSON-RPC 2.0)
+ *  Cho phép Claude, Codex, Antigravity gọi trực tiếp Skill bằng License Key
+ * ========================================================== */
+async function handleMcpEndpoint(c: any, targetSlug?: string) {
+  const db = c.env.DB
+  const origin = getRequestOrigin(c)
+  const licenseKey = extractLicenseKey(c.req.raw, c.req.query('key'))
+
+  if (c.req.method === 'GET') {
+    if (licenseKey) {
+      const auth = await authenticateMcpLicense(db, licenseKey, targetSlug)
+      if (!auth.ok) return c.json({ ok: false, error: auth.error }, auth.status as any)
+      return c.json({
+        ok: true,
+        protocol: 'MCP Streamable HTTP (JSON-RPC 2.0)',
+        server: resolveMcpServerName(auth.primary),
+        endpoint: resolveMcpEndpoint(origin, auth.primary),
+        active_skills: auth.skills.map(s => ({ slug: s.slug, name: s.name, version: s.version }))
+      })
+    }
+    return c.json({
+      ok: true,
+      name: 'KhoSkill AI MCP Server',
+      protocol: 'Model Context Protocol (Streamable HTTP / JSON-RPC 2.0)',
+      usage: 'POST JSON-RPC 2.0 requests with header "Authorization: Bearer <YOUR_LICENSE_KEY>"',
+      supported_clients: ['Claude Code', 'Claude Desktop', 'OpenAI Codex', 'Antigravity']
+    })
+  }
+
+  if (c.req.method === 'DELETE') {
+    return c.json({ ok: true })
+  }
+
+  const auth = await authenticateMcpLicense(db, licenseKey, targetSlug)
+  if (!auth.ok) {
+    return c.json({
+      jsonrpc: '2.0',
+      id: null,
+      error: { code: -32001, message: auth.error }
+    }, auth.status as any)
+  }
+
+  let body: any
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error: body không phải JSON hợp lệ' } }, 400)
+  }
+
+  if (Array.isArray(body)) {
+    const responses: any[] = []
+    for (const item of body) {
+      const r = await handleMcpJsonRpc({ db, auth, payload: item, origin })
+      if (r.body !== null) responses.push(r.body)
+    }
+    if (responses.length === 0) return c.body(null, 202)
+    return c.json(responses, 200)
+  }
+
+  const res = await handleMcpJsonRpc({ db, auth, payload: body, origin })
+  if (res.body === null) return c.body(null, res.status as any)
+  return c.json(res.body, res.status as any)
+}
+
+app.all('/api/mcp', (c) => handleMcpEndpoint(c))
+app.all('/api/mcp/:slug', (c) => handleMcpEndpoint(c, c.req.param('slug')))
+
+/* Kiểm tra kết nối MCP trực tiếp từ trang "Sản phẩm của tôi" */
+app.post('/api/account/mcp/test', requireAuth, async (c) => {
+  const db = c.env.DB
+  const u = c.get('user')!
+  const b = await c.req.json<any>().catch(() => ({}))
+  const licenseId = Number(b.license_id)
+  if (!licenseId) return c.json({ error: 'Thiếu license_id' }, 400)
+
+  const lic = await db.prepare(
+    `SELECT l.id, l.license_key, p.slug, p.product_type, p.mcp_endpoint, p.mcp_server_name
+     FROM licenses l JOIN products p ON p.id = l.product_id
+     WHERE l.id = ? AND l.user_id = ?`
+  ).bind(licenseId, u.id).first<any>()
+
+  if (!lic) return c.json({ error: 'Không tìm thấy bản quyền sản phẩm này trong tài khoản của bạn' }, 404)
+  if (lic.product_type !== 'mcp_skill') return c.json({ error: 'Sản phẩm này không phải dạng Skill AI Agent (MCP)' }, 400)
+
+  const origin = getRequestOrigin(c)
+  const endpoint = resolveMcpEndpoint(origin, lic)
+  const customEndpoint = (lic.mcp_endpoint || '').trim()
+
+  if (customEndpoint && (customEndpoint.startsWith('https://') || customEndpoint.startsWith('http://'))) {
+    try {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 8000)
+      const initRes = await fetch(customEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+          Authorization: `Bearer ${lic.license_key}`,
+          'X-License-Key': lic.license_key
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'khoskill-web-tester', version: '1.0.0' } }
+        }),
+        signal: ctrl.signal
+      })
+      clearTimeout(timer)
+      if (!initRes.ok) {
+        return c.json({ error: `MCP Server trả về mã lỗi HTTP ${initRes.status}` }, 502)
+      }
+      const initJson: any = await initRes.json().catch(() => ({}))
+      return c.json({
+        ok: true,
+        mode: 'external',
+        endpoint: customEndpoint,
+        protocolVersion: initJson?.result?.protocolVersion || '2025-03-26',
+        serverInfo: initJson?.result?.serverInfo || { name: resolveMcpServerName(lic), version: '1.0' },
+        tools: []
+      })
+    } catch (err: any) {
+      return c.json({ error: `Không kết nối được tới MCP Server (${String(err?.message || err)})` }, 502)
+    }
+  }
+
+  const auth = await authenticateMcpLicense(db, lic.license_key, lic.slug)
+  if (!auth.ok) return c.json({ error: auth.error }, auth.status as any)
+
+  const initResp = await handleMcpJsonRpc({
+    db,
+    auth,
+    origin,
+    payload: {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'khoskill-web-tester', version: '1.0.0' } }
+    }
+  })
+  const toolsResp = await handleMcpJsonRpc({
+    db,
+    auth,
+    origin,
+    payload: { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }
+  })
+
+  return c.json({
+    ok: true,
+    mode: 'builtin',
+    endpoint,
+    protocolVersion: initResp.body?.result?.protocolVersion || '2025-03-26',
+    serverInfo: initResp.body?.result?.serverInfo || { name: resolveMcpServerName(lic), version: '1.0' },
+    tools: toolsResp.body?.result?.tools || []
+  })
 })
 
 app.get('/tai-khoan/thong-bao', requireAuth, async (c) => {
@@ -1440,6 +1641,20 @@ app.get('/admin/san-pham/:id', requireAdmin, async (c) => {
 
 function productFields(b: any) {
   const toArr = (s: string) => JSON.stringify(String(s || '').split('\n').map(x => x.trim()).filter(Boolean))
+  const toClients = (s: string) => {
+    const arr = String(s || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean)
+    return arr.length ? JSON.stringify(arr) : null
+  }
+  const toMcpTools = (s: string) => {
+    const lines = String(s || '').split('\n').map(x => x.trim()).filter(Boolean)
+    if (!lines.length) return null
+    const tools = lines.map(line => {
+      const [name, ...rest] = line.split('|')
+      return { name: name.trim(), description: rest.join('|').trim() || 'MCP Skill Tool' }
+    }).filter(t => t.name)
+    return tools.length ? JSON.stringify(tools) : null
+  }
+  const ptype = ['course', 'skill', 'mcp_skill', 'chatbot', 'app', 'combo', 'source'].includes(b.product_type) ? b.product_type : 'skill'
   return {
     name: (b.name || '').trim(),
     slug: (b.slug || slugify(b.name || '')).trim(),
@@ -1456,8 +1671,14 @@ function productFields(b: any) {
     demo_url: b.demo_url || null,
     download_url: b.download_url || null,
     doc_url: b.doc_url || null,
-    file_size: b.file_size || null,
-    product_type: ['course', 'skill', 'chatbot', 'app', 'combo', 'source'].includes(b.product_type) ? b.product_type : 'skill',
+    file_size: b.file_size || (ptype === 'mcp_skill' ? 'MCP Live API' : null),
+    product_type: ptype,
+    mcp_endpoint: (b.mcp_endpoint || '').trim() || null,
+    mcp_server_name: (b.mcp_server_name || '').trim() || null,
+    mcp_clients: ptype === 'mcp_skill' ? (toClients(b.mcp_clients_text) || JSON.stringify(['Claude', 'Codex', 'Antigravity'])) : toClients(b.mcp_clients_text),
+    mcp_tools: toMcpTools(b.mcp_tools_text),
+    mcp_skill_prompt: (b.mcp_skill_prompt || '').trim() || null,
+    mcp_render_webhook: (b.mcp_render_webhook || '').trim() || null,
     is_featured: b.is_featured ? 1 : 0,
     is_hot: b.is_hot ? 1 : 0,
     is_new: b.is_new ? 1 : 0,
@@ -1472,11 +1693,15 @@ app.post('/api/admin/products', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare(`INSERT INTO products
     (name,slug,category_id,short_desc,description,features,tech_stack,version,price,original_price,thumbnail,
-     demo_video_url,demo_url,download_url,doc_url,file_size,product_type,is_featured,is_hot,is_new,status)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+     demo_video_url,demo_url,download_url,doc_url,file_size,product_type,
+     mcp_endpoint,mcp_server_name,mcp_clients,mcp_tools,mcp_skill_prompt,mcp_render_webhook,
+     is_featured,is_hot,is_new,status)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
-      f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status).run()
+      f.file_size, f.product_type,
+      f.mcp_endpoint, f.mcp_server_name, f.mcp_clients, f.mcp_tools, f.mcp_skill_prompt, f.mcp_render_webhook,
+      f.is_featured, f.is_hot, f.is_new, f.status).run()
   invalidateCache()
   return c.json({ ok: true, redirect: '/admin/san-pham' })
 })
@@ -1491,10 +1716,14 @@ app.post('/api/admin/products/:id/update', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã được dùng cho sản phẩm khác' }, 400)
   await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
-    doc_url=?,file_size=?,product_type=?,is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+    doc_url=?,file_size=?,product_type=?,
+    mcp_endpoint=?,mcp_server_name=?,mcp_clients=?,mcp_tools=?,mcp_skill_prompt=?,mcp_render_webhook=?,
+    is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.demo_url, f.download_url, f.doc_url,
-      f.file_size, f.product_type, f.is_featured, f.is_hot, f.is_new, f.status, id).run()
+      f.file_size, f.product_type,
+      f.mcp_endpoint, f.mcp_server_name, f.mcp_clients, f.mcp_tools, f.mcp_skill_prompt, f.mcp_render_webhook,
+      f.is_featured, f.is_hot, f.is_new, f.status, id).run()
   invalidateCache()
 
   if (b.notify_buyers === '1') {
@@ -1593,7 +1822,7 @@ app.get('/admin/don-hang/:id', requireAdmin, async (c) => {
   const [items, licenses, bankTx, customerStats] = await Promise.all([
     db.prepare(`SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`)
       .bind(o.id).all(),
-    db.prepare(`SELECT l.*, p.name product_name, p.version, p.download_url FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.order_id=? ORDER BY l.id`)
+    db.prepare(`SELECT l.*, p.name product_name, p.version, p.download_url, p.product_type FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.order_id=? ORDER BY l.id`)
       .bind(o.id).all(),
     o.bank_tx_id
       ? db.prepare('SELECT * FROM bank_transactions WHERE id=?').bind(o.bank_tx_id).first<any>()

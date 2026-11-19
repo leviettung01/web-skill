@@ -7946,6 +7946,10 @@ function parseJSON(s, fallback) {
 function slugify(str) {
   return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-");
 }
+function stripHtml(html2, max = 160) {
+  const t = html2.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return t.length > max ? t.slice(0, max) + "\u2026" : t;
+}
 var GRADIENTS = [
   ["#6366f1", "#a855f7"],
   ["#8b5cf6", "#ec4899"],
@@ -7961,8 +7965,9 @@ function gradientFor(id) {
   return `linear-gradient(135deg, ${a} 0%, ${b} 100%)`;
 }
 var PRODUCT_TYPE_LABEL = {
-  course: "Kh\xF3a h\u1ECDc",
   skill: "Skill AI",
+  mcp_skill: "Skill AI Agent (MCP)",
+  course: "Kh\xF3a h\u1ECDc",
   chatbot: "Chatbot",
   app: "App Video AI",
   prompt: "B\u1ED9 Prompt",
@@ -7971,8 +7976,9 @@ var PRODUCT_TYPE_LABEL = {
   combo: "Combo"
 };
 var PRODUCT_TYPE_ICON = {
-  course: "fa-graduation-cap",
   skill: "fa-wand-magic-sparkles",
+  mcp_skill: "fa-plug-circle-bolt",
+  course: "fa-graduation-cap",
   chatbot: "fa-robot",
   app: "fa-mobile-screen-button",
   prompt: "fa-layer-group",
@@ -7980,6 +7986,38 @@ var PRODUCT_TYPE_ICON = {
   source: "fa-code",
   combo: "fa-box-open"
 };
+function isMcpSkill(type) {
+  return type === "mcp_skill";
+}
+function parseMcpClients(raw2) {
+  const arr = parseJSON(raw2, null);
+  if (Array.isArray(arr) && arr.length > 0) {
+    return arr.map((x) => String(x || "").trim()).filter(Boolean);
+  }
+  return ["Claude", "Codex", "Antigravity"];
+}
+var DEFAULT_MCP_TOOLS = [
+  { name: "list_licensed_skills", description: "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t theo License Key" },
+  { name: "get_skill_blueprint", description: "N\u1EA1p quy tr\xECnh, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt, Hook-Body-CTA v\xE0 template prompt chu\u1EA9n c\u1EE7a Skill" },
+  { name: "generate_video_storyboard", description: "T\u1EF1 \u0111\u1ED9ng t\xE1ch ch\u1EE7 \u0111\u1EC1 th\xE0nh storyboard 30s k\xE8m prompt t\u1EEBng c\u1EA3nh cho Seedance 2.5 / Muse AI / Veo 3" },
+  { name: "create_video_from_skill", description: "Ch\u1EA1y pipeline t\u1EA1o video theo Skill (xu\u1EA5t g\xF3i render + SRT ph\u1EE5 \u0111\u1EC1 ho\u1EB7c \u0111\u1EA9y qua render webhook)" }
+];
+function parseMcpTools(raw2) {
+  const parsed = parseJSON(raw2, null);
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const out = [];
+    for (const item of parsed) {
+      if (typeof item === "string" && item.trim()) {
+        const [name, ...rest] = item.split("|");
+        out.push({ name: name.trim(), description: rest.join("|").trim() || "MCP Skill Tool" });
+      } else if (item && typeof item === "object" && item.name) {
+        out.push({ name: String(item.name).trim(), description: String(item.description || "").trim() });
+      }
+    }
+    if (out.length > 0) return out;
+  }
+  return DEFAULT_MCP_TOOLS;
+}
 function vietQrUrl(bankCode, account, amount, content, owner) {
   const p = new URLSearchParams({
     amount: String(amount),
@@ -8193,8 +8231,8 @@ function buildOrderPaidEmail(opts) {
       bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
         <p>\u0110\u01A1n h\xE0ng <b>${escHtml(opts.orderCode)}</b> tr\u1ECB gi\xE1 <b>${escHtml(opts.totalFormatted)}</b> \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c nh\u1EADn v\xE0 k\xEDch ho\u1EA1t b\u1EA3n quy\u1EC1n tr\u1ECDn \u0111\u1EDDi:</p>
         <ul style="list-style:none;padding:0;margin:14px 0;">${itemsHtml}</ul>
-        <p>M\u1ED7i khi s\u1EA3n ph\u1EA9m c\xF3 phi\xEAn b\u1EA3n m\u1EDBi ho\u1EB7c b\u1ED5 sung prompt/link t\u1EA3i, b\u1EA1n c\u0169ng s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c th\xF4ng b\xE1o tr\u1EF1c ti\u1EBFp.</p>`,
-      ctaLabel: "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i & T\u1EA3i v\u1EC1",
+        <p>Truy c\u1EADp m\u1EE5c <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b> \u0111\u1EC3 t\u1EA3i b\u1ED9 Skill ho\u1EB7c l\u1EA5y c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i <b>MCP (Claude / Codex / Antigravity)</b> c\xF9ng License Key c\u1EE7a b\u1EA1n. Khi c\xF3 phi\xEAn b\u1EA3n m\u1EDBi, b\u1EA1n c\u0169ng s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c th\xF4ng b\xE1o t\u1EF1 \u0111\u1ED9ng.</p>`,
+      ctaLabel: "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
       ctaUrl: opts.accountUrl
     }),
     text: `Don hang ${opts.orderCode} (${opts.totalFormatted}) da duoc kich hoat. Truy cap ${opts.accountUrl} de tai san pham.`
@@ -9276,6 +9314,7 @@ var Layout = (props) => {
   const isProductsAll = path === "/san-pham" && !currentQueryType && !currentQuerySort || active === "products";
   const isBestseller = path === "/san-pham" && (currentQuerySort === "bestseller" || currentQuerySort === "hot");
   const isSkill = path === "/san-pham" && currentQueryType === "skill" || path === "/danh-muc/skill-video-ai" || active === "skill";
+  const isMcpSkill2 = path === "/san-pham" && currentQueryType === "mcp_skill" || path === "/danh-muc/skill-ai-agent-mcp" || active === "mcp_skill";
   const isCourse = path === "/san-pham" && currentQueryType === "course" || path === "/danh-muc/khoa-hoc-video-ai" || active === "course";
   const isChatbot = path === "/san-pham" && currentQueryType === "chatbot" || path === "/danh-muc/chatbot-kich-ban" || active === "chatbot";
   const isApp = path === "/san-pham" && currentQueryType === "app" || path === "/danh-muc/app-video-ai" || active === "app";
@@ -9309,12 +9348,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261120", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261121", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261118", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261121", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -9354,11 +9393,18 @@ var Layout = (props) => {
               /* @__PURE__ */ jsxDEV("div", { children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "sidebar-group-label px-3 text-[10px] uppercase font-bold text-[#9492b8] tracking-wider mb-1.5 sidebar-text", children: "Danh m\u1EE5c" }),
                 /* @__PURE__ */ jsxDEV("nav", { class: "flex flex-col gap-1", "aria-label": "Danh m\u1EE5c s\u1EA3n ph\u1EA9m", children: [
-                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", title: "Skill AI (\u0110ang b\xE1n)", "data-nav": "skill", "aria-current": isSkill ? "page" : void 0, class: sbCls(isSkill), children: [
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", title: "Skill AI t\u1EF1 t\u1EA3i (\u0110ang b\xE1n)", "data-nav": "skill", "aria-current": isSkill ? "page" : void 0, class: sbCls(isSkill), children: [
                     /* @__PURE__ */ jsxDEV("i", { class: `fas fa-wand-magic-sparkles w-5 shrink-0 text-center ${isSkill ? "text-indigo-400" : "text-indigo-400/80"}`, "aria-hidden": "true" }),
                     /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
                       /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Skill AI" }),
                       /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold leading-none shrink-0", children: "\u0110ang b\xE1n" })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=mcp_skill", title: "Skill AI Agent (MCP) \u2014 Claude, Codex, Antigravity", "data-nav": "mcp_skill", "aria-current": isMcpSkill2 ? "page" : void 0, class: sbCls(isMcpSkill2), children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: `fas fa-plug-circle-bolt w-5 shrink-0 text-center ${isMcpSkill2 ? "text-cyan-300" : "text-cyan-400/85"}`, "aria-hidden": "true" }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "sidebar-text flex-1 flex items-center justify-between gap-2 whitespace-nowrap min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "truncate", children: "Skill Agent MCP" }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "sidebar-badge text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold leading-none shrink-0", children: "MCP M\u1EDBi" })
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", title: "Kh\xF3a h\u1ECDc Video AI (S\u1EAFp m\u1EDF)", "data-nav": "course", "aria-current": isCourse ? "page" : void 0, class: sbCls(isCourse), children: [
@@ -9619,7 +9665,11 @@ var Layout = (props) => {
               /* @__PURE__ */ jsxDEV("div", { class: "pt-2 border-t border-[#221e54] flex flex-wrap gap-1.5", children: [
                 /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold", children: [
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1", "aria-hidden": "true" }),
-                  "Skill AI (\u0110ang b\xE1n)"
+                  "Skill AI (T\u1EF1 t\u1EA3i)"
+                ] }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=mcp_skill", class: "px-2.5 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 text-[11px] font-bold", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1", "aria-hidden": "true" }),
+                  "Skill Agent MCP"
                 ] }),
                 /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium", children: "Kh\xF3a h\u1ECDc (S\u1EAFp m\u1EDF)" }),
                 /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=chatbot", class: "px-2.5 py-1.5 rounded-lg bg-[#161436] text-[#9492b8] text-[11px] font-medium", children: "Chatbot (S\u1EAFp m\u1EDF)" }),
@@ -9693,6 +9743,10 @@ var Layout = (props) => {
                   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "text-white font-semibold hover:text-indigo-400 transition", children: [
                     "Skill T\u1EA1o Video AI ",
                     /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-emerald-400 ml-1", children: "(\u0110ang b\xE1n)" })
+                  ] }) }),
+                  /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=mcp_skill", class: "text-cyan-300 font-semibold hover:text-cyan-200 transition", children: [
+                    "Skill AI Agent (MCP) ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-cyan-400 ml-1", children: "(M\u1EDBi \xB7 \u0110ang b\xE1n)" })
                   ] }) }),
                   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=course", class: "hover:text-indigo-400 transition", children: [
                     "Kh\xF3a h\u1ECDc Video AI ",
@@ -9791,7 +9845,7 @@ var Layout = (props) => {
       ] }),
       /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261119" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261121" })
     ] })
   ] });
 };
@@ -9801,7 +9855,9 @@ var Stars = ({ rating, size = "text-xs" }) => /* @__PURE__ */ jsxDEV("span", { c
 var ProductCard = ({ p, compact }) => {
   const off = discountPercent(p.price, p.original_price);
   const comingSoon = p.status === "coming_soon";
-  return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/15 hover:-translate-y-1 hover:border-indigo-500/40 transition-all duration-300 flex flex-col ${comingSoon ? "opacity-90" : ""}`, children: [
+  const mcp = isMcpSkill(p.product_type);
+  const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : [];
+  return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e24] rounded-2xl border overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${mcp ? "border-cyan-500/35 hover:border-cyan-400/65 hover:shadow-cyan-500/15" : "border-[#221e54] hover:border-indigo-500/40 hover:shadow-indigo-500/15"} ${comingSoon ? "opacity-90" : ""}`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "product-card-media relative aspect-video overflow-hidden bg-[#070614]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
       p.thumbnail ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
         /* @__PURE__ */ jsxDEV(
@@ -9829,11 +9885,15 @@ var ProductCard = ({ p, compact }) => {
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[9px]", "aria-hidden": "true" }),
         "Ch\u01B0a m\u1EDF b\xE1n"
       ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        mcp && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-cyan-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[9px]", "aria-hidden": "true" }),
+          "MCP LIVE"
+        ] }),
         p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold shadow-md inline-flex items-center gap-1", children: [
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[9px]", "aria-hidden": "true" }),
           "HOT"
         ] }),
-        p.is_hot !== 1 && p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md", children: "M\u1EDAI" }),
+        !mcp && p.is_hot !== 1 && p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md", children: "M\u1EDAI" }),
         off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold tabular-nums shadow-md", children: [
           "-",
           off,
@@ -9860,12 +9920,20 @@ var ProductCard = ({ p, compact }) => {
       /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "absolute inset-0 z-10", "aria-label": `Xem chi ti\u1EBFt ${p.name}` })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "p-4 flex flex-col flex-1", children: [
-      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mb-2 text-[11px] text-[#9492b8]", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
-        /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-[10px]", children: p.version })
+      /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-1.5 mb-2 text-[11px] text-[#9492b8]", children: [
+        mcp ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 font-bold uppercase inline-flex items-center gap-1", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[9px]", "aria-hidden": "true" }),
+          PRODUCT_TYPE_LABEL[p.product_type]
+        ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+        /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-[10px]", children: p.version }),
+        p.product_type === "skill" && /* @__PURE__ */ jsxDEV("span", { class: "ml-auto text-[10px] text-[#9492b8]", title: "T\u1EA3i v\u1EC1 m\xE1y & l\xE0m theo h\u01B0\u1EDBng d\u1EABn", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-0.5 text-[9px]", "aria-hidden": "true" }),
+          "T\u1EF1 t\u1EA3i v\u1EC1"
+        ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("h3", { class: "font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 group-hover:text-indigo-300 transition", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, children: p.name }) }),
+      /* @__PURE__ */ jsxDEV("h3", { class: `font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 transition ${mcp ? "group-hover:text-cyan-300" : "group-hover:text-indigo-300"}`, children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, children: p.name }) }),
       !compact && /* @__PURE__ */ jsxDEV("p", { class: "text-[12px] text-[#b8b6d9] line-clamp-2 mb-3 leading-relaxed", children: p.short_desc }),
+      mcp && !compact && /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-1.5 mb-3", children: mcpClients.slice(0, 3).map((cl) => /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-[#161436] border border-cyan-500/25 text-cyan-200 text-[10px] font-semibold", children: cl })) }),
       /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 text-[11px] text-[#9492b8] mb-4", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300 font-medium", children: [
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hourglass-half mr-1", "aria-hidden": "true" }),
         "\u0110ang ho\xE0n thi\u1EC7n & s\u1EAFp ra m\u1EAFt"
@@ -9914,7 +9982,7 @@ var ProductCard = ({ p, compact }) => {
             "button",
             {
               type: "button",
-              class: "btn-add-cart h-9 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer",
+              class: `btn-add-cart h-9 px-3 rounded-lg text-white text-xs font-bold transition shadow-md cursor-pointer ${mcp ? "bg-gradient-to-r from-cyan-600 to-indigo-600 hover:opacity-95 shadow-cyan-600/20" : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20"}`,
               "data-id": p.id,
               "data-name": p.name,
               "aria-label": `Th\xEAm ${p.name} v\xE0o gi\u1ECF h\xE0ng`,
@@ -9938,19 +10006,33 @@ var SectionTitle = ({ title: title2, subtitle, center, more }) => /* @__PURE__ *
 ] });
 var CategoryCard = ({ c }) => {
   const count = c.product_count ?? 0;
-  return /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${c.slug}`, class: "group relative p-5 rounded-2xl bg-[#0f0e24] border border-[#221e54] hover:border-indigo-500/40 hover:shadow-lg transition-all overflow-hidden flex flex-col", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon}`, "aria-hidden": "true" }) }),
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white mb-1 group-hover:text-indigo-300 transition", children: c.name }),
-    /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#b8b6d9] line-clamp-2 leading-relaxed", children: c.description }),
-    /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 text-xs font-semibold", children: count > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400 tabular-nums", children: [
-      count,
-      " Skill \u0111ang m\u1EDF b\xE1n ",
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right ml-0.5 text-[10px]", "aria-hidden": "true" })
-    ] }) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[11px] font-semibold", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]", "aria-hidden": "true" }),
-      "Ch\u01B0a m\u1EDF b\xE1n"
-    ] }) })
-  ] });
+  const isMcpCat = c.slug === "skill-ai-agent-mcp";
+  const iconBg = isMcpCat ? "from-cyan-500 to-indigo-600" : c.slug === "skill-video-ai" ? "from-indigo-500 to-fuchsia-500" : "from-slate-600 to-indigo-700";
+  return /* @__PURE__ */ jsxDEV(
+    "a",
+    {
+      href: `/danh-muc/${c.slug}`,
+      class: `group relative p-5 rounded-2xl bg-[#0f0e24] border hover:shadow-lg transition-all overflow-hidden flex flex-col ${isMcpCat ? "border-cyan-500/35 hover:border-cyan-400/70" : "border-[#221e54] hover:border-indigo-500/40"}`,
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { class: `w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br ${iconBg} group-hover:scale-110 transition`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${c.icon}`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("h3", { class: `font-bold text-white mb-1 transition ${isMcpCat ? "group-hover:text-cyan-300" : "group-hover:text-indigo-300"}`, children: c.name }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[13px] text-[#b8b6d9] line-clamp-2 leading-relaxed", children: c.description }),
+        /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 text-xs font-semibold", children: count > 0 ? isMcpCat ? /* @__PURE__ */ jsxDEV("span", { class: "text-cyan-300 tabular-nums inline-flex items-center gap-1.5", children: [
+          /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-cyan-400" }),
+          count,
+          " Skill MCP ",
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-[10px]", "aria-hidden": "true" })
+        ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400 tabular-nums", children: [
+          count,
+          " Skill \u0111ang m\u1EDF b\xE1n ",
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right ml-0.5 text-[10px]", "aria-hidden": "true" })
+        ] }) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[11px] font-semibold", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]", "aria-hidden": "true" }),
+          "Ch\u01B0a m\u1EDF b\xE1n"
+        ] }) })
+      ]
+    }
+  );
 };
 var Breadcrumb = ({ items }) => /* @__PURE__ */ jsxDEV("nav", { class: "text-[13px] text-[#9492b8] mb-5", "aria-label": "Breadcrumb", children: /* @__PURE__ */ jsxDEV("ol", { class: "flex flex-wrap items-center gap-1.5", children: [
   /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: "/", "aria-label": "Trang ch\u1EE7", class: "hover:text-indigo-300 transition", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-house", "aria-hidden": "true" }) }) }),
@@ -10029,24 +10111,25 @@ var PostCard = ({ p }) => /* @__PURE__ */ jsxDEV("article", { class: "group bg-[
 
 // src/pages/home.tsx
 var BENEFITS = [
-  { icon: "fa-bolt", title: "Giao h\xE0ng t\u1EF1 \u0111\u1ED9ng 24/7", desc: "Thanh to\xE1n xong nh\u1EADn ngay b\u1ED9 t\xE0i li\u1EC7u Skill, prompt chu\u1EA9n v\xE0 quy tr\xECnh chi ti\u1EBFt trong t\xE0i kho\u1EA3n, kh\xF4ng c\u1EA7n ch\u1EDD admin." },
+  { icon: "fa-bolt", title: "K\xEDch ho\u1EA1t t\u1EF1 \u0111\u1ED9ng 24/7", desc: "Thanh to\xE1n xong nh\u1EADn ngay link t\u1EA3i b\u1ED9 Skill ho\u1EB7c License Key + c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp trong t\xE0i kho\u1EA3n." },
+  { icon: "fa-plug-circle-bolt", title: "H\u1ED7 tr\u1EE3 MCP cho AI Agent", desc: "D\xF2ng Skill AI Agent (MCP) c\u1EAFm th\u1EB3ng v\xE0o Claude, Codex, Antigravity \u2014 Agent t\u1EF1 g\u1ECDi tool v\xE0 d\u1EF1ng video theo Skill." },
   { icon: "fa-infinity", title: "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", desc: "Mua m\u1ED9t l\u1EA7n d\xF9ng m\xE3i m\xE3i, kh\xF4ng ph\xED \u1EA9n, nh\u1EADn m\u1ECDi b\u1EA3n c\u1EADp nh\u1EADt prompt & quy tr\xECnh m\u1EDBi ho\xE0n to\xE0n mi\u1EC5n ph\xED." },
-  { icon: "fa-wand-magic-sparkles", title: "Skill th\u1EF1c chi\u1EBFn, test k\u1EF9", desc: "T\u1EA5t c\u1EA3 5 b\u1ED9 Skill AI \u0111ang m\u1EDF b\xE1n \u0111\u1EC1u \u0111\xE3 ch\u1EA1y th\u1EF1c t\u1EBF ra video demo xem ngay tr\xEAn trang s\u1EA3n ph\u1EA9m." },
-  { icon: "fa-headset", title: "H\u1ED7 tr\u1EE3 1-1 qua Zalo", desc: "\u0110\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 c\u1EA7m tay ch\u1EC9 vi\u1EC7c \u0111\u1EBFn khi b\u1EA1n \xE1p d\u1EE5ng Skill \u0111\u1EC3 t\u1EA1o \u0111\u01B0\u1EE3c video \u0111\u1EA7u ti\xEAn." },
-  { icon: "fa-shield-halved", title: "B\u1EA3o h\xE0nh & ho\xE0n ti\u1EC1n", desc: "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y n\u1EBFu n\u1ED9i dung Skill kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3 ho\u1EB7c video demo." },
-  { icon: "fa-rocket", title: "C\u1EADp nh\u1EADt theo model m\u1EDBi", desc: "B\u1ED9 Skill \u0111\u01B0\u1EE3c tinh ch\u1EC9nh li\xEAn t\u1EE5c theo Muse AI, Seedance 2.5, Veo 3, Flow... ho\xE0n to\xE0n mi\u1EC5n ph\xED." }
+  { icon: "fa-wand-magic-sparkles", title: "Skill th\u1EF1c chi\u1EBFn, test k\u1EF9", desc: "To\xE0n b\u1ED9 Skill t\u1EF1 t\u1EA3i v\xE0 Skill AI Agent (MCP) \u0111\u1EC1u \u0111\xE3 ch\u1EA1y th\u1EF1c t\u1EBF ra video demo xem ngay tr\xEAn trang s\u1EA3n ph\u1EA9m." },
+  { icon: "fa-headset", title: "H\u1ED7 tr\u1EE3 1-1 qua Zalo", desc: "\u0110\u1ED9i ng\u0169 h\u1ED7 tr\u1EE3 c\u1EA7m tay ch\u1EC9 vi\u1EC7c c\xE0i \u0111\u1EB7t MCP v\xE0 \xE1p d\u1EE5ng Skill \u0111\u1EBFn khi b\u1EA1n t\u1EA1o \u0111\u01B0\u1EE3c video \u0111\u1EA7u ti\xEAn." },
+  { icon: "fa-shield-halved", title: "B\u1EA3o h\xE0nh & ho\xE0n ti\u1EC1n", desc: "Ho\xE0n ti\u1EC1n 100% trong 7 ng\xE0y n\u1EBFu n\u1ED9i dung Skill ho\u1EB7c k\u1EBFt n\u1ED1i MCP kh\xF4ng \u0111\xFAng nh\u01B0 m\xF4 t\u1EA3." }
 ];
 var STEPS = [
-  { n: "01", icon: "fa-user-plus", title: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n", desc: "T\u1EA1o t\xE0i kho\u1EA3n mi\u1EC5n ph\xED ch\u1EC9 v\u1EDBi email trong 30 gi\xE2y." },
-  { n: "02", icon: "fa-cart-shopping", title: "Ch\u1ECDn b\u1ED9 Skill AI", desc: "Xem video demo th\u1EF1c t\u1EBF, \u0111\u1ECDc chi ti\u1EBFt ng\xE1ch r\u1ED3i th\xEAm v\xE0o gi\u1ECF." },
+  { n: "01", icon: "fa-user-plus", title: "\u0110\u0103ng k\xFD t\xE0i kho\u1EA3n", desc: "T\u1EA1o t\xE0i kho\u1EA3n mi\u1EC5n ph\xED ch\u1EC9 v\u1EDBi email ho\u1EB7c Google trong 30 gi\xE2y." },
+  { n: "02", icon: "fa-cart-shopping", title: "Ch\u1ECDn lo\u1EA1i Skill ph\xF9 h\u1EE3p", desc: "Ch\u1ECDn Skill t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m tay ho\u1EB7c Skill AI Agent (MCP) cho Claude, Codex, Antigravity." },
   { n: "03", icon: "fa-qrcode", title: "Thanh to\xE1n VietQR", desc: "Qu\xE9t m\xE3 VietQR chuy\u1EC3n kho\u1EA3n, h\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng x\xE1c nh\u1EADn 24/7." },
-  { n: "04", icon: "fa-download", title: "Nh\u1EADn link t\u1EA3i Skill", desc: 'Link t\u1EA3i + m\xE3 k\xEDch ho\u1EA1t xu\u1EA5t hi\u1EC7n ngay trong "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' }
+  { n: "04", icon: "fa-plug-circle-bolt", title: "T\u1EA3i Skill ho\u1EB7c C\u1EAFm MCP", desc: "Nh\u1EADn link t\u1EA3i ngay ho\u1EB7c copy config MCP + License Key d\xE1n v\xE0o AI Agent d\xF9ng li\u1EC1n." }
 ];
 var FAQS = [
-  { q: "Mua Skill AI th\xEC t\xF4i nh\u1EADn \u0111\u01B0\u1EE3c nh\u1EEFng g\xEC?", a: "B\u1EA1n nh\u1EADn tr\u1ECDn b\u1ED9 t\xE0i li\u1EC7u s\u1ED1 c\u1EE7a Skill: file c\u1EA5u h\xECnh/prompt chu\u1EA9n ho\xE1 theo ng\xE1ch, quy tr\xECnh t\u1EEBng b\u01B0\u1EDBc t\u1EA1o video 30s, checklist d\u1EF1ng clip & \u0111\u0103ng page, c\xF9ng link h\u01B0\u1EDBng d\u1EABn th\u1EF1c h\xE0nh. Giao t\u1EF1 \u0111\u1ED9ng ngay sau khi thanh to\xE1n." },
-  { q: "T\xF4i ch\u01B0a t\u1EEBng l\xE0m video AI th\xEC c\xF3 d\xF9ng \u0111\u01B0\u1EE3c Skill kh\xF4ng?", a: "Ho\xE0n to\xE0n \u0111\u01B0\u1EE3c. M\u1ED7i b\u1ED9 Skill \u0111\u1EC1u vi\u1EBFt s\u1EB5n c\xF4ng th\u1EE9c t\u1EEBng b\u01B0\u1EDBc cho ng\u01B0\u1EDDi m\u1EDBi, k\xE8m v\xED d\u1EE5 prompt th\u1EF1c t\u1EBF v\xE0 h\u1ED7 tr\u1EE3 qua Zalo n\u1EBFu b\u1EA1n g\u1EB7p v\u01B0\u1EDBng m\u1EAFc." },
-  { q: "C\xE1c d\u1ECBch v\u1EE5 Kh\xF3a h\u1ECDc, Chatbot, App Video AI khi n\xE0o m\u1EDF b\xE1n?", a: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng t\u1EADp trung m\u1EDF b\xE1n tr\u01B0\u1EDBc 5 b\u1ED9 Skill AI ho\xE0n thi\u1EC7n nh\u1EA5t. C\xE1c h\u1EA1ng m\u1EE5c Kh\xF3a h\u1ECDc Video AI, Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n, App l\xE0m video v\xE0 Combo \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n \u0111\u1EC3 ho\xE0n thi\u1EC7n ch\u1EA5t l\u01B0\u1EE3ng tr\u01B0\u1EDBc khi ph\xE1t h\xE0nh." },
-  { q: "Thanh to\xE1n xong bao l\xE2u th\xEC nh\u1EADn \u0111\u01B0\u1EE3c h\xE0ng?", a: 'H\u1EC7 th\u1ED1ng giao t\u1EF1 \u0111\u1ED9ng 24/7. Ngay khi chuy\u1EC3n kho\u1EA3n \u0111\xFAng m\xE3 \u0111\u01A1n h\xE0ng v\xE0 h\u1EC7 th\u1ED1ng x\xE1c nh\u1EADn th\xE0nh c\xF4ng, link t\u1EA3i xu\u1EA5t hi\u1EC7n l\u1EADp t\u1EE9c trong m\u1EE5c "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' },
+  { q: "Skill AI Agent (MCP) kh\xE1c g\xEC so v\u1EDBi Skill AI t\u1EF1 t\u1EA3i th\xF4ng th\u01B0\u1EDDng?", a: "V\u1EDBi Skill AI th\xF4ng th\u01B0\u1EDDng, b\u1EA1n t\u1EA3i file t\xE0i li\u1EC7u/prompt v\u1EC1 m\xE1y r\u1ED3i t\u1EF1 l\xE0m theo t\u1EEBng b\u01B0\u1EDBc. C\xF2n v\u1EDBi Skill AI Agent (MCP), b\u1EA1n ch\u1EC9 c\u1EA7n copy c\u1EA5u h\xECnh MCP + License Key d\xE1n 1 l\u1EA7n v\xE0o Claude, Codex ho\u1EB7c Antigravity \u2014 AI Agent s\u1EBD t\u1EF1 g\u1ECDi tr\u1EF1c ti\u1EBFp v\u1EC1 server MCP \u0111\u1EC3 n\u1EA1p quy tr\xECnh Skill, sinh k\u1ECBch b\u1EA3n kh\xF3a nh\xE2n v\u1EADt v\xE0 t\u1EA1o video ngay trong cu\u1ED9c h\u1ED9i tho\u1EA1i." },
+  { q: "Mua Skill AI / Skill AI Agent (MCP) th\xEC t\xF4i nh\u1EADn \u0111\u01B0\u1EE3c nh\u1EEFng g\xEC?", a: 'V\u1EDBi Skill t\u1EF1 t\u1EA3i: b\u1EA1n nh\u1EADn tr\u1ECDn b\u1ED9 t\xE0i li\u1EC7u s\u1ED1, prompt chu\u1EA9n ho\xE1 theo ng\xE1ch, quy tr\xECnh t\u1EEBng b\u01B0\u1EDBc & checklist d\u1EF1ng clip. V\u1EDBi Skill AI Agent (MCP): b\u1EA1n nh\u1EADn MCP Endpoint URL, License Key ri\xEAng, snippet c\u1EA5u h\xECnh copy 1-click cho Claude / Codex / Antigravity v\xE0 n\xFAt ki\u1EC3m tra k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp trong "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' },
+  { q: "T\xF4i ch\u01B0a t\u1EEBng l\xE0m video AI ho\u1EB7c ch\u01B0a d\xF9ng MCP bao gi\u1EDD th\xEC c\xF3 d\xF9ng \u0111\u01B0\u1EE3c kh\xF4ng?", a: "Ho\xE0n to\xE0n \u0111\u01B0\u1EE3c. V\u1EDBi Skill t\u1EF1 t\u1EA3i c\xF3 h\u01B0\u1EDBng d\u1EABn t\u1EEBng b\u01B0\u1EDBc cho ng\u01B0\u1EDDi m\u1EDBi; v\u1EDBi Skill MCP ch\u1EC9 c\u1EA7n copy-paste \u0111\xFAng 1 \u0111o\u1EA1n c\u1EA5u h\xECnh c\xF3 s\u1EB5n (ho\u1EB7c 1 d\xF2ng l\u1EC7nh CLI) v\xE0o Claude, Codex, Antigravity l\xE0 ch\u1EA1y ngay \u2014 k\xE8m h\u1ED7 tr\u1EE3 1-1 qua Zalo n\u1EBFu b\u1EA1n c\u1EA7n." },
+  { q: "C\xE1c d\u1ECBch v\u1EE5 Kh\xF3a h\u1ECDc, Chatbot, App Video AI khi n\xE0o m\u1EDF b\xE1n?", a: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng t\u1EADp trung m\u1EDF b\xE1n 2 d\xF2ng s\u1EA3n ph\u1EA9m c\u1ED1t l\xF5i l\xE0 Skill AI (t\u1EF1 t\u1EA3i) v\xE0 Skill AI Agent (MCP). C\xE1c h\u1EA1ng m\u1EE5c Kh\xF3a h\u1ECDc Video AI, Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n, App l\xE0m video v\xE0 Combo \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n \u0111\u1EC3 ho\xE0n thi\u1EC7n ch\u1EA5t l\u01B0\u1EE3ng tr\u01B0\u1EDBc khi ph\xE1t h\xE0nh." },
+  { q: "Thanh to\xE1n xong bao l\xE2u th\xEC nh\u1EADn \u0111\u01B0\u1EE3c h\xE0ng?", a: 'H\u1EC7 th\u1ED1ng giao t\u1EF1 \u0111\u1ED9ng 24/7. Ngay khi chuy\u1EC3n kho\u1EA3n \u0111\xFAng m\xE3 \u0111\u01A1n h\xE0ng v\xE0 h\u1EC7 th\u1ED1ng x\xE1c nh\u1EADn th\xE0nh c\xF4ng, link t\u1EA3i ho\u1EB7c c\u1EA5u h\xECnh MCP + License Key xu\u1EA5t hi\u1EC7n l\u1EADp t\u1EE9c trong m\u1EE5c "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i".' },
   { q: "T\xF4i c\xF3 th\u1EC3 d\xF9ng Skill cho nhi\u1EC1u k\xEAnh TikTok/Reels kh\xF4ng?", a: "C\xF3. Skill mua m\u1ED9t l\u1EA7n s\u1EED d\u1EE5ng kh\xF4ng gi\u1EDBi h\u1EA1n cho m\u1ECDi k\xEAnh c\xE1 nh\xE2n v\xE0 k\xEAnh b\xE1n h\xE0ng c\u1EE7a ch\xEDnh b\u1EA1n." }
 ];
 var R2_BASE = "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev";
@@ -10168,7 +10251,7 @@ var DEMO_VIDEOS = [
   }
 ];
 var HomePage = (props) => {
-  const { categories, featured, hot, newest, comingSoon, posts, reviews, stats } = props;
+  const { categories, featured, mcpSkills = [], manualSkills = [], hot, newest, comingSoon, posts, reviews, stats } = props;
   const siteName = props.settings?.site_name || "KhoSkill AI";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "home", children: [
     /* @__PURE__ */ jsxDEV("script", { id: "demo-videos-json", type: "application/json", dangerouslySetInnerHTML: { __html: JSON.stringify(DEMO_VIDEOS).replace(/</g, "\\u003c") } }),
@@ -10187,12 +10270,9 @@ var HomePage = (props) => {
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("span", { class: "text-white/40", "aria-hidden": "true", children: "\xB7" }),
-            /* @__PURE__ */ jsxDEV("span", { children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "tabular-nums", children: [
-                stats.sold.toLocaleString("vi-VN"),
-                "+"
-              ] }),
-              " l\u01B0\u1EE3t mua th\xE0nh c\xF4ng"
+            /* @__PURE__ */ jsxDEV("span", { class: "text-cyan-300 font-bold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1 text-[10px]", "aria-hidden": "true" }),
+              "M\u1EDBi: Skill AI Agent (MCP)"
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("h1", { class: "text-4xl md:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5", children: [
@@ -10200,19 +10280,29 @@ var HomePage = (props) => {
             /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent", children: "Skill AI L\xE0m Video" }),
             " th\u1EF1c chi\u1EBFn s\u1ED1 1 Vi\u1EC7t Nam"
           ] }),
-          /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-base md:text-lg leading-relaxed mb-8 max-w-xl", children: "M\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn l\xE0m video 30s chu\u1EA9n viral: Muse AI Pro, Seedance 2.5, Thu\u1EF7 Sinh, DIY L\xE0m V\u01B0\u1EDDn, Affiliate Fitness. Mua m\u1ED9t l\u1EA7n \u2014 s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi \u2014 giao link t\u1EA3i t\u1EF1 \u0111\u1ED9ng 24/7." }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-base md:text-lg leading-relaxed mb-8 max-w-xl", children: [
+            "\u0110\u1EA7y \u0111\u1EE7 2 d\xF2ng s\u1EA3n ph\u1EA9m: ",
+            /* @__PURE__ */ jsxDEV("b", { children: "Skill AI t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m theo" }),
+            " (Muse AI, Seedance 2.5, Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Fitness) v\xE0 d\xF2ng m\u1EDBi ",
+            /* @__PURE__ */ jsxDEV("b", { class: "text-cyan-300", children: "Skill AI Agent (MCP)" }),
+            " k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp v\xE0o ",
+            /* @__PURE__ */ jsxDEV("b", { children: "Claude, Codex, Antigravity" }),
+            " \u0111\u1EC3 AI t\u1EF1 g\u1ECDi tool t\u1EA1o video ngay."
+          ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-3 mb-9", children: [
-            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 font-semibold shadow-xl shadow-indigo-500/30 hover:opacity-95 transition", children: [
+            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "h-12 px-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 font-semibold shadow-xl shadow-indigo-500/30 hover:opacity-95 transition", children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
-              "Xem 5 Skill \u0111ang m\u1EDF b\xE1n"
+              "Kh\xE1m ph\xE1 ",
+              stats.products,
+              " Skill \u0111ang b\xE1n"
             ] }),
-            /* @__PURE__ */ jsxDEV("a", { href: "#theater", id: "heroTrailerBtn", class: "h-12 px-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur font-semibold text-white transition shadow-lg", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-[10px] text-white shadow", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5", "aria-hidden": "true" }) }),
-              "Xem demo 30s"
+            /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=mcp_skill", class: "h-12 px-5 inline-flex items-center gap-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/45 text-cyan-200 font-semibold backdrop-blur transition shadow-lg", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-cyan-300", "aria-hidden": "true" }),
+              "Skill AI Agent (MCP)"
             ] }),
-            comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("a", { href: "#coming-soon-section", class: "h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur font-semibold text-[#c2c0e0] hover:text-white hover:bg-white/10 transition", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400", "aria-hidden": "true" }),
-              "D\u1ECBch v\u1EE5 s\u1EAFp m\u1EDF"
+            /* @__PURE__ */ jsxDEV("a", { href: "#theater", id: "heroTrailerBtn", class: "h-12 px-4 inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur font-semibold text-white transition", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "w-5 h-5 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-[9px] text-white", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5", "aria-hidden": "true" }) }),
+              "Demo 30s"
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-3 gap-4 max-w-md", children: [
@@ -10394,7 +10484,7 @@ var HomePage = (props) => {
           ] })
         ] })
       ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "relative border-t border-white/5 bg-[#070614]/70 backdrop-blur py-3 marquee-wrap overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "marquee-track flex gap-10 w-max text-[#9492b8] text-xs font-semibold whitespace-nowrap", children: [...Array(2)].map(() => /* @__PURE__ */ jsxDEV(Fragment, { children: ["Muse AI", "Seedance 2.5", "Veo 3", "Google Flow", "Kling AI", "ChatGPT", "Gemini", "CapCut", "Sora", "Runway"].map((b) => /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "relative border-t border-white/5 bg-[#070614]/70 backdrop-blur py-3 marquee-wrap overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "marquee-track flex gap-10 w-max text-[#9492b8] text-xs font-semibold whitespace-nowrap", children: [...Array(2)].map(() => /* @__PURE__ */ jsxDEV(Fragment, { children: ["MCP Protocol", "Claude", "Codex", "Antigravity", "Muse AI", "Seedance 2.5", "Veo 3", "Google Flow", "Kling AI", "CapCut", "Runway"].map((b) => /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [
         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-nodes text-indigo-500/70", "aria-hidden": "true" }),
         b
       ] })) })) }) })
@@ -10529,20 +10619,128 @@ var HomePage = (props) => {
       /* @__PURE__ */ jsxDEV(SectionTitle, { title: "Danh m\u1EE5c s\u1EA3n ph\u1EA9m", subtitle: "Ch\u1ECDn \u0111\xFAng c\xF4ng c\u1EE5 b\u1EA1n c\u1EA7n cho h\xE0nh tr\xECnh l\xE0m video AI", more: { href: "/san-pham", label: "T\u1EA5t c\u1EA3" } }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4", children: categories.map((c) => /* @__PURE__ */ jsxDEV(CategoryCard, { c })) })
     ] }),
+    /* @__PURE__ */ jsxDEV("section", { id: "mcp-agent-section", class: "max-w-7xl mx-auto px-4 py-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-br from-[#0b1228] via-[#0f0e28] to-[#130b29] border border-cyan-500/35 p-6 md:p-10 relative overflow-hidden shadow-2xl shadow-cyan-950/30", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-cyan-500/15 blur-[100px]" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-indigo-500/15 blur-[100px]" }),
+      /* @__PURE__ */ jsxDEV("div", { class: "relative", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-end justify-between gap-4 mb-8", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "max-w-3xl", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider mb-3", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-cyan-400" }),
+              "Lo\u1EA1i S\u1EA3n Ph\u1EA9m M\u1EDBi \xB7 MCP Live Protocol"
+            ] }),
+            /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-4xl font-extrabold text-white tracking-tight", children: [
+              "Skill AI Agent ",
+              /* @__PURE__ */ jsxDEV("span", { class: "bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-300 bg-clip-text text-transparent", children: "(K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP)" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] mt-2 text-sm md:text-base leading-relaxed", children: [
+              "Kh\xE1c ho\xE0n to\xE0n v\u1EDBi Skill t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m th\u1EE7 c\xF4ng: b\u1EA1n ch\u1EC9 c\u1EA7n d\xE1n c\u1EA5u h\xECnh MCP + License Key v\xE0o ",
+              /* @__PURE__ */ jsxDEV("b", { children: "Claude, Codex ho\u1EB7c Antigravity" }),
+              " \u2014 AI Agent s\u1EBD g\u1ECDi tr\u1EF1c ti\u1EBFp v\u1EC1 server, n\u1EA1p Skill v\xE0 t\u1EA1o video theo \u0111\xFAng quy tr\xECnh ngay l\u1EADp t\u1EE9c."
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV(
+            "a",
+            {
+              href: "/san-pham?type=mcp_skill",
+              class: "h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-cyan-500/20 transition shrink-0",
+              children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }),
+                "Xem t\u1EA5t c\u1EA3 Skill MCP"
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-2 gap-5 mb-8", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl bg-[#0a091c]/85 border border-[#242054]", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-3", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/35 text-indigo-300 grid place-items-center", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }) }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white text-base", children: "Skill AI (T\u1EF1 t\u1EA3i & l\xE0m theo)" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: "D\xF2ng ti\xEAu chu\u1EA9n \xB7 T\u1EEB 399.000\u0111" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold", children: "Th\u1EE7 c\xF4ng" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 text-xs sm:text-sm text-[#c2c0e0]", children: [
+              /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check text-indigo-400 mt-1 shrink-0", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: "T\u1EA3i b\u1ED9 file ZIP / Google Drive g\u1ED3m prompt, quy tr\xECnh v\xE0 checklist v\u1EC1 m\xE1y." })
+              ] }),
+              /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check text-indigo-400 mt-1 shrink-0", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: "B\u1EA1n t\u1EF1 copy prompt, t\u1EF1 ch\u1EA1y t\u1EEBng b\u01B0\u1EDBc tr\xEAn Muse AI, Seedance 2.5, CapCut." })
+              ] }),
+              /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check text-indigo-400 mt-1 shrink-0", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: "Ph\xF9 h\u1EE3p ng\u01B0\u1EDDi m\u1EDBi mu\u1ED1n n\u1EAFm r\xF5 quy tr\xECnh v\xE0 t\u1EF1 ki\u1EC3m so\xE1t th\u1EE7 c\xF4ng t\u1EEBng c\u1EA3nh." })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "p-6 rounded-2xl bg-gradient-to-br from-cyan-950/55 via-[#111033] to-indigo-950/60 border border-cyan-400/45 shadow-lg shadow-cyan-950/30", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-3", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white grid place-items-center shadow-md shadow-cyan-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }) }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white text-base", children: "Skill AI Agent (MCP Live)" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-cyan-300 font-semibold", children: "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp \xB7 T\u1EEB 890.000\u0111" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black uppercase", children: "AI Agent t\u1EF1 ch\u1EA1y" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 text-xs sm:text-sm text-[#e2e1f5] mb-4", children: [
+              /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-cyan-300 mt-1 shrink-0", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: [
+                  /* @__PURE__ */ jsxDEV("b", { children: "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp qua MCP" }),
+                  " v\xE0o Claude, Codex, Antigravity b\u1EB1ng License Key."
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-cyan-300 mt-1 shrink-0", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: "Ra l\u1EC7nh 1 c\xE2u \u2014 AI Agent t\u1EF1 g\u1ECDi tool n\u1EA1p Skill, kh\xF3a nh\xE2n v\u1EADt & xu\u1EA5t g\xF3i t\u1EA1o video 30s." })
+              ] }),
+              /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-cyan-300 mt-1 shrink-0", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("span", { children: "Kh\xF4ng c\u1EA7n t\u1EA3i l\u1EA1i file khi c\xF3 b\u1EA3n m\u1EDBi \u2014 Agent lu\xF4n g\u1ECDi phi\xEAn b\u1EA3n Skill m\u1EDBi nh\u1EA5t tr\xEAn server." })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 pt-3 border-t border-cyan-500/20 text-[11px]", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-semibold", children: "T\u01B0\u01A1ng th\xEDch s\u1EB5n:" }),
+              ["Claude Code / Desktop", "OpenAI Codex", "Antigravity"].map((cl) => /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-lg bg-[#070614]/80 border border-cyan-400/30 text-cyan-200 font-bold", children: cl }))
+            ] })
+          ] })
+        ] }),
+        mcpSkills.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5", children: mcpSkills.slice(0, 3).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) })
+      ] })
+    ] }) }),
     /* @__PURE__ */ jsxDEV("section", { id: "catalog-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
       /* @__PURE__ */ jsxDEV(
         SectionTitle,
         {
           title: "Kho Skill AI th\u1EF1c chi\u1EBFn",
-          subtitle: "5 b\u1ED9 Skill l\xE0m video 30s \u0111ang m\u1EDF b\xE1n \u2014 l\u1ECDc nhanh theo m\u1EE9c \u0111\u1ED9 ph\u1ED5 bi\u1EBFn",
-          more: { href: "/san-pham?type=skill", label: "Xem t\u1EA5t c\u1EA3" }
+          subtitle: `\u0110ang m\u1EDF b\xE1n ${stats.products} b\u1ED9 Skill (g\u1ED3m Skill t\u1EF1 t\u1EA3i & Skill AI Agent MCP) \u2014 l\u1ECDc nhanh theo d\xF2ng s\u1EA3n ph\u1EA9m`,
+          more: { href: "/san-pham", label: "Xem t\u1EA5t c\u1EA3" }
         }
       ),
       /* @__PURE__ */ jsxDEV("div", { role: "tablist", "aria-label": "L\u1ECDc danh s\xE1ch Skill AI", class: "flex flex-wrap items-center gap-2 mb-7", children: [
         /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "true", class: "tab-btn active h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] transition cursor-pointer", "data-tab": "featured", "data-group": "hp", children: [
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1.5 text-indigo-300", "aria-hidden": "true" }),
-          "\u0110ang m\u1EDF b\xE1n (",
+          "T\u1EA5t c\u1EA3 \u0111ang b\xE1n (",
           featured.length,
+          ")"
+        ] }),
+        /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "false", class: "tab-btn h-10 px-4 rounded-xl border border-cyan-500/35 bg-[#0f0e24] text-sm font-bold text-cyan-200 hover:text-white transition cursor-pointer", "data-tab": "mcp", "data-group": "hp", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1.5 text-cyan-400", "aria-hidden": "true" }),
+          "Skill AI Agent MCP (",
+          mcpSkills.length,
+          ")"
+        ] }),
+        /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "false", class: "tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer", "data-tab": "manual", "data-group": "hp", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-1.5 text-indigo-300", "aria-hidden": "true" }),
+          "Skill t\u1EF1 t\u1EA3i (",
+          manualSkills.length,
           ")"
         ] }),
         /* @__PURE__ */ jsxDEV("button", { type: "button", role: "tab", "aria-selected": "false", class: "tab-btn h-10 px-4 rounded-xl border border-[#2a2559] bg-[#0f0e24] text-sm font-bold text-[#c2c0e0] hover:text-white transition cursor-pointer", "data-tab": "hot", "data-group": "hp", children: [
@@ -10555,6 +10753,8 @@ var HomePage = (props) => {
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel", "data-tab": "featured", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "mcp", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: mcpSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "manual", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: manualSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
       /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "hot", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: hot.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
       /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "new", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: newest.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) })
     ] }),
@@ -10568,7 +10768,7 @@ var HomePage = (props) => {
               "D\u1ECACH V\u1EE4 T\u1EA0M TH\u1EDCI CH\u01AFA M\u1EDE B\xC1N"
             ] }),
             /* @__PURE__ */ jsxDEV("h2", { class: "text-2xl md:text-3xl font-extrabold tracking-tight", children: "Kh\xF3a h\u1ECDc, Chatbot, App & Combo s\u1EAFp ra m\u1EAFt" }),
-            /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-1.5 text-sm md:text-base", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng ch\u1EC9 m\u1EDF b\xE1n 5 b\u1ED9 Skill AI. C\xE1c d\u1ECBch v\u1EE5 kh\xE1c s\u1EBD s\u1EDBm m\u1EDF b\xE1n trong th\u1EDDi gian t\u1EDBi." })
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9] mt-1.5 text-sm md:text-base", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng \u0111ang m\u1EDF b\xE1n Skill AI (t\u1EF1 t\u1EA3i) & Skill AI Agent (MCP). C\xE1c d\u1ECBch v\u1EE5 kh\xE1c s\u1EBD s\u1EDBm m\u1EDF b\xE1n trong th\u1EDDi gian t\u1EDBi." })
           ] }),
           /* @__PURE__ */ jsxDEV("a", { href: "/lien-he", class: "cta-white h-11 px-5 inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 font-semibold text-sm hover:bg-slate-100 transition", children: [
             "Nh\u1EAFn Zalo nh\u1EADn l\u1ECBch m\u1EDF b\xE1n",
@@ -10670,7 +10870,8 @@ var SORTS = [
 ];
 var TYPES = [
   ["", "T\u1EA5t c\u1EA3 lo\u1EA1i"],
-  ["skill", "Skill AI (\u0110ang m\u1EDF b\xE1n)"],
+  ["skill", "Skill AI t\u1EF1 t\u1EA3i (\u0110ang m\u1EDF b\xE1n)"],
+  ["mcp_skill", "Skill AI Agent MCP (\u0110ang m\u1EDF b\xE1n)"],
   ["course", "Kh\xF3a h\u1ECDc (S\u1EAFp m\u1EDF)"],
   ["chatbot", "Chatbot (S\u1EAFp m\u1EDF)"],
   ["app", "App Video AI (S\u1EAFp m\u1EDF)"],
@@ -10694,11 +10895,13 @@ var ProductListPage = (props) => {
     baseUrl,
     currentCategory
   } = props;
+  const isMcpView = type === "mcp_skill" || cat === "skill-ai-agent-mcp" || currentCategory?.slug === "skill-ai-agent-mcp";
+  const isComingSoonView = baseUrl === "/combo" || ["course", "chatbot", "app", "combo"].includes(type) || !!currentCategory && currentCategory.slug !== "skill-video-ai" && currentCategory.slug !== "skill-ai-agent-mcp";
   return /* @__PURE__ */ jsxDEV(
     Layout,
     {
       ...props,
-      active: currentCategory ? "products" : baseUrl === "/combo" ? "combo" : "products",
+      active: isMcpView ? "mcp_skill" : baseUrl === "/combo" ? "combo" : "products",
       title: heading,
       description: headingDesc,
       children: [
@@ -10833,15 +11036,69 @@ var ProductListPage = (props) => {
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            (baseUrl === "/combo" || ["course", "chatbot", "app", "combo"].includes(type) || currentCategory && currentCategory.slug !== "skill-video-ai") && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/35 flex flex-wrap items-center justify-between gap-3", children: [
+            baseUrl === "/san-pham" && /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-5", children: [
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: "/san-pham",
+                  class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${!type && !cat ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes text-[11px]", "aria-hidden": "true" }),
+                    "T\u1EA5t c\u1EA3 \u0111ang b\xE1n"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: "/san-pham?type=skill",
+                  class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${type === "skill" || cat === "skill-video-ai" ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download text-[11px]", "aria-hidden": "true" }),
+                    "Skill AI t\u1EF1 t\u1EA3i"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: "/san-pham?type=mcp_skill",
+                  class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${isMcpView ? "bg-gradient-to-r from-cyan-600 to-indigo-600 text-white border-cyan-400 shadow-md shadow-cyan-600/25" : "bg-cyan-500/10 border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/20 hover:text-white"}`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[11px]", "aria-hidden": "true" }),
+                    "Skill AI Agent (MCP)",
+                    /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded bg-cyan-400 text-slate-950 text-[9px] font-black leading-none", children: "M\u1EDAI" })
+                  ]
+                }
+              )
+            ] }),
+            isMcpView && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-[#121134] to-indigo-950/60 border border-cyan-400/40 flex flex-wrap items-center justify-between gap-4", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }),
+                  "Skill AI Agent \xB7 K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP"
+                ] }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs sm:text-sm text-[#d6d4ee] leading-relaxed", children: [
+                  "Kh\xE1c v\u1EDBi d\xF2ng Skill t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m th\u1EE7 c\xF4ng: d\xF2ng n\xE0y k\u1EBFt n\u1ED1i th\u1EB3ng qua ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "MCP" }),
+                  " v\xE0o ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "Claude, Codex, Antigravity" }),
+                  " b\u1EB1ng License Key \u0111\u1EC3 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill ngay."
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5 shrink-0", children: ["Claude", "Codex", "Antigravity"].map((cl) => /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-lg bg-[#070614]/80 border border-cyan-400/35 text-cyan-200 text-[11px] font-bold", children: cl })) })
+            ] }),
+            isComingSoonView && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/35 flex flex-wrap items-center justify-between gap-3", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "text-xs sm:text-sm text-amber-200 leading-relaxed", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-amber-400 mr-2", "aria-hidden": "true" }),
                 /* @__PURE__ */ jsxDEV("b", { children: "H\u1EA1ng m\u1EE5c n\xE0y t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n." }),
-                " Hi\u1EC7n t\u1EA1i c\u1EEDa h\xE0ng ch\u1EC9 m\u1EDF b\xE1n b\u1ED9 ",
-                /* @__PURE__ */ jsxDEV("b", { children: "5 Skill AI" }),
-                " l\xE0m video ho\xE0n thi\u1EC7n b\xEAn d\u01B0\u1EDBi."
+                " Hi\u1EC7n t\u1EA1i c\u1EEDa h\xE0ng \u0111ang m\u1EDF b\xE1n d\xF2ng ",
+                /* @__PURE__ */ jsxDEV("b", { children: "Skill AI (t\u1EF1 t\u1EA3i)" }),
+                " v\xE0 ",
+                /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent (MCP)" }),
+                "."
               ] }),
-              /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition shrink-0", children: "Xem 5 Skill \u0111ang b\xE1n \u2192" })
+              /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "px-3.5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition shrink-0", children: "Xem Skill \u0111ang b\xE1n \u2192" })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-3 mb-5", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
@@ -10888,9 +11145,638 @@ var ProductListPage = (props) => {
   );
 };
 
+// src/lib/mcp.ts
+function resolveMcpEndpoint(origin, product) {
+  const custom = (product.mcp_endpoint || "").trim();
+  if (custom && (custom.startsWith("https://") || custom.startsWith("http://"))) {
+    return custom;
+  }
+  const cleanOrigin = origin.replace(/\/+$/, "");
+  return `${cleanOrigin}/api/mcp/${product.slug}`;
+}
+function resolveMcpServerName(product) {
+  const raw2 = (product.mcp_server_name || "").trim();
+  if (raw2) {
+    const clean = raw2.toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    if (clean) return clean;
+  }
+  return `khoskill-${product.slug.slice(0, 28).replace(/[^a-z0-9-]/g, "-")}`;
+}
+function buildMcpConfigs(opts) {
+  const endpointUrl = resolveMcpEndpoint(opts.origin, { slug: opts.slug, mcp_endpoint: opts.mcpEndpoint });
+  const serverName = resolveMcpServerName({ slug: opts.slug, mcp_server_name: opts.mcpServerName });
+  const key = opts.licenseKey;
+  const claudeCli = `claude mcp add --transport http ${serverName} "${endpointUrl}" --header "Authorization: Bearer ${key}"`;
+  const claudeJson = JSON.stringify({
+    mcpServers: {
+      [serverName]: {
+        type: "http",
+        url: endpointUrl,
+        headers: {
+          Authorization: `Bearer ${key}`
+        }
+      }
+    }
+  }, null, 2);
+  const codexToml = `[mcp_servers.${serverName}]
+url = "${endpointUrl}"
+http_headers = { Authorization = "Bearer ${key}" }`;
+  const codexCli = `codex mcp add ${serverName} --url "${endpointUrl}"`;
+  const antigravityJson = JSON.stringify({
+    mcpServers: {
+      [serverName]: {
+        serverUrl: endpointUrl,
+        headers: {
+          Authorization: `Bearer ${key}`
+        }
+      }
+    }
+  }, null, 2);
+  const samplePrompt = `H\xE3y k\u1EBFt n\u1ED1i MCP "${serverName}", g\u1ECDi tool get_skill_blueprint r\u1ED3i g\u1ECDi create_video_from_skill \u0111\u1EC3 t\u1EA1o video 30s 9:16 theo \u0111\xFAng chu\u1EA9n Skill cho ch\u1EE7 \u0111\u1EC1/s\u1EA3n ph\u1EA9m: [nh\u1EADp t\xEAn s\u1EA3n ph\u1EA9m ho\u1EB7c \xFD t\u01B0\u1EDFng c\u1EE7a b\u1EA1n].`;
+  return {
+    endpointUrl,
+    serverName,
+    claudeCli,
+    claudeJson,
+    codexToml,
+    codexCli,
+    antigravityJson,
+    samplePrompt
+  };
+}
+function extractLicenseKey(req, queryKey) {
+  const auth = req.headers.get("authorization") || "";
+  if (/^Bearer\s+/i.test(auth)) {
+    const token = auth.replace(/^Bearer\s+/i, "").trim();
+    if (token) return token;
+  }
+  const xKey = (req.headers.get("x-license-key") || req.headers.get("x-api-key") || "").trim();
+  if (xKey) return xKey;
+  return (queryKey || "").trim();
+}
+async function authenticateMcpLicense(db, licenseKey, targetSlug) {
+  if (!licenseKey || licenseKey.length < 8) {
+    return {
+      ok: false,
+      status: 401,
+      error: 'Thi\u1EBFu License Key. Truy\u1EC1n header "Authorization: Bearer <LICENSE_KEY>" ho\u1EB7c "X-License-Key: <LICENSE_KEY>".'
+    };
+  }
+  const primary = await db.prepare(
+    `SELECT l.id AS license_id, l.license_key, l.user_id,
+            u.email AS user_email, u.full_name AS user_name, u.status AS user_status,
+            p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
+            p.features, p.tech_stack, p.product_type,
+            p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+            p.mcp_skill_prompt, p.mcp_render_webhook
+     FROM licenses l
+     JOIN users u ON u.id = l.user_id
+     JOIN products p ON p.id = l.product_id
+     WHERE l.license_key = ?`
+  ).bind(licenseKey).first();
+  if (!primary) {
+    return { ok: false, status: 401, error: "License Key kh\xF4ng h\u1EE3p l\u1EC7 ho\u1EB7c \u0111\xE3 b\u1ECB thu h\u1ED3i." };
+  }
+  if (primary.user_status !== "active") {
+    return { ok: false, status: 403, error: "T\xE0i kho\u1EA3n s\u1EDF h\u1EEFu License Key hi\u1EC7n \u0111ang b\u1ECB kho\xE1." };
+  }
+  if (primary.product_type !== "mcp_skill") {
+    return {
+      ok: false,
+      status: 403,
+      error: "License Key n\xE0y thu\u1ED9c d\xF2ng Skill t\u1EF1 t\u1EA3i (kh\xF4ng ph\u1EA3i Skill AI Agent MCP). Vui l\xF2ng d\xF9ng License Key c\u1EE7a s\u1EA3n ph\u1EA9m Skill AI Agent (MCP)."
+    };
+  }
+  const allRes = await db.prepare(
+    `SELECT l.id AS license_id, l.license_key, l.user_id,
+            u.email AS user_email, u.full_name AS user_name,
+            p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
+            p.features, p.tech_stack,
+            p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+            p.mcp_skill_prompt, p.mcp_render_webhook
+     FROM licenses l
+     JOIN users u ON u.id = l.user_id
+     JOIN products p ON p.id = l.product_id
+     WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
+     ORDER BY (CASE WHEN l.id = ? THEN 0 ELSE 1 END), l.id DESC`
+  ).bind(primary.user_id, primary.license_id).all();
+  const ownedSkills = allRes.results || [];
+  if (targetSlug) {
+    const matched = ownedSkills.find((s) => s.slug === targetSlug);
+    if (!matched) {
+      return {
+        ok: false,
+        status: 403,
+        error: `License Key c\u1EE7a b\u1EA1n ch\u01B0a k\xEDch ho\u1EA1t Skill MCP "${targetSlug}".`
+      };
+    }
+    return { ok: true, primary: matched, skills: [matched] };
+  }
+  return { ok: true, primary, skills: ownedSkills.length > 0 ? ownedSkills : [primary] };
+}
+function buildFallbackBlueprint(skill) {
+  const features = parseJSON(skill.features, []);
+  const tech = parseJSON(skill.tech_stack, []);
+  const lines = [
+    `# SKILL BLUEPRINT: ${skill.name} (${skill.version})`,
+    "",
+    skill.short_desc || "",
+    "",
+    "## C\xF4ng ngh\u1EC7 / Model t\u01B0\u01A1ng th\xEDch",
+    tech.length ? tech.map((t) => `- ${t}`).join("\n") : "- Seedance 2.5, Muse AI, Veo 3, CapCut",
+    "",
+    "## Th\xE0nh ph\u1EA7n c\u1ED1t l\xF5i c\u1EE7a Skill",
+    features.length ? features.map((f) => `- ${f}`).join("\n") : "- Hook 3s + Kh\xF3a nh\xE2n v\u1EADt + K\u1ECBch b\u1EA3n 30s + CTA",
+    "",
+    "## M\xF4 t\u1EA3 quy tr\xECnh",
+    stripHtml(skill.description || "", 2e3)
+  ];
+  return lines.join("\n");
+}
+function generateStoryboardPayload(skill, args) {
+  const topic = String(args.topic || args.product_name || "S\u1EA3n ph\u1EA9m / ch\u1EE7 \u0111\u1EC1 video AI").trim();
+  const productName = String(args.product_name || topic).trim();
+  const audience = String(args.target_audience || "Kh\xE1ch h\xE0ng tr\u1EBB 20-35 tu\u1ED5i tr\xEAn TikTok / Facebook Reels").trim();
+  const durationSec = Math.min(60, Math.max(10, Number(args.duration_sec) || 30));
+  const aspectRatio = String(args.aspect_ratio || "9:16");
+  const platform = String(args.platform || "TikTok / Reels");
+  const model = String(args.model || "Seedance 2.5");
+  const tone = String(args.tone || "T\u1EF1 nhi\xEAn, ch\xE2n th\u1EF1c, t\u1ED1c \u0111\u1ED9 nhanh, gi\u1EEF ch\xE2n 3 gi\xE2y \u0111\u1EA7u");
+  const usp = String(args.usp || "Gi\u1EA3i quy\u1EBFt v\u1EA5n \u0111\u1EC1 nhanh g\u1ECDn, ti\u1EBFt ki\u1EC7m th\u1EDDi gian & chi ph\xED").trim();
+  const s1 = Math.max(3, Math.round(durationSec * 0.16));
+  const s2 = Math.max(5, Math.round(durationSec * 0.27));
+  const s3 = Math.max(6, Math.round(durationSec * 0.37));
+  const s4 = Math.max(4, durationSec - s1 - s2 - s3);
+  const charAnchor = `Consistent Vietnamese creator (25yo, clean casual outfit, warm natural daylight, authentic home/studio setting, sharp focus, ${aspectRatio} vertical cinematic realism, no text artifacts)`;
+  const isAffiliate = skill.slug.includes("affiliate") || skill.name.toLowerCase().includes("affiliate");
+  const hookVariants = isAffiliate ? [
+    `\u0110\u1EEBng mua ${productName} tr\u01B0\u1EDBc khi xem h\u1EBFt 30 gi\xE2y test th\u1EF1c t\u1EBF n\xE0y!`,
+    `T\u1EA1i sao ai d\xF9ng ${productName} r\u1ED3i c\u0169ng b\u1EA3o \u0111\xE1ng ti\u1EC1n h\u01A1n g\u1EA5p 3 l\u1EA7n?`,
+    `Th\u1EED ${productName} trong \u0111\xFAng 5 gi\xE2y v\xE0 \u0111\xE2y l\xE0 k\u1EBFt qu\u1EA3 khi\u1EBFn m\xECnh b\u1EA5t ng\u1EDD...`
+  ] : [
+    `3 gi\xE2y \u0111\u1EA7u ti\xEAn s\u1EBD thay \u0111\u1ED5i ho\xE0n to\xE0n c\xE1ch b\u1EA1n nh\xECn v\u1EC1 ${topic}!`,
+    `90% m\u1ECDi ng\u01B0\u1EDDi l\xE0m sai b\u01B0\u1EDBc n\xE0y khi ti\u1EBFp c\u1EADn ${topic} \u2014 xem ngay c\xE1ch chu\u1EA9n:`,
+    `T\u1EEB con s\u1ED1 0 \u0111\u1EBFn k\u1EBFt qu\u1EA3 c\u1EF1c \u0111\xE3 m\u1EAFt v\u1EDBi ${topic} ch\u1EC9 trong ${durationSec} gi\xE2y.`
+  ];
+  const scenes = [
+    {
+      scene: 1,
+      role: "Visual Hook (Ch\u1EB7n cu\u1ED9n 3 gi\xE2y \u0111\u1EA7u)",
+      time_range: `00:00 - 00:${String(s1).padStart(2, "0")}`,
+      duration_sec: s1,
+      camera: "Fast push-in close-up, dynamic hand motion, eye-level",
+      voiceover_vi: hookVariants[0],
+      visual_prompt: `${charAnchor}. Dynamic opening close-up showcasing "${topic}" in action, dramatic eye-catching first frame, brisk push-in camera movement, vibrant crisp textures, high retention hook framing, natural ambient SFX.`
+    },
+    {
+      scene: 2,
+      role: "V\u1EA5n \u0111\u1EC1 th\u1EF1c t\u1EBF (Agitate)",
+      time_range: `00:${String(s1).padStart(2, "0")} - 00:${String(s1 + s2).padStart(2, "0")}`,
+      duration_sec: s2,
+      camera: "Medium shot, slight handheld authenticity",
+      voiceover_vi: `Tr\u01B0\u1EDBc \u0111\xE2y m\xECnh c\u0169ng m\u1EA5t r\u1EA5t nhi\u1EC1u th\u1EDDi gian loay hoay v\xEC v\u1EA5n \u0111\u1EC1 quen thu\u1ED9c khi l\xE0m v\u1EC1 ${topic}.`,
+      visual_prompt: `${charAnchor}. Medium shot showing relatable everyday frustration related to "${topic}", realistic indoor lighting, expressive natural body language, smooth camera pan, consistent wardrobe and background.`
+    },
+    {
+      scene: 3,
+      role: "Gi\u1EA3i ph\xE1p & Demo USP (Payoff)",
+      time_range: `00:${String(s1 + s2).padStart(2, "0")} - 00:${String(s1 + s2 + s3).padStart(2, "0")}`,
+      duration_sec: s3,
+      camera: "Macro detail + smooth orbit transition (Before -> After)",
+      voiceover_vi: `Cho \u0111\u1EBFn khi \xE1p d\u1EE5ng \u0111\xFAng \u0111i\u1EC3m \u0103n ti\u1EC1n c\u1EE7a ${productName}: ${usp}. Nh\xECn k\u1EBFt qu\u1EA3 th\u1EF1c t\u1EBF kh\xE1c h\u1EB3n ngay l\u1EADp t\u1EE9c!`,
+      visual_prompt: `${charAnchor}. Crisp macro and medium-close shots demonstrating "${productName}" delivering "${usp}", clean before-and-after transformation, smooth gimbal motion, studio-grade highlights, zero distortion.`
+    },
+    {
+      scene: 4,
+      role: "K\u1EBFt qu\u1EA3 \u0111\u1EB9p nh\u1EA5t & CTA",
+      time_range: `00:${String(s1 + s2 + s3).padStart(2, "0")} - 00:${String(durationSec).padStart(2, "0")}`,
+      duration_sec: s4,
+      camera: "Clean hero shot, gentle zoom-out + smile to camera",
+      voiceover_vi: isAffiliate ? `M\xECnh g\u1EAFn s\u1EB5n ${productName} \u1EDF gi\u1ECF h\xE0ng g\xF3c tr\xE1i m\xE0n h\xECnh, b\u1EA5m xem \u01B0u \u0111\xE3i h\xF4m nay tr\u01B0\u1EDBc khi h\u1EBFt deal nh\xE9!` : `L\u01B0u ngay video n\xE0y \u0111\u1EC3 \xE1p d\u1EE5ng cho k\xEAnh c\u1EE7a b\u1EA1n v\xE0 b\xECnh lu\u1EADn ch\u1EE7 \u0111\u1EC1 b\u1EA1n mu\u1ED1n m\xECnh l\xE0m ti\u1EBFp theo nh\xE9!`,
+      visual_prompt: `${charAnchor}. Polished final hero shot displaying the completed result of "${topic}", creator smiling confidently toward camera, warm rim lighting, clean negative space at bottom-left for CTA overlay.`
+    }
+  ];
+  const srt = scenes.map((sc, idx) => {
+    const startSec = scenes.slice(0, idx).reduce((a, x) => a + x.duration_sec, 0);
+    const endSec = startSec + sc.duration_sec;
+    const fmt = (t) => `00:00:${String(t).padStart(2, "0")},000`;
+    return `${idx + 1}
+${fmt(startSec)} --> ${fmt(endSec)}
+${sc.voiceover_vi}`;
+  }).join("\n\n");
+  return {
+    skill: {
+      slug: skill.slug,
+      name: skill.name,
+      version: skill.version
+    },
+    brief: {
+      topic,
+      product_name: productName,
+      target_audience: audience,
+      duration_sec: durationSec,
+      aspect_ratio: aspectRatio,
+      platform,
+      target_model: model,
+      tone,
+      usp
+    },
+    character_lock: charAnchor,
+    ab_hook_variants: hookVariants,
+    scenes,
+    subtitles_srt: srt,
+    social_meta: {
+      caption: `${hookVariants[0]} \u2728 #${skill.slug.replace(/[^a-z0-9]/gi, "")} #VideoAI #KhoSkillAI #ReelsVN #TikTokShop`,
+      posting_windows_vn: ["11:30 - 12:30", "19:30 - 21:30"]
+    }
+  };
+}
+function buildToolsManifest(skills) {
+  const slugEnum = skills.map((s) => s.slug);
+  const slugNote = slugEnum.length === 1 ? `M\u1EB7c \u0111\u1ECBnh d\xF9ng "${slugEnum[0]}".` : `Ch\u1ECDn 1 trong c\xE1c skill \u0111\xE3 k\xEDch ho\u1EA1t: ${slugEnum.join(", ")} (\u0111\u1EC3 tr\u1ED1ng s\u1EBD d\xF9ng "${slugEnum[0]}").`;
+  const baseTools = [
+    {
+      name: "list_licensed_skills",
+      description: "Li\u1EC7t k\xEA t\u1EA5t c\u1EA3 Skill AI Agent (MCP) \u0111ang \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t b\u1EDFi License Key c\u1EE7a ng\u01B0\u1EDDi d\xF9ng tr\xEAn KhoSkill AI.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        additionalProperties: false
+      }
+    },
+    {
+      name: "get_skill_blueprint",
+      description: `N\u1EA1p to\xE0n b\u1ED9 quy tr\xECnh, c\xF4ng th\u1EE9c Hook-Body-CTA, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt v\xE0 ch\u1EC9 d\u1EABn th\u1EF1c thi c\u1EE7a Skill AI. ${slugNote}`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          skill_slug: { type: "string", description: slugNote }
+        }
+      }
+    },
+    {
+      name: "generate_video_storyboard",
+      description: `\xC1p d\u1EE5ng Skill \u0111\u1EC3 t\u1EF1 \u0111\u1ED9ng t\u1EA1o storyboard chi ti\u1EBFt, kh\xF3a nh\xE2n v\u1EADt, prompt t\u1EEBng c\u1EA3nh chu\u1EA9n Seedance 2.5 / Muse AI / Veo 3, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT. ${slugNote}`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          skill_slug: { type: "string", description: slugNote },
+          topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 video ho\u1EB7c \xFD t\u01B0\u1EDFng ch\xEDnh (b\u1EAFt bu\u1ED9c)" },
+          product_name: { type: "string", description: "T\xEAn s\u1EA3n ph\u1EA9m / d\u1ECBch v\u1EE5 (n\u1EBFu l\xE0m video b\xE1n h\xE0ng / affiliate)" },
+          usp: { type: "string", description: "\u0110i\u1EC3m n\u1ED5i b\u1EADt ch\xEDnh (USP) mu\u1ED1n nh\u1EA5n m\u1EA1nh trong video" },
+          target_audience: { type: "string", description: "Kh\xE1ch h\xE0ng m\u1EE5c ti\xEAu" },
+          duration_sec: { type: "number", description: "Th\u1EDDi l\u01B0\u1EE3ng video mong mu\u1ED1n (gi\xE2y), m\u1EB7c \u0111\u1ECBnh 30" },
+          aspect_ratio: { type: "string", enum: ["9:16", "16:9", "1:1"], description: "T\u1EF7 l\u1EC7 khung h\xECnh, m\u1EB7c \u0111\u1ECBnh 9:16" },
+          platform: { type: "string", description: "N\u1EC1n t\u1EA3ng \u0111\u0103ng t\u1EA3i: TikTok, Facebook Reels, YouTube Shorts..." },
+          model: { type: "string", description: "Model AI t\u1EA1o video m\u1EE5c ti\xEAu: Seedance 2.5, Muse AI, Veo 3, Google Flow..." },
+          tone: { type: "string", description: "Gi\u1ECDng \u0111i\u1EC7u / phong c\xE1ch th\u1EC3 hi\u1EC7n" }
+        },
+        required: ["topic"]
+      }
+    },
+    {
+      name: "create_video_from_skill",
+      description: `Th\u1EF1c thi tr\u1ECDn v\u1EB9n Skill \u0111\u1EC3 t\u1EA1o g\xF3i s\u1EA3n xu\u1EA5t video ho\xE0n ch\u1EC9nh (ho\u1EB7c g\u1ECDi render pipeline t\u1EF1 \u0111\u1ED9ng n\u1EBFu Skill c\xF3 g\u1EAFn render API/webhook). Tr\u1EA3 v\u1EC1 job_id, blueprint \xE1p d\u1EE5ng, storyboard t\u1EEBng c\u1EA3nh, prompt render, voiceover, SRT v\xE0 h\u01B0\u1EDBng d\u1EABn l\u1EAFp r\xE1p cu\u1ED1i. ${slugNote}`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          skill_slug: { type: "string", description: slugNote },
+          topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 ho\u1EB7c t\xEAn s\u1EA3n ph\u1EA9m c\u1EA7n t\u1EA1o video (b\u1EAFt bu\u1ED9c)" },
+          product_name: { type: "string", description: "T\xEAn s\u1EA3n ph\u1EA9m c\u1EE5 th\u1EC3 (tu\u1EF3 ch\u1ECDn)" },
+          usp: { type: "string", description: "L\u1EE3i \xEDch / \u0111i\u1EC3m m\u1EA1nh c\u1ED1t l\xF5i c\u1EA7n nh\u1EA5n m\u1EA1nh" },
+          target_audience: { type: "string", description: "T\u1EC7p ng\u01B0\u1EDDi xem m\u1EE5c ti\xEAu" },
+          duration_sec: { type: "number", description: "Th\u1EDDi l\u01B0\u1EE3ng gi\xE2y, m\u1EB7c \u0111\u1ECBnh 30" },
+          aspect_ratio: { type: "string", enum: ["9:16", "16:9", "1:1"], description: "T\u1EF7 l\u1EC7 khung h\xECnh, m\u1EB7c \u0111\u1ECBnh 9:16" },
+          platform: { type: "string", description: "TikTok, Facebook Reels, Instagram Reels ho\u1EB7c YouTube Shorts" },
+          model: { type: "string", description: "Seedance 2.5, Muse AI, Veo 3 ho\u1EB7c Google Flow" },
+          reference_image_url: { type: "string", description: "URL \u1EA3nh nh\xE2n v\u1EADt ho\u1EB7c \u1EA3nh s\u1EA3n ph\u1EA9m \u0111\u1EC3 kh\xF3a ngo\u1EA1i h\xECnh (tu\u1EF3 ch\u1ECDn)" },
+          voice_script: { type: "string", description: "L\u1EDDi tho\u1EA1i tu\u1EF3 ch\u1EC9nh n\u1EBFu b\u1EA1n \u0111\xE3 c\xF3 s\u1EB5n (tu\u1EF3 ch\u1ECDn)" }
+        },
+        required: ["topic"]
+      }
+    }
+  ];
+  const knownNames = new Set(baseTools.map((t) => t.name));
+  for (const sk of skills) {
+    for (const custom of parseMcpTools(sk.mcp_tools)) {
+      if (!knownNames.has(custom.name)) {
+        knownNames.add(custom.name);
+        baseTools.push({
+          name: custom.name,
+          description: `${custom.description || "Tool chuy\xEAn bi\u1EC7t theo Skill"} (Skill: ${sk.name})`,
+          inputSchema: {
+            type: "object",
+            properties: {
+              topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 / y\xEAu c\u1EA7u \u0111\u1EA7u v\xE0o cho Skill" },
+              params: { type: "object", description: "Tham s\u1ED1 m\u1EDF r\u1ED9ng tu\u1EF3 ch\u1ECDn" }
+            }
+          }
+        });
+      }
+    }
+  }
+  return baseTools;
+}
+function rpcResult(id, result) {
+  return { jsonrpc: "2.0", id, result };
+}
+function rpcError(id, code, message, data) {
+  return { jsonrpc: "2.0", id, error: { code, message, ...data !== void 0 ? { data } : {} } };
+}
+async function handleMcpJsonRpc(opts) {
+  const { db, auth, payload, origin } = opts;
+  if (!payload || typeof payload !== "object" || payload.jsonrpc !== "2.0" || typeof payload.method !== "string") {
+    return { status: 400, body: rpcError(payload?.id ?? null, -32600, "Invalid JSON-RPC 2.0 request") };
+  }
+  const { id, method, params = {} } = payload;
+  const isNotification = id === void 0 || id === null;
+  if (method === "notifications/initialized" || method.startsWith("notifications/")) {
+    return { status: 202, body: null };
+  }
+  if (method === "ping") {
+    return { status: 200, body: rpcResult(id, {}) };
+  }
+  if (method === "initialize") {
+    const clientVer = typeof params?.protocolVersion === "string" ? params.protocolVersion : "2025-03-26";
+    const supported = ["2025-06-18", "2025-03-26", "2024-11-05"];
+    const negotiated = supported.includes(clientVer) ? clientVer : "2025-03-26";
+    const serverName = resolveMcpServerName(auth.primary);
+    return {
+      status: 200,
+      body: rpcResult(id, {
+        protocolVersion: negotiated,
+        capabilities: {
+          tools: { listChanged: false },
+          prompts: { listChanged: false },
+          resources: { subscribe: false, listChanged: false }
+        },
+        serverInfo: {
+          name: serverName,
+          version: auth.primary.version || "1.0.0"
+        },
+        instructions: `B\u1EA1n \u0111\xE3 k\u1EBFt n\u1ED1i th\xE0nh c\xF4ng v\u1EDBi KhoSkill AI MCP Server (${auth.skills.length} Skill AI Agent \u0111ang k\xEDch ho\u1EA1t). H\xE3y g\u1ECDi tool "get_skill_blueprint" \u0111\u1EC3 n\u1EA1p quy tr\xECnh chu\u1EA9n v\xE0 g\u1ECDi "create_video_from_skill" ho\u1EB7c "generate_video_storyboard" \u0111\u1EC3 t\u1EF1 \u0111\u1ED9ng s\u1EA3n xu\u1EA5t video theo \u0111\xFAng Skill.`
+      })
+    };
+  }
+  if (method === "tools/list") {
+    return {
+      status: 200,
+      body: rpcResult(id, { tools: buildToolsManifest(auth.skills) })
+    };
+  }
+  if (method === "prompts/list") {
+    const prompts = auth.skills.map((s) => ({
+      name: `skill_${s.slug.replace(/[^a-z0-9_]/gi, "_")}`,
+      description: `Ch\u1EA1y to\xE0n b\u1ED9 quy tr\xECnh "${s.name}" \u0111\u1EC3 t\u1EA1o video t\u1EF1 \u0111\u1ED9ng theo chu\u1EA9n Skill`,
+      arguments: [
+        { name: "topic", description: "Ch\u1EE7 \u0111\u1EC1 ho\u1EB7c t\xEAn s\u1EA3n ph\u1EA9m mu\u1ED1n t\u1EA1o video", required: true },
+        { name: "model", description: "Model video AI m\u1EE5c ti\xEAu (Seedance 2.5, Muse AI, Veo 3...)", required: false }
+      ]
+    }));
+    return { status: 200, body: rpcResult(id, { prompts }) };
+  }
+  if (method === "prompts/get") {
+    const pName = String(params?.name || "");
+    const matched = auth.skills.find((s) => `skill_${s.slug.replace(/[^a-z0-9_]/gi, "_")}` === pName) || auth.primary;
+    const topic = String(params?.arguments?.topic || "[ch\u1EE7 \u0111\u1EC1 c\u1EE7a ng\u01B0\u1EDDi d\xF9ng]");
+    const model = String(params?.arguments?.model || "Seedance 2.5");
+    const blueprint = (matched.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(matched);
+    return {
+      status: 200,
+      body: rpcResult(id, {
+        description: matched.short_desc || matched.name,
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `H\xE3y th\u1EF1c thi Skill "${matched.name}" cho ch\u1EE7 \u0111\u1EC1 "${topic}" tr\xEAn model "${model}".
+
+D\u01B0\u1EDBi \u0111\xE2y l\xE0 Skill Blueprint ch\xEDnh th\u1EE9c t\u1EEB KhoSkill MCP:
+
+${blueprint}
+
+Sau khi n\u1EAFm r\xF5 blueprint, h\xE3y g\u1ECDi tool "create_video_from_skill" v\u1EDBi topic="${topic}" v\xE0 model="${model}" \u0111\u1EC3 xu\u1EA5t g\xF3i s\u1EA3n xu\u1EA5t video ho\xE0n ch\u1EC9nh.`
+            }
+          }
+        ]
+      })
+    };
+  }
+  if (method === "resources/list") {
+    const resources = auth.skills.map((s) => ({
+      uri: `khoskill://skills/${s.slug}/blueprint.md`,
+      name: `${s.name} \u2014 Skill Blueprint`,
+      description: s.short_desc || "T\xE0i li\u1EC7u quy tr\xECnh & c\xF4ng th\u1EE9c Skill chu\u1EA9n cho AI Agent",
+      mimeType: "text/markdown"
+    }));
+    return { status: 200, body: rpcResult(id, { resources }) };
+  }
+  if (method === "resources/read") {
+    const uri = String(params?.uri || "");
+    const m = uri.match(/^khoskill:\/\/skills\/([^/]+)\/blueprint\.md$/);
+    const matched = m && auth.skills.find((s) => s.slug === m[1]) || auth.primary;
+    const blueprint = (matched.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(matched);
+    return {
+      status: 200,
+      body: rpcResult(id, {
+        contents: [
+          {
+            uri: `khoskill://skills/${matched.slug}/blueprint.md`,
+            mimeType: "text/markdown",
+            text: blueprint
+          }
+        ]
+      })
+    };
+  }
+  if (method === "tools/call") {
+    const toolName = String(params?.name || "").trim();
+    const args = params?.arguments && typeof params.arguments === "object" ? params.arguments : {};
+    const requestedSlug = String(args.skill_slug || "").trim();
+    const targetSkill = requestedSlug && auth.skills.find((s) => s.slug === requestedSlug) || auth.primary;
+    await db.prepare(
+      `UPDATE licenses SET mcp_call_count = COALESCE(mcp_call_count, 0) + 1, last_mcp_call_at = ? WHERE id = ?`
+    ).bind((/* @__PURE__ */ new Date()).toISOString(), targetSkill.license_id).run().catch(() => null);
+    if (toolName === "list_licensed_skills") {
+      const summary = auth.skills.map((s) => ({
+        slug: s.slug,
+        name: s.name,
+        version: s.version,
+        short_desc: s.short_desc,
+        server_name: resolveMcpServerName(s),
+        endpoint: resolveMcpEndpoint(origin, s),
+        supported_clients: parseMcpClients(s.mcp_clients),
+        tech_stack: parseJSON(s.tech_stack, []),
+        render_webhook_connected: Boolean((s.mcp_render_webhook || "").trim())
+      }));
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          content: [{ type: "text", text: JSON.stringify({ owner: auth.primary.user_email, active_skills: summary }, null, 2) }]
+        })
+      };
+    }
+    if (toolName === "get_skill_blueprint") {
+      const blueprint = (targetSkill.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(targetSkill);
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          content: [
+            {
+              type: "text",
+              text: `${blueprint}
+
+---
+Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to: ${targetSkill.user_email}`
+            }
+          ]
+        })
+      };
+    }
+    if (toolName === "generate_video_storyboard") {
+      const storyboard = generateStoryboardPayload(targetSkill, args);
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          content: [{ type: "text", text: JSON.stringify(storyboard, null, 2) }]
+        })
+      };
+    }
+    if (toolName === "create_video_from_skill") {
+      const blueprint = (targetSkill.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(targetSkill);
+      const storyboard = generateStoryboardPayload(targetSkill, args);
+      const jobId = `KSJOB-${Date.now().toString(36).toUpperCase()}`;
+      const webhookUrl = (targetSkill.mcp_render_webhook || "").trim();
+      if (webhookUrl && (webhookUrl.startsWith("https://") || webhookUrl.startsWith("http://"))) {
+        try {
+          const resp = await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-KhoSkill-License": targetSkill.license_key,
+              "X-KhoSkill-Slug": targetSkill.slug
+            },
+            body: JSON.stringify({
+              job_id: jobId,
+              skill_slug: targetSkill.slug,
+              skill_name: targetSkill.name,
+              user_email: targetSkill.user_email,
+              arguments: args,
+              storyboard,
+              blueprint
+            })
+          });
+          const respText = await resp.text();
+          let parsed = null;
+          try {
+            parsed = JSON.parse(respText);
+          } catch {
+            parsed = { raw: respText };
+          }
+          return {
+            status: 200,
+            body: rpcResult(id, {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    job_id: jobId,
+                    mode: "remote_render_webhook",
+                    webhook_status: resp.status,
+                    render_response: parsed,
+                    storyboard
+                  }, null, 2)
+                }
+              ],
+              isError: !resp.ok
+            })
+          };
+        } catch (err) {
+          return {
+            status: 200,
+            body: rpcResult(id, {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    job_id: jobId,
+                    mode: "fallback_production_package",
+                    webhook_error: String(err?.message || err),
+                    note: "Render webhook t\u1EA1m kh\xF4ng ph\u1EA3n h\u1ED3i \u2014 tr\u1EA3 v\u1EC1 tr\u1ECDn b\u1ED9 g\xF3i s\u1EA3n xu\u1EA5t chu\u1EA9n Skill \u0111\u1EC3 AI Agent ti\u1EBFp t\u1EE5c x\u1EED l\xFD.",
+                    storyboard,
+                    blueprint
+                  }, null, 2)
+                }
+              ]
+            })
+          };
+        }
+      }
+      const productionPackage = {
+        job_id: jobId,
+        status: "ready_for_agent_execution",
+        mode: "skill_orchestration_package",
+        skill_used: {
+          slug: targetSkill.slug,
+          name: targetSkill.name,
+          version: targetSkill.version
+        },
+        reference_image_url: args.reference_image_url || null,
+        custom_voice_script: args.voice_script || null,
+        storyboard,
+        agent_execution_steps: [
+          "1. Ki\u1EC3m tra l\u1EA1i Character Anchor v\xE0 4 c\u1EA3nh trong storyboard \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o \u0111\u1ED3ng nh\u1EA5t nh\xE2n v\u1EADt & s\u1EA3n ph\u1EA9m.",
+          `2. D\xF9ng t\u1EEBng visual_prompt g\u1EEDi t\u1EDBi ${storyboard.brief.target_model} (t\u1EF7 l\u1EC7 ${storyboard.brief.aspect_ratio}) \u0111\u1EC3 render clip t\u1EEBng c\u1EA3nh.`,
+          "3. Gh\xE9p clip theo \u0111\xFAng m\u1ED1c th\u1EDDi gian, ch\xE8n voiceover ti\u1EBFng Vi\u1EC7t v\xE0 file subtitles_srt.",
+          "4. Xu\u1EA5t video MP4 1080x1920 30fps, \xE1p d\u1EE5ng caption & khung gi\u1EDD \u0111\u0103ng trong social_meta."
+        ],
+        blueprint_excerpt: blueprint.slice(0, 1500)
+      };
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          content: [{ type: "text", text: JSON.stringify(productionPackage, null, 2) }]
+        })
+      };
+    }
+    const customTool = parseMcpTools(targetSkill.mcp_tools).find((t) => t.name === toolName);
+    if (customTool) {
+      const storyboard = generateStoryboardPayload(targetSkill, args);
+      const blueprint = (targetSkill.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(targetSkill);
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                tool: customTool.name,
+                description: customTool.description,
+                skill: targetSkill.name,
+                input: args,
+                storyboard,
+                blueprint
+              }, null, 2)
+            }
+          ]
+        })
+      };
+    }
+    return {
+      status: 200,
+      body: rpcError(id, -32602, `Tool kh\xF4ng t\u1ED3n t\u1EA1i: "${toolName}". G\u1ECDi tools/list \u0111\u1EC3 xem danh s\xE1ch tool kh\u1EA3 d\u1EE5ng.`)
+    };
+  }
+  if (isNotification) {
+    return { status: 202, body: null };
+  }
+  return { status: 200, body: rpcError(id, -32601, `Method kh\xF4ng h\u1ED7 tr\u1EE3: ${method}`) };
+}
+
 // src/pages/product-detail.tsx
 var ProductDetailPage = (props) => {
-  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings } = props;
+  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings, origin = "https://khoskill.site" } = props;
   const off = discountPercent(p.price, p.original_price);
   const features = parseJSON(p.features, []);
   const tech = parseJSON(p.tech_stack, []);
@@ -10901,6 +11787,17 @@ var ProductDetailPage = (props) => {
   const replacedPoster = isMp4 ? p.demo_video_url.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, "/videos/posters/poster-$2.jpg") : void 0;
   const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : void 0;
   const comingSoon = p.status === "coming_soon";
+  const mcp = isMcpSkill(p.product_type);
+  const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : [];
+  const mcpTools = mcp ? parseMcpTools(p.mcp_tools) : [];
+  const mcpPreview = mcp ? buildMcpConfigs({
+    origin,
+    slug: p.slug,
+    productName: p.name,
+    licenseKey: "KS-XXXX-XXXX-XXXX",
+    mcpEndpoint: p.mcp_endpoint,
+    mcpServerName: p.mcp_server_name
+  }) : null;
   return /* @__PURE__ */ jsxDEV(
     Layout,
     {
@@ -10985,7 +11882,36 @@ var ProductDetailPage = (props) => {
                   children: /* @__PURE__ */ jsxDEV("img", { src: g, alt: `${p.name} \u1EA3nh ${i + 1}`, loading: "lazy", class: "w-full h-full object-contain" })
                 }
               )) }),
-              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3 mt-5", children: [
+              mcp ? /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3 mt-5", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#0b1f33] border border-cyan-500/30 flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "Giao th\u1EE9c" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "MCP Streamable HTTP" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-terminal", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "AI Agent h\u1ED7 tr\u1EE3" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: mcpClients.join(" \xB7 ") })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-key", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "K\xEDch ho\u1EA1t" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "License Key t\u1EE9c th\xEC 24/7" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-fuchsia-500/15 text-fuchsia-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrows-rotate", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "C\u1EADp nh\u1EADt" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "\u0110\u1ED3ng b\u1ED9 live t\u1EEB Server" })
+                  ] })
+                ] })
+              ] }) : /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3 mt-5", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt", "aria-hidden": "true" }) }),
                   /* @__PURE__ */ jsxDEV("div", { children: [
@@ -11014,11 +11940,42 @@ var ProductDetailPage = (props) => {
                     /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "1-1 qua Zalo" })
                   ] })
                 ] })
+              ] }),
+              mcp && mcpPreview && /* @__PURE__ */ jsxDEV("div", { class: "mt-4 p-4 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#0f0e24] to-[#130f33] border border-cyan-500/35", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-2.5", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-cyan-300 flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }),
+                    "C\xE1ch ho\u1EA1t \u0111\u1ED9ng c\u1EE7a Skill AI Agent (MCP)"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-200 text-[10px] font-mono font-bold", children: "JSON-RPC 2.0" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#c2c0e0] leading-relaxed mb-3", children: [
+                  "Kh\xE1c v\u1EDBi Skill t\u1EF1 t\u1EA3i v\u1EC1 \u0111\u1ECDc v\xE0 l\xE0m tay: sau khi mua, b\u1EA1n ch\u1EC9 c\u1EA7n d\xE1n config MCP k\xE8m ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "License Key" }),
+                  " v\xE0o ",
+                  /* @__PURE__ */ jsxDEV("b", { children: mcpClients.join(", ") }),
+                  ". AI Agent s\u1EBD t\u1EF1 g\u1ECDi ",
+                  /* @__PURE__ */ jsxDEV("b", { children: [
+                    mcpTools.length,
+                    " MCP Tools"
+                  ] }),
+                  " d\u01B0\u1EDBi \u0111\xE2y \u0111\u1EC3 d\u1EF1ng video theo \u0111\xFAng chu\u1EA9n Skill:"
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "space-y-1.5", children: mcpTools.map((t) => /* @__PURE__ */ jsxDEV("div", { class: "p-2 rounded-lg bg-[#070614]/75 border border-white/10 text-[11px] flex items-start gap-2", children: [
+                  /* @__PURE__ */ jsxDEV("code", { class: "font-mono font-bold text-cyan-300 shrink-0", children: t.name }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-[#b8b6d9] leading-snug", children: [
+                    "\u2014 ",
+                    t.description
+                  ] })
+                ] })) })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col justify-start", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-3", children: [
-                /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+                mcp ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-xs font-bold inline-flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[11px]", "aria-hidden": "true" }),
+                  PRODUCT_TYPE_LABEL[p.product_type]
+                ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold", children: PRODUCT_TYPE_LABEL[p.product_type] }),
                 p.category_name && /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${p.category_slug}`, class: "px-2.5 py-1 rounded bg-[#161436] border border-[#221e54] text-[#c2c0e0] text-xs font-medium hover:text-white hover:border-indigo-500/40 transition", children: p.category_name }),
                 comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold", children: [
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1", "aria-hidden": "true" }),
@@ -11093,7 +12050,19 @@ var ProductDetailPage = (props) => {
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
                   "S\u1EA3n ph\u1EA9m hi\u1EC7n \u0111ang \u1EDF tr\u1EA1ng th\xE1i Ch\u01B0a m\u1EDF b\xE1n"
                 ] }),
-                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-amber-200/85 leading-relaxed", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng \u0111ang \u01B0u ti\xEAn m\u1EDF b\xE1n 5 b\u1ED9 Skill AI ho\xE0n thi\u1EC7n nh\u1EA5t. H\xE3y nh\u1EAFn Zalo ho\u1EB7c quay l\u1EA1i sau \u0111\u1EC3 c\u1EADp nh\u1EADt ng\xE0y ph\xE1t h\xE0nh ch\xEDnh th\u1EE9c." })
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-amber-200/85 leading-relaxed", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng \u0111ang \u01B0u ti\xEAn m\u1EDF b\xE1n d\xF2ng Skill AI (t\u1EF1 t\u1EA3i) & Skill AI Agent (MCP). H\xE3y nh\u1EAFn Zalo ho\u1EB7c quay l\u1EA1i sau \u0111\u1EC3 c\u1EADp nh\u1EADt ng\xE0y ph\xE1t h\xE0nh ch\xEDnh th\u1EE9c." })
+              ] }) : mcp ? /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-cyan-500/10 border border-cyan-400/30 p-4 rounded-xl flex items-center justify-between gap-3", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-cyan-100 flex items-center gap-2.5", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-cyan-300 shrink-0", "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    "Thanh to\xE1n VietQR t\u1EF1 \u0111\u1ED9ng 24/7 \u2014 nh\u1EADn ngay ",
+                    /* @__PURE__ */ jsxDEV("b", { children: "MCP Endpoint + License Key + Config copy" }),
+                    " cho ",
+                    /* @__PURE__ */ jsxDEV("b", { children: mcpClients.join(", ") }),
+                    "."
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[11px] font-bold shrink-0", children: "MCP Live" })
               ] }) : /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-indigo-500/10 border border-indigo-500/25 p-4 rounded-xl flex items-center justify-between gap-3", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-indigo-200 flex items-center gap-2", children: [
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-emerald-400", "aria-hidden": "true" }),
@@ -11106,10 +12075,10 @@ var ProductDetailPage = (props) => {
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-lg", "aria-hidden": "true" }),
                   "B\u1EA1n \u0111\xE3 s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0y"
                 ] }),
-                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-emerald-200/85 mb-3.5 leading-relaxed", children: "Truy c\u1EADp link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 t\xE0i li\u1EC7u h\u01B0\u1EDBng d\u1EABn trong khu v\u1EF1c t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-emerald-200/85 mb-3.5 leading-relaxed", children: mcp ? "M\u1EDF khu v\u1EF1c t\xE0i kho\u1EA3n \u0111\u1EC3 copy c\u1EA5u h\xECnh MCP cho Claude, Codex, Antigravity c\xF9ng License Key ri\xEAng v\xE0 ki\u1EC3m tra k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp." : "Truy c\u1EADp link t\u1EA3i s\u1EA3n ph\u1EA9m v\xE0 t\xE0i li\u1EC7u h\u01B0\u1EDBng d\u1EABn trong khu v\u1EF1c t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
                 /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition", children: [
-                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
-                  "Truy c\u1EADp s\u1EA3n ph\u1EA9m"
+                  /* @__PURE__ */ jsxDEV("i", { class: `fas ${mcp ? "fa-plug-circle-bolt" : "fa-download"}`, "aria-hidden": "true" }),
+                  mcp ? "L\u1EA5y c\u1EA5u h\xECnh MCP & License Key" : "Truy c\u1EADp s\u1EA3n ph\u1EA9m"
                 ] })
               ] }) : comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
                 /* @__PURE__ */ jsxDEV("button", { type: "button", disabled: true, class: "w-full h-12 rounded-xl bg-[#161436] border border-[#2a2559] text-amber-300 font-bold text-sm cursor-not-allowed", children: [
@@ -11133,11 +12102,11 @@ var ProductDetailPage = (props) => {
                   /* @__PURE__ */ jsxDEV(
                     "a",
                     {
-                      href: "/san-pham?type=skill",
+                      href: "/san-pham",
                       class: "flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/35 bg-indigo-500/15 text-indigo-200 hover:bg-indigo-500/25 font-bold text-xs transition",
                       children: [
                         /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
-                        "Xem 5 Skill \u0111ang b\xE1n"
+                        "Xem Skill \u0111ang m\u1EDF b\xE1n"
                       ]
                     }
                   )
@@ -11229,6 +12198,23 @@ var ProductDetailPage = (props) => {
                   ]
                 }
               ),
+              mcp && /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": "false",
+                  "aria-controls": "panel-mcp",
+                  id: "tab-mcp",
+                  class: "tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-cyan-300 whitespace-nowrap cursor-pointer",
+                  "data-tab": "mcp",
+                  "data-group": "pd",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1.5", "aria-hidden": "true" }),
+                    "K\u1EBFt n\u1ED1i MCP (Claude / Codex / Antigravity)"
+                  ]
+                }
+              ),
               /* @__PURE__ */ jsxDEV(
                 "button",
                 {
@@ -11267,6 +12253,56 @@ var ProductDetailPage = (props) => {
               )
             ] }),
             /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", id: "panel-desc", "aria-labelledby": "tab-desc", class: "tab-panel bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", "data-tab": "desc", "data-group": "pd", children: /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none", dangerouslySetInnerHTML: { __html: p.description || "<p>\u0110ang c\u1EADp nh\u1EADt m\xF4 t\u1EA3.</p>" } }) }),
+            mcp && mcpPreview && /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", id: "panel-mcp", "aria-labelledby": "tab-mcp", class: "tab-panel hidden bg-[#0f0e24] rounded-2xl border border-cyan-500/35 p-6 md:p-8 space-y-5", "data-tab": "mcp", "data-group": "pd", children: [
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("h3", { class: "text-lg font-extrabold text-white mb-2 flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-cyan-400", "aria-hidden": "true" }),
+                  "Xem tr\u01B0\u1EDBc c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP"
+                ] }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#c2c0e0] leading-relaxed", children: [
+                  "Sau khi thanh to\xE1n, License Key th\u1EADt c\u1EE7a b\u1EA1n s\u1EBD t\u1EF1 \u0111\u1ED9ng \u0111i\u1EC1n s\u1EB5n v\xE0o t\u1EEBng \u0111o\u1EA1n c\u1EA5u h\xECnh d\u01B0\u1EDBi \u0111\xE2y trong m\u1EE5c ",
+                  /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "text-cyan-300 underline font-semibold", children: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" }),
+                  ". B\u1EA1n ch\u1EC9 c\u1EA7n b\u1EA5m Copy v\xE0 d\xE1n 1 l\u1EA7n duy nh\u1EA5t."
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-xs flex flex-wrap items-center justify-between gap-2", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-semibold", children: "MCP Server Endpoint:" }),
+                /* @__PURE__ */ jsxDEV("code", { class: "font-mono text-cyan-300 break-all", children: mcpPreview.endpointUrl })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-3 gap-4", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-[#09081b] border border-[#242054]", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs mb-2 flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-2 h-2 rounded-full bg-orange-400" }),
+                    "Claude Code / Desktop"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("pre", { class: "text-[11px] font-mono text-[#c2c0e0] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all", children: mcpPreview.claudeJson })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-[#09081b] border border-[#242054]", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs mb-2 flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-2 h-2 rounded-full bg-emerald-400" }),
+                    "OpenAI Codex"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("pre", { class: "text-[11px] font-mono text-[#c2c0e0] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all", children: mcpPreview.codexToml })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-[#09081b] border border-[#242054]", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs mb-2 flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-2 h-2 rounded-full bg-violet-400" }),
+                    "Antigravity"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("pre", { class: "text-[11px] font-mono text-[#c2c0e0] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all", children: mcpPreview.antigravityJson })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-100 leading-relaxed", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-sparkles text-cyan-300 mr-1.5", "aria-hidden": "true" }),
+                /* @__PURE__ */ jsxDEV("b", { children: "C\xE2u l\u1EC7nh g\u1ECDi m\u1EABu trong AI Agent:" }),
+                " ",
+                /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-white", children: [
+                  '"',
+                  mcpPreview.samplePrompt,
+                  '"'
+                ] })
+              ] })
+            ] }),
             /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", id: "panel-rev", "aria-labelledby": "tab-rev", class: "tab-panel hidden", "data-tab": "rev", "data-group": "pd", children: [
               /* @__PURE__ */ jsxDEV("div", { id: "reviews", class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 mb-5", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-[180px_1fr] gap-7 items-center", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "text-center", children: [
@@ -11975,8 +13011,8 @@ var CartPage = (props) => {
       {
         icon: "fa-cart-shopping",
         title: "Gi\u1ECF h\xE0ng \u0111ang tr\u1ED1ng",
-        desc: "Kh\xE1m ph\xE1 b\u1ED9 5 Skill AI l\xE0m video \u0111ang m\u1EDF b\xE1n c\u1EE7a ch\xFAng t\xF4i.",
-        action: { href: "/san-pham?type=skill", label: "Xem 5 Skill \u0111ang b\xE1n" }
+        desc: "Kh\xE1m ph\xE1 kho Skill AI (t\u1EF1 t\u1EA3i) v\xE0 Skill AI Agent (MCP) \u0111ang m\u1EDF b\xE1n c\u1EE7a ch\xFAng t\xF4i.",
+        action: { href: "/san-pham", label: "Xem s\u1EA3n ph\u1EA9m \u0111ang b\xE1n" }
       }
     ) }) : /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-6", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
@@ -11987,11 +13023,11 @@ var CartPage = (props) => {
               href: `/san-pham/${p.slug}`,
               class: "w-24 sm:w-32 aspect-video rounded-xl overflow-hidden shrink-0 grid place-items-center text-white bg-[#070614]",
               style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`,
-              children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${p.product_type === "skill" ? "fa-wand-magic-sparkles" : p.product_type === "chatbot" ? "fa-robot" : p.product_type === "combo" ? "fa-box-open" : "fa-code"} text-xl`, "aria-hidden": "true" })
+              children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${p.product_type === "mcp_skill" ? "fa-plug-circle-bolt" : p.product_type === "skill" ? "fa-wand-magic-sparkles" : p.product_type === "chatbot" ? "fa-robot" : p.product_type === "combo" ? "fa-box-open" : "fa-code"} text-xl`, "aria-hidden": "true" })
             }
           ),
           /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-indigo-400 font-bold mb-1 uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+            /* @__PURE__ */ jsxDEV("div", { class: `text-[11px] font-bold mb-1 uppercase ${p.product_type === "mcp_skill" ? "text-cyan-300" : "text-indigo-400"}`, children: PRODUCT_TYPE_LABEL[p.product_type] }),
             /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white leading-snug line-clamp-2 mb-1.5", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "hover:text-indigo-300 transition", children: p.name }) }),
             /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mb-2", children: [
               p.version,
@@ -12272,10 +13308,10 @@ var OrderPage = (props) => {
       order.status === "paid" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check", "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-200 mb-4", children: "B\u1ED9 Skill AI \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-200 mb-4", children: "B\u1ED9 Skill AI / c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
         /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
-          "M\u1EDF & t\u1EA3i Skill ngay"
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-open", "aria-hidden": "true" }),
+          "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i ngay"
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-6", children: [
@@ -12609,130 +13645,368 @@ var AccountDashboard = (props) => {
     ] })
   ] });
 };
-var MyProductsPage = (props) => /* @__PURE__ */ jsxDEV(
-  AccountShell,
-  {
-    ...props,
-    activeKey: "products",
-    title: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
-    heading: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
-    sub: "Truy c\u1EADp link t\u1EA3i s\u1EA3n ph\u1EA9m, t\xE0i li\u1EC7u v\xE0 license key c\u1EE7a c\xE1c s\u1EA3n ph\u1EA9m b\u1EA1n \u0111\xE3 mua.",
-    children: props.licenses.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(
-      EmptyState,
-      {
-        icon: "fa-box-archive",
-        title: "B\u1EA1n ch\u01B0a s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0o",
-        desc: "Sau khi thanh to\xE1n th\xE0nh c\xF4ng, link t\u1EA3i s\u1EA3n ph\u1EA9m s\u1EBD xu\u1EA5t hi\u1EC7n t\u1EA1i \u0111\xE2y.",
-        action: { href: "/san-pham", label: "Kh\xE1m ph\xE1 s\u1EA3n ph\u1EA9m" }
-      }
-    ) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: props.licenses.map((l) => /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "p-5 flex flex-col sm:flex-row gap-4", children: [
-      /* @__PURE__ */ jsxDEV(
-        "div",
+var MyProductsPage = (props) => {
+  const origin = props.origin || "https://khoskill.site";
+  return /* @__PURE__ */ jsxDEV(
+    AccountShell,
+    {
+      ...props,
+      activeKey: "products",
+      title: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
+      heading: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
+      sub: "Truy c\u1EADp link t\u1EA3i Skill t\u1EF1 t\u1EA3i, ho\u1EB7c l\u1EA5y MCP Endpoint + License Key + c\u1EA5u h\xECnh copy s\u1EB5n cho Claude, Codex, Antigravity.",
+      children: props.licenses.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(
+        EmptyState,
         {
-          class: "sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white overflow-hidden",
-          style: l.thumbnail ? "" : `background:${gradientFor(l.product_id)}`,
-          children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: l.name, class: "w-full h-full object-cover rounded-xl", loading: "lazy" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-2xl`, "aria-hidden": "true" })
+          icon: "fa-box-archive",
+          title: "B\u1EA1n ch\u01B0a s\u1EDF h\u1EEFu s\u1EA3n ph\u1EA9m n\xE0o",
+          desc: "Sau khi thanh to\xE1n th\xE0nh c\xF4ng, link t\u1EA3i Skill ho\u1EB7c c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP cho AI Agent s\u1EBD xu\u1EA5t hi\u1EC7n t\u1EA1i \u0111\xE2y.",
+          action: { href: "/san-pham", label: "Kh\xE1m ph\xE1 s\u1EA3n ph\u1EA9m" }
         }
-      ),
-      /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1.5", children: [
-          /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold", children: PRODUCT_TYPE_LABEL[l.product_type] }),
-          /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1", "aria-hidden": "true" }),
-            "\u0110\xE3 k\xEDch ho\u1EA1t"
-          ] }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] font-mono", children: l.version })
-        ] }),
-        /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white leading-snug mb-2 text-base", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${l.slug}`, class: "hover:text-indigo-300 transition", children: l.name }) }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mb-3 flex flex-wrap gap-x-4 gap-y-1 tabular-nums", children: [
-          /* @__PURE__ */ jsxDEV("span", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1", "aria-hidden": "true" }),
-            "Mua ng\xE0y ",
-            formatDate(l.created_at)
-          ] }),
-          /* @__PURE__ */ jsxDEV("span", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-1", "aria-hidden": "true" }),
-            l.download_count,
-            " l\u01B0\u1EE3t t\u1EA3i"
-          ] }),
-          l.file_size && l.file_size !== "\u2014" && /* @__PURE__ */ jsxDEV("span", { children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hard-drive mr-1", "aria-hidden": "true" }),
-            l.file_size
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-[#161436] border border-[#221e54] mb-3", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mb-1 font-semibold uppercase tracking-wide", children: "License Key" }),
-          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxDEV("code", { class: "flex-1 font-mono text-sm text-indigo-300 font-bold tracking-wider truncate", children: l.license_key }),
-            /* @__PURE__ */ jsxDEV(
-              "button",
-              {
-                type: "button",
-                "data-copy": l.license_key,
-                "aria-label": "Sao ch\xE9p license key",
-                class: "shrink-0 w-9 h-9 rounded-lg bg-[#0f0e24] border border-[#2e2968] hover:border-indigo-400 hover:text-indigo-300 text-[#b8b6d9] text-xs transition grid place-items-center",
-                children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy", "aria-hidden": "true" })
-              }
-            )
-          ] })
-        ] }),
-        l.latest_changelog && /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]", children: [
-          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1", children: [
-            /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-indigo-300", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-sparkles mr-1", "aria-hidden": "true" }),
-              "C\u1EADp nh\u1EADt ",
-              l.latest_version || l.version
-            ] }),
-            l.latest_release_at && /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8]", children: formatDate(l.latest_release_at) })
-          ] }),
-          /* @__PURE__ */ jsxDEV("p", { class: "whitespace-pre-line text-[#c2c0e0] leading-relaxed", children: l.latest_changelog })
-        ] }),
-        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
-          l.download_url ? /* @__PURE__ */ jsxDEV(
-            "a",
+      ) }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: props.licenses.map((l) => {
+        const mcp = isMcpSkill(l.product_type);
+        const mcpCfg = mcp ? buildMcpConfigs({
+          origin,
+          slug: l.slug,
+          productName: l.name,
+          licenseKey: l.license_key,
+          mcpEndpoint: l.mcp_endpoint,
+          mcpServerName: l.mcp_server_name
+        }) : null;
+        const mcpClients = mcp ? parseMcpClients(l.mcp_clients) : [];
+        const tabGroup = `mcp-${l.id}`;
+        return /* @__PURE__ */ jsxDEV("div", { class: `bg-[#0f0e24] rounded-2xl border overflow-hidden ${mcp ? "border-cyan-500/40 shadow-lg shadow-cyan-950/20" : "border-[#221e54]"}`, children: /* @__PURE__ */ jsxDEV("div", { class: "p-5 flex flex-col sm:flex-row gap-4", children: [
+          /* @__PURE__ */ jsxDEV(
+            "div",
             {
-              href: `/tai-xuong/${l.id}`,
-              target: "_blank",
-              rel: "noopener",
-              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-indigo-500/20 transition",
-              children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
-                l.product_type === "skill" ? "T\u1EA3i b\u1ED9 Skill AI" : l.product_type === "chatbot" ? "M\u1EDF Chatbot" : "M\u1EDF & T\u1EA3i xu\u1ED1ng"
-              ]
-            }
-          ) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-sm", children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
-            "\u0110ang chu\u1EA9n b\u1ECB link..."
-          ] }),
-          l.doc_url && /* @__PURE__ */ jsxDEV(
-            "a",
-            {
-              href: l.doc_url,
-              target: "_blank",
-              rel: "noopener",
-              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-sm transition",
-              children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-book", "aria-hidden": "true" }),
-                "T\xE0i li\u1EC7u"
-              ]
+              class: "sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white overflow-hidden",
+              style: l.thumbnail ? "" : `background:${gradientFor(l.product_id)}`,
+              children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: l.name, class: "w-full h-full object-cover rounded-xl", loading: "lazy" }) : /* @__PURE__ */ jsxDEV("i", { class: `fas ${mcp ? "fa-plug-circle-bolt" : l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-2xl`, "aria-hidden": "true" })
             }
           ),
-          /* @__PURE__ */ jsxDEV(
-            "a",
-            {
-              href: `/san-pham/${l.slug}#reviews`,
-              class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-amber-400 hover:text-amber-300 font-semibold text-sm transition",
-              children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "far fa-star", "aria-hidden": "true" }),
-                "\u0110\xE1nh gi\xE1"
-              ]
-            }
-          )
-        ] })
-      ] })
-    ] }) })) })
-  }
-);
+          /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-1.5", children: [
+              mcp ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-[11px] font-bold inline-flex items-center gap-1", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[10px]", "aria-hidden": "true" }),
+                PRODUCT_TYPE_LABEL[l.product_type]
+              ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold", children: PRODUCT_TYPE_LABEL[l.product_type] }),
+              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check mr-1", "aria-hidden": "true" }),
+                "\u0110\xE3 k\xEDch ho\u1EA1t"
+              ] }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] font-mono", children: l.version })
+            ] }),
+            /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white leading-snug mb-2 text-base", children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${l.slug}`, class: `transition ${mcp ? "hover:text-cyan-300" : "hover:text-indigo-300"}`, children: l.name }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mb-3 flex flex-wrap gap-x-4 gap-y-1 tabular-nums", children: [
+              /* @__PURE__ */ jsxDEV("span", { children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "far fa-calendar mr-1", "aria-hidden": "true" }),
+                "Mua ng\xE0y ",
+                formatDate(l.created_at)
+              ] }),
+              mcp ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-cyan-300", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt mr-1", "aria-hidden": "true" }),
+                  l.mcp_call_count || 0,
+                  " l\u01B0\u1EE3t Agent g\u1ECDi MCP"
+                ] }),
+                l.last_mcp_call_at && /* @__PURE__ */ jsxDEV("span", { children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "far fa-clock mr-1", "aria-hidden": "true" }),
+                  "G\u1EA7n nh\u1EA5t: ",
+                  formatDateTime(l.last_mcp_call_at)
+                ] })
+              ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                /* @__PURE__ */ jsxDEV("span", { children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-1", "aria-hidden": "true" }),
+                  l.download_count,
+                  " l\u01B0\u1EE3t t\u1EA3i"
+                ] }),
+                l.file_size && l.file_size !== "\u2014" && /* @__PURE__ */ jsxDEV("span", { children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hard-drive mr-1", "aria-hidden": "true" }),
+                  l.file_size
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-[#161436] border border-[#221e54] mb-3", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mb-1 font-semibold uppercase tracking-wide", children: mcp ? "License Key (MCP Bearer Token)" : "License Key" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxDEV("code", { class: `flex-1 font-mono text-sm font-bold tracking-wider truncate ${mcp ? "text-cyan-300" : "text-indigo-300"}`, children: l.license_key }),
+                /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    "data-copy": l.license_key,
+                    "aria-label": "Sao ch\xE9p license key",
+                    class: "shrink-0 w-9 h-9 rounded-lg bg-[#0f0e24] border border-[#2e2968] hover:border-indigo-400 hover:text-indigo-300 text-[#b8b6d9] text-xs transition grid place-items-center",
+                    children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy", "aria-hidden": "true" })
+                  }
+                )
+              ] })
+            ] }),
+            mcp && mcpCfg && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-[#09081b] border border-cyan-500/35 p-4 mb-4 space-y-3.5", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }),
+                  "C\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP cho AI Agent"
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1", children: mcpClients.map((cl) => /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-[10px] font-bold", children: cl })) })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] font-semibold mb-1", children: "MCP Server Endpoint (Streamable HTTP)" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "text",
+                      readonly: true,
+                      value: mcpCfg.endpointUrl,
+                      class: "flex-1 h-9 px-3 rounded-lg bg-[#0f0e24] border border-[#242054] text-cyan-200 font-mono text-xs outline-none"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      "data-copy": mcpCfg.endpointUrl,
+                      "aria-label": "Sao ch\xE9p MCP Endpoint",
+                      class: "shrink-0 h-9 px-3 rounded-lg bg-[#161436] border border-[#2e2968] hover:border-cyan-400 text-[#c2c0e0] hover:text-white text-xs font-semibold transition",
+                      children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+                        "Copy URL"
+                      ]
+                    }
+                  )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("div", { role: "tablist", "aria-label": "Ch\u1ECDn AI Agent \u0111\u1EC3 l\u1EA5y c\u1EA5u h\xECnh MCP", class: "flex flex-wrap gap-1.5 mb-2.5", children: [
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      role: "tab",
+                      "aria-selected": "true",
+                      "data-tab": "claude",
+                      "data-group": tabGroup,
+                      class: "tab-btn active h-8 px-3 rounded-lg border border-[#2a2559] bg-[#141332] text-xs font-bold text-[#c2c0e0] cursor-pointer",
+                      children: "Claude Code / Desktop"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      role: "tab",
+                      "aria-selected": "false",
+                      "data-tab": "codex",
+                      "data-group": tabGroup,
+                      class: "tab-btn h-8 px-3 rounded-lg border border-[#2a2559] bg-[#141332] text-xs font-bold text-[#c2c0e0] cursor-pointer",
+                      children: "OpenAI Codex"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      role: "tab",
+                      "aria-selected": "false",
+                      "data-tab": "antigravity",
+                      "data-group": tabGroup,
+                      class: "tab-btn h-8 px-3 rounded-lg border border-[#2a2559] bg-[#141332] text-xs font-bold text-[#c2c0e0] cursor-pointer",
+                      children: "Antigravity"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", "data-tab": "claude", "data-group": tabGroup, class: "tab-panel space-y-2.5", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#070614] border border-[#221e54] p-3", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1.5", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-orange-300", children: "C\xE1ch 1 \u2014 Ch\u1EA1y 1 d\xF2ng l\u1EC7nh trong Claude Code CLI:" }),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          "data-copy-target": `mcp-claude-cli-${l.id}`,
+                          class: "text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-indigo-600 text-white font-semibold transition cursor-pointer",
+                          children: [
+                            /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+                            "Copy l\u1EC7nh"
+                          ]
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("pre", { id: `mcp-claude-cli-${l.id}`, class: "text-[11px] font-mono text-cyan-200 overflow-x-auto whitespace-pre-wrap break-all", children: mcpCfg.claudeCli })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#070614] border border-[#221e54] p-3", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1.5", children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-[#b8b6d9]", children: [
+                        "C\xE1ch 2 \u2014 D\xE1n v\xE0o ",
+                        /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: ".mcp.json" }),
+                        " ho\u1EB7c Claude Desktop config:"
+                      ] }),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          "data-copy-target": `mcp-claude-json-${l.id}`,
+                          class: "text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-indigo-600 text-white font-semibold transition cursor-pointer",
+                          children: [
+                            /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+                            "Copy JSON"
+                          ]
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("pre", { id: `mcp-claude-json-${l.id}`, class: "text-[11px] font-mono text-[#d6d4ee] overflow-x-auto whitespace-pre", children: mcpCfg.claudeJson })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", "data-tab": "codex", "data-group": tabGroup, class: "tab-panel hidden space-y-2.5", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#070614] border border-[#221e54] p-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-emerald-300", children: [
+                      "D\xE1n v\xE0o ",
+                      /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: "~/.codex/config.toml" }),
+                      " (OpenAI Codex):"
+                    ] }),
+                    /* @__PURE__ */ jsxDEV(
+                      "button",
+                      {
+                        type: "button",
+                        "data-copy-target": `mcp-codex-toml-${l.id}`,
+                        class: "text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-emerald-600 text-white font-semibold transition cursor-pointer",
+                        children: [
+                          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+                          "Copy TOML"
+                        ]
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("pre", { id: `mcp-codex-toml-${l.id}`, class: "text-[11px] font-mono text-emerald-200 overflow-x-auto whitespace-pre-wrap break-all", children: mcpCfg.codexToml })
+                ] }) }),
+                /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", "data-tab": "antigravity", "data-group": tabGroup, class: "tab-panel hidden space-y-2.5", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#070614] border border-[#221e54] p-3", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-violet-300", children: [
+                      "D\xE1n v\xE0o ",
+                      /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: "mcp_config.json" }),
+                      " trong Antigravity:"
+                    ] }),
+                    /* @__PURE__ */ jsxDEV(
+                      "button",
+                      {
+                        type: "button",
+                        "data-copy-target": `mcp-agy-json-${l.id}`,
+                        class: "text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-violet-600 text-white font-semibold transition cursor-pointer",
+                        children: [
+                          /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+                          "Copy JSON"
+                        ]
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("pre", { id: `mcp-agy-json-${l.id}`, class: "text-[11px] font-mono text-violet-200 overflow-x-auto whitespace-pre", children: mcpCfg.antigravityJson })
+                ] }) })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex flex-col sm:flex-row sm:items-center gap-2.5 justify-between", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-cyan-100 leading-relaxed min-w-0", children: [
+                  /* @__PURE__ */ jsxDEV("b", { class: "text-cyan-300", children: "Prompt th\u1EED nhanh trong AI Agent:" }),
+                  " ",
+                  /* @__PURE__ */ jsxDEV("span", { id: `mcp-sample-prompt-${l.id}`, class: "text-white/95", children: mcpCfg.samplePrompt })
+                ] }),
+                /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    "data-copy-target": `mcp-sample-prompt-${l.id}`,
+                    class: "shrink-0 h-8 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-400/40 text-cyan-200 text-xs font-bold transition cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
+                      "Copy prompt"
+                    ]
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { id: `mcp-test-result-${l.id}`, class: "hidden rounded-xl p-3 text-xs" })
+            ] }),
+            l.latest_changelog && /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-1", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-indigo-300", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-sparkles mr-1", "aria-hidden": "true" }),
+                  "C\u1EADp nh\u1EADt ",
+                  l.latest_version || l.version
+                ] }),
+                l.latest_release_at && /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8]", children: formatDate(l.latest_release_at) })
+              ] }),
+              /* @__PURE__ */ jsxDEV("p", { class: "whitespace-pre-line text-[#c2c0e0] leading-relaxed", children: l.latest_changelog })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
+              mcp ? /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  "data-license-id": l.id,
+                  class: "btn-test-mcp inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-cyan-500/20 transition cursor-pointer",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-check", "aria-hidden": "true" }),
+                    "Ki\u1EC3m tra k\u1EBFt n\u1ED1i MCP"
+                  ]
+                }
+              ) : l.download_url ? /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: `/tai-xuong/${l.id}`,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-indigo-500/20 transition",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
+                    l.product_type === "skill" ? "T\u1EA3i b\u1ED9 Skill AI" : l.product_type === "chatbot" ? "M\u1EDF Chatbot" : "M\u1EDF & T\u1EA3i xu\u1ED1ng"
+                  ]
+                }
+              ) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-sm", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
+                "\u0110ang chu\u1EA9n b\u1ECB link..."
+              ] }),
+              mcp && l.download_url && /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: `/tai-xuong/${l.id}`,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-cyan-400 hover:text-white font-semibold text-sm transition",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
+                    "T\xE0i nguy\xEAn b\u1ED5 sung"
+                  ]
+                }
+              ),
+              l.doc_url && /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: l.doc_url,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-sm transition",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-book", "aria-hidden": "true" }),
+                    "T\xE0i li\u1EC7u"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: `/san-pham/${l.slug}#reviews`,
+                  class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-amber-400 hover:text-amber-300 font-semibold text-sm transition",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "far fa-star", "aria-hidden": "true" }),
+                    "\u0110\xE1nh gi\xE1"
+                  ]
+                }
+              )
+            ] })
+          ] })
+        ] }) });
+      }) })
+    }
+  );
+};
 var MyOrdersPage = (props) => /* @__PURE__ */ jsxDEV(AccountShell, { ...props, activeKey: "orders", title: "\u0110\u01A1n h\xE0ng", heading: "L\u1ECBch s\u1EED \u0111\u01A1n h\xE0ng", sub: "Theo d\xF5i tr\u1EA1ng th\xE1i v\xE0 chi ti\u1EBFt c\xE1c \u0111\u01A1n h\xE0ng c\u1EE7a b\u1EA1n.", children: props.orders.length === 0 ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54]", children: /* @__PURE__ */ jsxDEV(EmptyState, { icon: "fa-receipt", title: "Ch\u01B0a c\xF3 \u0111\u01A1n h\xE0ng n\xE0o", action: { href: "/san-pham", label: "Mua s\u1EAFm ngay" } }) }) : /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-sm", children: [
   /* @__PURE__ */ jsxDEV("thead", { class: "bg-[#161436] border-b border-[#221e54] text-[#b8b6d9] text-xs uppercase tracking-wider", children: /* @__PURE__ */ jsxDEV("tr", { children: [
     /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3.5 px-4 font-semibold", children: "M\xE3 \u0111\u01A1n" }),
@@ -13184,10 +14458,16 @@ var BlogDetailPage = (props) => {
     /* @__PURE__ */ jsxDEV("div", { class: "prose-vn max-w-none bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-9", dangerouslySetInnerHTML: { __html: post.content || "" } }),
     /* @__PURE__ */ jsxDEV("div", { class: "mt-10 p-6 rounded-2xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white text-center shadow-xl shadow-indigo-950/50", children: [
       /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold mb-2", children: "B\u1EAFt \u0111\u1EA7u l\xE0m video AI ngay h\xF4m nay" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 text-sm mb-5", children: "Kh\xE1m ph\xE1 b\u1ED9 5 Skill AI l\xE0m video th\u1EF1c chi\u1EBFn \u0111\xE3 \u0111\u01B0\u1EE3c ki\u1EC3m ch\u1EE9ng b\u1EB1ng video demo th\u1EADt." }),
-      /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "cta-white inline-flex h-11 px-6 items-center gap-2 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
-        "Xem Skill AI \u0111ang b\xE1n"
+      /* @__PURE__ */ jsxDEV("p", { class: "text-white/85 text-sm mb-5", children: "Kh\xE1m ph\xE1 kho Skill AI t\u1EF1 t\u1EA3i v\xE0 d\xF2ng m\u1EDBi Skill AI Agent (MCP) k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity." }),
+      /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap justify-center gap-2.5", children: [
+        /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=skill", class: "cta-white inline-flex h-11 px-5 items-center gap-2 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-slate-100 transition", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
+          "Xem Skill t\u1EF1 t\u1EA3i"
+        ] }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?type=mcp_skill", class: "inline-flex h-11 px-5 items-center gap-2 rounded-xl bg-black/25 border border-white/30 text-white font-bold text-sm hover:bg-black/35 transition", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-cyan-300", "aria-hidden": "true" }),
+          "Xem Skill AI Agent (MCP)"
+        ] })
       ] })
     ] }),
     props.related.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "mt-12", children: [
@@ -13198,28 +14478,30 @@ var BlogDetailPage = (props) => {
 };
 var PLANS = [
   {
-    name: "Skill Ng\xE1ch",
+    name: "Skill AI (T\u1EF1 t\u1EA3i)",
     price: 399e3,
-    tag: "\u0110ang m\u1EDF b\xE1n",
-    icon: "fa-seedling",
+    tag: "\u0110ang m\u1EDF b\xE1n \xB7 T\u1EF1 l\xE0m theo",
+    icon: "fa-download",
     highlight: false,
     available: true,
-    desc: "Ch\u1ECDn 1 Skill theo ng\xE1ch (Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Affiliate Fitness) \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u d\u1EF1ng k\xEAnh.",
-    features: ["Tr\u1ECDn b\u1ED9 prompt & quy tr\xECnh 30s", "Video demo th\u1EADt xem tr\u01B0\u1EDBc khi mua", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi + update free", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt qua Zalo"],
-    cta: "Xem Skill ng\xE1ch",
+    isMcp: false,
+    desc: "Ch\u1ECDn Skill theo ng\xE1ch (Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Fitness) ho\u1EB7c Muse AI / Seedance 2.5 \u0111\u1EC3 t\u1EF1 t\u1EA3i v\u1EC1 & thao t\xE1c t\u1EEBng b\u01B0\u1EDBc.",
+    features: ["Tr\u1ECDn b\u1ED9 prompt, quy tr\xECnh 30s & file m\u1EABu", "T\u1EF1 t\u1EA3i v\u1EC1 m\xE1y, l\xE0m ch\u1EE7 th\u1EE7 c\xF4ng t\u1EEBng c\u1EA3nh", "Video demo th\u1EADt xem tr\u01B0\u1EDBc khi mua", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi + update free", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
+    cta: "Xem Skill t\u1EF1 t\u1EA3i",
     href: "/san-pham?type=skill"
   },
   {
-    name: "Skill N\xE2ng Cao",
-    price: 599e3,
-    tag: "Ph\u1ED5 bi\u1EBFn \xB7 \u0110ang b\xE1n",
-    icon: "fa-rocket",
+    name: "Skill AI Agent (MCP)",
+    price: 89e4,
+    tag: "M\u1EDAI \xB7 K\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp",
+    icon: "fa-plug-circle-bolt",
     highlight: true,
     available: true,
-    desc: "Skill Muse AI Pro 30s ho\u1EB7c Seedance 2.5 One-Take 30s \u2014 nh\xE2n v\u1EADt gi\u1EEF nguy\xEAn & lip-sync ti\u1EBFng Vi\u1EC7t.",
-    features: ["B\u1ED9 Skill Muse AI / Seedance 2.5 ho\xE0n ch\u1EC9nh", "C\xF4ng th\u1EE9c kh\xF3a nh\xE2n v\u1EADt 30s li\u1EC1n m\u1EA1ch", "Video demo th\u1EF1c t\u1EBF t\u1EEBng c\u1EA3nh", "H\u1ED7 tr\u1EE3 1-1 qua Zalo", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi + update free"],
-    cta: "Xem Skill \u0111ang b\xE1n",
-    href: "/san-pham?type=skill"
+    isMcp: true,
+    desc: "D\xE0nh cho ng\u01B0\u1EDDi d\xF9ng Claude, Codex, Antigravity: k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP b\u1EB1ng License Key, AI Agent t\u1EF1 g\u1ECDi tool t\u1EA1o video theo Skill.",
+    features: ["K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP cho Claude, Codex, Antigravity", "AI Agent t\u1EF1 g\u1ECDi tool xu\u1EA5t storyboard, prompt & pipeline video", "Kh\xF4ng c\u1EA7n t\u1EA3i file hay thao t\xE1c copy-paste th\u1EE7 c\xF4ng", "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n Skill m\u1EDBi nh\u1EA5t tr\xEAn server", "K\xE8m License Key ri\xEAng & n\xFAt test MCP tr\u1EF1c ti\u1EBFp", "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t MCP 1-1 qua Zalo / Ultraview"],
+    cta: "Xem Skill AI Agent (MCP)",
+    href: "/san-pham?type=mcp_skill"
   },
   {
     name: "Combo & Chatbot / App",
@@ -13228,24 +14510,31 @@ var PLANS = [
     icon: "fa-clock",
     highlight: false,
     available: false,
+    isMcp: false,
     desc: "Kh\xF3a h\u1ECDc chuy\xEAn s\xE2u, Chatbot k\u1ECBch b\u1EA3n, App render t\u1EF1 \u0111\u1ED9ng v\xE0 g\xF3i Combo All-In-One.",
-    features: ["Kh\xF3a h\u1ECDc Video AI (s\u1EAFp m\u1EDF)", "Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n + App render (s\u1EAFp m\u1EDF)", "Combo ti\u1EBFt ki\u1EC7m tr\u1ECDn b\u1ED9 (s\u1EAFp m\u1EDF)", "T\u1EA1m th\u1EDDi \u0111\xF3ng gi\u1ECF \u2014 \u01B0u ti\xEAn ho\xE0n thi\u1EC7n 5 Skill"],
+    features: ["Kh\xF3a h\u1ECDc Video AI (s\u1EAFp m\u1EDF)", "Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n + App render (s\u1EAFp m\u1EDF)", "Combo ti\u1EBFt ki\u1EC7m tr\u1ECDn b\u1ED9 (s\u1EAFp m\u1EDF)", "T\u1EA1m th\u1EDDi \u0111\xF3ng gi\u1ECF \u2014 t\u1EADp trung 2 d\xF2ng Skill ch\xEDnh"],
     cta: "Ch\u01B0a m\u1EDF b\xE1n",
     href: "/combo"
   }
 ];
-var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: "B\u1EA3ng gi\xE1", description: "B\u1EA3ng gi\xE1 b\u1ED9 5 Skill AI l\xE0m video \u0111ang m\u1EDF b\xE1n v\xE0 l\u1ED9 tr\xECnh c\xE1c d\u1ECBch v\u1EE5 s\u1EAFp ra m\u1EAFt", children: [
+var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: "B\u1EA3ng gi\xE1", description: "B\u1EA3ng gi\xE1 d\xF2ng Skill AI t\u1EF1 t\u1EA3i v\xE0 Skill AI Agent (MCP) k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity", children: [
   /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
     /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 py-16 text-center", children: [
       /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-3", children: "B\u1EA3ng gi\xE1 minh b\u1EA1ch" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] max-w-2xl mx-auto", children: "Hi\u1EC7n t\u1EA1i h\u1EC7 th\u1ED1ng m\u1EDF b\xE1n tr\u1ECDn b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn. Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi, kh\xF4ng ph\xED duy tr\xEC." })
+      /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] max-w-2xl mx-auto", children: [
+        "Ch\u1ECDn gi\u1EEFa ",
+        /* @__PURE__ */ jsxDEV("b", { children: "Skill AI (t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m theo)" }),
+        " ho\u1EB7c ",
+        /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent (MCP)" }),
+        " k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity. Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi."
+      ] })
     ] })
   ] }),
   /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 -mt-8 pb-14 relative", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-5", children: PLANS.map((pl) => /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl p-7 relative ${pl.highlight ? "bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-indigo-500/30 lg:-mt-4 lg:mb-4" : "bg-[#0f0e24] border border-[#221e54]"}`, children: [
-      pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-[10px]", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-5", children: PLANS.map((pl) => /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl p-7 relative ${pl.highlight ? "bg-gradient-to-br from-cyan-600 via-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-cyan-500/25 lg:-mt-4 lg:mb-4" : "bg-[#0f0e24] border border-[#221e54]"}`, children: [
+      pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-cyan-300 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[10px]", "aria-hidden": "true" }),
         pl.tag
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: `w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? "bg-white/20 text-white" : pl.available ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30" : "bg-amber-500/15 text-amber-300 border border-amber-500/30"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.icon}`, "aria-hidden": "true" }) }),
@@ -13257,7 +14546,7 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
         /* @__PURE__ */ jsxDEV("span", { class: `text-sm ml-1.5 ${pl.highlight ? "text-white/80" : "text-[#9492b8]"}`, children: pl.available ? "/ tr\u1ECDn \u0111\u1EDDi" : "/ d\u1EF1 ki\u1EBFn" })
       ] }),
       /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 mb-7", children: pl.features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: `flex gap-2.5 text-sm ${pl.highlight ? "text-white/95" : "text-[#c2c0e0]"}`, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.available ? "fa-circle-check" : "fa-clock"} mt-0.5 shrink-0 ${pl.highlight ? "text-emerald-300" : pl.available ? "text-emerald-400" : "text-amber-400"}`, "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.available ? "fa-circle-check" : "fa-clock"} mt-0.5 shrink-0 ${pl.highlight ? "text-cyan-200" : pl.available ? "text-emerald-400" : "text-amber-400"}`, "aria-hidden": "true" }),
         f
       ] })) }),
       /* @__PURE__ */ jsxDEV(
@@ -13273,7 +14562,7 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
       )
     ] })) }),
     /* @__PURE__ */ jsxDEV("div", { class: "mt-12 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", children: [
-      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-6 text-center", children: "So s\xE1nh chi ti\u1EBFt c\xE1c g\xF3i" }),
+      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-6 text-center", children: "So s\xE1nh Skill t\u1EF1 t\u1EA3i vs Skill AI Agent (MCP)" }),
       /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-sm min-w-[600px]", children: [
         /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { class: "border-b-2 border-[#221e54]", children: [
           /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3 font-bold text-[#c2c0e0]", children: "T\xEDnh n\u0103ng" }),
@@ -13281,12 +14570,12 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
         ] }) }),
         /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-[#221e54]", children: [
           ["Tr\u1EA1ng th\xE1i", "\u0110ang m\u1EDF b\xE1n", "\u0110ang m\u1EDF b\xE1n", "Ch\u01B0a m\u1EDF b\xE1n"],
+          ["H\xECnh th\u1EE9c s\u1EED d\u1EE5ng", "T\u1EF1 t\u1EA3i file & l\xE0m theo", "AI Agent g\u1ECDi MCP tr\u1EF1c ti\u1EBFp", "Tr\u1ECDn g\xF3i"],
+          ["T\u01B0\u01A1ng th\xEDch Claude / Codex / Antigravity", false, true, "Tu\u1EF3 g\xF3i"],
+          ["T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n Skill t\u1EEB server", false, true, true],
           ["S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", true, true, true],
           ["C\u1EADp nh\u1EADt mi\u1EC5n ph\xED", true, true, true],
-          ["H\u1ED7 tr\u1EE3 Zalo", true, true, true],
-          ["H\u1ED7 tr\u1EE3 \u01B0u ti\xEAn 1-1", false, true, true],
-          ["Video demo xem tr\u01B0\u1EDBc", true, true, false],
-          ["Skill AI theo ng\xE1ch / model", true, true, true],
+          ["H\u1ED7 tr\u1EE3 1-1 qua Zalo", true, true, true],
           ["Kh\xF3a h\u1ECDc + Chatbot + App", false, false, "S\u1EAFp m\u1EDF"]
         ].map(([label, ...vals]) => /* @__PURE__ */ jsxDEV("tr", { children: [
           /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 text-[#c2c0e0] font-medium", children: label }),
@@ -13298,7 +14587,7 @@ var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: 
 ] });
 var AboutPage = (props) => {
   const siteName = props.settings?.site_name || "KhoSkill AI";
-  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1EDBi thi\u1EC7u", description: `V\u1EC1 ${siteName} \u2014 kho Skill AI l\xE0m video th\u1EF1c chi\u1EBFn h\xE0ng \u0111\u1EA7u Vi\u1EC7t Nam`, children: [
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1EDBi thi\u1EC7u", description: `V\u1EC1 ${siteName} \u2014 kho Skill AI & Skill AI Agent (MCP) l\xE0m video th\u1EF1c chi\u1EBFn h\xE0ng \u0111\u1EA7u Vi\u1EC7t Nam`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
       /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-4xl mx-auto px-4 py-16 text-center", children: [
@@ -13306,7 +14595,13 @@ var AboutPage = (props) => {
           "V\u1EC1 ",
           siteName
         ] }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] leading-relaxed", children: "Ch\xFAng t\xF4i gi\xFAp ng\u01B0\u1EDDi Vi\u1EC7t l\xE0m video AI b\xE1n h\xE0ng m\u1ED9t c\xE1ch d\u1EC5 d\xE0ng nh\u1EA5t \u2014 b\u1EAFt \u0111\u1EA7u t\u1EEB b\u1ED9 5 Skill AI th\u1EF1c chi\u1EBFn \u0111ang m\u1EDF b\xE1n, c\xF9ng h\u1EC7 sinh th\xE1i Kh\xF3a h\u1ECDc, Chatbot v\xE0 App s\u1EAFp ra m\u1EAFt." })
+        /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] leading-relaxed", children: [
+          "Ch\xFAng t\xF4i gi\xFAp ng\u01B0\u1EDDi Vi\u1EC7t l\xE0m video AI b\xE1n h\xE0ng d\u1EC5 d\xE0ng nh\u1EA5t \u2014 v\u1EDBi 2 d\xF2ng s\u1EA3n ph\u1EA9m \u0111ang m\u1EDF b\xE1n: ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Skill AI t\u1EF1 t\u1EA3i" }),
+          " v\xE0 ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent (MCP)" }),
+          " k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp v\xE0o Claude, Codex, Antigravity."
+        ] })
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-14", children: [
@@ -13326,15 +14621,23 @@ var AboutPage = (props) => {
           " ra \u0111\u1EDDi t\u1EEB nhu c\u1EA7u th\u1EF1c t\u1EBF: r\u1EA5t nhi\u1EC1u ng\u01B0\u1EDDi mu\u1ED1n l\xE0m video b\xE1n h\xE0ng b\u1EB1ng AI nh\u01B0ng kh\xF4ng bi\u1EBFt vi\u1EBFt prompt chu\u1EA9n, kh\xF4ng gi\u1EEF \u0111\u01B0\u1EE3c nh\xE2n v\u1EADt xuy\xEAn su\u1ED1t 30 gi\xE2y v\xE0 t\u1ED1n nhi\u1EC1u th\u1EDDi gian th\u1EED sai."
         ] }),
         /* @__PURE__ */ jsxDEV("p", { children: [
-          "Ch\xFAng t\xF4i \u0111\xF3ng g\xF3i s\u1EB5n t\u1EEBng ",
-          /* @__PURE__ */ jsxDEV("b", { children: "Skill t\u1EA1o video AI theo ng\xE1ch & c\xF4ng c\u1EE5" }),
-          " (Muse AI Pro, Seedance 2.5, Thu\u1EF7 Sinh 30s, DIY L\xE0m V\u01B0\u1EDDn, Affiliate Fitness) \u2014 t\u1EA5t c\u1EA3 \u0111\u1EC1u \u0111\xE3 ch\u1EA1y th\u1EF1c t\u1EBF ra video demo \u0111\u1EC3 b\u1EA1n ki\u1EC3m ch\u1EE9ng tr\u01B0\u1EDBc khi mua."
+          "Ch\xFAng t\xF4i \u0111\xF3ng g\xF3i s\u1EB5n c\u1EA3 ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Skill t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m theo" }),
+          " l\u1EABn d\xF2ng ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent (MCP)" }),
+          " th\u1EBF h\u1EC7 m\u1EDBi \u0111\u1EC3 c\xE1c AI Agent nh\u01B0 ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Claude, Codex, Antigravity" }),
+          " c\xF3 th\u1EC3 k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp v\u1EC1 MCP Server v\xE0 t\u1EF1 \u0111\u1ED9ng th\u1EF1c thi quy tr\xECnh t\u1EA1o video theo Skill."
         ] }),
         /* @__PURE__ */ jsxDEV("h2", { children: "Tr\u1EA1ng th\xE1i d\u1ECBch v\u1EE5 hi\u1EC7n t\u1EA1i" }),
         /* @__PURE__ */ jsxDEV("ul", { children: [
           /* @__PURE__ */ jsxDEV("li", { children: [
-            /* @__PURE__ */ jsxDEV("b", { children: "Skill t\u1EA1o video AI (5 b\u1ED9 \u0111ang m\u1EDF b\xE1n):" }),
-            " mua v\xE0 nh\u1EADn link t\u1EA3i t\u1EF1 \u0111\u1ED9ng 24/7 ngay tr\xEAn h\u1EC7 th\u1ED1ng."
+            /* @__PURE__ */ jsxDEV("b", { children: "Skill AI t\u1EF1 t\u1EA3i (\u0110ang m\u1EDF b\xE1n):" }),
+            " nh\u1EADn link t\u1EA3i b\u1ED9 prompt, quy tr\xECnh & checklist t\u1EF1 \u0111\u1ED9ng 24/7 ngay sau thanh to\xE1n."
+          ] }),
+          /* @__PURE__ */ jsxDEV("li", { children: [
+            /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent MCP (\u0110ang m\u1EDF b\xE1n):" }),
+            " nh\u1EADn ngay MCP Endpoint + License Key + c\u1EA5u h\xECnh 1-click cho Claude, Codex, Antigravity."
           ] }),
           /* @__PURE__ */ jsxDEV("li", { children: [
             /* @__PURE__ */ jsxDEV("b", { children: "Kh\xF3a h\u1ECDc, Chatbot, App Video AI & Combo (Ch\u01B0a m\u1EDF b\xE1n):" }),
@@ -13592,7 +14895,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     } }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap", rel: "stylesheet" }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261116", rel: "stylesheet" })
+    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261121", rel: "stylesheet" })
   ] }),
   /* @__PURE__ */ jsxDEV("body", { class: "bg-slate-100 text-slate-800 antialiased", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "flex min-h-screen", children: [
@@ -13645,8 +14948,8 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     ] }),
     /* @__PURE__ */ jsxDEV("div", { id: "toast-container", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
     /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261119" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261116" })
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261121" }),
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261121" })
   ] })
 ] });
 var AdminDashboard = (props) => {
@@ -13772,7 +15075,10 @@ var AdminProducts = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, ac
       /* @__PURE__ */ jsxDEV("td", { children: [
         /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 line-clamp-1 max-w-xs", children: p.name }),
         /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 flex gap-2 mt-0.5", children: [
-          /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 font-medium", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+          /* @__PURE__ */ jsxDEV("span", { class: `px-1.5 py-0.5 rounded font-medium ${isMcpSkill(p.product_type) ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-brand-50 text-brand-700"}`, children: [
+            isMcpSkill(p.product_type) && /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1 text-[10px]" }),
+            PRODUCT_TYPE_LABEL[p.product_type]
+          ] }),
           /* @__PURE__ */ jsxDEV("span", { children: p.version }),
           p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "text-orange-600 font-semibold", children: "HOT" }),
           p.is_featured === 1 && /* @__PURE__ */ jsxDEV("span", { class: "text-amber-600 font-semibold", children: "\u2605" })
@@ -13855,7 +15161,10 @@ var AdminProductForm = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
         /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "N\u1ED9i dung b\xE0n giao" }),
         /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "\u{1F517} Link t\u1EA3i Skill / T\xE0i li\u1EC7u b\xE0n giao (ch\u1EC9 hi\u1EC7n sau khi mua) *" }),
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: [
+            "\u{1F517} Link t\u1EA3i Skill / T\xE0i li\u1EC7u b\xE0n giao ",
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 font-normal", children: "(tu\u1EF3 ch\u1ECDn n\u1EBFu l\xE0 Skill AI Agent MCP)" })
+          ] }),
           /* @__PURE__ */ jsxDEV("input", { type: "url", name: "download_url", value: p.download_url || "", placeholder: "https://drive.google.com/...", class: fieldCls })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
@@ -13864,13 +15173,88 @@ var AdminProductForm = (props) => {
             /* @__PURE__ */ jsxDEV("input", { type: "url", name: "doc_url", value: p.doc_url || "", class: fieldCls })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Dung l\u01B0\u1EE3ng file" }),
-            /* @__PURE__ */ jsxDEV("input", { type: "text", name: "file_size", value: p.file_size || "", placeholder: "248 MB", class: fieldCls })
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Dung l\u01B0\u1EE3ng file / \u0110\u1ECBnh d\u1EA1ng" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "text", name: "file_size", value: p.file_size || "", placeholder: "248 MB ho\u1EB7c MCP Live API", class: fieldCls })
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Link demo tr\u1EF1c ti\u1EBFp" }),
           /* @__PURE__ */ jsxDEV("input", { type: "url", name: "demo_url", value: p.demo_url || "", class: fieldCls })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { id: "mcp-config-card", class: `rounded-2xl border p-5 space-y-4 transition ${isMcpSkill(p.product_type) ? "bg-cyan-50/40 border-cyan-300 ring-2 ring-cyan-200/60" : "bg-white border-slate-200"}`, children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-cyan-600" }),
+            "C\u1EA5u h\xECnh MCP cho AI Agent (Claude / Codex / Antigravity)"
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { id: "mcp-mode-badge", class: `px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isMcpSkill(p.product_type) ? "bg-cyan-600 text-white" : "bg-slate-100 text-slate-500"}`, children: isMcpSkill(p.product_type) ? "\u0110ang k\xEDch ho\u1EA1t ch\u1EBF \u0111\u1ED9 MCP" : "D\xE0nh cho lo\u1EA1i Skill AI Agent (MCP)" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-500 leading-relaxed", children: [
+          "Khi ch\u1ECDn lo\u1EA1i s\u1EA3n ph\u1EA9m ",
+          /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent (MCP)" }),
+          ", kh\xE1ch mua xong s\u1EBD nh\u1EADn ngay c\u1EA5u h\xECnh MCP + License Key \u0111\u1EC3 c\u1EAFm tr\u1EF1c ti\u1EBFp v\xE0o Claude, Codex, Antigravity. \u0110\u1EC3 tr\u1ED1ng ",
+          /* @__PURE__ */ jsxDEV("b", { children: "MCP Endpoint" }),
+          " \u0111\u1EC3 d\xF9ng lu\xF4n endpoint t\xEDch h\u1EE3p s\u1EB5n ",
+          /* @__PURE__ */ jsxDEV("code", { class: "font-mono bg-slate-100 px-1 rounded", children: [
+            "/api/mcp/",
+            p.slug || "slug-san-pham"
+          ] }),
+          "."
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "T\xEAn MCP Server Key" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "text", name: "mcp_server_name", value: p.mcp_server_name || "", placeholder: "khoskill-video-viral", class: fieldCls })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "AI Agent h\u1ED7 tr\u1EE3 (ph\xE2n c\xE1ch d\u1EA5u ph\u1EA9y)" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "text", name: "mcp_clients_text", value: p.mcp_clients ? parseMcpClients(p.mcp_clients).join(", ") : "Claude, Codex, Antigravity", placeholder: "Claude, Codex, Antigravity", class: fieldCls })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: [
+            "MCP Server Endpoint tu\u1EF3 ch\u1EC9nh ",
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 font-normal", children: "(\u0111\u1EC3 tr\u1ED1ng = d\xF9ng /api/mcp/slug c\xF3 s\u1EB5n)" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("input", { type: "url", name: "mcp_endpoint", value: p.mcp_endpoint || "", placeholder: "https://mcp.domain-cua-ban.com/mcp (tu\u1EF3 ch\u1ECDn)", class: fieldCls })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: [
+            "Danh s\xE1ch MCP Tools hi\u1EC3n th\u1ECB & expose (m\u1ED7i d\xF2ng: ",
+            /* @__PURE__ */ jsxDEV("code", { children: "ten_tool | M\xF4 t\u1EA3" }),
+            ")"
+          ] }),
+          /* @__PURE__ */ jsxDEV(
+            "textarea",
+            {
+              name: "mcp_tools_text",
+              rows: 4,
+              placeholder: "list_licensed_skills | Li\u1EC7t k\xEA Skill MCP \u0111\xE3 k\xEDch ho\u1EA1t\nget_skill_blueprint | N\u1EA1p quy tr\xECnh & c\xF4ng th\u1EE9c Skill\ngenerate_video_storyboard | Sinh storyboard 30s + prompt t\u1EEBng c\u1EA3nh\ncreate_video_from_skill | Ch\u1EA1y pipeline t\u1EA1o video theo Skill",
+              class: "w-full p-3 rounded-xl border border-slate-200 focus:border-cyan-500 outline-none text-xs font-mono resize-y",
+              children: p.mcp_tools ? parseMcpTools(p.mcp_tools).map((t) => `${t.name} | ${t.description}`).join("\n") : ""
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "N\u1ED9i dung Skill Blueprint / System Prompt tr\u1EA3 v\u1EC1 qua MCP (Markdown)" }),
+          /* @__PURE__ */ jsxDEV(
+            "textarea",
+            {
+              name: "mcp_skill_prompt",
+              rows: 8,
+              placeholder: "# SKILL BLUEPRINT\nNh\u1EADp to\xE0n b\u1ED9 quy tr\xECnh, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt, c\xF4ng th\u1EE9c Hook-Body-CTA m\xE0 AI Agent s\u1EBD n\u1EA1p khi g\u1ECDi tool get_skill_blueprint / create_video_from_skill...",
+              class: "w-full p-3 rounded-xl border border-slate-200 focus:border-cyan-500 outline-none text-xs font-mono resize-y",
+              children: p.mcp_skill_prompt || ""
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: [
+            "Webhook / API Render Video b\xEAn ngo\xE0i ",
+            /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 font-normal", children: "(tu\u1EF3 ch\u1ECDn \u2014 n\u1EBFu nh\u1EADp, tool create_video_from_skill s\u1EBD POST job sang \u0111\xE2y)" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("input", { type: "url", name: "mcp_render_webhook", value: p.mcp_render_webhook || "", placeholder: "https://worker.domain.com/render-video (tu\u1EF3 ch\u1ECDn)", class: fieldCls })
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
@@ -14102,14 +15486,21 @@ var AdminOrderDetail = (props) => {
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mt-1", children: [
                 /* @__PURE__ */ jsxDEV("code", { class: "px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-bold", children: l.license_key }),
-                /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-slate-500", children: [
+                isMcpSkill(l.product_type) ? /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-cyan-700 font-medium", children: [
+                  "\xB7 ",
+                  l.mcp_call_count || 0,
+                  " l\u01B0\u1EE3t g\u1ECDi MCP"
+                ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-slate-500", children: [
                   "\xB7 ",
                   l.download_count || 0,
                   " l\u01B0\u1EE3t t\u1EA3i"
                 ] })
               ] })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0", children: l.download_url ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0", children: isMcpSkill(l.product_type) ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 text-xs font-semibold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt" }),
+              "MCP Live"
+            ] }) : l.download_url ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold", children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-link" }),
               "\u0110\xE3 c\xF3 link t\u1EA3i"
             ] }) : /* @__PURE__ */ jsxDEV("a", { href: `/admin/san-pham/${l.product_id}`, class: "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold hover:bg-amber-100", children: [
@@ -15252,7 +16643,8 @@ var POLICY_DOCS = {
 <h2>C\xE1ch nh\u1EADn s\u1EA3n ph\u1EA9m</h2>
 <p>Tu\u1EF3 lo\u1EA1i s\u1EA3n ph\u1EA9m, b\u1EA1n s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c:</p>
 <ul>
-<li><b>Skill t\u1EA1o video AI:</b> link Google Drive / t\xE0i li\u1EC7u ch\u1EE9a tr\u1ECDn b\u1ED9 prompt, quy tr\xECnh v\xE0 file c\u1EA5u h\xECnh theo ng\xE1ch</li>
+<li><b>Skill AI (t\u1EF1 t\u1EA3i &amp; l\xE0m theo):</b> link Google Drive / b\u1ED9 ZIP ch\u1EE9a tr\u1ECDn b\u1ED9 prompt, quy tr\xECnh t\u1EEBng b\u01B0\u1EDBc v\xE0 checklist theo ng\xE1ch \u0111\u1EC3 b\u1EA1n t\u1EF1 thao t\xE1c</li>
+<li><b>Skill AI Agent (MCP):</b> URL MCP Server + License Key ri\xEAng + \u0111o\u1EA1n c\u1EA5u h\xECnh copy-paste s\u1EB5n cho <b>Claude, Codex, Antigravity</b> \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill ngay, kh\xF4ng c\u1EA7n t\u1EA3i file th\u1EE7 c\xF4ng</li>
 <li><b>Chatbot / App (khi m\u1EDF b\xE1n):</b> link k\xEDch ho\u1EA1t ho\u1EB7c b\u1ED9 c\xE0i ri\xEAng theo h\u01B0\u1EDBng d\u1EABn</li>
 <li><b>Combo (khi m\u1EDF b\xE1n):</b> to\xE0n b\u1ED9 s\u1EA3n ph\u1EA9m con \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t c\xF9ng l\xFAc</li>
 </ul>
@@ -15486,6 +16878,233 @@ function invalidateCache(prefix) {
   }
 }
 
+// src/lib/mcp-bootstrap.ts
+var _done = false;
+var _inflight = null;
+var STARTER_MCP_PRODUCTS = [
+  {
+    slug: "mcp-skill-agent-video-viral-30s",
+    name: "MCP Skill AI Agent \u2014 T\u1EF1 \u0110\u1ED9ng T\u1EA1o Video Viral 30s (Claude / Codex / Antigravity)",
+    short_desc: "Skill MCP k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp v\xE0o Claude, Codex, Antigravity: AI Agent t\u1EF1 g\u1ECDi tool n\u1EA1p quy tr\xECnh Skill, sinh k\u1ECBch b\u1EA3n kh\xF3a nh\xE2n v\u1EADt v\xE0 xu\u1EA5t l\u1EC7nh t\u1EA1o video 30s chu\u1EA9n viral ngay trong cu\u1ED9c h\u1ED9i tho\u1EA1i.",
+    description: "<h3>\u0110i\u1EC3m kh\xE1c bi\u1EC7t so v\u1EDBi Skill t\u1EF1 t\u1EA3i truy\u1EC1n th\u1ED1ng</h3><p>V\u1EDBi <b>Skill t\u1EF1 t\u1EA3i</b>, b\u1EA1n c\u1EA7n t\u1EA3i file ZIP/Drive v\u1EC1 \u0111\u1ECDc h\u01B0\u1EDBng d\u1EABn r\u1ED3i t\u1EF1 copy-paste t\u1EEBng prompt sang c\xF4ng c\u1EE5 t\u1EA1o video. V\u1EDBi <b>MCP Skill AI Agent</b>, b\u1EA1n ch\u1EC9 c\u1EA7n d\xE1n c\u1EA5u h\xECnh MCP 1 l\u1EA7n v\xE0o <b>Claude, Codex ho\u1EB7c Antigravity</b> \u2014 t\u1EEB \u0111\xF3 AI Agent s\u1EBD t\u1EF1 g\u1ECDi tr\u1EF1c ti\u1EBFp v\u1EC1 MCP Server b\u1EB1ng License Key c\u1EE7a b\u1EA1n \u0111\u1EC3 n\u1EA1p blueprint, t\xE1ch c\u1EA3nh kh\xF3a nh\xE2n v\u1EADt v\xE0 t\u1EA1o video 30s theo \u0111\xFAng chu\u1EA9n Skill.</p><h3>AI Agent c\u1EE7a b\u1EA1n s\u1EBD l\xE0m \u0111\u01B0\u1EE3c g\xEC?</h3><ul><li><b>T\u1EF1 \u0111\u1ED9ng n\u1EA1p Skill Blueprint:</b> Agent g\u1ECDi <code>get_skill_blueprint</code> \u0111\u1EC3 l\u1EA5y c\xF4ng th\u1EE9c Hook 3s, quy t\u1EAFc kh\xF3a nh\xE2n v\u1EADt/\xE1nh s\xE1ng v\xE0 c\u1EA5u tr\xFAc 4 ph\xE2n \u0111o\u1EA1n 30s.</li><li><b>T\u1EF1 sinh Storyboard &amp; Prompt \u0111a model:</b> Agent g\u1ECDi <code>generate_video_storyboard</code> \u0111\u1EC3 t\u1EA1o b\u1ED9 prompt t\u1EEBng c\u1EA3nh chu\u1EA9n Seedance 2.5, Muse AI ho\u1EB7c Veo 3 k\xE8m l\u1EDDi tho\u1EA1i ti\u1EBFng Vi\u1EC7t.</li><li><b>T\u1EF1 k\xEDch ho\u1EA1t pipeline t\u1EA1o video:</b> Agent g\u1ECDi <code>create_video_from_skill</code> \u0111\u1EC3 xu\u1EA5t g\xF3i render chu\u1EA9n 9:16 (ho\u1EB7c \u0111\u1EA9y th\u1EB3ng sang render API/webhook n\u1EBFu b\u1EA1n k\u1EBFt n\u1ED1i) k\xE8m ph\u1EE5 \u0111\u1EC1 SRT &amp; caption \u0111\u0103ng TikTok/Reels.</li><li><b>Lu\xF4n nh\u1EADn b\u1EA3n Skill m\u1EDBi nh\u1EA5t:</b> Khi KhoSkill n\xE2ng c\u1EA5p c\xF4ng th\u1EE9c prompt ho\u1EB7c model m\u1EDBi, Agent t\u1EF1 \u0111\u1ED9ng nh\u1EADn b\u1EA3n m\u1EDBi qua MCP m\xE0 b\u1EA1n kh\xF4ng c\u1EA7n t\u1EA3i l\u1EA1i file.</li></ul><h3>H\u1ED7 tr\u1EE3 \u0111\u1EA7y \u0111\u1EE7 AI Agent ph\u1ED5 bi\u1EBFn</h3><p>Cung c\u1EA5p s\u1EB5n \u0111o\u1EA1n c\u1EA5u h\xECnh copy-paste trong m\u1EE5c <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b> cho <b>Claude Code / Claude Desktop</b>, <b>OpenAI Codex</b> v\xE0 <b>Antigravity</b>. C\xE0i \u0111\u1EB7t xong trong ch\u01B0a \u0111\u1EA7y 30 gi\xE2y.</p>",
+    features: JSON.stringify([
+      "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP v\xE0o Claude, Codex, Antigravity trong 30 gi\xE2y",
+      "AI Agent t\u1EF1 g\u1ECDi tool t\u1EA1o k\u1ECBch b\u1EA3n, prompt kh\xF3a nh\xE2n v\u1EADt & pipeline video 30s",
+      "Kh\xF4ng c\u1EA7n t\u1EA3i file th\u1EE7 c\xF4ng hay copy-paste r\u1EDDi r\u1EA1c t\u1EEBng b\u01B0\u1EDBc",
+      "X\xE1c th\u1EF1c b\u1EA3o m\u1EADt b\u1EB1ng License Key ri\xEAng \u2014 g\u1ECDi kh\xF4ng gi\u1EDBi h\u1EA1n",
+      "H\u1ED7 tr\u1EE3 chu\u1EA9n Streamable HTTP MCP (JSON-RPC 2.0) m\u1EDBi nh\u1EA5t",
+      "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n n\xE2ng c\u1EA5p Skill t\u1EEB server tr\u1ECDn \u0111\u1EDDi"
+    ]),
+    tech_stack: JSON.stringify(["MCP Protocol", "Claude", "Codex", "Antigravity", "Seedance 2.5", "Veo 3", "Muse AI"]),
+    version: "v1.0 MCP",
+    price: 99e4,
+    original_price: 199e4,
+    thumbnail: "/static/mcp-skill-viral-cover.svg",
+    demo_video_url: "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-khoa-hoc-seedance.mp4",
+    file_size: "MCP Live API",
+    is_featured: 1,
+    is_hot: 1,
+    is_new: 1,
+    sold_count: 64,
+    view_count: 4820,
+    rating: 5,
+    rating_count: 29,
+    mcp_server_name: "khoskill-video-viral",
+    mcp_clients: JSON.stringify(["Claude", "Codex", "Antigravity"]),
+    mcp_tools: JSON.stringify([
+      { name: "list_licensed_skills", description: "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill MCP \u0111ang ho\u1EA1t \u0111\u1ED9ng theo License Key c\u1EE7a b\u1EA1n" },
+      { name: "get_skill_blueprint", description: "N\u1EA1p to\xE0n b\u1ED9 quy tr\xECnh, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt, c\xF4ng th\u1EE9c Hook-Body-CTA v\xE0 template prompt c\u1EE7a Skill" },
+      { name: "generate_video_storyboard", description: "T\u1EF1 \u0111\u1ED9ng t\xE1ch ch\u1EE7 \u0111\u1EC1 th\xE0nh storyboard 30s (4 c\u1EA3nh) k\xE8m prompt t\u1ED1i \u01B0u cho Seedance 2.5 / Muse AI / Veo 3" },
+      { name: "create_video_from_skill", description: "Ch\u1EA1y pipeline t\u1EA1o video theo chu\u1EA9n Skill, tr\u1EA3 v\u1EC1 g\xF3i render job + SRT ph\u1EE5 \u0111\u1EC1 ho\u1EB7c g\u1ECDi render webhook tr\u1EF1c ti\u1EBFp" }
+    ]),
+    mcp_skill_prompt: `# SKILL BLUEPRINT: AI AGENT VIDEO VIRAL 30S (MCP)
+
+## 1. M\u1EE5c ti\xEAu \u0111\u1EA7u ra
+- T\u1EA1o video ng\u1EAFn 30 gi\xE2y t\u1EF7 l\u1EC7 9:16 (TikTok / Facebook Reels / YouTube Shorts) c\xF3 t\u1EF7 l\u1EC7 gi\u1EEF ch\xE2n cao (>65% \u1EDF m\u1ED1c 3s \u0111\u1EA7u).
+- Duy tr\xEC t\xEDnh \u0111\u1ED3ng nh\u1EA5t tuy\u1EC7t \u0111\u1ED1i v\u1EC1 **nh\xE2n v\u1EADt, trang ph\u1EE5c, \xE1nh s\xE1ng, t\xF4ng m\xE0u v\xE0 kh\xF4ng gian** xuy\xEAn su\u1ED1t to\xE0n b\u1ED9 video.
+
+## 2. C\u1EA5u tr\xFAc 4 ph\xE2n \u0111o\u1EA1n chu\u1EA9n Viral 30s
+1. **C\u1EA3nh 1 \u2014 Visual Hook (00:00 - 00:05)**: M\u1EDF \u0111\u1EA7u b\u1EB1ng chuy\u1EC3n \u0111\u1ED9ng m\u1EA1nh, k\u1EBFt qu\u1EA3 g\xE2y t\xF2 m\xF2 ho\u1EB7c c\xE2u h\u1ECFi \u0111\xE1nh tr\xFAng n\u1ED7i \u0111au. Camera \u0111\u1EA9y nhanh (fast push-in / whip pan).
+2. **C\u1EA3nh 2 \u2014 B\u1ED1i c\u1EA3nh & V\u1EA5n \u0111\u1EC1 (00:05 - 00:13)**: Minh ho\u1EA1 v\u1EA5n \u0111\u1EC1 th\u1EF1c t\u1EBF ng\u01B0\u1EDDi xem g\u1EB7p ph\u1EA3i. \xC1nh s\xE1ng t\u01B0\u01A1ng ph\u1EA3n v\u1EEBa ph\u1EA3i, g\xF3c m\xE1y medium shot.
+3. **C\u1EA3nh 3 \u2014 Gi\u1EA3i ph\xE1p & Bi\u1EBFn \u0111\u1ED5i (00:13 - 00:24)**: Ph\xF4 di\u1EC5n quy tr\xECnh/s\u1EA3n ph\u1EA9m t\u1EA1o ra s\u1EF1 thay \u0111\u1ED5i r\xF5 r\u1EC7t (Before -> After). G\xF3c m\xE1y close-up s\u1EAFc n\xE9t, chi ti\u1EBFt ch\xE2n th\u1EF1c.
+4. **C\u1EA3nh 4 \u2014 Payoff & CTA (00:24 - 00:30)**: Khung h\xECnh th\xE0nh qu\u1EA3 \u0111\u1EB9p nh\u1EA5t + l\u1EDDi k\xEAu g\u1ECDi h\xE0nh \u0111\u1ED9ng t\u1EF1 nhi\xEAn (b\xECnh lu\u1EADn / l\u01B0u clip / b\u1EA5m gi\u1ECF h\xE0ng).
+
+## 3. Quy t\u1EAFc kh\xF3a nh\xE2n v\u1EADt & phong c\xE1ch (Character & Style Lock)
+- Lu\xF4n \u0111\u1ECBnh ngh\u0129a 1 **Character Anchor** c\u1ED1 \u0111\u1ECBnh (\u0111\u1ED9 tu\u1ED5i, ki\u1EC3u t\xF3c, trang ph\u1EE5c, ph\u1EE5 ki\u1EC7n, b\u1ED1i c\u1EA3nh n\u1EC1n) v\xE0 l\u1EB7p l\u1EA1i nguy\xEAn v\u0103n \u1EDF \u0111\u1EA7u prompt m\u1ECDi c\u1EA3nh.
+- H\u1ED7 tr\u1EE3 Seedance 2.5 (one-take 30s), Muse AI (clip 10s lip-sync ti\u1EBFng Vi\u1EC7t), Veo 3 (c\u1EA3nh \u0111i\u1EC7n \u1EA3nh + SFX).
+
+## 4. Quy tr\xECnh th\u1EF1c thi b\u1EAFt bu\u1ED9c cho AI Agent
+1. Thu th\u1EADp ch\u1EE7 \u0111\u1EC1, s\u1EA3n ph\u1EA9m/ng\xE1ch, \u0111\u1ED1i t\u01B0\u1EE3ng xem v\xE0 model m\u1EE5c ti\xEAu t\u1EEB ng\u01B0\u1EDDi d\xF9ng.
+2. G\u1ECDi \`generate_video_storyboard\` \u0111\u1EC3 t\u1EA1o \u0111\u1EE7 4 c\u1EA3nh c\xF3 kh\xF3a nh\xE2n v\u1EADt, l\u1EDDi tho\u1EA1i v\xE0 ph\u1EE5 \u0111\u1EC1.
+3. G\u1ECDi \`create_video_from_skill\` \u0111\u1EC3 \u0111\xF3ng g\xF3i render pipeline (ho\u1EB7c g\u1EEDi l\u1EC7nh render t\u1EF1 \u0111\u1ED9ng qua webhook/API n\u1EBFu c\xF3).`
+  },
+  {
+    slug: "mcp-skill-agent-affiliate-tiktok",
+    name: "MCP Skill AI Agent \u2014 T\u1EF1 \u0110\u1ED9ng S\u1EA3n Xu\u1EA5t Video Affiliate TikTok Shop",
+    short_desc: "K\u1EBFt n\u1ED1i MCP v\xE0o Claude, Codex, Antigravity: ch\u1EC9 c\u1EA7n \u0111\u01B0a t\xEAn ho\u1EB7c th\xF4ng tin s\u1EA3n ph\u1EA9m, AI Agent t\u1EF1 g\u1ECDi Skill xu\u1EA5t tr\u1ECDn b\u1ED9 k\u1ECBch b\u1EA3n ch\u1ED1t \u0111\u01A1n, prompt c\u1EA3nh quay 9:16, voiceover & l\u1EC7nh t\u1EA1o video Affiliate.",
+    description: "<h3>T\u1EF1 \u0111\u1ED9ng ho\xE1 d\xE2y chuy\u1EC1n l\xE0m video Affiliate b\u1EB1ng AI Agent</h3><p>Thay v\xEC t\u1EA3i b\u1ED9 prompt v\u1EC1 m\xE1y r\u1ED3i t\u1EF1 ch\u1EC9nh s\u1EEDa t\u1EEBng c\xE2u ch\u1EEF cho m\u1ED7i s\u1EA3n ph\u1EA9m m\u1EDBi, <b>MCP Skill Affiliate TikTok Shop</b> bi\u1EBFn <b>Claude, Codex v\xE0 Antigravity</b> th\xE0nh tr\u1EE3 l\xFD s\u1EA3n xu\u1EA5t video ch\u1ED1t \u0111\u01A1n chuy\xEAn nghi\u1EC7p qua k\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp.</p><h3>Quy tr\xECnh Agent ch\u1EA1y t\u1EF1 \u0111\u1ED9ng qua MCP</h3><ul><li><b>B\u01B0\u1EDBc 1:</b> Nh\u1EADp t\xEAn s\u1EA3n ph\u1EA9m, \u0111i\u1EC3m b\xE1n h\xE0ng (USP) v\xE0 gi\xE1 \u01B0u \u0111\xE3i v\xE0o Claude / Codex / Antigravity.</li><li><b>B\u01B0\u1EDBc 2:</b> Agent t\u1EF1 \u0111\u1ED9ng g\u1ECDi MCP tool n\u1EA1p b\u1ED9 <b>25 c\xF4ng th\u1EE9c Hook ch\u1ED1t \u0111\u01A1n</b> &amp; c\u1EA5u tr\xFAc PAS/AIDA t\u1ED1i \u01B0u cho TikTok Shop.</li><li><b>B\u01B0\u1EDBc 3:</b> Agent g\u1ECDi <code>create_video_from_skill</code> xu\u1EA5t b\u1ED9 prompt kh\xF3a s\u1EA3n ph\u1EA9m/nh\xE2n v\u1EADt, l\u1EDDi tho\u1EA1i lip-sync ti\u1EBFng Vi\u1EC7t, file ph\u1EE5 \u0111\u1EC1 SRT v\xE0 th\xF4ng s\u1ED1 render h\xE0ng lo\u1EA1t.</li><li><b>B\u01B0\u1EDBc 4:</b> Xu\u1EA5t s\u1EB5n nhi\u1EC1u bi\u1EBFn th\u1EC3 Hook \u0111\u1EC3 b\u1EA1n ch\u1EA1y test A/B t\xECm video win c\u1EF1c nhanh.</li></ul><h3>Ph\xF9 h\u1EE3p v\u1EDBi ai?</h3><p>Ch\u1EE7 shop TikTok Shop, KOC/Affiliate creator, team media mu\u1ED1n scale 10\u201330 video b\xE1n h\xE0ng m\u1ED7i ng\xE0y ngay trong Claude, Codex ho\u1EB7c Antigravity.</p>",
+    features: JSON.stringify([
+      "T\xEDch h\u1EE3p tr\u1EF1c ti\u1EBFp v\xE0o Claude, Codex, Antigravity qua MCP",
+      "\u0110\u01B0a t\xEAn s\u1EA3n ph\u1EA9m -> Agent t\u1EF1 xu\u1EA5t tr\u1ECDn g\xF3i k\u1ECBch b\u1EA3n + prompt + l\u1EC7nh render",
+      "S\u1EB5n 25 khung Hook gi\u1EEF ch\xE2n 3 gi\xE2y & CTA chu\u1EA9n TikTok Shop",
+      "Sinh nhanh 3 bi\u1EBFn th\u1EC3 Hook \u0111\u1EC3 test A/B t\xECm clip ra \u0111\u01A1n",
+      "Xu\u1EA5t k\xE8m script voiceover ti\u1EBFng Vi\u1EC7t, ph\u1EE5 \u0111\u1EC1 SRT v\xE0 hashtag ng\xE1ch",
+      "C\u1EADp nh\u1EADt c\xF4ng th\u1EE9c ch\u1ED1t \u0111\u01A1n m\u1EDBi tr\u1EF1c ti\u1EBFp t\u1EEB MCP Server"
+    ]),
+    tech_stack: JSON.stringify(["MCP Protocol", "Claude", "Codex", "Antigravity", "Muse AI", "Seedance 2.5", "CapCut"]),
+    version: "v1.0 MCP",
+    price: 89e4,
+    original_price: 179e4,
+    thumbnail: "/static/mcp-skill-affiliate-cover.svg",
+    demo_video_url: "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-skill-fitness.mp4",
+    file_size: "MCP Live API",
+    is_featured: 1,
+    is_hot: 0,
+    is_new: 1,
+    sold_count: 41,
+    view_count: 3190,
+    rating: 4.9,
+    rating_count: 18,
+    mcp_server_name: "khoskill-affiliate-agent",
+    mcp_clients: JSON.stringify(["Claude", "Codex", "Antigravity"]),
+    mcp_tools: JSON.stringify([
+      { name: "list_licensed_skills", description: "Ki\u1EC3m tra danh s\xE1ch MCP Skill \u0111\xE3 k\xEDch ho\u1EA1t" },
+      { name: "get_skill_blueprint", description: "N\u1EA1p c\xF4ng th\u1EE9c Hook 3s, c\u1EA5u tr\xFAc b\xE1n h\xE0ng PAS/AIDA v\xE0 lu\u1EADt kh\xF3a s\u1EA3n ph\u1EA9m TikTok Shop" },
+      { name: "generate_video_storyboard", description: "T\u1EA1o storyboard 30s ch\u1ED1t \u0111\u01A1n + 3 bi\u1EBFn th\u1EC3 Hook theo t\xEAn s\u1EA3n ph\u1EA9m v\xE0 USP" },
+      { name: "create_video_from_skill", description: "Xu\u1EA5t g\xF3i render video Affiliate 9:16 ho\xE0n ch\u1EC9nh k\xE8m voiceover, ph\u1EE5 \u0111\u1EC1 SRT & CTA gi\u1ECF h\xE0ng" }
+    ]),
+    mcp_skill_prompt: `# SKILL BLUEPRINT: AI AGENT AFFILIATE TIKTOK SHOP (MCP)
+
+## 1. C\xF4ng th\u1EE9c chuy\u1EC3n \u0111\u1ED5i 30s (Hook - Agitate - Demo - Social Proof - CTA)
+- **00:00 - 00:04 (Hook Ch\u1EB7n Cu\u1ED9n)**: G\u1ECDi th\u1EB3ng t\u1EC7p kh\xE1ch h\xE0ng + c\u1EADn c\u1EA3nh s\u1EA3n ph\u1EA9m \u0111ang ho\u1EA1t \u0111\u1ED9ng th\u1EF1c t\u1EBF.
+- **00:04 - 00:10 (N\u1ED7i \u0111au th\u1EF1c t\u1EBF)**: N\xEAu 1 v\u1EA5n \u0111\u1EC1 c\u1EE5 th\u1EC3 g\xE2y kh\xF3 ch\u1ECBu h\u1EB1ng ng\xE0y.
+- **00:10 - 00:21 (Demo USP s\u1EA3n ph\u1EA9m)**: T\u1EADp trung 2 l\u1EE3i \xEDch m\u1EA1nh nh\u1EA5t b\u1EB1ng g\xF3c quay c\u1EADn (macro / close-up).
+- **00:21 - 00:26 (B\u1EB1ng ch\u1EE9ng & X\u1EED l\xFD t\u1EEB ch\u1ED1i)**: So s\xE1nh gi\xE1 tr\u1ECB/chi ph\xED ho\u1EB7c \u0111\u1ED9 b\u1EC1n th\u1EF1c t\u1EBF.
+- **00:26 - 00:30 (CTA Gi\u1ECF H\xE0ng)**: Ch\u1EC9 gi\u1ECF h\xE0ng g\xF3c tr\xE1i t\u1EF1 nhi\xEAn.
+
+## 2. A/B Test 3 bi\u1EBFn th\u1EC3 Hook
+- M\u1ED7i l\u1EA7n ch\u1EA1y Skill lu\xF4n xu\u1EA5t k\xE8m **3 bi\u1EBFn th\u1EC3 Hook \u0111\u1EA7u 3 gi\xE2y** \u0111\u1EC3 test nhanh t\xECm video win.`
+  }
+];
+async function runOnce(db) {
+  try {
+    const flag = await db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null);
+    if (flag?.value === "1") {
+      _done = true;
+      return;
+    }
+    const alters = [
+      "ALTER TABLE products ADD COLUMN mcp_endpoint TEXT",
+      "ALTER TABLE products ADD COLUMN mcp_server_name TEXT",
+      "ALTER TABLE products ADD COLUMN mcp_clients TEXT",
+      "ALTER TABLE products ADD COLUMN mcp_tools TEXT",
+      "ALTER TABLE products ADD COLUMN mcp_skill_prompt TEXT",
+      "ALTER TABLE products ADD COLUMN mcp_render_webhook TEXT",
+      "ALTER TABLE licenses ADD COLUMN mcp_call_count INTEGER NOT NULL DEFAULT 0",
+      "ALTER TABLE licenses ADD COLUMN last_mcp_call_at TIMESTAMP"
+    ];
+    for (const sql of alters) {
+      await db.prepare(sql).run().catch(() => null);
+    }
+    await db.prepare(
+      `SELECT setval(pg_get_serial_sequence('categories', 'id'), COALESCE((SELECT MAX(id) FROM categories), 1), (SELECT COUNT(*) > 0 FROM categories))`
+    ).first().catch(() => null);
+    await db.prepare(
+      `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
+    ).first().catch(() => null);
+    const orders = [
+      ["skill-video-ai", 1],
+      ["khoa-hoc-video-ai", 3],
+      ["chatbot-ai", 4],
+      ["app-video-ai", 5],
+      ["combo", 6]
+    ];
+    for (const [slug, ord] of orders) {
+      await db.prepare("UPDATE categories SET sort_order=? WHERE slug=?").bind(ord, slug).run().catch(() => null);
+    }
+    let catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
+    if (!catRow) {
+      const ins = await db.prepare(
+        `INSERT INTO categories (slug, name, description, icon, color, sort_order) VALUES (?,?,?,?,?,?)`
+      ).bind(
+        "skill-ai-agent-mcp",
+        "Skill AI Agent (MCP)",
+        "Skill k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp d\u1EA1ng MCP cho Claude, Codex, Antigravity \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill, kh\xF4ng c\u1EA7n t\u1EA3i v\u1EC1 l\xE0m th\u1EE7 c\xF4ng",
+        "fa-plug-circle-bolt",
+        "cyan",
+        2
+      ).run();
+      catRow = { id: ins.meta.last_row_id };
+    }
+    if (!catRow?.id) {
+      catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
+    }
+    const catId = catRow?.id || null;
+    for (const p of STARTER_MCP_PRODUCTS) {
+      const exists = await db.prepare("SELECT id FROM products WHERE slug=?").bind(p.slug).first().catch(() => null);
+      if (!exists) {
+        await db.prepare(
+          `INSERT INTO products (
+            slug, name, category_id, short_desc, description, features, tech_stack, version,
+            price, original_price, thumbnail, demo_video_url, demo_url, download_url, doc_url,
+            file_size, product_type, is_featured, is_hot, is_new, status,
+            sold_count, view_count, rating, rating_count,
+            mcp_endpoint, mcp_server_name, mcp_clients, mcp_tools, mcp_skill_prompt, mcp_render_webhook
+          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        ).bind(
+          p.slug,
+          p.name,
+          catId,
+          p.short_desc,
+          p.description,
+          p.features,
+          p.tech_stack,
+          p.version,
+          p.price,
+          p.original_price,
+          p.thumbnail,
+          p.demo_video_url,
+          "",
+          "",
+          "",
+          p.file_size,
+          "mcp_skill",
+          p.is_featured,
+          p.is_hot,
+          p.is_new,
+          "published",
+          p.sold_count,
+          p.view_count,
+          p.rating,
+          p.rating_count,
+          "",
+          p.mcp_server_name,
+          p.mcp_clients,
+          p.mcp_tools,
+          p.mcp_skill_prompt,
+          ""
+        ).run();
+      }
+    }
+    await db.prepare(
+      `INSERT INTO settings (key, value) VALUES ('mcp_migration_0004_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+    ).run();
+    invalidateCache();
+    _done = true;
+  } catch (err) {
+    console.error("[MCP_BOOTSTRAP]", err);
+  }
+}
+async function ensureMcpMigration(db) {
+  if (_done || !db) return;
+  if (!_inflight) {
+    _inflight = runOnce(db).finally(() => {
+      _inflight = null;
+    });
+  }
+  await _inflight;
+}
+
 // src/index.tsx
 var app = new Hono2();
 app.use("*", async (c, next) => {
@@ -15493,8 +17112,24 @@ app.use("*", async (c, next) => {
     const cs = c.env.POSTGRES_URL || pgConnectionString();
     if (cs) c.env.DB = pgDb;
   }
+  const pathname = new URL(c.req.url).pathname;
+  if (c.env.DB && !pathname.startsWith("/static/") && pathname !== "/favicon.ico" && !pathname.startsWith("/videos/")) {
+    await ensureMcpMigration(c.env.DB);
+  }
   await next();
 });
+app.use("/api/mcp", cors({
+  origin: "*",
+  allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
+  allowHeaders: ["Authorization", "Content-Type", "Accept", "Mcp-Session-Id", "X-License-Key", "X-Api-Key"],
+  exposeHeaders: ["Mcp-Session-Id"]
+}));
+app.use("/api/mcp/*", cors({
+  origin: "*",
+  allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
+  allowHeaders: ["Authorization", "Content-Type", "Accept", "Mcp-Session-Id", "X-License-Key", "X-Api-Key"],
+  exposeHeaders: ["Mcp-Session-Id"]
+}));
 app.use("/api/*", cors());
 async function fetchSettings(db) {
   const map = {};
@@ -15504,7 +17139,7 @@ async function fetchSettings(db) {
 }
 app.use("*", async (c, next) => {
   const url = new URL(c.req.url);
-  if (url.pathname.startsWith("/static/") || url.pathname === "/favicon.ico" || url.pathname === "/robots.txt" || url.pathname.startsWith("/videos/")) {
+  if (url.pathname.startsWith("/static/") || url.pathname === "/favicon.ico" || url.pathname === "/robots.txt" || url.pathname.startsWith("/videos/") || url.pathname === "/api/mcp" || url.pathname.startsWith("/api/mcp/")) {
     return next();
   }
   const [user, settings] = await Promise.all([
@@ -15584,11 +17219,15 @@ async function requireAdmin(c, next) {
 app.get("/", async (c) => {
   const db = c.env.DB;
   const data = await cached("home:bundle", 3e4, async () => {
-    const [cats, featured, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
+    const [cats, featured, mcpSkills, manualSkills, hot, newest, comingSoon, posts, reviews, stats] = await Promise.all([
       db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                   FROM categories c ORDER BY c.sort_order`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.is_featured=1 ORDER BY p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.is_featured DESC, p.id DESC LIMIT 8`).all(),
+      db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
+                  WHERE p.status='published' AND p.product_type='skill' ORDER BY p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                   WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -15600,10 +17239,12 @@ app.get("/", async (c) => {
                   FROM reviews r JOIN users u ON u.id=r.user_id JOIN products p ON p.id=r.product_id
                   WHERE r.rating>=4 ORDER BY r.id DESC LIMIT 6`).all(),
       db.prepare(`SELECT (SELECT COUNT(*) FROM products WHERE status='published') products,
+                         (SELECT COUNT(*) FROM products WHERE status='published' AND product_type='skill') manualSkills,
+                         (SELECT COUNT(*) FROM products WHERE status='published' AND product_type='mcp_skill') mcpSkills,
                          (SELECT COUNT(*) FROM users) users,
                          (SELECT COALESCE(SUM(sold_count),0) FROM products) sold`).first()
     ]);
-    return { cats, featured, hot, newest, comingSoon, posts, reviews, stats };
+    return { cats, featured, mcpSkills, manualSkills, hot, newest, comingSoon, posts, reviews, stats };
   });
   return c.html(/* @__PURE__ */ jsxDEV(
     HomePage,
@@ -15611,6 +17252,8 @@ app.get("/", async (c) => {
       ...base(c),
       categories: data.cats.results,
       featured: data.featured.results,
+      mcpSkills: data.mcpSkills.results,
+      manualSkills: data.manualSkills.results,
       hot: data.hot.results,
       newest: data.newest.results,
       comingSoon: data.comingSoon.results,
@@ -15630,7 +17273,7 @@ async function renderProductList(c, opts) {
   const maxPrice = c.req.query("max") || "";
   const page = Math.max(1, parseInt(c.req.query("page") || "1"));
   const perPage = 12;
-  const includeComingSoon = opts.comboOnly || ["course", "chatbot", "app", "combo"].includes(type) || !!cat && cat !== "skill-video-ai";
+  const includeComingSoon = opts.comboOnly || ["course", "chatbot", "app", "combo"].includes(type) || !!cat && cat !== "skill-video-ai" && cat !== "skill-ai-agent-mcp";
   const where = [includeComingSoon ? `p.status IN ('published','coming_soon')` : `p.status='published'`];
   const binds = [];
   if (q) {
@@ -15675,8 +17318,8 @@ async function renderProductList(c, opts) {
   const cacheKey = q ? "" : `plist:${opts.comboOnly ? "1" : "0"}:${cat}:${type}:${sort}:${minPrice}:${maxPrice}:${page}`;
   const [cntRow, rows, cats, currentCat] = cacheKey ? await cached(cacheKey, 2e4, fetchList) : await fetchList();
   const total = cntRow?.n || 0;
-  const heading = opts.comboOnly ? "Combo Tr\u1ECDn B\u1ED9" : currentCat ? currentCat.name : q ? `K\u1EBFt qu\u1EA3 cho "${q}"` : "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m";
-  const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m \u2014 Hi\u1EC7n \u0111ang t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" : currentCat ? currentCat.description : "Kh\xE1m ph\xE1 5 b\u1ED9 Skill AI t\u1EA1o video chuy\xEAn nghi\u1EC7p \u0111ang m\u1EDF b\xE1n c\xF9ng c\xE1c d\u1ECBch v\u1EE5 s\u1EAFp ra m\u1EAFt";
+  const heading = opts.comboOnly ? "Combo Tr\u1ECDn B\u1ED9" : currentCat ? currentCat.name : q ? `K\u1EBFt qu\u1EA3 cho "${q}"` : type === "mcp_skill" ? "Skill AI Agent (MCP)" : type === "skill" ? "Skill AI (T\u1EF1 t\u1EA3i & l\xE0m theo)" : "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m";
+  const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m \u2014 Hi\u1EC7n \u0111ang t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" : currentCat ? currentCat.description : type === "mcp_skill" ? "Skill k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp d\u1EA1ng MCP cho Claude, Codex, Antigravity \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill" : type === "skill" ? "B\u1ED9 Skill \u0111\xF3ng g\xF3i theo ng\xE1ch & c\xF4ng c\u1EE5: t\u1EF1 t\u1EA3i t\xE0i li\u1EC7u, prompt chu\u1EA9n v\xE0 l\xE0m theo t\u1EEBng b\u01B0\u1EDBc" : "Kh\xE1m ph\xE1 kho Skill AI t\u1EF1 t\u1EA3i v\xE0 d\xF2ng m\u1EDBi Skill AI Agent (MCP) k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity";
   const baseUrl = opts.comboOnly ? "/combo" : opts.catSlug ? `/danh-muc/${opts.catSlug}` : "/san-pham";
   return c.html(/* @__PURE__ */ jsxDEV(
     ProductListPage,
@@ -15749,7 +17392,8 @@ app.get("/san-pham/:slug", async (c) => {
       owned,
       inWishlist: !!wishRow,
       canReview,
-      ratingBreakdown: rb
+      ratingBreakdown: rb,
+      origin: getRequestOrigin(c)
     }
   ));
 });
@@ -16576,12 +18220,155 @@ app.get("/tai-khoan/san-pham", requireAuth, async (c) => {
   const u = c.get("user");
   const rows = await c.env.DB.prepare(
     `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
+       p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
        (SELECT r.changelog FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_changelog,
        (SELECT r.version FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_version,
        (SELECT r.created_at FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_release_at
      FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
-  ).bind(u.id).all();
-  return c.html(/* @__PURE__ */ jsxDEV(MyProductsPage, { ...base(c), licenses: rows.results }));
+  ).bind(u.id).all().catch(
+    () => c.env.DB.prepare(
+      `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size
+       FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
+    ).bind(u.id).all()
+  );
+  return c.html(/* @__PURE__ */ jsxDEV(MyProductsPage, { ...base(c), licenses: rows.results, origin: getRequestOrigin(c) }));
+});
+async function handleMcpEndpoint(c, targetSlug) {
+  const db = c.env.DB;
+  const origin = getRequestOrigin(c);
+  const licenseKey = extractLicenseKey(c.req.raw, c.req.query("key"));
+  if (c.req.method === "GET") {
+    if (licenseKey) {
+      const auth2 = await authenticateMcpLicense(db, licenseKey, targetSlug);
+      if (!auth2.ok) return c.json({ ok: false, error: auth2.error }, auth2.status);
+      return c.json({
+        ok: true,
+        protocol: "MCP Streamable HTTP (JSON-RPC 2.0)",
+        server: resolveMcpServerName(auth2.primary),
+        endpoint: resolveMcpEndpoint(origin, auth2.primary),
+        active_skills: auth2.skills.map((s) => ({ slug: s.slug, name: s.name, version: s.version }))
+      });
+    }
+    return c.json({
+      ok: true,
+      name: "KhoSkill AI MCP Server",
+      protocol: "Model Context Protocol (Streamable HTTP / JSON-RPC 2.0)",
+      usage: 'POST JSON-RPC 2.0 requests with header "Authorization: Bearer <YOUR_LICENSE_KEY>"',
+      supported_clients: ["Claude Code", "Claude Desktop", "OpenAI Codex", "Antigravity"]
+    });
+  }
+  if (c.req.method === "DELETE") {
+    return c.json({ ok: true });
+  }
+  const auth = await authenticateMcpLicense(db, licenseKey, targetSlug);
+  if (!auth.ok) {
+    return c.json({
+      jsonrpc: "2.0",
+      id: null,
+      error: { code: -32001, message: auth.error }
+    }, auth.status);
+  }
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error: body kh\xF4ng ph\u1EA3i JSON h\u1EE3p l\u1EC7" } }, 400);
+  }
+  if (Array.isArray(body)) {
+    const responses = [];
+    for (const item of body) {
+      const r = await handleMcpJsonRpc({ db, auth, payload: item, origin });
+      if (r.body !== null) responses.push(r.body);
+    }
+    if (responses.length === 0) return c.body(null, 202);
+    return c.json(responses, 200);
+  }
+  const res = await handleMcpJsonRpc({ db, auth, payload: body, origin });
+  if (res.body === null) return c.body(null, res.status);
+  return c.json(res.body, res.status);
+}
+app.all("/api/mcp", (c) => handleMcpEndpoint(c));
+app.all("/api/mcp/:slug", (c) => handleMcpEndpoint(c, c.req.param("slug")));
+app.post("/api/account/mcp/test", requireAuth, async (c) => {
+  const db = c.env.DB;
+  const u = c.get("user");
+  const b = await c.req.json().catch(() => ({}));
+  const licenseId = Number(b.license_id);
+  if (!licenseId) return c.json({ error: "Thi\u1EBFu license_id" }, 400);
+  const lic = await db.prepare(
+    `SELECT l.id, l.license_key, p.slug, p.product_type, p.mcp_endpoint, p.mcp_server_name
+     FROM licenses l JOIN products p ON p.id = l.product_id
+     WHERE l.id = ? AND l.user_id = ?`
+  ).bind(licenseId, u.id).first();
+  if (!lic) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y b\u1EA3n quy\u1EC1n s\u1EA3n ph\u1EA9m n\xE0y trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n" }, 404);
+  if (lic.product_type !== "mcp_skill") return c.json({ error: "S\u1EA3n ph\u1EA9m n\xE0y kh\xF4ng ph\u1EA3i d\u1EA1ng Skill AI Agent (MCP)" }, 400);
+  const origin = getRequestOrigin(c);
+  const endpoint = resolveMcpEndpoint(origin, lic);
+  const customEndpoint = (lic.mcp_endpoint || "").trim();
+  if (customEndpoint && (customEndpoint.startsWith("https://") || customEndpoint.startsWith("http://"))) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8e3);
+      const initRes = await fetch(customEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, text/event-stream",
+          Authorization: `Bearer ${lic.license_key}`,
+          "X-License-Key": lic.license_key
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "khoskill-web-tester", version: "1.0.0" } }
+        }),
+        signal: ctrl.signal
+      });
+      clearTimeout(timer);
+      if (!initRes.ok) {
+        return c.json({ error: `MCP Server tr\u1EA3 v\u1EC1 m\xE3 l\u1ED7i HTTP ${initRes.status}` }, 502);
+      }
+      const initJson = await initRes.json().catch(() => ({}));
+      return c.json({
+        ok: true,
+        mode: "external",
+        endpoint: customEndpoint,
+        protocolVersion: initJson?.result?.protocolVersion || "2025-03-26",
+        serverInfo: initJson?.result?.serverInfo || { name: resolveMcpServerName(lic), version: "1.0" },
+        tools: []
+      });
+    } catch (err) {
+      return c.json({ error: `Kh\xF4ng k\u1EBFt n\u1ED1i \u0111\u01B0\u1EE3c t\u1EDBi MCP Server (${String(err?.message || err)})` }, 502);
+    }
+  }
+  const auth = await authenticateMcpLicense(db, lic.license_key, lic.slug);
+  if (!auth.ok) return c.json({ error: auth.error }, auth.status);
+  const initResp = await handleMcpJsonRpc({
+    db,
+    auth,
+    origin,
+    payload: {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "khoskill-web-tester", version: "1.0.0" } }
+    }
+  });
+  const toolsResp = await handleMcpJsonRpc({
+    db,
+    auth,
+    origin,
+    payload: { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }
+  });
+  return c.json({
+    ok: true,
+    mode: "builtin",
+    endpoint,
+    protocolVersion: initResp.body?.result?.protocolVersion || "2025-03-26",
+    serverInfo: initResp.body?.result?.serverInfo || { name: resolveMcpServerName(lic), version: "1.0" },
+    tools: toolsResp.body?.result?.tools || []
+  });
 });
 app.get("/tai-khoan/thong-bao", requireAuth, async (c) => {
   const u = c.get("user");
@@ -16859,6 +18646,20 @@ app.get("/admin/san-pham/:id", requireAdmin, async (c) => {
 });
 function productFields(b) {
   const toArr = (s) => JSON.stringify(String(s || "").split("\n").map((x) => x.trim()).filter(Boolean));
+  const toClients = (s) => {
+    const arr = String(s || "").split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+    return arr.length ? JSON.stringify(arr) : null;
+  };
+  const toMcpTools = (s) => {
+    const lines = String(s || "").split("\n").map((x) => x.trim()).filter(Boolean);
+    if (!lines.length) return null;
+    const tools = lines.map((line) => {
+      const [name, ...rest] = line.split("|");
+      return { name: name.trim(), description: rest.join("|").trim() || "MCP Skill Tool" };
+    }).filter((t) => t.name);
+    return tools.length ? JSON.stringify(tools) : null;
+  };
+  const ptype = ["course", "skill", "mcp_skill", "chatbot", "app", "combo", "source"].includes(b.product_type) ? b.product_type : "skill";
   return {
     name: (b.name || "").trim(),
     slug: (b.slug || slugify(b.name || "")).trim(),
@@ -16875,8 +18676,14 @@ function productFields(b) {
     demo_url: b.demo_url || null,
     download_url: b.download_url || null,
     doc_url: b.doc_url || null,
-    file_size: b.file_size || null,
-    product_type: ["course", "skill", "chatbot", "app", "combo", "source"].includes(b.product_type) ? b.product_type : "skill",
+    file_size: b.file_size || (ptype === "mcp_skill" ? "MCP Live API" : null),
+    product_type: ptype,
+    mcp_endpoint: (b.mcp_endpoint || "").trim() || null,
+    mcp_server_name: (b.mcp_server_name || "").trim() || null,
+    mcp_clients: ptype === "mcp_skill" ? toClients(b.mcp_clients_text) || JSON.stringify(["Claude", "Codex", "Antigravity"]) : toClients(b.mcp_clients_text),
+    mcp_tools: toMcpTools(b.mcp_tools_text),
+    mcp_skill_prompt: (b.mcp_skill_prompt || "").trim() || null,
+    mcp_render_webhook: (b.mcp_render_webhook || "").trim() || null,
     is_featured: b.is_featured ? 1 : 0,
     is_hot: b.is_hot ? 1 : 0,
     is_new: b.is_new ? 1 : 0,
@@ -16890,8 +18697,10 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare(`INSERT INTO products
     (name,slug,category_id,short_desc,description,features,tech_stack,version,price,original_price,thumbnail,
-     demo_video_url,demo_url,download_url,doc_url,file_size,product_type,is_featured,is_hot,is_new,status)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+     demo_video_url,demo_url,download_url,doc_url,file_size,product_type,
+     mcp_endpoint,mcp_server_name,mcp_clients,mcp_tools,mcp_skill_prompt,mcp_render_webhook,
+     is_featured,is_hot,is_new,status)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
     f.name,
     f.slug,
     f.category_id,
@@ -16909,6 +18718,12 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
     f.doc_url,
     f.file_size,
     f.product_type,
+    f.mcp_endpoint,
+    f.mcp_server_name,
+    f.mcp_clients,
+    f.mcp_tools,
+    f.mcp_skill_prompt,
+    f.mcp_render_webhook,
     f.is_featured,
     f.is_hot,
     f.is_new,
@@ -16927,7 +18742,9 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
   if (dup) return c.json({ error: "Slug \u0111\xE3 \u0111\u01B0\u1EE3c d\xF9ng cho s\u1EA3n ph\u1EA9m kh\xE1c" }, 400);
   await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,demo_url=?,download_url=?,
-    doc_url=?,file_size=?,product_type=?,is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(
+    doc_url=?,file_size=?,product_type=?,
+    mcp_endpoint=?,mcp_server_name=?,mcp_clients=?,mcp_tools=?,mcp_skill_prompt=?,mcp_render_webhook=?,
+    is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(
     f.name,
     f.slug,
     f.category_id,
@@ -16945,6 +18762,12 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
     f.doc_url,
     f.file_size,
     f.product_type,
+    f.mcp_endpoint,
+    f.mcp_server_name,
+    f.mcp_clients,
+    f.mcp_tools,
+    f.mcp_skill_prompt,
+    f.mcp_render_webhook,
     f.is_featured,
     f.is_hot,
     f.is_new,
@@ -17054,7 +18877,7 @@ app.get("/admin/don-hang/:id", requireAdmin, async (c) => {
   if (!o) return c.redirect("/admin/don-hang");
   const [items, licenses, bankTx, customerStats] = await Promise.all([
     db.prepare(`SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`).bind(o.id).all(),
-    db.prepare(`SELECT l.*, p.name product_name, p.version, p.download_url FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.order_id=? ORDER BY l.id`).bind(o.id).all(),
+    db.prepare(`SELECT l.*, p.name product_name, p.version, p.download_url, p.product_type FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.order_id=? ORDER BY l.id`).bind(o.id).all(),
     o.bank_tx_id ? db.prepare("SELECT * FROM bank_transactions WHERE id=?").bind(o.bank_tx_id).first() : db.prepare("SELECT * FROM bank_transactions WHERE matched_order_id=? ORDER BY id DESC LIMIT 1").bind(o.id).first(),
     db.prepare(`SELECT u.email_verified, u.google_id,
         (SELECT COUNT(*) FROM orders WHERE user_id=u.id) order_count,

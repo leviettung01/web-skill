@@ -46,6 +46,12 @@ export interface Product {
   doc_url: string | null
   file_size: string | null
   product_type: string
+  mcp_endpoint?: string | null
+  mcp_server_name?: string | null
+  mcp_clients?: string | null
+  mcp_tools?: string | null
+  mcp_skill_prompt?: string | null
+  mcp_render_webhook?: string | null
   is_featured: number
   is_hot: number
   is_new: number

@@ -85,6 +85,24 @@
       if (!slugInput.value) slugInput.value = slugify(input.value);
     });
   });
+
+  /* Highlight MCP config panel when product_type === 'mcp_skill' */
+  var typeSelect = document.querySelector('select[name=product_type]');
+  var mcpCard = document.getElementById('mcp-config-card');
+  var mcpBadge = document.getElementById('mcp-mode-badge');
+  if (typeSelect && mcpCard) {
+    var syncMcpCard = function () {
+      var on = typeSelect.value === 'mcp_skill';
+      mcpCard.className = 'rounded-2xl border p-5 space-y-4 transition ' +
+        (on ? 'bg-cyan-50/40 border-cyan-300 ring-2 ring-cyan-200/60' : 'bg-white border-slate-200');
+      if (mcpBadge) {
+        mcpBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold ' +
+          (on ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500');
+        mcpBadge.textContent = on ? 'Đang kích hoạt chế độ MCP' : 'Dành cho loại Skill AI Agent (MCP)';
+      }
+    };
+    typeSelect.addEventListener('change', syncMcpCard);
+  }
 })();
 
 /* ============================================================

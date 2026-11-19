@@ -1,6 +1,6 @@
 import type { FC } from 'hono/jsx'
 import type { Product, Category } from '../lib/types'
-import { formatVND, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate } from '../lib/utils'
+import { formatVND, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isMcpSkill, parseMcpClients } from '../lib/utils'
 
 export const Stars: FC<{ rating: number; size?: string }> = ({ rating, size = 'text-xs' }) => (
   <span class={`text-amber-400 ${size}`} aria-label={`Đánh giá ${rating.toFixed(1)} trên 5 sao`}>
@@ -13,8 +13,10 @@ export const Stars: FC<{ rating: number; size?: string }> = ({ rating, size = 't
 export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact }) => {
   const off = discountPercent(p.price, p.original_price)
   const comingSoon = p.status === 'coming_soon'
+  const mcp = isMcpSkill(p.product_type)
+  const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : []
   return (
-    <article class={`product-card group bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/15 hover:-translate-y-1 hover:border-indigo-500/40 transition-all duration-300 flex flex-col ${comingSoon ? 'opacity-90' : ''}`}>
+    <article class={`product-card group bg-[#0f0e24] rounded-2xl border overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${mcp ? 'border-cyan-500/35 hover:border-cyan-400/65 hover:shadow-cyan-500/15' : 'border-[#221e54] hover:border-indigo-500/40 hover:shadow-indigo-500/15'} ${comingSoon ? 'opacity-90' : ''}`}>
       {/* Media area - adaptive 16:9 frame */}
       <div class="product-card-media relative aspect-video overflow-hidden bg-[#070614]" style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
         {p.thumbnail
@@ -43,8 +45,13 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
             </span>
           ) : (
             <>
+              {mcp && (
+                <span class="px-2 py-0.5 rounded-md bg-cyan-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1">
+                  <i class="fas fa-plug-circle-bolt text-[9px]" aria-hidden="true"></i>MCP LIVE
+                </span>
+              )}
               {p.is_hot === 1 && <span class="px-2 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold shadow-md inline-flex items-center gap-1"><i class="fas fa-fire text-[9px]" aria-hidden="true"></i>HOT</span>}
-              {p.is_hot !== 1 && p.is_new === 1 && <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md">MỚI</span>}
+              {!mcp && p.is_hot !== 1 && p.is_new === 1 && <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md">MỚI</span>}
               {off > 0 && <span class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold tabular-nums shadow-md">-{off}%</span>}
             </>
           )}
@@ -67,16 +74,37 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
 
       {/* Info area */}
       <div class="p-4 flex flex-col flex-1">
-        <div class="flex items-center gap-2 mb-2 text-[11px] text-[#9492b8]">
-          <span class="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
+        <div class="flex flex-wrap items-center gap-1.5 mb-2 text-[11px] text-[#9492b8]">
+          {mcp ? (
+            <span class="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 font-bold uppercase inline-flex items-center gap-1">
+              <i class="fas fa-plug-circle-bolt text-[9px]" aria-hidden="true"></i>{PRODUCT_TYPE_LABEL[p.product_type]}
+            </span>
+          ) : (
+            <span class="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
+          )}
           <span class="font-mono text-[10px]">{p.version}</span>
+          {p.product_type === 'skill' && (
+            <span class="ml-auto text-[10px] text-[#9492b8]" title="Tải về máy & làm theo hướng dẫn">
+              <i class="fas fa-download mr-0.5 text-[9px]" aria-hidden="true"></i>Tự tải về
+            </span>
+          )}
         </div>
 
-        <h3 class="font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 group-hover:text-indigo-300 transition">
+        <h3 class={`font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 transition ${mcp ? 'group-hover:text-cyan-300' : 'group-hover:text-indigo-300'}`}>
           <a href={`/san-pham/${p.slug}`}>{p.name}</a>
         </h3>
 
         {!compact && <p class="text-[12px] text-[#b8b6d9] line-clamp-2 mb-3 leading-relaxed">{p.short_desc}</p>}
+
+        {mcp && !compact && (
+          <div class="flex flex-wrap items-center gap-1.5 mb-3">
+            {mcpClients.slice(0, 3).map(cl => (
+              <span class="px-2 py-0.5 rounded-md bg-[#161436] border border-cyan-500/25 text-cyan-200 text-[10px] font-semibold">
+                {cl}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div class="flex items-center gap-3 text-[11px] text-[#9492b8] mb-4">
           {comingSoon ? (
@@ -115,7 +143,7 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
                   data-id={p.id} aria-label={`Yêu thích ${p.name}`} title="Yêu thích">
                   <i class="far fa-heart text-xs" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="btn-add-cart h-9 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer"
+                <button type="button" class={`btn-add-cart h-9 px-3 rounded-lg text-white text-xs font-bold transition shadow-md cursor-pointer ${mcp ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 hover:opacity-95 shadow-cyan-600/20' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20'}`}
                   data-id={p.id} data-name={p.name} aria-label={`Thêm ${p.name} vào giỏ hàng`}>
                   Thêm
                 </button>
@@ -145,16 +173,30 @@ export const SectionTitle: FC<{ title: string; subtitle?: string; center?: boole
 
 export const CategoryCard: FC<{ c: Category }> = ({ c }) => {
   const count = c.product_count ?? 0
+  const isMcpCat = c.slug === 'skill-ai-agent-mcp'
+  const iconBg = isMcpCat
+    ? 'from-cyan-500 to-indigo-600'
+    : c.slug === 'skill-video-ai'
+      ? 'from-indigo-500 to-fuchsia-500'
+      : 'from-slate-600 to-indigo-700'
   return (
-    <a href={`/danh-muc/${c.slug}`} class="group relative p-5 rounded-2xl bg-[#0f0e24] border border-[#221e54] hover:border-indigo-500/40 hover:shadow-lg transition-all overflow-hidden flex flex-col">
-      <div class="w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 group-hover:scale-110 transition">
+    <a href={`/danh-muc/${c.slug}`}
+      class={`group relative p-5 rounded-2xl bg-[#0f0e24] border hover:shadow-lg transition-all overflow-hidden flex flex-col ${isMcpCat ? 'border-cyan-500/35 hover:border-cyan-400/70' : 'border-[#221e54] hover:border-indigo-500/40'}`}>
+      <div class={`w-11 h-11 rounded-xl grid place-items-center text-white mb-3.5 shadow-lg bg-gradient-to-br ${iconBg} group-hover:scale-110 transition`}>
         <i class={`fas ${c.icon}`} aria-hidden="true"></i>
       </div>
-      <h3 class="font-bold text-white mb-1 group-hover:text-indigo-300 transition">{c.name}</h3>
+      <h3 class={`font-bold text-white mb-1 transition ${isMcpCat ? 'group-hover:text-cyan-300' : 'group-hover:text-indigo-300'}`}>{c.name}</h3>
       <p class="text-[13px] text-[#b8b6d9] line-clamp-2 leading-relaxed">{c.description}</p>
       <div class="mt-auto pt-3 text-xs font-semibold">
         {count > 0 ? (
-          <span class="text-emerald-400 tabular-nums">{count} Skill đang mở bán <i class="fas fa-arrow-right ml-0.5 text-[10px]" aria-hidden="true"></i></span>
+          isMcpCat ? (
+            <span class="text-cyan-300 tabular-nums inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+              {count} Skill MCP <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
+            </span>
+          ) : (
+            <span class="text-emerald-400 tabular-nums">{count} Skill đang mở bán <i class="fas fa-arrow-right ml-0.5 text-[10px]" aria-hidden="true"></i></span>
+          )
         ) : (
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[11px] font-semibold">
             <i class="fas fa-clock text-[10px]" aria-hidden="true"></i>Chưa mở bán

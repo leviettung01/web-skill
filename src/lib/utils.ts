@@ -74,8 +74,9 @@ export function gradientFor(id: number): string {
 }
 
 export const PRODUCT_TYPE_LABEL: Record<string, string> = {
-  course: 'Khóa học',
   skill: 'Skill AI',
+  mcp_skill: 'Skill AI Agent (MCP)',
+  course: 'Khóa học',
   chatbot: 'Chatbot',
   app: 'App Video AI',
   prompt: 'Bộ Prompt',
@@ -86,14 +87,56 @@ export const PRODUCT_TYPE_LABEL: Record<string, string> = {
 
 /** Icon FontAwesome cho từng loại sản phẩm (dùng ở card & trang chi tiết) */
 export const PRODUCT_TYPE_ICON: Record<string, string> = {
-  course: 'fa-graduation-cap',
   skill: 'fa-wand-magic-sparkles',
+  mcp_skill: 'fa-plug-circle-bolt',
+  course: 'fa-graduation-cap',
   chatbot: 'fa-robot',
   app: 'fa-mobile-screen-button',
   prompt: 'fa-layer-group',
   tool: 'fa-gears',
   source: 'fa-code',
   combo: 'fa-box-open'
+}
+
+export function isMcpSkill(type?: string | null): boolean {
+  return type === 'mcp_skill'
+}
+
+export function parseMcpClients(raw?: string | null): string[] {
+  const arr = parseJSON<any>(raw, null)
+  if (Array.isArray(arr) && arr.length > 0) {
+    return arr.map(x => String(x || '').trim()).filter(Boolean)
+  }
+  return ['Claude', 'Codex', 'Antigravity']
+}
+
+export interface McpToolDef {
+  name: string
+  description: string
+}
+
+export const DEFAULT_MCP_TOOLS: McpToolDef[] = [
+  { name: 'list_licensed_skills', description: 'Liệt kê toàn bộ Skill AI Agent (MCP) đang kích hoạt theo License Key' },
+  { name: 'get_skill_blueprint', description: 'Nạp quy trình, luật khóa nhân vật, Hook-Body-CTA và template prompt chuẩn của Skill' },
+  { name: 'generate_video_storyboard', description: 'Tự động tách chủ đề thành storyboard 30s kèm prompt từng cảnh cho Seedance 2.5 / Muse AI / Veo 3' },
+  { name: 'create_video_from_skill', description: 'Chạy pipeline tạo video theo Skill (xuất gói render + SRT phụ đề hoặc đẩy qua render webhook)' }
+]
+
+export function parseMcpTools(raw?: string | null): McpToolDef[] {
+  const parsed = parseJSON<any>(raw, null)
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const out: McpToolDef[] = []
+    for (const item of parsed) {
+      if (typeof item === 'string' && item.trim()) {
+        const [name, ...rest] = item.split('|')
+        out.push({ name: name.trim(), description: rest.join('|').trim() || 'MCP Skill Tool' })
+      } else if (item && typeof item === 'object' && item.name) {
+        out.push({ name: String(item.name).trim(), description: String(item.description || '').trim() })
+      }
+    }
+    if (out.length > 0) return out
+  }
+  return DEFAULT_MCP_TOOLS
 }
 
 /** URL ảnh QR VietQR cho thanh toán chuyển khoản */

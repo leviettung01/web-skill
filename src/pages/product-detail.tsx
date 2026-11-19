@@ -1,7 +1,8 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { Breadcrumb, ProductCard, Stars, SectionTitle } from '../components/ui'
-import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl } from '../lib/utils'
+import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
+import { buildMcpConfigs } from '../lib/mcp'
 import type { Product } from '../lib/types'
 
 interface Props extends LayoutProps {
@@ -13,10 +14,11 @@ interface Props extends LayoutProps {
   inWishlist: boolean
   canReview: boolean
   ratingBreakdown: Record<number, number>
+  origin?: string
 }
 
 export const ProductDetailPage: FC<Props> = (props) => {
-  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings } = props
+  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings, origin = 'https://khoskill.site' } = props
   const off = discountPercent(p.price, p.original_price)
   const features = parseJSON<string[]>(p.features, [])
   const tech = parseJSON<string[]>(p.tech_stack, [])
@@ -28,6 +30,17 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const replacedPoster = isMp4 ? p.demo_video_url!.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, '/videos/posters/poster-$2.jpg') : undefined
   const demoPoster = replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : undefined
   const comingSoon = p.status === 'coming_soon'
+  const mcp = isMcpSkill(p.product_type)
+  const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : []
+  const mcpTools = mcp ? parseMcpTools(p.mcp_tools) : []
+  const mcpPreview = mcp ? buildMcpConfigs({
+    origin,
+    slug: p.slug,
+    productName: p.name,
+    licenseKey: 'KS-XXXX-XXXX-XXXX',
+    mcpEndpoint: p.mcp_endpoint,
+    mcpServerName: p.mcp_server_name
+  }) : null
 
   return (
     <Layout {...props} active="products" title={p.name} description={p.short_desc} ogImage={p.thumbnail || undefined}
@@ -92,42 +105,104 @@ export const ProductDetailPage: FC<Props> = (props) => {
               )}
 
               {/* Specs Grid boards */}
-              <div class="grid grid-cols-2 gap-3 mt-5">
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-400 grid place-items-center text-sm shrink-0"><i class="fas fa-bolt" aria-hidden="true"></i></div>
-                  <div>
-                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Giao hàng</div>
-                    <div class="text-xs font-bold text-white">Tự động 24/7</div>
+              {mcp ? (
+                <div class="grid grid-cols-2 gap-3 mt-5">
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#0b1f33] border border-cyan-500/30 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-300 grid place-items-center text-sm shrink-0"><i class="fas fa-plug-circle-bolt" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Giao thức</div>
+                      <div class="text-xs font-bold text-white">MCP Streamable HTTP</div>
+                    </div>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-300 grid place-items-center text-sm shrink-0"><i class="fas fa-terminal" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">AI Agent hỗ trợ</div>
+                      <div class="text-xs font-bold text-white">{mcpClients.join(' · ')}</div>
+                    </div>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-key" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Kích hoạt</div>
+                      <div class="text-xs font-bold text-white">License Key tức thì 24/7</div>
+                    </div>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-fuchsia-500/15 text-fuchsia-300 grid place-items-center text-sm shrink-0"><i class="fas fa-arrows-rotate" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Cập nhật</div>
+                      <div class="text-xs font-bold text-white">Đồng bộ live từ Server</div>
+                    </div>
                   </div>
                 </div>
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-cubes" aria-hidden="true"></i></div>
-                  <div>
-                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Nội dung</div>
-                    <div class="text-xs font-bold text-white">Full tài liệu + HDSD</div>
+              ) : (
+                <div class="grid grid-cols-2 gap-3 mt-5">
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-500/15 text-indigo-400 grid place-items-center text-sm shrink-0"><i class="fas fa-bolt" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Giao hàng</div>
+                      <div class="text-xs font-bold text-white">Tự động 24/7</div>
+                    </div>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-cubes" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Nội dung</div>
+                      <div class="text-xs font-bold text-white">Full tài liệu + HDSD</div>
+                    </div>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 grid place-items-center text-sm shrink-0"><i class="fas fa-infinity" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Truy cập</div>
+                      <div class="text-xs font-bold text-white">Trọn đời + update free</div>
+                    </div>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-rose-500/15 text-rose-400 grid place-items-center text-sm shrink-0"><i class="fas fa-headset" aria-hidden="true"></i></div>
+                    <div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Hỗ trợ</div>
+                      <div class="text-xs font-bold text-white">1-1 qua Zalo</div>
+                    </div>
                   </div>
                 </div>
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 grid place-items-center text-sm shrink-0"><i class="fas fa-infinity" aria-hidden="true"></i></div>
-                  <div>
-                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Truy cập</div>
-                    <div class="text-xs font-bold text-white">Trọn đời + update free</div>
+              )}
+
+              {/* MCP Quick Architecture Preview Card under video/specs */}
+              {mcp && mcpPreview && (
+                <div class="mt-4 p-4 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#0f0e24] to-[#130f33] border border-cyan-500/35">
+                  <div class="flex items-center justify-between gap-2 mb-2.5">
+                    <div class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                      <i class="fas fa-plug-circle-bolt" aria-hidden="true"></i>Cách hoạt động của Skill AI Agent (MCP)
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-200 text-[10px] font-mono font-bold">JSON-RPC 2.0</span>
+                  </div>
+                  <p class="text-xs text-[#c2c0e0] leading-relaxed mb-3">
+                    Khác với Skill tự tải về đọc và làm tay: sau khi mua, bạn chỉ cần dán config MCP kèm <b>License Key</b> vào <b>{mcpClients.join(', ')}</b>. AI Agent sẽ tự gọi <b>{mcpTools.length} MCP Tools</b> dưới đây để dựng video theo đúng chuẩn Skill:
+                  </p>
+                  <div class="space-y-1.5">
+                    {mcpTools.map(t => (
+                      <div class="p-2 rounded-lg bg-[#070614]/75 border border-white/10 text-[11px] flex items-start gap-2">
+                        <code class="font-mono font-bold text-cyan-300 shrink-0">{t.name}</code>
+                        <span class="text-[#b8b6d9] leading-snug">— {t.description}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-lg bg-rose-500/15 text-rose-400 grid place-items-center text-sm shrink-0"><i class="fas fa-headset" aria-hidden="true"></i></div>
-                  <div>
-                    <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Hỗ trợ</div>
-                    <div class="text-xs font-bold text-white">1-1 qua Zalo</div>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* COLUMN 2: Product info & Call to Action */}
             <div class="flex flex-col justify-start">
               <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
+                {mcp ? (
+                  <span class="px-2.5 py-1 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-xs font-bold inline-flex items-center gap-1.5">
+                    <i class="fas fa-plug-circle-bolt text-[11px]" aria-hidden="true"></i>{PRODUCT_TYPE_LABEL[p.product_type]}
+                  </span>
+                ) : (
+                  <span class="px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
+                )}
                 {p.category_name && <a href={`/danh-muc/${p.category_slug}`} class="px-2.5 py-1 rounded bg-[#161436] border border-[#221e54] text-[#c2c0e0] text-xs font-medium hover:text-white hover:border-indigo-500/40 transition">{p.category_name}</a>}
                 {comingSoon ? (
                   <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold"><i class="fas fa-clock mr-1" aria-hidden="true"></i>CHƯA MỞ BÁN</span>
@@ -180,8 +255,16 @@ export const ProductDetailPage: FC<Props> = (props) => {
                     <i class="fas fa-clock" aria-hidden="true"></i>Sản phẩm hiện đang ở trạng thái Chưa mở bán
                   </div>
                   <p class="text-xs text-amber-200/85 leading-relaxed">
-                    Hiện tại hệ thống đang ưu tiên mở bán 5 bộ Skill AI hoàn thiện nhất. Hãy nhắn Zalo hoặc quay lại sau để cập nhật ngày phát hành chính thức.
+                    Hiện tại hệ thống đang ưu tiên mở bán dòng Skill AI (tự tải) &amp; Skill AI Agent (MCP). Hãy nhắn Zalo hoặc quay lại sau để cập nhật ngày phát hành chính thức.
                   </p>
+                </div>
+              ) : mcp ? (
+                <div class="mb-5 bg-cyan-500/10 border border-cyan-400/30 p-4 rounded-xl flex items-center justify-between gap-3">
+                  <div class="text-xs text-cyan-100 flex items-center gap-2.5">
+                    <i class="fas fa-plug-circle-bolt text-cyan-300 shrink-0" aria-hidden="true"></i>
+                    <span>Thanh toán VietQR tự động 24/7 — nhận ngay <b>MCP Endpoint + License Key + Config copy</b> cho <b>{mcpClients.join(', ')}</b>.</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[11px] font-bold shrink-0">MCP Live</span>
                 </div>
               ) : (
                 <div class="mb-5 bg-indigo-500/10 border border-indigo-500/25 p-4 rounded-xl flex items-center justify-between gap-3">
@@ -198,9 +281,13 @@ export const ProductDetailPage: FC<Props> = (props) => {
                   <div class="flex items-center gap-2.5 text-emerald-400 font-bold mb-2">
                     <i class="fas fa-circle-check text-lg" aria-hidden="true"></i>Bạn đã sở hữu sản phẩm này
                   </div>
-                  <p class="text-xs text-emerald-200/85 mb-3.5 leading-relaxed">Truy cập link tải sản phẩm và tài liệu hướng dẫn trong khu vực tài khoản của bạn.</p>
+                  <p class="text-xs text-emerald-200/85 mb-3.5 leading-relaxed">
+                    {mcp
+                      ? 'Mở khu vực tài khoản để copy cấu hình MCP cho Claude, Codex, Antigravity cùng License Key riêng và kiểm tra kết nối trực tiếp.'
+                      : 'Truy cập link tải sản phẩm và tài liệu hướng dẫn trong khu vực tài khoản của bạn.'}
+                  </p>
                   <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
-                    <i class="fas fa-download" aria-hidden="true"></i>Truy cập sản phẩm
+                    <i class={`fas ${mcp ? 'fa-plug-circle-bolt' : 'fa-download'}`} aria-hidden="true"></i>{mcp ? 'Lấy cấu hình MCP & License Key' : 'Truy cập sản phẩm'}
                   </a>
                 </div>
               ) : comingSoon ? (
@@ -213,9 +300,9 @@ export const ProductDetailPage: FC<Props> = (props) => {
                       class="flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0068ff] hover:bg-blue-600 text-white font-bold text-xs transition">
                       <i class="fas fa-bell" aria-hidden="true"></i>Nhắn Zalo nhận lịch mở bán
                     </a>
-                    <a href="/san-pham?type=skill"
+                    <a href="/san-pham"
                       class="flex items-center justify-center gap-2 h-11 rounded-xl border border-indigo-500/35 bg-indigo-500/15 text-indigo-200 hover:bg-indigo-500/25 font-bold text-xs transition">
-                      <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem 5 Skill đang bán
+                      <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>Xem Skill đang mở bán
                     </a>
                   </div>
                 </div>
@@ -295,6 +382,12 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 class="tab-btn active px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer" data-tab="desc" data-group="pd">
                 <i class="fas fa-file-lines mr-1.5" aria-hidden="true"></i>Mô tả chi tiết
               </button>
+              {mcp && (
+                <button type="button" role="tab" aria-selected="false" aria-controls="panel-mcp" id="tab-mcp"
+                  class="tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-cyan-300 whitespace-nowrap cursor-pointer" data-tab="mcp" data-group="pd">
+                  <i class="fas fa-plug-circle-bolt mr-1.5" aria-hidden="true"></i>Kết nối MCP (Claude / Codex / Antigravity)
+                </button>
+              )}
               <button type="button" role="tab" aria-selected="false" aria-controls="panel-rev" id="tab-rev"
                 class="tab-btn px-4 py-2.5 rounded-xl border border-transparent text-sm font-bold text-[#c2c0e0] whitespace-nowrap cursor-pointer" data-tab="rev" data-group="pd">
                 <i class="fas fa-star mr-1.5" aria-hidden="true"></i>Đánh giá ({p.rating_count})
@@ -308,6 +401,50 @@ export const ProductDetailPage: FC<Props> = (props) => {
             <div role="tabpanel" id="panel-desc" aria-labelledby="tab-desc" class="tab-panel bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8" data-tab="desc" data-group="pd">
               <div class="prose-vn max-w-none" dangerouslySetInnerHTML={{ __html: p.description || '<p>Đang cập nhật mô tả.</p>' }}></div>
             </div>
+
+            {mcp && mcpPreview && (
+              <div role="tabpanel" id="panel-mcp" aria-labelledby="tab-mcp" class="tab-panel hidden bg-[#0f0e24] rounded-2xl border border-cyan-500/35 p-6 md:p-8 space-y-5" data-tab="mcp" data-group="pd">
+                <div>
+                  <h3 class="text-lg font-extrabold text-white mb-2 flex items-center gap-2">
+                    <i class="fas fa-plug-circle-bolt text-cyan-400" aria-hidden="true"></i>Xem trước cấu hình kết nối MCP
+                  </h3>
+                  <p class="text-sm text-[#c2c0e0] leading-relaxed">
+                    Sau khi thanh toán, License Key thật của bạn sẽ tự động điền sẵn vào từng đoạn cấu hình dưới đây trong mục <a href="/tai-khoan/san-pham" class="text-cyan-300 underline font-semibold">Sản phẩm của tôi</a>. Bạn chỉ cần bấm Copy và dán 1 lần duy nhất.
+                  </p>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-xs flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-[#9492b8] font-semibold">MCP Server Endpoint:</span>
+                  <code class="font-mono text-cyan-300 break-all">{mcpPreview.endpointUrl}</code>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div class="p-4 rounded-xl bg-[#09081b] border border-[#242054]">
+                    <div class="font-bold text-white text-xs mb-2 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-orange-400"></span>Claude Code / Desktop
+                    </div>
+                    <pre class="text-[11px] font-mono text-[#c2c0e0] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">{mcpPreview.claudeJson}</pre>
+                  </div>
+                  <div class="p-4 rounded-xl bg-[#09081b] border border-[#242054]">
+                    <div class="font-bold text-white text-xs mb-2 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>OpenAI Codex
+                    </div>
+                    <pre class="text-[11px] font-mono text-[#c2c0e0] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">{mcpPreview.codexToml}</pre>
+                  </div>
+                  <div class="p-4 rounded-xl bg-[#09081b] border border-[#242054]">
+                    <div class="font-bold text-white text-xs mb-2 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-violet-400"></span>Antigravity
+                    </div>
+                    <pre class="text-[11px] font-mono text-[#c2c0e0] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">{mcpPreview.antigravityJson}</pre>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-100 leading-relaxed">
+                  <i class="fas fa-sparkles text-cyan-300 mr-1.5" aria-hidden="true"></i>
+                  <b>Câu lệnh gọi mẫu trong AI Agent:</b> <span class="font-mono text-white">"{mcpPreview.samplePrompt}"</span>
+                </div>
+              </div>
+            )}
 
             <div role="tabpanel" id="panel-rev" aria-labelledby="tab-rev" class="tab-panel hidden" data-tab="rev" data-group="pd">
               <div id="reviews" class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 mb-5">
