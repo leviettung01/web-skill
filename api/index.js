@@ -7999,9 +7999,10 @@ function parseMcpClients(raw2) {
 }
 var DEFAULT_MCP_TOOLS = [
   { name: "list_licensed_skills", description: "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t theo License Key" },
-  { name: "get_skill_blueprint", description: "N\u1EA1p quy tr\xECnh, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt, Hook-Body-CTA v\xE0 template prompt chu\u1EA9n c\u1EE7a Skill" },
-  { name: "generate_video_storyboard", description: "T\u1EF1 \u0111\u1ED9ng t\xE1ch ch\u1EE7 \u0111\u1EC1 th\xE0nh storyboard 30s k\xE8m prompt t\u1EEBng c\u1EA3nh cho Seedance 2.5 / Muse AI / Veo 3" },
-  { name: "create_video_from_skill", description: "Ch\u1EA1y pipeline t\u1EA1o video theo Skill (xu\u1EA5t g\xF3i render + SRT ph\u1EE5 \u0111\u1EC1 ho\u1EB7c \u0111\u1EA9y qua render webhook)" }
+  { name: "get_skill_blueprint", description: "N\u1EA1p to\xE0n b\u1ED9 SKILL.md, quy tr\xECnh t\u1EEBng pha, th\xF4ng s\u1ED1 k\u1EF9 thu\u1EADt & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill" },
+  { name: "get_skill_assets_and_setup", description: "L\u1EA5y link Google Drive t\u1EA3i b\u1ED9 Skill Kit (templates, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng cho Claude/Codex/Antigravity" },
+  { name: "generate_video_storyboard", description: "Ph\xE2n t\xEDch brief v\xE0 xu\u1EA5t k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, c\u1EA5u tr\xFAc c\u1EA3nh & ph\u1EE5 \u0111\u1EC1 SRT theo chu\u1EA9n Skill" },
+  { name: "create_video_from_skill", description: "L\u1EADp pipeline d\u1EF1ng video \u0111\u1EA7y \u0111\u1EE7 t\u1EEBng pha (k\xE8m chu\u1ED7i l\u1EC7nh script Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent th\u1EF1c thi" }
 ];
 function parseMcpTools(raw2) {
   const parsed = parseJSON(raw2, null);
@@ -8034,10 +8035,14 @@ function isDirectVideoUrl(url) {
 function toEmbedVideoUrl(url) {
   const raw2 = (url || "").trim();
   if (!raw2) return "";
-  if (raw2.includes("/embed/")) return raw2;
+  if (raw2.includes("/embed/") || raw2.includes("/preview")) return raw2;
   try {
     const u = new URL(raw2);
     const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "drive.google.com") {
+      const m = u.pathname.match(/\/file\/d\/([^/]+)/);
+      if (m && m[1]) return `https://drive.google.com/file/d/${m[1]}/preview`;
+    }
     let id = "";
     if (host === "youtu.be") {
       id = u.pathname.split("/").filter(Boolean)[0] || "";
@@ -8218,25 +8223,72 @@ function buildPasswordResetEmail(opts) {
 }
 function buildOrderPaidEmail(opts) {
   const site = opts.siteName || "KhoSkill AI";
-  const itemsHtml = opts.items.map((it) => `<li style="margin:8px 0;padding:10px 12px;border-radius:10px;background:#161436;border:1px solid #2a2559;">
-      <div style="font-weight:700;color:#ffffff;">${escHtml(it.product_name)}</div>
-      ${it.license_key ? `<div style="margin-top:4px;font-family:monospace;font-size:12px;color:#34d399;">License Key: ${escHtml(it.license_key)}</div>` : ""}
-    </li>`).join("");
+  const cleanOrigin = opts.origin.replace(/\/+$/, "");
+  const itemsHtml = opts.items.map((it) => {
+    const isMcp = it.product_type === "mcp_skill";
+    const dlUrl = (it.download_url || "").trim();
+    const mcpEndpoint = (it.mcp_endpoint || "").trim() || (it.slug ? `${cleanOrigin}/api/mcp/${it.slug}` : `${cleanOrigin}/api/mcp`);
+    const serverName = (it.mcp_server_name || "").trim() || (it.slug ? `khoskill-${it.slug.slice(0, 24)}` : "khoskill-agent");
+    const claudeCmd = it.license_key ? `claude mcp add --transport http ${serverName} "${mcpEndpoint}" --header "Authorization: Bearer ${it.license_key}"` : "";
+    return `<li style="margin:12px 0;padding:14px 16px;border-radius:12px;background:#161436;border:1px solid ${isMcp ? "#0e7490" : "#2a2559"};">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:${isMcp ? "#22d3ee" : "#a5b4fc"};margin-bottom:4px;">
+        ${isMcp ? "Skill AI Agent (MCP + Google Drive Kit)" : "Skill AI B\u1EA3n Quy\u1EC1n"}
+      </div>
+      <div style="font-weight:700;font-size:15px;color:#ffffff;line-height:1.35;">${escHtml(it.product_name)}</div>
+      ${it.license_key ? `<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#0b0a1f;border:1px solid #262254;font-family:monospace;font-size:12px;color:#34d399;word-break:break-all;">License Key: ${escHtml(it.license_key)}</div>` : ""}
+      ${dlUrl ? `<div style="margin-top:10px;">
+        <a href="${escHtml(dlUrl)}" style="display:inline-block;padding:9px 16px;border-radius:9px;background:#10b981;color:#052e16;font-weight:700;font-size:13px;text-decoration:none;">
+          T\u1EA3i b\u1ED9 Skill tr\xEAn Google Drive \u2192
+        </a>
+        <div style="margin-top:5px;font-size:11px;color:#94a3b8;word-break:break-all;">Link Drive: <a href="${escHtml(dlUrl)}" style="color:#67e8f9;text-decoration:underline;">${escHtml(dlUrl)}</a></div>
+      </div>` : ""}
+      ${isMcp ? `<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:#091326;border:1px solid #164e63;font-size:12px;color:#cbd5e1;">
+        <div style="font-weight:700;color:#22d3ee;margin-bottom:4px;">K\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp (Claude / Codex / Antigravity):</div>
+        <div style="font-family:monospace;font-size:11px;color:#a5f3fc;word-break:break-all;">Endpoint: ${escHtml(mcpEndpoint)}</div>
+        ${claudeCmd ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;">L\u1EC7nh nhanh Claude Code CLI:</div>
+        <div style="margin-top:3px;padding:6px 8px;border-radius:6px;background:#050816;font-family:monospace;font-size:11px;color:#e2e8f0;word-break:break-all;">${escHtml(claudeCmd)}</div>` : ""}
+      </div>` : ""}
+    </li>`;
+  }).join("");
+  const hasMcp = opts.items.some((i) => i.product_type === "mcp_skill");
+  const plainLines = [
+    `Xin chao ${opts.fullName},`,
+    `Don hang ${opts.orderCode} (${opts.totalFormatted}) tai ${site} da thanh toan thanh cong va kich hoat tron doi:`,
+    "",
+    ...opts.items.flatMap((it) => {
+      const arr = [`- ${it.product_name}`];
+      if (it.license_key) arr.push(`  License Key: ${it.license_key}`);
+      if (it.download_url) arr.push(`  Link Google Drive tai Skill: ${it.download_url}`);
+      if (it.product_type === "mcp_skill") {
+        const ep = (it.mcp_endpoint || "").trim() || (it.slug ? `${cleanOrigin}/api/mcp/${it.slug}` : `${cleanOrigin}/api/mcp`);
+        arr.push(`  MCP Server Endpoint: ${ep}`);
+      }
+      return arr;
+    }),
+    "",
+    `Xem day du cau hinh Claude / Codex / Antigravity va tai lai bat cu luc nao tai: ${opts.accountUrl}`
+  ];
   return {
     to: opts.to,
-    subject: `[${site}] \u0110\u01A1n h\xE0ng ${opts.orderCode} \u0111\xE3 thanh to\xE1n th\xE0nh c\xF4ng`,
+    subject: `[${site}] Giao h\xE0ng \u0111\u01A1n ${opts.orderCode} \u2014 Link Google Drive & License Key`,
     html: renderEmailShell({
       siteName: site,
       origin: opts.origin,
       heading: `Thanh to\xE1n th\xE0nh c\xF4ng \u2014 ${opts.orderCode}`,
       bodyHtml: `<p>Xin ch\xE0o <b>${escHtml(opts.fullName)}</b>,</p>
-        <p>\u0110\u01A1n h\xE0ng <b>${escHtml(opts.orderCode)}</b> tr\u1ECB gi\xE1 <b>${escHtml(opts.totalFormatted)}</b> \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c nh\u1EADn v\xE0 k\xEDch ho\u1EA1t b\u1EA3n quy\u1EC1n tr\u1ECDn \u0111\u1EDDi:</p>
+        <p>\u0110\u01A1n h\xE0ng <b>${escHtml(opts.orderCode)}</b> tr\u1ECB gi\xE1 <b>${escHtml(opts.totalFormatted)}</b> \u0111\xE3 \u0111\u01B0\u1EE3c x\xE1c nh\u1EADn v\xE0 k\xEDch ho\u1EA1t b\u1EA3n quy\u1EC1n tr\u1ECDn \u0111\u1EDDi. D\u01B0\u1EDBi \u0111\xE2y l\xE0 <b>link Google Drive t\u1EA3i b\u1ED9 Skill</b> v\xE0 <b>License Key</b> c\u1EE7a b\u1EA1n:</p>
         <ul style="list-style:none;padding:0;margin:14px 0;">${itemsHtml}</ul>
-        <p>Truy c\u1EADp m\u1EE5c <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b> \u0111\u1EC3 t\u1EA3i b\u1ED9 Skill ho\u1EB7c l\u1EA5y c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i <b>MCP (Claude / Codex / Antigravity)</b> c\xF9ng License Key c\u1EE7a b\u1EA1n. Khi c\xF3 phi\xEAn b\u1EA3n m\u1EDBi, b\u1EA1n c\u0169ng s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c th\xF4ng b\xE1o t\u1EF1 \u0111\u1ED9ng.</p>`,
-      ctaLabel: "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i",
-      ctaUrl: opts.accountUrl
+        ${hasMcp ? `<div style="margin:14px 0;padding:12px 14px;border-radius:10px;background:#111030;border:1px solid #2a2559;font-size:13px;color:#cbd5e1;">
+          <b style="color:#ffffff;">C\xE1ch d\xF9ng nhanh Skill AI Agent trong 2 ph\xFAt:</b><br>
+          1. B\u1EA5m link Google Drive \u1EDF tr\xEAn, t\u1EA3i file <code>*-Core-Kit.zip</code> v\xE0 gi\u1EA3i n\xE9n v\xE0o th\u01B0 m\u1EE5c skills c\u1EE7a AI Agent (<code>.claude/skills/</code>, <code>.codex/skills/</code> ho\u1EB7c <code>.agents/skills/</code>).<br>
+          2. M\u1EDF m\u1EE5c <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b> \u0111\u1EC3 copy s\u1EB5n c\u1EA5u h\xECnh <b>MCP</b> cho Claude, Codex ho\u1EB7c Antigravity \u2014 AI Agent s\u1EBD t\u1EF1 n\u1EA1p quy tr\xECnh chu\u1EA9n &amp; ch\u1EA1y d\u1EF1ng video ngay tr\xEAn m\xE1y b\u1EA1n.
+        </div>` : ""}
+        <p>B\u1EA1n lu\xF4n c\xF3 th\u1EC3 xem l\u1EA1i link t\u1EA3i, License Key, c\u1EA5u h\xECnh MCP \u0111\u1EA7y \u0111\u1EE7 v\xE0 nh\u1EADn c\u1EADp nh\u1EADt mi\u1EC5n ph\xED tr\u1ECDn \u0111\u1EDDi trong trang <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b>.</p>`,
+      ctaLabel: "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i & C\u1EA5u h\xECnh MCP",
+      ctaUrl: opts.accountUrl,
+      footerNote: "C\u1EA7n h\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t m\xF4i tr\u01B0\u1EDDng 1-1? Nh\u1EAFn ngay Zalo h\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt: <b>0915 967 790</b>."
     }),
-    text: `Don hang ${opts.orderCode} (${opts.totalFormatted}) da duoc kich hoat. Truy cap ${opts.accountUrl} de tai san pham.`
+    text: plainLines.join("\n")
   };
 }
 function buildProductUpdateEmail(opts) {
@@ -10249,6 +10301,121 @@ var DEMO_VIDEOS = [
     slug: "skill-video-affiliate-fitness",
     price: 449e3,
     originalPrice: 899e3
+  },
+  {
+    id: "mcp-travel-video",
+    title: "Travel-Video-Editing \u2014 Skill AI Agent D\u1EF1ng Video Du L\u1ECBch 9:16",
+    shortTitle: "AI Agent Travel Video 9:16",
+    tag: "AI Agent MCP",
+    dur: "0:38",
+    orient: "portrait",
+    platform: "tiktok",
+    handle: "@khoskill.agent",
+    caption: "AI Agent t\u1EF1 d\u1EF1ng tr\u1ECDn g\xF3i video qu\u1EA3ng c\xE1o Tour Nh\u1EADt B\u1EA3n 4K + Voice + GSAP + -14 LUFS #TravelAI #MCP",
+    music: "\u266B Autumn Gold Travel Cinema",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=travelmcp",
+    likes: "198.4K",
+    comments: "3.2K",
+    saves: "29.5K",
+    shares: "8.7K",
+    desc: "Skill AI Agent d\u1EF1ng video qu\u1EA3ng c\xE1o tour 9:16: t\u1EF1 t\xECm B-roll 4K, gh\xE9p gi\u1ECDng Vbee/Edge-TTS, 47 SFX & render t\u1EF1 \u0111\u1ED9ng.",
+    videoUrl: "/static/demos/demo-travel-video-editing.mp4",
+    posterUrl: "/static/demos/poster-travel-video-editing.jpg",
+    slug: "travel-video-editing",
+    price: 599e3,
+    originalPrice: 1199e3
+  },
+  {
+    id: "mcp-edit-bds",
+    title: "Skill-Edit-BDS \u2014 Skill AI Agent Video B\u0110S GeoLayers & 3D Blender",
+    shortTitle: "AI Agent B\u0110S GeoLayers 3D",
+    tag: "AI Agent MCP",
+    dur: "0:59",
+    orient: "portrait",
+    platform: "reels",
+    handle: "@khoskill.bds",
+    caption: "AI Agent t\u1EF1 d\u1EF1ng video review B\u0110S b\u1EA3n \u0111\u1ED3 v\u1EC7 tinh GeoLayers + m\xF4 h\xECnh 3D Blender + callout ti\u1EC7n \xEDch 45\xB0 #BDS #GeoLayers",
+    music: "\u266B Pure Cinema Real Estate",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=bdsmcp",
+    likes: "312.6K",
+    comments: "6.8K",
+    saves: "54.2K",
+    shares: "19.3K",
+    desc: "Skill AI Agent cao c\u1EA5p d\u1EF1ng video B\u0110S b\u1EA3n \u0111\u1ED3 v\u1EC7 tinh OSM, m\xF4 h\xECnh 3D Blender ENU & chuy\u1EC3n c\u1EA3nh WebGL2.",
+    videoUrl: "/static/demos/demo-skill-edit-bds.mp4",
+    posterUrl: "/static/demos/poster-skill-edit-bds.jpg",
+    slug: "skill-edit-bds",
+    price: 15e5,
+    originalPrice: 299e4
+  },
+  {
+    id: "mcp-viral-talking-head",
+    title: "Viral-Talking-Head-Video-Edit \u2014 AI Agent Walking 3-Plane Depth",
+    shortTitle: "AI Agent Walking 3-Plane Depth",
+    tag: "AI Agent MCP",
+    dur: "0:50",
+    orient: "portrait",
+    platform: "tiktok",
+    handle: "@khoskill.motion",
+    caption: "T\u1EF1 t\xE1ch ch\u1EE7 th\u1EC3 AI (U2-Net) \u0111\u1EB7t ch\u1EEF kh\u1ED5ng l\u1ED3 sau l\u01B0ng ng\u01B0\u1EDDi n\xF3i + KPI sparkline & ph\u1EE5 \u0111\u1EC1 \u0111\u1ED9ng #TalkingHead #MCP",
+    music: "\u266B Field Motion Studio Beat",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=walkingmcp",
+    likes: "264.1K",
+    comments: "4.4K",
+    saves: "41.8K",
+    shares: "12.6K",
+    desc: "Skill AI Agent d\u1EF1ng Walking Talking Head 3 l\u1EDBp chi\u1EC1u s\xE2u v\u1EDBi ONNX U2-Net VP9 Alpha & 14 component GSAP.",
+    videoUrl: "/static/demos/demo-viral-talking-head-video-edit.mp4",
+    posterUrl: "/static/demos/poster-viral-talking-head-video-edit.jpg",
+    slug: "viral-talking-head-video-edit",
+    price: 599e3,
+    originalPrice: 1199e3
+  },
+  {
+    id: "mcp-lich-su",
+    title: "Phan-Tich-Style-Video-Lich-Su \u2014 AI Agent Phim T\xE0i Li\u1EC7u 16:9",
+    shortTitle: "AI Agent T\xE0i Li\u1EC7u L\u1ECBch S\u1EED 16:9",
+    tag: "AI Agent MCP",
+    dur: "1:05",
+    orient: "landscape",
+    platform: "shorts",
+    handle: "@khoskill.history",
+    caption: "D\u1EF1ng phim t\xE0i li\u1EC7u l\u1ECBch s\u1EED \u0110i\u1EC7n Bi\xEAn Ph\u1EE7 1954 b\u1EB1ng AI Agent: B\u1EA3n \u0111\u1ED3 GeoJSON VN + Ho\xE0ng Sa & Tr\u01B0\u1EDDng Sa #LichSu #YouTube",
+    music: "\u266B Archival Documentary Score",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=historymcp",
+    likes: "289.0K",
+    comments: "7.1K",
+    saves: "48.9K",
+    shares: "16.2K",
+    desc: "Skill AI Agent d\u1EF1ng phim t\xE0i li\u1EC7u l\u1ECBch s\u1EED 16:9 chu\u1EA9n t\u01B0 li\u1EC7u k\xE8m GeoJSON Vi\u1EC7t Nam & ki\u1EC3m duy\u1EC7t Playwright QA.",
+    videoUrl: "/static/demos/demo-phan-tich-style-video-lich-su.mp4",
+    posterUrl: "/static/demos/poster-phan-tich-style-video-lich-su.jpg",
+    slug: "phan-tich-style-video-lich-su",
+    price: 599e3,
+    originalPrice: 1199e3
+  },
+  {
+    id: "mcp-fitness-manga",
+    title: "Fitness-Video-Editing \u2014 AI Agent Video Gym Manga 16:9",
+    shortTitle: "AI Agent Fitness Manga 16:9",
+    tag: "AI Agent MCP",
+    dur: "1:05",
+    orient: "landscape",
+    platform: "shorts",
+    handle: "@khoskill.fitness",
+    caption: "AI Agent d\u1EF1ng video khoa h\u1ECDc Calisthenics phong c\xE1ch Manga gi\u1EA3i ph\u1EABu (52 t\u01B0 th\u1EBF RGBA + 5-Lock Cel) #Fitness #Calisthenics",
+    music: "\u266B Melodic Fitness Uplift",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=fitmcp",
+    likes: "345.2K",
+    comments: "8.3K",
+    saves: "63.5K",
+    shares: "21.9K",
+    desc: "Skill AI Agent d\u1EF1ng video Fitness Manga song ng\u1EEF Vi\u1EC7t/Anh: 52 t\u01B0 th\u1EBF RGBA, 21 archetype GSAP & render song song.",
+    videoUrl: "/static/demos/demo-fitness-video-editing.mp4",
+    posterUrl: "/static/demos/poster-fitness-video-editing.jpg",
+    slug: "fitness-video-editing",
+    price: 15e5,
+    originalPrice: 299e4
   }
 ];
 var HomePage = (props) => {
@@ -10684,27 +10851,33 @@ var HomePage = (props) => {
               /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white grid place-items-center shadow-md shadow-cyan-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt", "aria-hidden": "true" }) }),
                 /* @__PURE__ */ jsxDEV("div", { children: [
-                  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white text-base", children: "Skill AI Agent (MCP Live)" }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-cyan-300 font-semibold", children: "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp \xB7 T\u1EEB 890.000\u0111" })
+                  /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white text-base", children: "Skill AI Agent (MCP + Drive Kit)" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-cyan-300 font-semibold", children: "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP \xB7 T\u1EEB 599.000\u0111" })
                 ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black uppercase", children: "AI Agent t\u1EF1 ch\u1EA1y" })
+              /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black uppercase", children: "AI Agent t\u1EF1 d\u1EF1ng" })
             ] }),
             /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 text-xs sm:text-sm text-[#e2e1f5] mb-4", children: [
               /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-cyan-300 mt-1 shrink-0", "aria-hidden": "true" }),
                 /* @__PURE__ */ jsxDEV("span", { children: [
                   /* @__PURE__ */ jsxDEV("b", { children: "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp qua MCP" }),
-                  " v\xE0o Claude, Codex, Antigravity b\u1EB1ng License Key."
+                  " v\xE0o Claude, Codex, Antigravity + nh\u1EADn ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "Link Google Drive tr\u1ECDn b\u1ED9 Skill Kit" }),
+                  " qua Gmail."
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-cyan-300 mt-1 shrink-0", "aria-hidden": "true" }),
-                /* @__PURE__ */ jsxDEV("span", { children: "Ra l\u1EC7nh 1 c\xE2u \u2014 AI Agent t\u1EF1 g\u1ECDi tool n\u1EA1p Skill, kh\xF3a nh\xE2n v\u1EADt & xu\u1EA5t g\xF3i t\u1EA1o video 30s." })
+                /* @__PURE__ */ jsxDEV("span", { children: [
+                  "AI Agent t\u1EF1 \u0111\u1ECDc ",
+                  /* @__PURE__ */ jsxDEV("code", { children: "SKILL.md" }),
+                  ", ch\u1EA1y script d\u1EF1ng video 1080p (B\u0110S GeoLayers 3D, Du l\u1ECBch, Talking Head, L\u1ECBch s\u1EED, Fitness Manga)."
+                ] })
               ] }),
               /* @__PURE__ */ jsxDEV("li", { class: "flex gap-2.5", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt text-cyan-300 mt-1 shrink-0", "aria-hidden": "true" }),
-                /* @__PURE__ */ jsxDEV("span", { children: "Kh\xF4ng c\u1EA7n t\u1EA3i l\u1EA1i file khi c\xF3 b\u1EA3n m\u1EDBi \u2014 Agent lu\xF4n g\u1ECDi phi\xEAn b\u1EA3n Skill m\u1EDBi nh\u1EA5t tr\xEAn server." })
+                /* @__PURE__ */ jsxDEV("span", { children: "\u0110\u1EA7y \u0111\u1EE7 starter templates, SFX, fonts, video demo 1080p g\u1ED1c v\xE0 \u0111\u1ED3ng b\u1ED9 b\u1EA3n m\u1EDBi qua MCP Server tr\u1ECDn \u0111\u1EDDi." })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 pt-3 border-t border-cyan-500/20 text-[11px]", children: [
@@ -10713,7 +10886,7 @@ var HomePage = (props) => {
             ] })
           ] })
         ] }),
-        mcpSkills.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5", children: mcpSkills.slice(0, 3).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) })
+        mcpSkills.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5", children: mcpSkills.slice(0, 6).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) })
       ] })
     ] }) }),
     /* @__PURE__ */ jsxDEV("section", { id: "catalog-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
@@ -10753,7 +10926,7 @@ var HomePage = (props) => {
           "M\u1EDBi ra m\u1EAFt"
         ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel", "data-tab": "featured", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel", "data-tab": "featured", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 12).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
       /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "mcp", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: mcpSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
       /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "manual", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: manualSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
       /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "hot", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: hot.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
@@ -11147,6 +11320,144 @@ var ProductListPage = (props) => {
 };
 
 // src/lib/mcp.ts
+var SKILL_ENGINE_PROFILES = {
+  "travel-video-editing": {
+    folderName: "Travel-Video-Editing",
+    defaultAspect: "9:16",
+    defaultDurationSec: 45,
+    resolution: "1080x1920 @ 30fps (-14.0 LUFS)",
+    engineSummary: "HyperFrames + GSAP Typography + Multi-Threaded Vbee/Edge-TTS + Parallel 4K yt-dlp B-roll + 47 SFX stems + FFmpeg Studio Travel Color Grading",
+    prerequisites: [
+      "Node.js >= 22 + HyperFrames CLI (`npm install -g hyperframes`)",
+      "FFmpeg >= 7 (libx264, loudnorm, selectivecolor, cas, drawtext)",
+      "Python 3.10+ (`pip install -r Travel-Video-Editing/requirements.txt`: Pillow, yt-dlp, requests, edge-tts)",
+      "Gi\u1ECDng \u0111\u1ECDc: m\u1EB7c \u0111\u1ECBnh d\xF9ng Edge-TTS mi\u1EC5n ph\xED; tu\u1EF3 ch\u1ECDn VBEE_APP_ID & VBEE_TOKEN cho gi\u1ECDng Vbee Studio"
+    ],
+    verifyCommand: 'python "$SKILL_DIR/scripts/doctor.py"',
+    phaseCommands: [
+      'Phase 0 \u2014 Preflight & Init: `python "$SKILL_DIR/scripts/doctor.py"` && `python "$SKILL_DIR/scripts/init_project.py" --out "./projects/tour-<slug>"`',
+      "Phase 1 \u2014 Brief & Archetype: l\u1EADp `$PROJ/FACTS.md`, ch\u1ECDn 1 trong 5 archetype (`royal-blue`, `festive-red`, `autumn-gold`, `modern-cyan`, `tropical-bold`)",
+      'Phase 2 \u2014 Voiceover TTS: `python "$SKILL_DIR/scripts/vbee_tts.py" --beats-json "$PROJ/beats.json" --workers 6 --rate 1.02 --out "$PROJ/assets/audio/voice.wav"` (auto fallback edge-tts)',
+      'Phase 3 \u2014 4K B-Roll & Hook Scan: `python "$SKILL_DIR/scripts/research_broll.py" --yt-search "<keywords 4K>" --check-4k --out "$PROJ/assets/broll"` -> `--scan-hooks` -> `--prepare-json "$PROJ/broll_plan.json"` + ki\u1EC3m tra `_broll_verify.jpg`',
+      'Phase 4 \u2014 Timeline & Snapshot QA: vi\u1EBFt `$PROJ/assets/edit.js` (`window.TOUR_EDIT`), ch\u1EA1y `fetch_bgm.py`, `node "$PROJ/tools/build_edit.cjs"` v\xE0 `hyperframes snapshot --at "1.0,5.5,14.0,26.0,36.0" -o snaps`',
+      'Phase 5 \u2014 Render & -14 LUFS Master: `python "$SKILL_DIR/scripts/build_tour_video.py" --proj "$PROJ"` -> ki\u1EC3m tra `out/final.qa.jpg` & xu\u1EA5t `out/final.mp4`'
+    ]
+  },
+  "viral-talking-head-video-edit": {
+    folderName: "Viral-Talking-Head-Video-Edit",
+    defaultAspect: "9:16",
+    defaultDurationSec: 50,
+    resolution: "1080x1920 @ 30fps (-14.0 LUFS)",
+    engineSummary: "Field Motion v2 \u2014 HyperFrames + GSAP + ONNX U2-Net 3-Plane Depth Alpha Subject Cutouts (VP9 WebM) + 3D Floor Text + KPI Sparklines + FFmpeg -14 LUFS",
+    prerequisites: [
+      "Node.js >= 22 + HyperFrames CLI (`npm install -g hyperframes`)",
+      "FFmpeg >= 7 (libx264, libvpx-vp9 cho alpha WebM cutouts, loudnorm, sidechaincompress)",
+      "Python 3.10+: `pip install onnxruntime opencv-python-headless numpy pillow faster-whisper`",
+      "Model `u2net.onnx` (~176 MB) t\u1EF1 t\u1EA3i \u1EDF l\u1EA7n ch\u1EA1y \u0111\u1EA7u c\u1EE7a `scripts/cutout_subject.py`"
+    ],
+    verifyCommand: `python -c "import onnxruntime, cv2, numpy, PIL; print('CUTOUT_DEPS_OK')" && npx hyperframes --version`,
+    phaseCommands: [
+      "Phase 0 \u2014 Copy Template: copy `$SKILL_DIR/template` sang `$PROJ` (t\u1EA1o th\u01B0 m\u1EE5c `probe`, `snaps`, `out`, `assets/icons`)",
+      'Phase 1 \u2014 Footage Audit: `python "$SKILL_DIR/scripts/analyze_walking.py" "<raw.mp4>" --out-dir "$PROJ/probe" --lang auto --model medium` -> \u0111\u1ECDc `face_grid.jpg`, `timeline_grid.jpg`, `transcript.json` v\xE0 bake `assets/a-roll.mp4`',
+      'Phase 2 \u2014 3-Plane Depth Cutout: `python "$SKILL_DIR/scripts/cutout_subject.py" "$PROJ/assets/a-roll.mp4" --out-dir "$PROJ/assets" --range "0.0:6.5"` (xu\u1EA5t `fg_01.webm` trong su\u1ED1t \u0111\u1EB7t ch\u1EEF kh\u1ED5ng l\u1ED3 sau l\u01B0ng ng\u01B0\u1EDDi n\xF3i)',
+      "Phase 3 \u2014 Choreography & Assets: ch\u1EA1y `fetch_assets.py` l\u1EA5y icon SVG + vi\u1EBFt `$PROJ/assets/edit.js` (depthHeadline, brollStrip, dualCompareCards, KPI sparkline, kinetic captions)",
+      "Phase 4 \u2014 Check & Snapshot QA: `node tools/build_edit.cjs` -> `npx hyperframes check --json` -> `npx hyperframes snapshot` -> duy\u1EC7t `snaps/contact-sheet.jpg`",
+      "Phase 5-6 \u2014 Render & Master: ch\u1EA1y `sfx_planner_fm.py` -> `npx hyperframes render --fps 30 --quality delivery -o out/video_silent.mp4` -> `audio_master.py` (-14 LUFS) -> `extract_qa_sheet.py`"
+    ]
+  },
+  "skill-edit-bds": {
+    folderName: "Skill-Edit-BDS",
+    defaultAspect: "9:16",
+    defaultDurationSec: 55,
+    resolution: "1080x1920 @ 30fps (-14.0 LUFS)",
+    engineSummary: "GeoLayers 9:16 Pure-Cinema Real Estate Director \u2014 OSM GeoJSON + MapLibre Satellite Camera Baker + Blender 5.x ENU 3D GLBs + WebGL2 B-roll FX + 45\xB0 Frosted POI Callouts + HyperFrames",
+    prerequisites: [
+      "Node.js >= 22 + HyperFrames CLI (`npm install -g hyperframes`) + `playwright-core`",
+      "FFmpeg >= 7 + Python 3.10+ (`pip install requests pillow yt-dlp edge-tts`)",
+      "Blender 5.x (mi\u1EC5n ph\xED t\u1EA1i blender.org) n\u1EBFu mu\u1ED1n t\u1EF1 d\u1EF1ng m\xF4 h\xECnh 3D ki\u1EBFn tr\xFAc ENU GLB theo t\u1EEBng d\u1EF1 \xE1n; \u0111\xE3 \u0111\xF3ng g\xF3i s\u1EB5n 4 GLB c\u01A1 b\u1EA3n + 42 font + 22 WAV SFX/BGM",
+      "Gi\u1ECDng \u0111\u1ECDc: file thu \xE2m s\u1EB5n, Edge-TTS mi\u1EC5n ph\xED, ho\u1EB7c Vbee TTS (`VBEE_APP_ID` / `VBEE_TOKEN`)"
+    ],
+    verifyCommand: 'python "$SKILL_DIR/scripts/bootstrap_project.py" --check-only',
+    phaseCommands: [
+      'Phase 0 \u2014 Bootstrap 1 l\u1EC7nh: `python "$SKILL_DIR/scripts/bootstrap_project.py" --dest "$PROJ" --brand "<TEN_DU_AN>"`',
+      'Phase 1 \u2014 Geolocation & FACTS.md: x\xE1c minh s\u1ED1 li\u1EC7u th\u1EADt, vi\u1EBFt `geo_query.json`, ch\u1EA1y `python "$SKILL_DIR/scripts/fetch_geolayers_geo.py" --spec "$PROJ/geo_query.json" --out "$PROJ/assets/geo/geo_data.json"` (auto t\xEDnh ha & km)',
+      "Phase 2 \u2014 Voice-First Timing: `vbee_tts.py` ho\u1EB7c `edge-tts` + `analyze_voice.py` t\u1EA1o `voice.wav` & `voice_cues.json`",
+      'Phase 3 \u2014 B-Roll Verification: `fetch_broll.py --search` / `--probe-video` -> `--download-json "$PROJ/broll_plan.json"` -> duy\u1EC7t `_broll_verify.jpg`',
+      'Phase 4 \u2014 Satellite Camera Bake: `node "$SKILL_DIR/scripts/bake_geolayers_camera.mjs" --plan "$PROJ/camera_plan.json" --geo "$PROJ/assets/geo/geo_data.json" --out "$PROJ/assets/maps"`',
+      'Phase 5 \u2014 Blender 3D ENU Models: ch\u1EA1y `blender --background --python "$PROJ/build_project_3d.py"` t\u1EA1o GLB kh\u1EDBp to\u1EA1 \u0111\u1ED9 l\xF4 \u0111\u1EA5t & ki\u1EC3m tra `.preview.png`',
+      "Phase 6-8 \u2014 Compose, Render & QA (>= 8.5/10): c\u1EA5u h\xECnh `reel_config.json` + `sfx_plan.json` -> `npx hyperframes check --json` -> `npx hyperframes render` -> `audio_master.py` (-14 LUFS) -> `extract_qa_sheet.py`"
+    ]
+  },
+  "video-talking-head": {
+    folderName: "Video-Talking-Head",
+    defaultAspect: "9:16",
+    defaultDurationSec: 55,
+    resolution: "1080x1920 @ 30fps (-14.0 LUFS)",
+    engineSummary: "Viral Talking Head Studio Engine v6 \u2014 3 Themes (Apple Sky, Sunlit Botanical, Editorial Warm) + Whisper Word Sync + Headroom Glass Motion UI + PiP/B-roll + FFmpeg -14 LUFS",
+    prerequisites: [
+      "Node.js >= 22 + HyperFrames CLI (`npm install -g hyperframes`)",
+      "FFmpeg >= 7 (hqdn3d, afftdn, acompressor, loudnorm, libx264)",
+      "Python 3.10+: `pip install faster-whisper pillow requests yt-dlp numpy`",
+      "\u0110\xE3 \u0111\xF3ng g\xF3i s\u1EB5n `template/` Engine v6 \u0111\u1EA7y \u0111\u1EE7 SFX, nh\u1EA1c n\u1EC1n v\xE0 component catalog"
+    ],
+    verifyCommand: `python -c "import faster_whisper, PIL; print('TALKING_HEAD_DEPS_OK')" && npx hyperframes --version`,
+    phaseCommands: [
+      "Phase 0 \u2014 Scaffold: copy `$SKILL_DIR/template` sang `$PROJ`",
+      'Phase 1 \u2014 Raw Audit & Framing Lock: `python "$SKILL_DIR/scripts/analyze_raw.py" "<raw.mp4>" --out-dir "$PROJ/probe" --lang auto --model medium` -> ch\u1ECDn theme (`apple-sky` / `sunlit-botanical` / `editorial-warm`) & kho\xE1 `face`, `capY`, headroom',
+      "Phase 2 \u2014 Denoise, Trim & Skin-Safe Grade: bake `assets/a-roll.mp4` 1080x1920 30fps, t\xE1ch `assets/voice_clean.wav`, ch\u1EA1y l\u1EA1i `analyze_raw.py` kho\xE1 timing t\u1EEBng t\u1EEB",
+      'Phase 3 \u2014 Asset Research: `python "$SKILL_DIR/scripts/fetch_assets.py" --mixkit-video "<keywords>" --out "$PROJ/assets"` + duy\u1EC7t `_broll_verify.jpg`',
+      "Phase 4-5 \u2014 Direct `assets/edit.js` & Snapshot QA: t\u1EA1o Hook 10s camera in-out, lu\xE2n phi\xEAn headroom UI / `storyBroll` / `browserPip` / `frostTitle` / `splitGlassCompare` -> `node tools/build_edit.cjs` -> `npx hyperframes check --json` -> `npx hyperframes snapshot`",
+      "Phase 6 \u2014 Render & Master: `sfx_planner.py` -> `npx hyperframes render --fps 30 --quality delivery` -> `audio_master.py` (-14 LUFS) -> `extract_qa_sheet.py`"
+    ]
+  },
+  "phan-tich-style-video-lich-su": {
+    folderName: "Phan-Tich-Style-Video-Lich-Su",
+    defaultAspect: "16:9",
+    defaultDurationSec: 180,
+    resolution: "1920x1080 @ 30fps (-14.0 LUFS)",
+    engineSummary: "Historical Archival Documentary Engine \u2014 Official 63-Province Vietnam & Ho\xE0ng Sa/Tr\u01B0\u1EDDng Sa GeoJSON Atlas + 3D Bastion Maps + Archival Grain/Scanlines + Playwright DOM Auditor + HyperFrames",
+    prerequisites: [
+      "Node.js >= 22 + HyperFrames CLI (`npx --yes hyperframes@0.9.41`)",
+      "FFmpeg >= 7 + Python 3.10+ (`pip install edge-tts requests pillow playwright` v\xE0 `playwright install chromium`)",
+      "\u0110\xE3 \u0111\xF3ng g\xF3i s\u1EB5n GeoJSON b\u1EA3n \u0111\u1ED3 Vi\u1EC7t Nam (k\xE8m Q.\u0111. Ho\xE0ng Sa & Q.\u0111. Tr\u01B0\u1EDDng Sa), SFX t\u01B0 li\u1EC7u v\xE0 `starter/` 4 c\u1EA3nh 1920x1080",
+      "Gi\u1ECDng \u0111\u1ECDc: Edge-TTS ti\u1EBFng Vi\u1EC7t mi\u1EC5n ph\xED (`scripts/tts_edge_vi.py`) ho\u1EB7c `ELEVENLABS_API_KEY` cho gi\u1ECDng t\xE0i li\u1EC7u \u0111i\u1EC7n \u1EA3nh"
+    ],
+    verifyCommand: 'python "$SKILL_DIR/scripts/build_vietnam_atlas.py" --help && npx --yes hyperframes@0.9.41 --version',
+    phaseCommands: [
+      "Phase 1 \u2014 Fact-Grounding: copy `$SKILL_DIR/starter/` sang `$PROJ`, nghi\xEAn c\u1EE9u ngu\u1ED3n ch\xEDnh th\u1ED1ng ghi `FACTS.md` & s\u01B0u t\u1EA7m \u1EA3nh t\u01B0 li\u1EC7u (1.8x-2.2x s\u1ED1 c\u1EA3nh)",
+      "Phase 2 \u2014 6-Act Script: vi\u1EBFt `SCRIPT.md` & `audio_chunks.json` theo c\u1EA5u tr\xFAc 6 h\u1ED3i l\u1ECBch s\u1EED",
+      'Phase 3 \u2014 Compile Vietnam GeoJSON Atlas: `python "$SKILL_DIR/scripts/build_vietnam_atlas.py" --out "$PROJ/assets/maps/doc_map_data.js" --global-var DOC_MAP_DATA`',
+      'Phase 4 \u2014 Voice Synthesis: `python "$SKILL_DIR/scripts/tts_edge_vi.py" --chunks audio_chunks.json --voice vi-male --rate="-4%" --output-dir assets/audio` (ho\u1EB7c `tts_elevenlabs_doc.py`) -> t\u1EA1o `voice_timings.json`',
+      "Phase 5-6 \u2014 Clean B-Roll & -14 LUFS Soundtrack: `slice_broll_clean.py --manifest broll_plan.json` -> `audio_soundtrack_and_master.py` t\u1EA1o `assets/audio/master.wav`",
+      "Phase 7-8 \u2014 Compose, Audit & Render: d\u1EF1ng `index.html` (GSAP + b\u1EA3n \u0111\u1ED3 chi\u1EBFn d\u1ECBch) -> `audit_doc_composition.py --require-browser` -> `npx --yes hyperframes@0.9.41 check --json` -> `render` -> `qa_rendered_mp4.py out/final.mp4`"
+    ]
+  },
+  "fitness-video-editing": {
+    folderName: "Fitness-Video-Editing",
+    defaultAspect: "16:9",
+    defaultDurationSec: 300,
+    resolution: "1920x1080 @ 30fps (-14.0 LUFS, h\u1ED7 tr\u1EE3 c\u1EA3 9:16)",
+    engineSummary: "Fitness Manga-Anatomical Motion-Graphics Director (chu\u1EA9n \u5065\u8EAB\u5927\u4E66 / XXL\u5065\u8EAB) \u2014 21 GSAP Archetypes + 52 Locked RGBA Poses + 5-Lock AI Cel Pipeline + 43 Foley SFX + Parallel Chapter Renderer",
+    prerequisites: [
+      "Node.js >= 22 + HyperFrames CLI (`npm install -g hyperframes`)",
+      "FFmpeg >= 7 + Python 3.10+ (`pip install opencv-python-headless numpy pillow edge-tts requests faster-whisper`)",
+      "\u0110\xE3 \u0111\xF3ng g\xF3i s\u1EB5n `starter/` k\xE8m 52 t\u01B0 th\u1EBF nh\xE2n v\u1EADt Manga RGBA, 43 SFX Foley, 5 nh\u1EA1c n\u1EC1n BGM kh\xF4ng b\u1EA3n quy\u1EC1n, 7 \u1EA3nh t\u01B0 li\u1EC7u & font ti\u1EBFng Vi\u1EC7t c\u1EE5c b\u1ED9",
+      "T\u1EA1o t\u01B0 th\u1EBF m\u1EDBi (tu\u1EF3 ch\u1ECDn): d\xF9ng tool sinh \u1EA3nh s\u1EB5n c\xF3 c\u1EE7a AI Agent ho\u1EB7c c\u1EA5u h\xECnh `GEMINI_API_KEY` / `OPENAI_API_KEY` / `CLIPROXY` / `SD_WEBUI_URL`"
+    ],
+    verifyCommand: 'python "$SKILL_DIR/scripts/ai_image_hub.py" --check && npx hyperframes --version',
+    phaseCommands: [
+      'Phase 0-1 \u2014 Check & Scaffold: `python "$SKILL_DIR/scripts/ai_image_hub.py" --check` -> copy `$SKILL_DIR/starter/` sang `$PROJ`, ch\u1ECDn `lang: "vi"` ho\u1EB7c `"en"`',
+      'Phase 2 \u2014 6-Beat Coaching Script & Voice: vi\u1EBFt `paragraphs.json` -> `python "$SKILL_DIR/scripts/build_paragraph_voice.py" --paragraphs "$PROJ/paragraphs.json" --out-dir "$PROJ/assets/audio" --lang vi` (Vbee ho\u1EB7c Edge-TTS + Whisper clause alignment)',
+      "Phase 3 \u2014 Character Poses, 5-Lock Cels & Doc Photos: t\xE1i s\u1EED d\u1EE5ng 52 t\u01B0 th\u1EBF s\u1EB5n c\xF3 ho\u1EB7c t\u1EA1o chu\u1ED7i cel v\u1EDBi `build_pose_guides.py` + `register_and_lock_cels.py` (0.00px bar flicker) + `fetch_doc_photos.py`",
+      'Phase 4-5 \u2014 Scene Plan & Precheck: vi\u1EBFt `assets/fitness-plan.js` (4.5-7s/scene, 100% Face-Safe outer callouts) -> `node "$PROJ/tools/build_fitness.cjs"` -> `npx hyperframes check --json` + `snapshot`',
+      "Phase 6 \u2014 Parallel Chapter Render & Seamless Looped Audio: `render_chapters_parallel.py` -> `sfx_planner_fitness.py` -> `audio_master_loop.py --target-lufs -14.0`",
+      'Phase 7 \u2014 Final QA Gate: `python "$SKILL_DIR/scripts/qa_rendered_mp4.py" "$PROJ/out/final.mp4" --cols 6 --rows 6` -> duy\u1EC7t `final.qa.jpg`'
+    ]
+  }
+};
+function getSkillEngineProfile(slug) {
+  return SKILL_ENGINE_PROFILES[slug] || null;
+}
 function resolveMcpEndpoint(origin, product) {
   const custom = (product.mcp_endpoint || "").trim();
   if (custom && (custom.startsWith("https://") || custom.startsWith("http://"))) {
@@ -11167,6 +11478,7 @@ function buildMcpConfigs(opts) {
   const endpointUrl = resolveMcpEndpoint(opts.origin, { slug: opts.slug, mcp_endpoint: opts.mcpEndpoint });
   const serverName = resolveMcpServerName({ slug: opts.slug, mcp_server_name: opts.mcpServerName });
   const key = opts.licenseKey;
+  const profile = getSkillEngineProfile(opts.slug);
   const claudeCli = `claude mcp add --transport http ${serverName} "${endpointUrl}" --header "Authorization: Bearer ${key}"`;
   const claudeJson = JSON.stringify({
     mcpServers: {
@@ -11193,7 +11505,7 @@ http_headers = { Authorization = "Bearer ${key}" }`;
       }
     }
   }, null, 2);
-  const samplePrompt = `H\xE3y k\u1EBFt n\u1ED1i MCP "${serverName}", g\u1ECDi tool get_skill_blueprint r\u1ED3i g\u1ECDi create_video_from_skill \u0111\u1EC3 t\u1EA1o video 30s 9:16 theo \u0111\xFAng chu\u1EA9n Skill cho ch\u1EE7 \u0111\u1EC1/s\u1EA3n ph\u1EA9m: [nh\u1EADp t\xEAn s\u1EA3n ph\u1EA9m ho\u1EB7c \xFD t\u01B0\u1EDFng c\u1EE7a b\u1EA1n].`;
+  const samplePrompt = profile ? `H\xE3y k\u1EBFt n\u1ED1i MCP "${serverName}", g\u1ECDi tool get_skill_blueprint v\xE0 get_skill_assets_and_setup \u0111\u1EC3 ki\u1EC3m tra b\u1ED9 Skill Kit (${profile.folderName}) tr\xEAn m\xE1y t\xF4i, sau \u0111\xF3 g\u1ECDi create_video_from_skill \u0111\u1EC3 l\u1EADp k\u1EBF ho\u1EA1ch v\xE0 d\u1EF1ng video ${profile.defaultAspect} ho\xE0n ch\u1EC9nh xu\u1EA5t ra out/final.mp4 cho ch\u1EE7 \u0111\u1EC1: [nh\u1EADp brief ho\u1EB7c \u0111\u01B0\u1EDDng d\u1EABn video th\xF4 c\u1EE7a b\u1EA1n].` : `H\xE3y k\u1EBFt n\u1ED1i MCP "${serverName}", g\u1ECDi tool get_skill_blueprint r\u1ED3i g\u1ECDi create_video_from_skill \u0111\u1EC3 d\u1EF1ng video theo \u0111\xFAng chu\u1EA9n Skill cho ch\u1EE7 \u0111\u1EC1/s\u1EA3n ph\u1EA9m: [nh\u1EADp t\xEAn s\u1EA3n ph\u1EA9m ho\u1EB7c \xFD t\u01B0\u1EDFng c\u1EE7a b\u1EA1n].`;
   return {
     endpointUrl,
     serverName,
@@ -11227,7 +11539,7 @@ async function authenticateMcpLicense(db, licenseKey, targetSlug) {
     `SELECT l.id AS license_id, l.license_key, l.user_id,
             u.email AS user_email, u.full_name AS user_name, u.status AS user_status,
             p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
-            p.features, p.tech_stack, p.product_type,
+            p.features, p.tech_stack, p.product_type, p.download_url, p.doc_url,
             p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
             p.mcp_skill_prompt, p.mcp_render_webhook
      FROM licenses l
@@ -11252,7 +11564,7 @@ async function authenticateMcpLicense(db, licenseKey, targetSlug) {
     `SELECT l.id AS license_id, l.license_key, l.user_id,
             u.email AS user_email, u.full_name AS user_name,
             p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
-            p.features, p.tech_stack,
+            p.features, p.tech_stack, p.download_url, p.doc_url,
             p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
             p.mcp_skill_prompt, p.mcp_render_webhook
      FROM licenses l
@@ -11283,93 +11595,130 @@ function buildFallbackBlueprint(skill) {
     "",
     skill.short_desc || "",
     "",
-    "## C\xF4ng ngh\u1EC7 / Model t\u01B0\u01A1ng th\xEDch",
-    tech.length ? tech.map((t) => `- ${t}`).join("\n") : "- Seedance 2.5, Muse AI, Veo 3, CapCut",
+    "## C\xF4ng ngh\u1EC7 / Engine t\u01B0\u01A1ng th\xEDch",
+    tech.length ? tech.map((t) => `- ${t}`).join("\n") : "- HyperFrames, GSAP, FFmpeg (-14 LUFS), Python, Node.js 22+",
     "",
     "## Th\xE0nh ph\u1EA7n c\u1ED1t l\xF5i c\u1EE7a Skill",
-    features.length ? features.map((f) => `- ${f}`).join("\n") : "- Hook 3s + Kh\xF3a nh\xE2n v\u1EADt + K\u1ECBch b\u1EA3n 30s + CTA",
+    features.length ? features.map((f) => `- ${f}`).join("\n") : "- Starter template, scripts t\u1EF1 \u0111\u1ED9ng, SFX/BGM v\xE0 quy tr\xECnh QA",
     "",
     "## M\xF4 t\u1EA3 quy tr\xECnh",
     stripHtml(skill.description || "", 2e3)
   ];
   return lines.join("\n");
 }
+function buildSetupAndAssetsPayload(skill) {
+  const profile = getSkillEngineProfile(skill.slug);
+  const folderName = profile?.folderName || skill.slug;
+  const driveUrl = (skill.download_url || "").trim() || null;
+  const guideUrl = (skill.doc_url || "").trim() || driveUrl;
+  return {
+    skill_slug: skill.slug,
+    skill_name: skill.name,
+    version: skill.version,
+    licensed_to: skill.user_email,
+    google_drive_skill_kit_url: driveUrl,
+    quick_guide_url: guideUrl,
+    local_skill_folder_name: folderName,
+    install_paths: {
+      antigravity: `<workspace>/.agents/skills/${folderName}/ (ho\u1EB7c ~/.gemini/antigravity/skills/${folderName}/)`,
+      claude_code: `~/.claude/skills/${folderName}/ (ho\u1EB7c <workspace>/.claude/skills/${folderName}/)`,
+      openai_codex: `~/.codex/skills/${folderName}/`
+    },
+    engine: profile ? {
+      summary: profile.engineSummary,
+      output_spec: profile.resolution,
+      default_aspect: profile.defaultAspect,
+      prerequisites: profile.prerequisites,
+      verify_command: profile.verifyCommand
+    } : {
+      summary: "AI Agent Video Production Engine (HyperFrames + GSAP + FFmpeg)",
+      output_spec: "1080x1920 ho\u1EB7c 1920x1080 @ 30fps (-14.0 LUFS)",
+      default_aspect: "9:16",
+      prerequisites: ["Node.js >= 22", "FFmpeg >= 7", "Python 3.10+", "HyperFrames CLI"],
+      verify_command: "node --version && ffmpeg -version && npx hyperframes --version"
+    },
+    how_agent_should_assist_user: [
+      `1. Ki\u1EC3m tra xem th\u01B0 m\u1EE5c "${folderName}" \u0111\xE3 t\u1ED3n t\u1EA1i trong workspace ho\u1EB7c th\u01B0 m\u1EE5c skills c\u1EE7a ng\u01B0\u1EDDi d\xF9ng ch\u01B0a.`,
+      driveUrl ? `2. N\u1EBFu ch\u01B0a c\xF3, h\u01B0\u1EDBng d\u1EABn ng\u01B0\u1EDDi d\xF9ng t\u1EA3i file "${folderName}-Core-Kit.zip" t\u1EA1i ${driveUrl} v\xE0 gi\u1EA3i n\xE9n v\xE0o th\u01B0 m\u1EE5c skills.` : "2. N\u1EBFu ch\u01B0a c\xF3 b\u1ED9 Skill Kit c\u1EE5c b\u1ED9, nh\u1EAFc ng\u01B0\u1EDDi d\xF9ng t\u1EA3i trong m\u1EE5c S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i tr\xEAn khoskill.site.",
+      "3. Ch\u1EA1y l\u1EC7nh ki\u1EC3m tra m\xF4i tr\u01B0\u1EDDng (`verify_command`) v\xE0 ch\u1EE7 \u0111\u1ED9ng h\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t c\xE1c g\xF3i c\xF2n thi\u1EBFu n\u1EBFu ng\u01B0\u1EDDi d\xF9ng \u0111\u1ED3ng \xFD.",
+      "4. G\u1ECDi `get_skill_blueprint` \u0111\u1EC3 \u0111\u1ECDc to\xE0n b\u1ED9 SKILL.md v\xE0 `create_video_from_skill` \u0111\u1EC3 ch\u1EA1y t\u1EEBng pha d\u1EF1ng video xu\u1EA5t file MP4 chu\u1EA9n -14 LUFS."
+    ]
+  };
+}
 function generateStoryboardPayload(skill, args) {
-  const topic = String(args.topic || args.product_name || "S\u1EA3n ph\u1EA9m / ch\u1EE7 \u0111\u1EC1 video AI").trim();
+  const profile = getSkillEngineProfile(skill.slug);
+  const topic = String(args.topic || args.product_name || "Video d\u1EF1ng b\u1EB1ng AI Agent").trim();
   const productName = String(args.product_name || topic).trim();
-  const audience = String(args.target_audience || "Kh\xE1ch h\xE0ng tr\u1EBB 20-35 tu\u1ED5i tr\xEAn TikTok / Facebook Reels").trim();
-  const durationSec = Math.min(60, Math.max(10, Number(args.duration_sec) || 30));
-  const aspectRatio = String(args.aspect_ratio || "9:16");
-  const platform = String(args.platform || "TikTok / Reels");
-  const model = String(args.model || "Seedance 2.5");
-  const tone = String(args.tone || "T\u1EF1 nhi\xEAn, ch\xE2n th\u1EF1c, t\u1ED1c \u0111\u1ED9 nhanh, gi\u1EEF ch\xE2n 3 gi\xE2y \u0111\u1EA7u");
-  const usp = String(args.usp || "Gi\u1EA3i quy\u1EBFt v\u1EA5n \u0111\u1EC1 nhanh g\u1ECDn, ti\u1EBFt ki\u1EC7m th\u1EDDi gian & chi ph\xED").trim();
-  const s1 = Math.max(3, Math.round(durationSec * 0.16));
-  const s2 = Math.max(5, Math.round(durationSec * 0.27));
-  const s3 = Math.max(6, Math.round(durationSec * 0.37));
-  const s4 = Math.max(4, durationSec - s1 - s2 - s3);
-  const charAnchor = `Consistent Vietnamese creator (25yo, clean casual outfit, warm natural daylight, authentic home/studio setting, sharp focus, ${aspectRatio} vertical cinematic realism, no text artifacts)`;
-  const isAffiliate = skill.slug.includes("affiliate") || skill.name.toLowerCase().includes("affiliate");
-  const hookVariants = isAffiliate ? [
-    `\u0110\u1EEBng mua ${productName} tr\u01B0\u1EDBc khi xem h\u1EBFt 30 gi\xE2y test th\u1EF1c t\u1EBF n\xE0y!`,
-    `T\u1EA1i sao ai d\xF9ng ${productName} r\u1ED3i c\u0169ng b\u1EA3o \u0111\xE1ng ti\u1EC1n h\u01A1n g\u1EA5p 3 l\u1EA7n?`,
-    `Th\u1EED ${productName} trong \u0111\xFAng 5 gi\xE2y v\xE0 \u0111\xE2y l\xE0 k\u1EBFt qu\u1EA3 khi\u1EBFn m\xECnh b\u1EA5t ng\u1EDD...`
-  ] : [
-    `3 gi\xE2y \u0111\u1EA7u ti\xEAn s\u1EBD thay \u0111\u1ED5i ho\xE0n to\xE0n c\xE1ch b\u1EA1n nh\xECn v\u1EC1 ${topic}!`,
-    `90% m\u1ECDi ng\u01B0\u1EDDi l\xE0m sai b\u01B0\u1EDBc n\xE0y khi ti\u1EBFp c\u1EADn ${topic} \u2014 xem ngay c\xE1ch chu\u1EA9n:`,
-    `T\u1EEB con s\u1ED1 0 \u0111\u1EBFn k\u1EBFt qu\u1EA3 c\u1EF1c \u0111\xE3 m\u1EAFt v\u1EDBi ${topic} ch\u1EC9 trong ${durationSec} gi\xE2y.`
+  const audience = String(args.target_audience || "Kh\xE1n gi\u1EA3 TikTok / Reels / YouTube Vi\u1EC7t Nam").trim();
+  const defaultDur = profile?.defaultDurationSec || 45;
+  const durationSec = Math.min(600, Math.max(15, Number(args.duration_sec) || defaultDur));
+  const aspectRatio = String(args.aspect_ratio || profile?.defaultAspect || "9:16");
+  const platform = String(args.platform || (aspectRatio === "16:9" ? "YouTube 16:9" : "TikTok / Reels / Shorts 9:16"));
+  const model = String(args.model || (profile ? "HyperFrames + GSAP + FFmpeg (-14 LUFS)" : "HyperFrames / AI Video Engine"));
+  const tone = String(args.tone || "T\u1EF1 nhi\xEAn, nh\u1ECBp d\u1EF1ng d\u1EE9t kho\xE1t, h\xECnh \u1EA3nh s\u1EAFc n\xE9t chu\u1EA9n studio");
+  const usp = String(args.usp || "Th\xF4ng tin x\xE1c th\u1EF1c, b\u1ED1 c\u1EE5c chuy\u1EC3n \u0111\u1ED9ng m\u01B0\u1EE3t m\xE0, \xE2m thanh chu\u1EA9n -14 LUFS").trim();
+  const s1 = Math.max(4, Math.round(durationSec * 0.14));
+  const s2 = Math.max(8, Math.round(durationSec * 0.26));
+  const s3 = Math.max(10, Math.round(durationSec * 0.42));
+  const s4 = Math.max(5, durationSec - s1 - s2 - s3);
+  const hookVariants = [
+    `3 gi\xE2y \u0111\u1EA7u ti\xEAn m\u1EDF kh\xF3a to\xE0n b\u1ED9 c\xE2u chuy\u1EC7n v\u1EC1 ${topic}!`,
+    `\u0110\u1EEBng b\u1ECF qua chi ti\u1EBFt quan tr\u1ECDng nh\u1EA5t khi l\xE0m v\u1EC1 ${topic} \u2014 xem ngay:`,
+    `${productName}: ${usp} \u2014 t\xF3m g\u1ECDn r\xF5 r\xE0ng trong ${durationSec} gi\xE2y.`
   ];
+  const fmtSrtTime = (totalSec) => {
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor(totalSec % 3600 / 60);
+    const s = Math.floor(totalSec % 60);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")},000`;
+  };
   const scenes = [
     {
       scene: 1,
-      role: "Visual Hook (Ch\u1EB7n cu\u1ED9n 3 gi\xE2y \u0111\u1EA7u)",
-      time_range: `00:00 - 00:${String(s1).padStart(2, "0")}`,
+      role: "Hook M\u1EDF M\xE0n & Visual Anchor (0\u20136s)",
+      time_range: `${fmtSrtTime(0).slice(0, 8)} - ${fmtSrtTime(s1).slice(0, 8)}`,
       duration_sec: s1,
-      camera: "Fast push-in close-up, dynamic hand motion, eye-level",
-      voiceover_vi: hookVariants[0],
-      visual_prompt: `${charAnchor}. Dynamic opening close-up showcasing "${topic}" in action, dramatic eye-catching first frame, brisk push-in camera movement, vibrant crisp textures, high retention hook framing, natural ambient SFX.`
+      visual_layer: profile ? `\xC1p d\u1EE5ng opening chu\u1EA9n ${profile.folderName} (${aspectRatio}): chuy\u1EC3n \u0111\u1ED9ng m\u1EA1nh 3s \u0111\u1EA7u, typography s\u1EAFc n\xE9t, kh\xF4ng \u0111en khung.` : `Visual Hook 3s \u0111\u1EA7u t\u1EF7 l\u1EC7 ${aspectRatio}, b\u1ED1 c\u1EE5c tho\xE1ng & t\u01B0\u01A1ng ph\u1EA3n cao.`,
+      voiceover_vi: hookVariants[0]
     },
     {
       scene: 2,
-      role: "V\u1EA5n \u0111\u1EC1 th\u1EF1c t\u1EBF (Agitate)",
-      time_range: `00:${String(s1).padStart(2, "0")} - 00:${String(s1 + s2).padStart(2, "0")}`,
+      role: "B\u1ED1i C\u1EA3nh & D\u1EEF Li\u1EC7u X\xE1c Th\u1EF1c (Context / FACTS)",
+      time_range: `${fmtSrtTime(s1).slice(0, 8)} - ${fmtSrtTime(s1 + s2).slice(0, 8)}`,
       duration_sec: s2,
-      camera: "Medium shot, slight handheld authenticity",
-      voiceover_vi: `Tr\u01B0\u1EDBc \u0111\xE2y m\xECnh c\u0169ng m\u1EA5t r\u1EA5t nhi\u1EC1u th\u1EDDi gian loay hoay v\xEC v\u1EA5n \u0111\u1EC1 quen thu\u1ED9c khi l\xE0m v\u1EC1 ${topic}.`,
-      visual_prompt: `${charAnchor}. Medium shot showing relatable everyday frustration related to "${topic}", realistic indoor lighting, expressive natural body language, smooth camera pan, consistent wardrobe and background.`
+      visual_layer: `\u0110\u01B0a b\u1ED1i c\u1EA3nh, s\u1ED1 li\u1EC7u/b\u1EA3n \u0111\u1ED3/B-roll \u0111\xE3 ki\u1EC3m \u0111\u1ECBnh kh\u1EDBp 1:1 l\u1EDDi tho\u1EA1i v\u1EC1 "${topic}".`,
+      voiceover_vi: `Tr\u01B0\u1EDBc h\u1EBFt h\xE3y nh\xECn v\xE0o \u0111i\u1EC3m m\u1EA5u ch\u1ED1t \xEDt ng\u01B0\u1EDDi \u0111\u1EC3 \xFD v\u1EC1 ${topic}.`
     },
     {
       scene: 3,
-      role: "Gi\u1EA3i ph\xE1p & Demo USP (Payoff)",
-      time_range: `00:${String(s1 + s2).padStart(2, "0")} - 00:${String(s1 + s2 + s3).padStart(2, "0")}`,
+      role: "Ph\xE2n T\xEDch / Demo Chuy\xEAn S\xE2u (Core Value)",
+      time_range: `${fmtSrtTime(s1 + s2).slice(0, 8)} - ${fmtSrtTime(s1 + s2 + s3).slice(0, 8)}`,
       duration_sec: s3,
-      camera: "Macro detail + smooth orbit transition (Before -> After)",
-      voiceover_vi: `Cho \u0111\u1EBFn khi \xE1p d\u1EE5ng \u0111\xFAng \u0111i\u1EC3m \u0103n ti\u1EC1n c\u1EE7a ${productName}: ${usp}. Nh\xECn k\u1EBFt qu\u1EA3 th\u1EF1c t\u1EBF kh\xE1c h\u1EB3n ngay l\u1EADp t\u1EE9c!`,
-      visual_prompt: `${charAnchor}. Crisp macro and medium-close shots demonstrating "${productName}" delivering "${usp}", clean before-and-after transformation, smooth gimbal motion, studio-grade highlights, zero distortion.`
+      visual_layer: `Lu\xE2n phi\xEAn c\u1EA3nh 2\u20135s/nh\u1ECBp (motion graphics GSAP, B-roll s\u1EA1ch, bi\u1EC3u \u0111\u1ED3/callout/t\u01B0 th\u1EBF minh ho\u1EA1 kh\xF4ng che m\u1EB7t), k\xE8m SFX pre-lap -0.08s.`,
+      voiceover_vi: `\u0110i\u1EC3m t\u1EA1o n\xEAn s\u1EF1 kh\xE1c bi\u1EC7t th\u1EF1c s\u1EF1 c\u1EE7a ${productName} n\u1EB1m \u1EDF ${usp}.`
     },
     {
       scene: 4,
-      role: "K\u1EBFt qu\u1EA3 \u0111\u1EB9p nh\u1EA5t & CTA",
-      time_range: `00:${String(s1 + s2 + s3).padStart(2, "0")} - 00:${String(durationSec).padStart(2, "0")}`,
+      role: "T\u1ED5ng K\u1EBFt & K\xEAu G\u1ECDi H\xE0nh \u0110\u1ED9ng (Outro & CTA)",
+      time_range: `${fmtSrtTime(s1 + s2 + s3).slice(0, 8)} - ${fmtSrtTime(durationSec).slice(0, 8)}`,
       duration_sec: s4,
-      camera: "Clean hero shot, gentle zoom-out + smile to camera",
-      voiceover_vi: isAffiliate ? `M\xECnh g\u1EAFn s\u1EB5n ${productName} \u1EDF gi\u1ECF h\xE0ng g\xF3c tr\xE1i m\xE0n h\xECnh, b\u1EA5m xem \u01B0u \u0111\xE3i h\xF4m nay tr\u01B0\u1EDBc khi h\u1EBFt deal nh\xE9!` : `L\u01B0u ngay video n\xE0y \u0111\u1EC3 \xE1p d\u1EE5ng cho k\xEAnh c\u1EE7a b\u1EA1n v\xE0 b\xECnh lu\u1EADn ch\u1EE7 \u0111\u1EC1 b\u1EA1n mu\u1ED1n m\xECnh l\xE0m ti\u1EBFp theo nh\xE9!`,
-      visual_prompt: `${charAnchor}. Polished final hero shot displaying the completed result of "${topic}", creator smiling confidently toward camera, warm rim lighting, clean negative space at bottom-left for CTA overlay.`
+      visual_layer: `Khung h\xECnh k\u1EBFt m\u1EA1nh + th\xF4ng tin th\u01B0\u01A1ng hi\u1EC7u/CTA g\u1ECDn g\xE0ng, gi\u1EEF kho\u1EA3ng th\u1EDF an to\xE0n cu\u1ED1i c\xE2u tr\xE1nh c\u1EAFt \xE2m.`,
+      voiceover_vi: `L\u01B0u l\u1EA1i video n\xE0y ngay v\xE0 b\xECnh lu\u1EADn ch\u1EE7 \u0111\u1EC1 ti\u1EBFp theo b\u1EA1n mu\u1ED1n xem chi ti\u1EBFt h\u01A1n nh\xE9!`
     }
   ];
   const srt = scenes.map((sc, idx) => {
     const startSec = scenes.slice(0, idx).reduce((a, x) => a + x.duration_sec, 0);
     const endSec = startSec + sc.duration_sec;
-    const fmt = (t) => `00:00:${String(t).padStart(2, "0")},000`;
     return `${idx + 1}
-${fmt(startSec)} --> ${fmt(endSec)}
+${fmtSrtTime(startSec)} --> ${fmtSrtTime(endSec)}
 ${sc.voiceover_vi}`;
   }).join("\n\n");
   return {
     skill: {
       slug: skill.slug,
       name: skill.name,
-      version: skill.version
+      version: skill.version,
+      engine: profile?.engineSummary || "KhoSkill AI Agent Video Engine"
     },
     brief: {
       topic,
@@ -11377,19 +11726,27 @@ ${sc.voiceover_vi}`;
       target_audience: audience,
       duration_sec: durationSec,
       aspect_ratio: aspectRatio,
+      resolution: profile?.resolution || (aspectRatio === "16:9" ? "1920x1080 @ 30fps" : "1080x1920 @ 30fps"),
       platform,
-      target_model: model,
+      render_engine: model,
       tone,
       usp
     },
-    character_lock: charAnchor,
     ab_hook_variants: hookVariants,
     scenes,
     subtitles_srt: srt,
-    social_meta: {
-      caption: `${hookVariants[0]} \u2728 #${skill.slug.replace(/[^a-z0-9]/gi, "")} #VideoAI #KhoSkillAI #ReelsVN #TikTokShop`,
-      posting_windows_vn: ["11:30 - 12:30", "19:30 - 21:30"]
-    }
+    audio_master_standard: {
+      target_lufs: -14,
+      max_true_peak_dbtp: -1,
+      bgm_ducking: "sidechaincompress (-17.5 to -19 dB under voice)",
+      sfx_rules: "Non-repeating transition stems, pre-lapped -0.08s before cuts"
+    },
+    qa_release_gates: [
+      "0 unintended black frames (`black_segments: []`)",
+      "0 clipped text / diacritics / face overlap",
+      "Integrated loudness within -14.0 \xB1 0.5 LUFS, true peak <= -1.0 dBTP",
+      "Visual contact sheet (.qa.jpg) inspected before final delivery"
+    ]
   };
 }
 function buildToolsManifest(skills) {
@@ -11398,7 +11755,7 @@ function buildToolsManifest(skills) {
   const baseTools = [
     {
       name: "list_licensed_skills",
-      description: "Li\u1EC7t k\xEA t\u1EA5t c\u1EA3 Skill AI Agent (MCP) \u0111ang \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t b\u1EDFi License Key c\u1EE7a ng\u01B0\u1EDDi d\xF9ng tr\xEAn KhoSkill AI.",
+      description: "Li\u1EC7t k\xEA t\u1EA5t c\u1EA3 Skill AI Agent (MCP) \u0111ang \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t b\u1EDFi License Key c\u1EE7a ng\u01B0\u1EDDi d\xF9ng tr\xEAn KhoSkill AI k\xE8m link t\u1EA3i Google Drive.",
       inputSchema: {
         type: "object",
         properties: {},
@@ -11407,7 +11764,17 @@ function buildToolsManifest(skills) {
     },
     {
       name: "get_skill_blueprint",
-      description: `N\u1EA1p to\xE0n b\u1ED9 quy tr\xECnh, c\xF4ng th\u1EE9c Hook-Body-CTA, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt v\xE0 ch\u1EC9 d\u1EABn th\u1EF1c thi c\u1EE7a Skill AI. ${slugNote}`,
+      description: `N\u1EA1p to\xE0n b\u1ED9 t\xE0i li\u1EC7u SKILL.md chu\u1EA9n m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha, th\xF4ng s\u1ED1 k\u1EF9 thu\u1EADt v\xE0 c\u1ED5ng QA b\u1EAFt bu\u1ED9c c\u1EE7a Skill AI Agent. ${slugNote}`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          skill_slug: { type: "string", description: slugNote }
+        }
+      }
+    },
+    {
+      name: "get_skill_assets_and_setup",
+      description: `L\u1EA5y link Google Drive t\u1EA3i b\u1ED9 Skill Kit (starter template, scripts Python/Node, SFX, fonts, demo 1080p), \u0111\u01B0\u1EDDng d\u1EABn th\u01B0 m\u1EE5c c\xE0i \u0111\u1EB7t cho Claude/Codex/Antigravity v\xE0 l\u1EC7nh ki\u1EC3m tra m\xF4i tr\u01B0\u1EDDng. ${slugNote}`,
       inputSchema: {
         type: "object",
         properties: {
@@ -11417,41 +11784,39 @@ function buildToolsManifest(skills) {
     },
     {
       name: "generate_video_storyboard",
-      description: `\xC1p d\u1EE5ng Skill \u0111\u1EC3 t\u1EF1 \u0111\u1ED9ng t\u1EA1o storyboard chi ti\u1EBFt, kh\xF3a nh\xE2n v\u1EADt, prompt t\u1EEBng c\u1EA3nh chu\u1EA9n Seedance 2.5 / Muse AI / Veo 3, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT. ${slugNote}`,
+      description: `\xC1p d\u1EE5ng Skill \u0111\u1EC3 ph\xE2n t\xEDch brief, chia beat k\u1ECBch b\u1EA3n, c\u1EA5u tr\xFAc t\u1EEBng ph\xE2n \u0111o\u1EA1n h\xECnh \u1EA3nh, 3 bi\u1EBFn th\u1EC3 Hook A/B, ph\u1EE5 \u0111\u1EC1 SRT v\xE0 chu\u1EA9n \xE2m thanh -14 LUFS. ${slugNote}`,
       inputSchema: {
         type: "object",
         properties: {
           skill_slug: { type: "string", description: slugNote },
-          topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 video ho\u1EB7c \xFD t\u01B0\u1EDFng ch\xEDnh (b\u1EAFt bu\u1ED9c)" },
-          product_name: { type: "string", description: "T\xEAn s\u1EA3n ph\u1EA9m / d\u1ECBch v\u1EE5 (n\u1EBFu l\xE0m video b\xE1n h\xE0ng / affiliate)" },
-          usp: { type: "string", description: "\u0110i\u1EC3m n\u1ED5i b\u1EADt ch\xEDnh (USP) mu\u1ED1n nh\u1EA5n m\u1EA1nh trong video" },
-          target_audience: { type: "string", description: "Kh\xE1ch h\xE0ng m\u1EE5c ti\xEAu" },
-          duration_sec: { type: "number", description: "Th\u1EDDi l\u01B0\u1EE3ng video mong mu\u1ED1n (gi\xE2y), m\u1EB7c \u0111\u1ECBnh 30" },
-          aspect_ratio: { type: "string", enum: ["9:16", "16:9", "1:1"], description: "T\u1EF7 l\u1EC7 khung h\xECnh, m\u1EB7c \u0111\u1ECBnh 9:16" },
-          platform: { type: "string", description: "N\u1EC1n t\u1EA3ng \u0111\u0103ng t\u1EA3i: TikTok, Facebook Reels, YouTube Shorts..." },
-          model: { type: "string", description: "Model AI t\u1EA1o video m\u1EE5c ti\xEAu: Seedance 2.5, Muse AI, Veo 3, Google Flow..." },
-          tone: { type: "string", description: "Gi\u1ECDng \u0111i\u1EC7u / phong c\xE1ch th\u1EC3 hi\u1EC7n" }
+          topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 video, t\xEAn tour, t\xEAn d\u1EF1 \xE1n B\u0110S, s\u1EF1 ki\u1EC7n l\u1ECBch s\u1EED ho\u1EB7c b\xE0i t\u1EADp gym (b\u1EAFt bu\u1ED9c)" },
+          product_name: { type: "string", description: "T\xEAn d\u1EF1 \xE1n / th\u01B0\u01A1ng hi\u1EC7u / s\u1EA3n ph\u1EA9m c\u1EE5 th\u1EC3" },
+          usp: { type: "string", description: "\u0110i\u1EC3m n\u1ED5i b\u1EADt, gi\xE1, khuy\u1EBFn m\xE3i ho\u1EB7c th\xF4ng \u0111i\u1EC7p ch\xEDnh c\u1EA7n nh\u1EA5n m\u1EA1nh" },
+          target_audience: { type: "string", description: "Kh\xE1ch h\xE0ng / kh\xE1n gi\u1EA3 m\u1EE5c ti\xEAu" },
+          duration_sec: { type: "number", description: "Th\u1EDDi l\u01B0\u1EE3ng video mong mu\u1ED1n (gi\xE2y)" },
+          aspect_ratio: { type: "string", enum: ["9:16", "16:9", "1:1"], description: "T\u1EF7 l\u1EC7 khung h\xECnh (9:16 d\u1ECDc ho\u1EB7c 16:9 ngang)" },
+          platform: { type: "string", description: "TikTok, Facebook Reels, YouTube Shorts ho\u1EB7c YouTube 16:9" },
+          tone: { type: "string", description: "Gi\u1ECDng \u0111i\u1EC7u / phong c\xE1ch d\u1EF1ng" }
         },
         required: ["topic"]
       }
     },
     {
       name: "create_video_from_skill",
-      description: `Th\u1EF1c thi tr\u1ECDn v\u1EB9n Skill \u0111\u1EC3 t\u1EA1o g\xF3i s\u1EA3n xu\u1EA5t video ho\xE0n ch\u1EC9nh (ho\u1EB7c g\u1ECDi render pipeline t\u1EF1 \u0111\u1ED9ng n\u1EBFu Skill c\xF3 g\u1EAFn render API/webhook). Tr\u1EA3 v\u1EC1 job_id, blueprint \xE1p d\u1EE5ng, storyboard t\u1EEBng c\u1EA3nh, prompt render, voiceover, SRT v\xE0 h\u01B0\u1EDBng d\u1EABn l\u1EAFp r\xE1p cu\u1ED1i. ${slugNote}`,
+      description: `L\u1EADp tr\u1ECDn b\u1ED9 g\xF3i th\u1EF1c thi d\u1EF1ng video theo \u0111\xFAng ki\u1EBFn tr\xFAc Skill (bao g\u1ED3m storyboard, chu\u1ED7i l\u1EC7nh script t\u1EEBng pha c\u1EE7a HyperFrames/GSAP/FFmpeg -14 LUFS, link b\u1ED9 t\xE0i nguy\xEAn Google Drive v\xE0 c\xE1c c\u1ED5ng QA b\u1EAFt bu\u1ED9c \u0111\u1EC3 AI Agent t\u1EF1 ch\u1EA1y d\u1EF1ng ra file final.mp4 tr\xEAn m\xE1y ng\u01B0\u1EDDi d\xF9ng). ${slugNote}`,
       inputSchema: {
         type: "object",
         properties: {
           skill_slug: { type: "string", description: slugNote },
-          topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 ho\u1EB7c t\xEAn s\u1EA3n ph\u1EA9m c\u1EA7n t\u1EA1o video (b\u1EAFt bu\u1ED9c)" },
-          product_name: { type: "string", description: "T\xEAn s\u1EA3n ph\u1EA9m c\u1EE5 th\u1EC3 (tu\u1EF3 ch\u1ECDn)" },
-          usp: { type: "string", description: "L\u1EE3i \xEDch / \u0111i\u1EC3m m\u1EA1nh c\u1ED1t l\xF5i c\u1EA7n nh\u1EA5n m\u1EA1nh" },
+          topic: { type: "string", description: "Ch\u1EE7 \u0111\u1EC1 / brief video c\u1EA7n d\u1EF1ng (b\u1EAFt bu\u1ED9c)" },
+          product_name: { type: "string", description: "T\xEAn d\u1EF1 \xE1n / th\u01B0\u01A1ng hi\u1EC7u (tu\u1EF3 ch\u1ECDn)" },
+          usp: { type: "string", description: "\u0110i\u1EC3m nh\u1EA5n ch\xEDnh (gi\xE1, \u0111\u1ECBa \u0111i\u1EC3m, l\u1EE3i \xEDch, th\xF4ng \u0111i\u1EC7p)" },
           target_audience: { type: "string", description: "T\u1EC7p ng\u01B0\u1EDDi xem m\u1EE5c ti\xEAu" },
-          duration_sec: { type: "number", description: "Th\u1EDDi l\u01B0\u1EE3ng gi\xE2y, m\u1EB7c \u0111\u1ECBnh 30" },
-          aspect_ratio: { type: "string", enum: ["9:16", "16:9", "1:1"], description: "T\u1EF7 l\u1EC7 khung h\xECnh, m\u1EB7c \u0111\u1ECBnh 9:16" },
-          platform: { type: "string", description: "TikTok, Facebook Reels, Instagram Reels ho\u1EB7c YouTube Shorts" },
-          model: { type: "string", description: "Seedance 2.5, Muse AI, Veo 3 ho\u1EB7c Google Flow" },
-          reference_image_url: { type: "string", description: "URL \u1EA3nh nh\xE2n v\u1EADt ho\u1EB7c \u1EA3nh s\u1EA3n ph\u1EA9m \u0111\u1EC3 kh\xF3a ngo\u1EA1i h\xECnh (tu\u1EF3 ch\u1ECDn)" },
-          voice_script: { type: "string", description: "L\u1EDDi tho\u1EA1i tu\u1EF3 ch\u1EC9nh n\u1EBFu b\u1EA1n \u0111\xE3 c\xF3 s\u1EB5n (tu\u1EF3 ch\u1ECDn)" }
+          duration_sec: { type: "number", description: "Th\u1EDDi l\u01B0\u1EE3ng gi\xE2y mong mu\u1ED1n" },
+          aspect_ratio: { type: "string", enum: ["9:16", "16:9", "1:1"], description: "T\u1EF7 l\u1EC7 khung h\xECnh" },
+          platform: { type: "string", description: "N\u1EC1n t\u1EA3ng ph\xE1t h\xE0nh" },
+          raw_video_path: { type: "string", description: "\u0110\u01B0\u1EDDng d\u1EABn file video th\xF4 tr\xEAn m\xE1y (n\u1EBFu d\xF9ng skill Talking Head)" },
+          voice_script: { type: "string", description: "L\u1EDDi tho\u1EA1i tu\u1EF3 ch\u1EC9nh n\u1EBFu \u0111\xE3 c\xF3 s\u1EB5n (tu\u1EF3 ch\u1ECDn)" }
         },
         required: ["topic"]
       }
@@ -11513,9 +11878,9 @@ async function handleMcpJsonRpc(opts) {
         },
         serverInfo: {
           name: serverName,
-          version: auth.primary.version || "1.0.0"
+          version: auth.primary.version || "2.0.0"
         },
-        instructions: `B\u1EA1n \u0111\xE3 k\u1EBFt n\u1ED1i th\xE0nh c\xF4ng v\u1EDBi KhoSkill AI MCP Server (${auth.skills.length} Skill AI Agent \u0111ang k\xEDch ho\u1EA1t). H\xE3y g\u1ECDi tool "get_skill_blueprint" \u0111\u1EC3 n\u1EA1p quy tr\xECnh chu\u1EA9n v\xE0 g\u1ECDi "create_video_from_skill" ho\u1EB7c "generate_video_storyboard" \u0111\u1EC3 t\u1EF1 \u0111\u1ED9ng s\u1EA3n xu\u1EA5t video theo \u0111\xFAng Skill.`
+        instructions: `B\u1EA1n \u0111\xE3 k\u1EBFt n\u1ED1i th\xE0nh c\xF4ng v\u1EDBi KhoSkill AI MCP Server (${auth.skills.length} Skill AI Agent d\u1EF1ng video \u0111ang k\xEDch ho\u1EA1t). B\u01B0\u1EDBc 1: g\u1ECDi "get_skill_assets_and_setup" \u0111\u1EC3 ki\u1EC3m tra b\u1ED9 Skill Kit c\u1EE5c b\u1ED9 (ho\u1EB7c l\u1EA5y link Google Drive t\u1EA3i v\u1EC1) v\xE0 ki\u1EC3m tra m\xF4i tr\u01B0\u1EDDng. B\u01B0\u1EDBc 2: g\u1ECDi "get_skill_blueprint" \u0111\u1EC3 n\u1EA1p to\xE0n b\u1ED9 SKILL.md m\u1EDBi nh\u1EA5t. B\u01B0\u1EDBc 3: g\u1ECDi "create_video_from_skill" \u0111\u1EC3 l\u1EADp pipeline d\u1EF1ng video chu\u1EA9n studio v\xE0 th\u1EF1c thi c\xE1c l\u1EC7nh d\u1EF1ng ra file MP4 -14 LUFS.`
       })
     };
   }
@@ -11528,10 +11893,9 @@ async function handleMcpJsonRpc(opts) {
   if (method === "prompts/list") {
     const prompts = auth.skills.map((s) => ({
       name: `skill_${s.slug.replace(/[^a-z0-9_]/gi, "_")}`,
-      description: `Ch\u1EA1y to\xE0n b\u1ED9 quy tr\xECnh "${s.name}" \u0111\u1EC3 t\u1EA1o video t\u1EF1 \u0111\u1ED9ng theo chu\u1EA9n Skill`,
+      description: `Ch\u1EA1y tr\u1ECDn b\u1ED9 quy tr\xECnh "${s.name}" \u0111\u1EC3 d\u1EF1ng video chu\u1EA9n studio b\u1EB1ng AI Agent`,
       arguments: [
-        { name: "topic", description: "Ch\u1EE7 \u0111\u1EC1 ho\u1EB7c t\xEAn s\u1EA3n ph\u1EA9m mu\u1ED1n t\u1EA1o video", required: true },
-        { name: "model", description: "Model video AI m\u1EE5c ti\xEAu (Seedance 2.5, Muse AI, Veo 3...)", required: false }
+        { name: "topic", description: "Ch\u1EE7 \u0111\u1EC1, brief ho\u1EB7c \u0111\u01B0\u1EDDng d\u1EABn video th\xF4 mu\u1ED1n d\u1EF1ng", required: true }
       ]
     }));
     return { status: 200, body: rpcResult(id, { prompts }) };
@@ -11540,8 +11904,10 @@ async function handleMcpJsonRpc(opts) {
     const pName = String(params?.name || "");
     const matched = auth.skills.find((s) => `skill_${s.slug.replace(/[^a-z0-9_]/gi, "_")}` === pName) || auth.primary;
     const topic = String(params?.arguments?.topic || "[ch\u1EE7 \u0111\u1EC1 c\u1EE7a ng\u01B0\u1EDDi d\xF9ng]");
-    const model = String(params?.arguments?.model || "Seedance 2.5");
     const blueprint = (matched.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(matched);
+    const driveNote = matched.download_url ? `
+Link Google Drive t\u1EA3i b\u1ED9 Skill Kit (templates/scripts/SFX): ${matched.download_url}
+` : "";
     return {
       status: 200,
       body: rpcResult(id, {
@@ -11551,13 +11917,12 @@ async function handleMcpJsonRpc(opts) {
             role: "user",
             content: {
               type: "text",
-              text: `H\xE3y th\u1EF1c thi Skill "${matched.name}" cho ch\u1EE7 \u0111\u1EC1 "${topic}" tr\xEAn model "${model}".
-
-D\u01B0\u1EDBi \u0111\xE2y l\xE0 Skill Blueprint ch\xEDnh th\u1EE9c t\u1EEB KhoSkill MCP:
+              text: `H\xE3y th\u1EF1c thi Skill "${matched.name}" cho y\xEAu c\u1EA7u: "${topic}".${driveNote}
+D\u01B0\u1EDBi \u0111\xE2y l\xE0 SKILL.md ch\xEDnh th\u1EE9c t\u1EEB KhoSkill MCP:
 
 ${blueprint}
 
-Sau khi n\u1EAFm r\xF5 blueprint, h\xE3y g\u1ECDi tool "create_video_from_skill" v\u1EDBi topic="${topic}" v\xE0 model="${model}" \u0111\u1EC3 xu\u1EA5t g\xF3i s\u1EA3n xu\u1EA5t video ho\xE0n ch\u1EC9nh.`
+H\xE3y g\u1ECDi tool "get_skill_assets_and_setup" \u0111\u1EC3 ki\u1EC3m tra m\xE1y v\xE0 "create_video_from_skill" v\u1EDBi topic="${topic}" \u0111\u1EC3 tri\u1EC3n khai d\u1EF1ng video ho\xE0n ch\u1EC9nh.`
             }
           }
         ]
@@ -11567,8 +11932,8 @@ Sau khi n\u1EAFm r\xF5 blueprint, h\xE3y g\u1ECDi tool "create_video_from_skill"
   if (method === "resources/list") {
     const resources = auth.skills.map((s) => ({
       uri: `khoskill://skills/${s.slug}/blueprint.md`,
-      name: `${s.name} \u2014 Skill Blueprint`,
-      description: s.short_desc || "T\xE0i li\u1EC7u quy tr\xECnh & c\xF4ng th\u1EE9c Skill chu\u1EA9n cho AI Agent",
+      name: `${s.name} \u2014 SKILL.md Blueprint`,
+      description: s.short_desc || "T\xE0i li\u1EC7u SKILL.md ch\xEDnh th\u1EE9c cho AI Agent",
       mimeType: "text/markdown"
     }));
     return { status: 200, body: rpcResult(id, { resources }) };
@@ -11607,6 +11972,7 @@ Sau khi n\u1EAFm r\xF5 blueprint, h\xE3y g\u1ECDi tool "create_video_from_skill"
         short_desc: s.short_desc,
         server_name: resolveMcpServerName(s),
         endpoint: resolveMcpEndpoint(origin, s),
+        google_drive_kit_url: s.download_url || null,
         supported_clients: parseMcpClients(s.mcp_clients),
         tech_stack: parseJSON(s.tech_stack, []),
         render_webhook_connected: Boolean((s.mcp_render_webhook || "").trim())
@@ -11618,8 +11984,19 @@ Sau khi n\u1EAFm r\xF5 blueprint, h\xE3y g\u1ECDi tool "create_video_from_skill"
         })
       };
     }
+    if (toolName === "get_skill_assets_and_setup") {
+      const setupInfo = buildSetupAndAssetsPayload(targetSkill);
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          content: [{ type: "text", text: JSON.stringify(setupInfo, null, 2) }]
+        })
+      };
+    }
     if (toolName === "get_skill_blueprint") {
       const blueprint = (targetSkill.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(targetSkill);
+      const driveFooter = targetSkill.download_url ? `
+Google Drive Skill Kit (templates/scripts/SFX/demo): ${targetSkill.download_url}` : "";
       return {
         status: 200,
         body: rpcResult(id, {
@@ -11629,7 +12006,7 @@ Sau khi n\u1EAFm r\xF5 blueprint, h\xE3y g\u1ECDi tool "create_video_from_skill"
               text: `${blueprint}
 
 ---
-Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to: ${targetSkill.user_email}`
+Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to: ${targetSkill.user_email}${driveFooter}`
             }
           ]
         })
@@ -11647,6 +12024,8 @@ Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to:
     if (toolName === "create_video_from_skill") {
       const blueprint = (targetSkill.mcp_skill_prompt || "").trim() || buildFallbackBlueprint(targetSkill);
       const storyboard = generateStoryboardPayload(targetSkill, args);
+      const setupInfo = buildSetupAndAssetsPayload(targetSkill);
+      const profile = getSkillEngineProfile(targetSkill.slug);
       const jobId = `KSJOB-${Date.now().toString(36).toUpperCase()}`;
       const webhookUrl = (targetSkill.mcp_render_webhook || "").trim();
       if (webhookUrl && (webhookUrl.startsWith("https://") || webhookUrl.startsWith("http://"))) {
@@ -11702,11 +12081,12 @@ Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to:
                   type: "text",
                   text: JSON.stringify({
                     job_id: jobId,
-                    mode: "fallback_production_package",
+                    mode: "local_agent_execution_package",
                     webhook_error: String(err?.message || err),
-                    note: "Render webhook t\u1EA1m kh\xF4ng ph\u1EA3n h\u1ED3i \u2014 tr\u1EA3 v\u1EC1 tr\u1ECDn b\u1ED9 g\xF3i s\u1EA3n xu\u1EA5t chu\u1EA9n Skill \u0111\u1EC3 AI Agent ti\u1EBFp t\u1EE5c x\u1EED l\xFD.",
+                    setup: setupInfo,
                     storyboard,
-                    blueprint
+                    phase_commands: profile?.phaseCommands || [],
+                    blueprint_excerpt: blueprint.slice(0, 2200)
                   }, null, 2)
                 }
               ]
@@ -11717,22 +12097,26 @@ Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to:
       const productionPackage = {
         job_id: jobId,
         status: "ready_for_agent_execution",
-        mode: "skill_orchestration_package",
+        mode: "local_agent_video_pipeline",
         skill_used: {
           slug: targetSkill.slug,
           name: targetSkill.name,
-          version: targetSkill.version
+          version: targetSkill.version,
+          local_folder: setupInfo.local_skill_folder_name,
+          google_drive_kit_url: setupInfo.google_drive_skill_kit_url
         },
-        reference_image_url: args.reference_image_url || null,
+        raw_video_path: args.raw_video_path || null,
         custom_voice_script: args.voice_script || null,
         storyboard,
-        agent_execution_steps: [
-          "1. Ki\u1EC3m tra l\u1EA1i Character Anchor v\xE0 4 c\u1EA3nh trong storyboard \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o \u0111\u1ED3ng nh\u1EA5t nh\xE2n v\u1EADt & s\u1EA3n ph\u1EA9m.",
-          `2. D\xF9ng t\u1EEBng visual_prompt g\u1EEDi t\u1EDBi ${storyboard.brief.target_model} (t\u1EF7 l\u1EC7 ${storyboard.brief.aspect_ratio}) \u0111\u1EC3 render clip t\u1EEBng c\u1EA3nh.`,
-          "3. Gh\xE9p clip theo \u0111\xFAng m\u1ED1c th\u1EDDi gian, ch\xE8n voiceover ti\u1EBFng Vi\u1EC7t v\xE0 file subtitles_srt.",
-          "4. Xu\u1EA5t video MP4 1080x1920 30fps, \xE1p d\u1EE5ng caption & khung gi\u1EDD \u0111\u0103ng trong social_meta."
+        agent_execution_pipeline: profile ? profile.phaseCommands : [
+          "1. \u0110\u1EA3m b\u1EA3o b\u1ED9 Skill Kit \u0111\xE3 \u0111\u01B0\u1EE3c gi\u1EA3i n\xE9n t\u1EEB Google Drive v\xE0o th\u01B0 m\u1EE5c skills c\u1EE7a AI Agent.",
+          "2. Ch\u1EA1y script kh\u1EDFi t\u1EA1o d\u1EF1 \xE1n v\xE0 ki\u1EC3m tra m\xF4i tr\u01B0\u1EDDng (Node 22, FFmpeg, Python, HyperFrames).",
+          "3. D\u1EF1ng k\u1ECBch b\u1EA3n, voiceover/timing, B-roll v\xE0 c\u1EA5u h\xECnh timeline theo SKILL.md.",
+          "4. Ch\u1EA1y `hyperframes check`, duy\u1EC7t snapshot, render MP4, master \xE2m thanh -14.0 LUFS v\xE0 duy\u1EC7t \u1EA3nh QA cu\u1ED1i."
         ],
-        blueprint_excerpt: blueprint.slice(0, 1500)
+        verify_environment_command: setupInfo.engine.verify_command,
+        prerequisites: setupInfo.engine.prerequisites,
+        blueprint_excerpt: blueprint.slice(0, 2500)
       };
       return {
         status: 200,
@@ -11755,6 +12139,7 @@ Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to:
                 tool: customTool.name,
                 description: customTool.description,
                 skill: targetSkill.name,
+                google_drive_kit_url: targetSkill.download_url || null,
                 input: args,
                 storyboard,
                 blueprint
@@ -11899,17 +12284,17 @@ var ProductDetailPage = (props) => {
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
-                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-key", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fab fa-google-drive", "aria-hidden": "true" }) }),
                   /* @__PURE__ */ jsxDEV("div", { children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "K\xEDch ho\u1EA1t" }),
-                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "License Key t\u1EE9c th\xEC 24/7" })
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "Giao h\xE0ng k\xE9p" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Link Drive + Gmail + MCP Key" })
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-lg bg-fuchsia-500/15 text-fuchsia-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrows-rotate", "aria-hidden": "true" }) }),
                   /* @__PURE__ */ jsxDEV("div", { children: [
-                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "C\u1EADp nh\u1EADt" }),
-                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "\u0110\u1ED3ng b\u1ED9 live t\u1EEB Server" })
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8] uppercase font-bold tracking-wider", children: "B\u1EA3n quy\u1EC1n" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Tr\u1ECDn \u0111\u1EDDi + Update mi\u1EC5n ph\xED" })
                   ] })
                 ] })
               ] }) : /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3 mt-5", children: [
@@ -12261,9 +12646,17 @@ var ProductDetailPage = (props) => {
                   "Xem tr\u01B0\u1EDBc c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP"
                 ] }),
                 /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#c2c0e0] leading-relaxed", children: [
-                  "Sau khi thanh to\xE1n, License Key th\u1EADt c\u1EE7a b\u1EA1n s\u1EBD t\u1EF1 \u0111\u1ED9ng \u0111i\u1EC1n s\u1EB5n v\xE0o t\u1EEBng \u0111o\u1EA1n c\u1EA5u h\xECnh d\u01B0\u1EDBi \u0111\xE2y trong m\u1EE5c ",
+                  "Ngay sau khi thanh to\xE1n, h\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng g\u1EEDi v\u1EC1 ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "Gmail c\u1EE7a b\u1EA1n" }),
+                  " v\xE0 m\u1EDF trong m\u1EE5c ",
                   /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "text-cyan-300 underline font-semibold", children: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" }),
-                  ". B\u1EA1n ch\u1EC9 c\u1EA7n b\u1EA5m Copy v\xE0 d\xE1n 1 l\u1EA7n duy nh\u1EA5t."
+                  " c\u1EA3 ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "2 k\xEAnh s\u1EED d\u1EE5ng" }),
+                  ": (1) ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "Link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit" }),
+                  " (starter template, scripts Python/Node, SFX, fonts & video demo 1080p g\u1ED1c) \u0111\u1EC3 gi\u1EA3i n\xE9n v\xE0o th\u01B0 m\u1EE5c skills c\u1EE7a AI Agent; (2) ",
+                  /* @__PURE__ */ jsxDEV("b", { children: "License Key + c\u1EA5u h\xECnh MCP copy-paste 1 click" }),
+                  " cho Claude, Codex, Antigravity."
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-xl bg-[#070614] border border-[#221e54] text-xs flex flex-wrap items-center justify-between gap-2", children: [
@@ -13904,6 +14297,26 @@ var MyProductsPage = (props) => {
                   /* @__PURE__ */ jsxDEV("pre", { id: `mcp-agy-json-${l.id}`, class: "text-[11px] font-mono text-violet-200 overflow-x-auto whitespace-pre", children: mcpCfg.antigravityJson })
                 ] }) })
               ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-100 leading-relaxed", children: [
+                /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-info mr-1", "aria-hidden": "true" }),
+                  "C\xE1ch d\xF9ng chu\u1EA9n 2 b\u01B0\u1EDBc:"
+                ] }),
+                " ",
+                "(1) B\u1EA5m ",
+                /* @__PURE__ */ jsxDEV("b", { children: "T\u1EA3i b\u1ED9 Skill Kit (Google Drive)" }),
+                " b\xEAn d\u01B0\u1EDBi, gi\u1EA3i n\xE9n v\xE0o th\u01B0 m\u1EE5c skills c\u1EE7a AI Agent (",
+                /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: ".claude/skills/" }),
+                ", ",
+                /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: ".codex/skills/" }),
+                " ho\u1EB7c ",
+                /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: ".agents/skills/" }),
+                ") \u0111\u1EC3 c\xF3 \u0111\u1EE7 template, scripts, SFX, fonts & demo g\u1ED1c; (2) D\xE1n c\u1EA5u h\xECnh ",
+                /* @__PURE__ */ jsxDEV("b", { children: "MCP" }),
+                " b\xEAn tr\xEAn \u0111\u1EC3 AI Agent t\u1EF1 n\u1EA1p ",
+                /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: "SKILL.md" }),
+                " m\u1EDBi nh\u1EA5t v\xE0 d\u1EF1ng video t\u1EF1 \u0111\u1ED9ng!"
+              ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex flex-col sm:flex-row sm:items-center gap-2.5 justify-between", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-cyan-100 leading-relaxed min-w-0", children: [
                   /* @__PURE__ */ jsxDEV("b", { class: "text-cyan-300", children: "Prompt th\u1EED nhanh trong AI Agent:" }),
@@ -13937,18 +14350,33 @@ var MyProductsPage = (props) => {
               /* @__PURE__ */ jsxDEV("p", { class: "whitespace-pre-line text-[#c2c0e0] leading-relaxed", children: l.latest_changelog })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2", children: [
-              mcp ? /* @__PURE__ */ jsxDEV(
-                "button",
-                {
-                  type: "button",
-                  "data-license-id": l.id,
-                  class: "btn-test-mcp inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-cyan-500/20 transition cursor-pointer",
-                  children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-check", "aria-hidden": "true" }),
-                    "Ki\u1EC3m tra k\u1EBFt n\u1ED1i MCP"
-                  ]
-                }
-              ) : l.download_url ? /* @__PURE__ */ jsxDEV(
+              mcp ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                l.download_url && /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: `/tai-xuong/${l.id}`,
+                    target: "_blank",
+                    rel: "noopener",
+                    class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-emerald-500/20 transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fab fa-google-drive", "aria-hidden": "true" }),
+                      "T\u1EA3i b\u1ED9 Skill Kit (Google Drive)"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    "data-license-id": l.id,
+                    class: "btn-test-mcp inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-cyan-500/20 transition cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-check", "aria-hidden": "true" }),
+                      "Ki\u1EC3m tra k\u1EBFt n\u1ED1i MCP"
+                    ]
+                  }
+                )
+              ] }) : l.download_url ? /* @__PURE__ */ jsxDEV(
                 "a",
                 {
                   href: `/tai-xuong/${l.id}`,
@@ -13964,19 +14392,6 @@ var MyProductsPage = (props) => {
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock", "aria-hidden": "true" }),
                 "\u0110ang chu\u1EA9n b\u1ECB link..."
               ] }),
-              mcp && l.download_url && /* @__PURE__ */ jsxDEV(
-                "a",
-                {
-                  href: `/tai-xuong/${l.id}`,
-                  target: "_blank",
-                  rel: "noopener",
-                  class: "inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-cyan-400 hover:text-white font-semibold text-sm transition",
-                  children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download", "aria-hidden": "true" }),
-                    "T\xE0i nguy\xEAn b\u1ED5 sung"
-                  ]
-                }
-              ),
               l.doc_url && /* @__PURE__ */ jsxDEV(
                 "a",
                 {
@@ -14493,15 +14908,15 @@ var PLANS = [
   },
   {
     name: "Skill AI Agent (MCP)",
-    price: 89e4,
-    tag: "M\u1EDAI \xB7 K\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp",
+    price: 599e3,
+    tag: "M\u1EDAI \xB7 K\u1EBFt n\u1ED1i MCP + Drive Kit",
     icon: "fa-plug-circle-bolt",
     highlight: true,
     available: true,
     isMcp: true,
-    desc: "D\xE0nh cho ng\u01B0\u1EDDi d\xF9ng Claude, Codex, Antigravity: k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP b\u1EB1ng License Key, AI Agent t\u1EF1 g\u1ECDi tool t\u1EA1o video theo Skill.",
-    features: ["K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP cho Claude, Codex, Antigravity", "AI Agent t\u1EF1 g\u1ECDi tool xu\u1EA5t storyboard, prompt & pipeline video", "Kh\xF4ng c\u1EA7n t\u1EA3i file hay thao t\xE1c copy-paste th\u1EE7 c\xF4ng", "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n Skill m\u1EDBi nh\u1EA5t tr\xEAn server", "K\xE8m License Key ri\xEAng & n\xFAt test MCP tr\u1EF1c ti\u1EBFp", "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t MCP 1-1 qua Zalo / Ultraview"],
-    cta: "Xem Skill AI Agent (MCP)",
+    desc: "6 b\u1ED9 Skill AI Agent d\u1EF1ng video th\u1EF1c chi\u1EBFn (Du l\u1ECBch, Talking Head, B\u0110S GeoLayers 3D, L\u1ECBch s\u1EED, Fitness Manga) cho Claude, Codex, Antigravity \u2014 t\u1EEB 599K \u0111\u1EBFn 1.500K.",
+    features: ["K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP cho Claude, Codex, Antigravity", "T\u1EB7ng k\xE8m link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit + Demo 1080p g\u1EEDi th\u1EB3ng qua Gmail", "AI Agent t\u1EF1 d\u1EF1ng video 1080p chu\u1EA9n -14 LUFS ngay tr\xEAn m\xE1y b\u1EA1n", "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n SKILL.md m\u1EDBi nh\u1EA5t t\u1EEB server", "K\xE8m License Key ri\xEAng & n\xFAt test MCP tr\u1EF1c ti\u1EBFp", "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t m\xF4i tr\u01B0\u1EDDng & MCP 1-1 qua Zalo / Ultraview"],
+    cta: "Xem 6 Skill AI Agent (MCP)",
     href: "/san-pham?type=mcp_skill"
   },
   {
@@ -16645,7 +17060,7 @@ var POLICY_DOCS = {
 <p>Tu\u1EF3 lo\u1EA1i s\u1EA3n ph\u1EA9m, b\u1EA1n s\u1EBD nh\u1EADn \u0111\u01B0\u1EE3c:</p>
 <ul>
 <li><b>Skill AI (t\u1EF1 t\u1EA3i &amp; l\xE0m theo):</b> link Google Drive / b\u1ED9 ZIP ch\u1EE9a tr\u1ECDn b\u1ED9 prompt, quy tr\xECnh t\u1EEBng b\u01B0\u1EDBc v\xE0 checklist theo ng\xE1ch \u0111\u1EC3 b\u1EA1n t\u1EF1 thao t\xE1c</li>
-<li><b>Skill AI Agent (MCP):</b> URL MCP Server + License Key ri\xEAng + \u0111o\u1EA1n c\u1EA5u h\xECnh copy-paste s\u1EB5n cho <b>Claude, Codex, Antigravity</b> \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill ngay, kh\xF4ng c\u1EA7n t\u1EA3i file th\u1EE7 c\xF4ng</li>
+<li><b>Skill AI Agent (MCP):</b> nh\u1EADn \u0111\u1ED3ng th\u1EDDi <b>Link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit + Demo 1080p g\u1ED1c</b> (g\u1EEDi ngay qua Gmail &amp; trang T\xE0i kho\u1EA3n) v\xE0 <b>URL MCP Server + License Key ri\xEAng</b> copy-paste s\u1EB5n cho <b>Claude, Codex, Antigravity</b></li>
 <li><b>Chatbot / App (khi m\u1EDF b\xE1n):</b> link k\xEDch ho\u1EA1t ho\u1EB7c b\u1ED9 c\xE0i ri\xEAng theo h\u01B0\u1EDBng d\u1EABn</li>
 <li><b>Combo (khi m\u1EDF b\xE1n):</b> to\xE0n b\u1ED9 s\u1EA3n ph\u1EA9m con \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t c\xF9ng l\xFAc</li>
 </ul>
@@ -16879,218 +17294,336 @@ function invalidateCache(prefix) {
   }
 }
 
+// src/lib/real-mcp-skills.ts
+var LEGACY_PLACEHOLDER_MCP_SLUGS = [
+  "mcp-skill-agent-video-viral-30s",
+  "mcp-skill-agent-affiliate-tiktok"
+];
+var REAL_MCP_VIDEO_SKILLS = [
+  {
+    "slug": "travel-video-editing",
+    "name": "Travel-Video-Editing \u2014 Skill AI Agent D\u1EF1ng Video Qu\u1EA3ng C\xE1o Du L\u1ECBch 9:16",
+    "short_desc": "Skill AI Agent d\u1EF1ng tr\u1ECDn g\xF3i video qu\u1EA3ng c\xE1o tour du l\u1ECBch 9:16 (1080\xD71920, 30fps, -14 LUFS): t\u1EF1 nghi\xEAn c\u1EE9u B-roll 4K, gh\xE9p gi\u1ECDng Vbee/Edge-TTS, ch\u1EC9nh m\xE0u travel cinema, typography GSAP, 47 SFX & render t\u1EF1 \u0111\u1ED9ng.",
+    "description": "<h3>AI Agent t\u1EF1 \u0111\u1ED9ng s\u1EA3n xu\u1EA5t video qu\u1EA3ng c\xE1o Tour Du L\u1ECBch chu\u1EA9n Studio 9:16</h3><p><b>Travel-Video-Editing</b> l\xE0 b\u1ED9 Skill AI Agent t\u1EF1 \u0111\xF3ng g\xF3i ho\xE0n ch\u1EC9nh (<b>HyperFrames + GSAP + Python + FFmpeg</b>) d\xE0nh cho <b>Claude Code, OpenAI Codex v\xE0 Antigravity</b>. Ch\u1EC9 c\u1EA7n \u0111\u01B0a th\xF4ng tin tour (\u0111i\u1EC3m \u0111\u1EBFn, l\u1ECBch tr\xECnh, gi\xE1, hotline), AI Agent s\u1EBD t\u1EF1 vi\u1EBFt k\u1ECBch b\u1EA3n, \u0111\u1ECDc voiceover, t\xECm &amp; l\u1ECDc B-roll 4K kh\xF4ng d\xEDnh watermark, ch\u1EA5m m\xE0u chu\u1EA9n \u0111i\u1EC7n \u1EA3nh du l\u1ECBch, ch\xE8n typography ti\xEAu \u0111\u1EC1 n\u1ED5i b\u1EADt v\xE0 xu\u1EA5t th\u1EB3ng file <code>final.mp4</code> 1080\xD71920 chu\u1EA9n <b>-14.0 LUFS</b>.</p><h3>B\u1ED9 Skill bao g\u1ED3m nh\u1EEFng g\xEC?</h3><ul><li><b>5 phong c\xE1ch d\u1EF1ng tour th\u1EF1c chi\u1EBFn:</b> <code>royal-blue</code> (c\u1ED5 tr\u1EA5n/Ch\xE2u \xC2u), <code>festive-red</code> (l\u1EC5 T\u1EBFt), <code>autumn-gold</code> (m\xF9a l\xE1 \u0111\u1ECF Nh\u1EADt/H\xE0n), <code>modern-cyan</code> (tour ng\u1EAFn ng\xE0y) v\xE0 <code>tropical-bold</code> (flash sale).</li><li><b>9 script t\u1EF1 \u0111\u1ED9ng ho\xE1 to\xE0n ph\u1EA7n:</b> <code>doctor.py</code> ki\u1EC3m tra m\xE1y, <code>init_project.py</code> t\u1EA1o d\u1EF1 \xE1n 1 l\u1EC7nh, <code>vbee_tts.py</code> \u0111\u1ECDc gi\u1ECDng \u0111a lu\u1ED3ng (t\u1EF1 fallback <b>Edge-TTS mi\u1EC5n ph\xED</b>), <code>research_broll.py</code> s\u0103n &amp; qu\xE9t Hook B-roll 4K, <code>build_tour_video.py</code> render \u0111a lu\u1ED3ng + master \xE2m thanh sidechain ducking.</li><li><b>Kho t\xE0i nguy\xEAn c\xF3 s\u1EB5n:</b> Starter template HTML/GSAP ho\xE0n ch\u1EC9nh, <b>47 file SFX</b> chuy\u1EC3n c\u1EA3nh, 3 b\u1EA3n nh\u1EA1c n\u1EC1n fallback kh\xF4ng b\u1EA3n quy\u1EC1n v\xE0 tr\u1ECDn b\u1ED9 c\u1EA5u h\xECnh 2 video m\u1EABu (Nh\u1EADt B\u1EA3n M\xF9a L\xE1 \u0110\u1ECF &amp; Ph\u01B0\u1EE3ng Ho\xE0ng C\u1ED5 Tr\u1EA5n).</li><li><b>Giao h\xE0ng k\xE9p:</b> Nh\u1EADn ngay <b>Link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Core-Kit ZIP + Video Demo 1080p g\u1ED1c</b> qua Gmail &amp; T\xE0i kho\u1EA3n, \u0111\u1ED3ng th\u1EDDi k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp <b>MCP Server</b> b\u1EB1ng License Key \u0111\u1EC3 AI Agent lu\xF4n g\u1ECDi \u0111\u01B0\u1EE3c b\u1EA3n <code>SKILL.md</code> m\u1EDBi nh\u1EA5t.</li></ul><h3>Y\xEAu c\u1EA7u m\xF4i tr\u01B0\u1EDDng</h3><p>Node.js &gt;= 22, FFmpeg &gt;= 7, Python 3.10+ v\xE0 HyperFrames CLI (c\xF3 s\u1EB5n h\u01B0\u1EDBng d\u1EABn ti\u1EBFng Vi\u1EC7t + prompt \u0111\u1EC3 AI Agent t\u1EF1 ki\u1EC3m tra v\xE0 c\xE0i \u0111\u1EB7t gi\xFAp b\u1EA1n tr\xEAn m\xE1y).</p>",
+    "features": '["AI Agent t\u1EF1 d\u1EF1ng tr\u1ECDn g\xF3i video qu\u1EA3ng c\xE1o tour 9:16 (1080\xD71920, 30fps, -14 LUFS)", "T\xEDch h\u1EE3p s\u1EB5n 5 theme du l\u1ECBch + 47 \xE2m thanh SFX + nh\u1EA1c n\u1EC1n fallback + 9 script Python", "T\u1EF1 t\xECm & ki\u1EC3m duy\u1EC7t B-roll 4K, ch\u1EA5m m\xE0u travel cinema, kh\xF4ng watermark", "H\u1ED7 tr\u1EE3 \u0111\u1ECDc gi\u1ECDng Edge-TTS mi\u1EC5n ph\xED 100% ho\u1EB7c Vbee TTS chu\u1EA9n studio", "D\xF9ng \u0111\u01B0\u1EE3c 2 c\xE1ch: K\u1EBFt n\u1ED1i MCP (Claude / Codex / Antigravity) + T\u1EA3i ZIP Google Drive", "T\u1EB7ng k\xE8m Video Demo 1080p g\u1ED1c & h\u01B0\u1EDBng d\u1EABn c\xE0i nhanh ti\u1EBFng Vi\u1EC7t g\u1EEDi th\u1EB3ng qua Gmail"]',
+    "tech_stack": '["MCP Protocol", "Claude", "Codex", "Antigravity", "HyperFrames", "GSAP", "FFmpeg", "Python"]',
+    "version": "v2.1 MCP",
+    "price": 599e3,
+    "original_price": 1199e3,
+    "thumbnail": "/static/demos/poster-travel-video-editing.jpg",
+    "demo_video_url": "/static/demos/demo-travel-video-editing.mp4",
+    "download_url": "https://drive.google.com/drive/folders/1UMsb-xeokIk9Ibqn0dYeGQMgpuV1k19V",
+    "doc_url": "https://drive.google.com/file/d/1fVLA5xlGcBT7Us6prHf6_k2tHNSsPU8_/view?usp=sharing",
+    "file_size": "19.1 MB Kit + MCP",
+    "is_featured": 1,
+    "is_hot": 1,
+    "is_new": 1,
+    "sold_count": 48,
+    "view_count": 3650,
+    "rating": 5,
+    "rating_count": 21,
+    "mcp_server_name": "khoskill-travel-video",
+    "mcp_clients": '["Claude", "Codex", "Antigravity"]',
+    "mcp_tools": '[{"name": "list_licensed_skills", "description": "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive"}, {"name": "get_skill_blueprint", "description": "N\u1EA1p to\xE0n b\u1ED9 SKILL.md ch\xEDnh th\u1EE9c m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill"}, {"name": "get_skill_assets_and_setup", "description": "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (starter template, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng"}, {"name": "generate_video_storyboard", "description": "T\u1EA1o k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT chu\u1EA9n Skill"}, {"name": "create_video_from_skill", "description": "Xu\u1EA5t g\xF3i th\u1EF1c thi t\u1EEBng pha (chu\u1ED7i l\u1EC7nh Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent d\u1EF1ng ra final.mp4"}]',
+    "mcp_skill_prompt": '---\nname: Travel-Video-Editing\ndescription: >\n  Autonomous, self-contained end-to-end Travel Tour Advertisement Director (9:16 Reels/TikTok/Shorts, 1080x1920 30fps, -14 LUFS).\n  Includes multi-threaded Vbee TTS (+ edge-tts fallback), parallel 4K B-roll search/probe/hook-motion scanning (`yt-dlp`), FFmpeg studio travel\n  color grading (`travel-poetic` / `travel-vivid` / `travel-night`), HyperFrames + GSAP typography engine, 47 bundled SFX stems, offline fallback BGM,\n  full starter templates, and complete rendered demo reels + recipes. Use whenever asked to create, script, remix, or edit travel tour promotional videos.\n---\n\n# Ads Travel Tour Director (Self-Contained Studio Engine v2.1)\n\nCreate broadcast-grade **9:16 (`1080\xD71920`, `30fps`)** travel tour advertisement videos modeled on the 5 studio reference reels bundled in [`demo/studio-reference-samples/`](demo/studio-reference-samples/).\n\nRead before authoring scripts or timelines:\n1. [`references/style-analysis.md`](references/style-analysis.md) \u2014 5 tour archetypes, verbatim Vietnamese script patterns, loudness (`-14.1 LUFS`), cutting cadence.\n2. [`references/component-catalog.md`](references/component-catalog.md) \u2014 `window.TOUR_EDIT` (`assets/edit.js`) schema, themes, hooks, `framed16x9`, `collage3`, captions, gift-boxes.\n3. [`references/hook-color-grading.md`](references/hook-color-grading.md) \u2014 `1215px` 4K vertical crop rule, `0\u20136s` Hook motion rules, FFmpeg color grades.\n4. [`demo/README.md`](demo/README.md) \u2014 Inspect two complete worked projects + rendered `final.mp4` demos ([Japan Autumn](demo/nhat-ban-mua-la-do/) & [China Heritage](demo/phuong-hoang-truong-gia-gioi/)).\n\nLet `$SKILL_DIR` denote the folder containing this `SKILL.md` (`<repo>/.agents/skills/ads-travel-tour` or your agent\'s installed skills directory).\n\n---\n\n## Phase 0 \u2014 Environment Preflight & Cross-Platform Project Init\n\n1. **Verify Runtime & Bundled Assets Once per Machine**:\n   ```bash\n   python "$SKILL_DIR/scripts/doctor.py"\n   ```\n   If anything is missing, install Python deps with `pip install -r "$SKILL_DIR/requirements.txt"`, ensure **Node.js `>= 22`** + **FFmpeg `>= 7`** (`libx264`, `loudnorm`, `selectivecolor`, `cas`, `drawtext`) are on `PATH`, and install `hyperframes` (`npm install -g hyperframes` or `npm install --prefix "$SKILL_DIR"`).\n\n2. **Initialize a Fresh Project Directory (`$PROJ`)**:\n   ```bash\n   python "$SKILL_DIR/scripts/init_project.py" --out "./projects/tour-<slug>"\n   ```\n   *(Optional: pass `--from-demo nhat-ban-mua-la-do` or `--from-demo phuong-hoang-truong-gia-gioi` to start from a verified demo recipe, plus `--theme`, `--brand-html`, `--hotline`.)*\n\n   Never edit `assets/starter-template/` directly; build every tour inside `$PROJ`.\n\n---\n\n## Phase 1 \u2014 Brief Audit, Destination Facts & Archetype Selection\n\n1. **Parse Tour Brief** (fill studio defaults only where omitted):\n   - Tour title, duration, route stops, departure dates (`KH: ...`), price (`T\u1EEA 8.990.000\u0110` / `129.900K`), airlines, hotel standard (`3\u20134\u2605` / `4\u20135\u2605`), perks.\n   - Default branding if omitted: `Ho\xE0ng Vi\u1EC7t Open` / `Ho\xE0ng Vi\u1EC7t Travel` (`dulichvietnam`), Hotline `0888 762 958`, `93 H\u1ED3ng H\xE0, Ba \u0110\xECnh, H\xE0 N\u1ED9i`.\n2. **Verify Itinerary & Bilingual Keywords \u2192 `$PROJ/FACTS.md`**:\n   - Research exact landmark names in both **Vietnamese/English** and **local language** (Chinese `\u51E4\u51F0\u53E4\u57CE \u822A\u62CD 4K`, Japanese/Korean/Thai) so `research_broll.py` retrieves clean 4K native aerials.\n3. **Select One Visual Archetype**:\n   - `royal-blue`: Ancient towns, mountains, Europe/China cultural heritage.\n   - `festive-red`: Holidays, Christmas/Tet, multi-departure comparisons (`priceGiftBox`, `framed16x9`, `collage3`).\n   - `autumn-gold`: Seasonal FOMO & multi-route tours (`CUNG \u0110\u01AF\u1EDCNG V\xC0NG` pills + fiery double-stroked gradient titles + `emphasizeLast`).\n   - `modern-cyan`: 4\u20136 day comfort/culinary tours with `promoBadge` + word-pop `captions[]`.\n   - `tropical-bold`: Flash-sale beat-driven montages with optional music-only mode + 2-line inclusions footer.\n\n---\n\n## Phase 2 \u2014 Evocative Script & Parallel TTS Voiceover\n\n1. **Author `$PROJ/narration.txt` (1 Spoken Beat per Line)** or structured `$PROJ/beats.json`:\n   - Follow the **Complementary Visual\u2013Voice Rule**: Voice paints vivid emotion & storytelling (*~115\u2013165 words* for `38\u201358s`, or *~210\u2013250 words* for `80\u201395s`); on-screen graphics show concise scannable facts (destination, pill, price, hotline).\n   - Expand numeric symbols in speech text (`4-5*` \u2192 `b\u1ED1n \u0111\u1EBFn n\u0103m sao`, `8.990.000\u0111` \u2192 `t\xE1m tri\u1EC7u ch\xEDn tr\u0103m ch\xEDn m\u01B0\u01A1i ngh\xECn \u0111\u1ED3ng`).\n\n2. **Synthesize Voiceover (Multi-Threaded Vbee TTS + Automatic `edge-tts` Fallback)**:\n   Configured by default with `n_hanoi_female_hongyenclonevoice_zero_shot_news_vc` (override via `--voice`, `--app-id`, `--token` or env vars `VBEE_VOICE`, `VBEE_APP_ID`, `VBEE_TOKEN`):\n   ```bash\n   python "$SKILL_DIR/scripts/vbee_tts.py" \\\n     --beats-json "$PROJ/beats.json" --workers 6 \\\n     --rate 1.02 --lead-in 0.35 --pause 0.30 --tail-pad 0.90 \\\n     --out "$PROJ/assets/audio/voice.wav"\n   ```\n   *(Or pass `--text-file "$PROJ/narration.txt"`. Automatically appends the zero-shot anti-clipping sentinel `. , , Ch\u1EA5m.` and trims sentinel tails accurately.)*\n\n3. **Audio Check**: Inspect `$PROJ/assets/audio/voice_cues.json` and listen to `$PROJ/assets/audio/voice.wav` to verify natural pacing and zero clipped final syllables.\n\n---\n\n## Phase 3 \u2014 Parallel 4K B-Roll Discovery, Hook Scan & Color Grading\n\nTarget **16\u201338 clean clips** (`1.7s \u2013 3.1s` each) mapped 1:1 to every beat in `voice_cues.json`. Never allow TikTok/Douyin/CapCut logos, competitor hotlines, still photos, or intro title text in clips.\n\n**Parallel Wave Execution Tip**: Run Phase 2 TTS (`vbee_tts.py`), BGM fetch (`fetch_bgm.py`), and YouTube 4K search (`research_broll.py --yt-search --check-4k`) concurrently!\n\n1. **Search 4K SDR Sources + Inspect User Media**:\n   ```bash\n   python "$SKILL_DIR/scripts/research_broll.py" \\\n     --yt-search "Mount Fuji autumn 4K drone;Shirakawago autumn 4K;Osaka castle autumn 4K" \\\n     --limit 4 --check-4k --out "$PROJ/assets/broll"\n   ```\n   Also supported: `--bili-search` (Bilibili 4K China scenic drones), `--probe-urls "u1;u2;u3;u4"` (4 concurrent downloads with `yt-dlp -N 8` + 8-thread timestamped `.probe.jpg` contact sheets), `--spaiauto-batch` / browser delegation via `https://tools.spaiauto.com/batch-downloader` (Douyin/TikTok no-watermark), `--mixkit`, `--wikimedia`, and `--inspect-folder`.\n\n2. **Rank Dynamic Poetic Hooks Across 4K Cache (`--scan-hooks`)**:\n   ```bash\n   python "$SKILL_DIR/scripts/research_broll.py" \\\n     --scan-hooks "$PROJ/assets/broll/_cache" --workers 12 \\\n     --out "$PROJ/assets/broll/_hook_lab"\n   ```\n   Inspect every `.probe.jpg` and `_hook_candidates.jpg` visually before committing timestamps to `$PROJ/broll_plan.json` (see `references/hook-color-grading.md` for `1215px` width, `motion >= 5.0`, and `travel-poetic` / `travel-vivid` / `travel-heritage` / `travel-night` grades).\n\n3. **Encode Parallel 1080\xD71920 Graded Clips & Verify**:\n   ```bash\n   python "$SKILL_DIR/scripts/research_broll.py" \\\n     --prepare-json "$PROJ/broll_plan.json" --workers 8 \\\n     --out "$PROJ/assets/broll"\n   ```\n   **MANDATORY VISUAL GATE**: Inspect `$PROJ/assets/broll/_broll_verify.jpg`. Confirm `low_res_warnings: []` (every vertical clip shows `>= 1000px` native width, typically `1215px`), vibrant destination colors, and zero burned-in titles/watermarks. Fix any bad `ss` timestamp and re-run `--prepare-json` before rendering.\n\n---\n\n## Phase 4 \u2014 Compose Timeline (`assets/edit.js`), BGM & Snapshot QA\n\n1. **Author `$PROJ/assets/edit.js` (`window.TOUR_EDIT`)** using [`references/component-catalog.md`](references/component-catalog.md):\n   - Set `duration` to match `voice_cues.json` `total_duration`.\n   - Cover `[0, duration]` seamlessly with `clips[]` (`end` of clip `i` == `t` of clip `i+1`).\n   - Lock `hook`, `overlays[]`, `captions[]`, and `outro` timestamps directly to `voice_cues.json` cues.\n2. **Fetch Destination-Matched BGM** (automatically falls back to bundled `assets/bgm-fallback/*.mp3` if offline):\n   ```bash\n   python "$SKILL_DIR/scripts/fetch_bgm.py" --tour "<Tour Name>" --out "$PROJ/assets/audio/bgm.mp3"\n   ```\n3. **Compile Tracks & Run Pre-Render Snapshots**:\n   ```bash\n   node "$PROJ/tools/build_edit.cjs"\n   cd "$PROJ"\n   hyperframes snapshot --at "1.0,5.5,14.0,26.0,36.0" --no-end -o snaps\n   ```\n   **MANDATORY**: Inspect `$PROJ/snaps/contact-sheet.jpg` to verify crisp Vietnamese diacritics, single-line destination labels (`white-space: nowrap`), and zero element overlap before launching the full render.\n\n---\n\n## Phase 5 \u2014 Multi-Worker Render, `-14 LUFS` Master & Final QA\n\n1. **Execute Full Automated Build** (`build_edit` \u2192 parallel `hyperframes check --json` + `sfx_planner.py` \u2192 multi-worker `hyperframes render -q delivery -w <auto up to 16>` \u2192 `-14 LUFS` sidechain audio master \u2192 `extract_qa_sheet.py`):\n   ```bash\n   python "$SKILL_DIR/scripts/build_tour_video.py" --proj "$PROJ"\n   ```\n   *(Pass `--workers N` if tuning Chrome worker concurrency or `--bgm-db -16.5` to adjust music level.)*\n\n2. **Mandatory Final Quality Gate Before Handover**:\n   - Visually inspect `$PROJ/out/final.qa.jpg`: verify `black_segments: []`, vivid colors across all 16 frames, legible hooks/badges/hotline, and zero overlaps.\n   - Check `$PROJ/out/final.mastered.wav` & `audio_master` JSON output: confirm integrated loudness `\u2248 -14.0 LUFS` (`true peak <= -1.0 dBTP`), clear voiceover above ducked BGM, and subtle non-cluttering SFX.\n   - Verify deliverables exist: `$PROJ/out/final.mp4` and `$PROJ/out/final.qa.jpg`.'
+  },
+  {
+    "slug": "viral-talking-head-video-edit",
+    "name": "Viral-Talking-Head-Video-Edit \u2014 Skill AI Agent Walking 3-Plane Depth 9:16",
+    "short_desc": "Skill AI Agent d\u1EF1ng video Walking & Spatial Talking Head (Field Motion v2): t\u1EF1 t\xE1ch n\u1EC1n AI U2-Net \u0111\u1EB7t ch\u1EEF kh\u1ED5ng l\u1ED3 ph\xEDa sau ng\u01B0\u1EDDi n\xF3i, text 3D m\u1EB7t \u0111\u1EA5t, KPI sparkline, B-roll strip & ph\u1EE5 \u0111\u1EC1 \u0111\u1ED9ng kh\u1EDBp t\u1EEBng t\u1EEB.",
+    "description": "<h3>Hi\u1EC7u \u1EE9ng ch\u1EEF kh\u1ED5ng l\u1ED3 sau l\u01B0ng ng\u01B0\u1EDDi n\xF3i (3-Plane AI Depth) ho\xE0n to\xE0n t\u1EF1 \u0111\u1ED9ng</h3><p><b>Viral-Talking-Head-Video-Edit</b> (<b>Field Motion v2</b>) bi\u1EBFn <b>Claude Code, Codex ho\u1EB7c Antigravity</b> th\xE0nh m\u1ED9t editor d\u1EF1ng video Talking Head ngo\xE0i tr\u1EDDi / \u0111i b\u1ED9 \u0111\u1EB3ng c\u1EA5p agency. \u0110\u01B0a v\xE0o 1 file <code>raw.mp4</code>, AI Agent t\u1EF1 ph\xE2n t\xEDch khu\xF4n m\u1EB7t, nh\u1EADn di\u1EC7n l\u1EDDi n\xF3i t\u1EEBng t\u1EEB b\u1EB1ng Whisper, t\u1EF1 t\xE1ch n\u1EC1n ch\u1EE7 th\u1EC3 th\xE0nh video VP9 trong su\u1ED1t (<b>ONNX U2-Net</b>) \u0111\u1EC3 \u0111\u1EB7t typography kh\u1ED5ng l\u1ED3 &amp; l\u01B0\u1EDBi ki\u1EBFn tr\xFAc <b>n\u1EB1m ph\xEDa sau ng\u01B0\u1EDDi n\xF3i</b>.</p><h3>\u0110i\u1EC3m n\u1ED5i b\u1EADt trong b\u1ED9 Skill</h3><ul><li><b>T\xE1ch l\u1EDBp 3-Plane AI Depth th\u1EADt:</b> Script <code>cutout_subject.py</code> t\u1EF1 xu\u1EA5t WebM alpha k\xEAnh trong su\u1ED1t, kho\xE1 \u0111\u1ED3ng b\u1ED9 chuy\u1EC3n \u0111\u1ED9ng camera gi\u1EEFa n\u1EC1n, l\u1EDBp ch\u1EEF kh\u1ED5ng l\u1ED3 ph\xEDa sau v\xE0 ch\u1EE7 th\u1EC3 ph\xEDa tr\u01B0\u1EDBc.</li><li><b>14 component chuy\u1EC3n \u0111\u1ED9ng modular:</b> Ch\u1EEF sau l\u01B0ng ng\u01B0\u1EDDi n\xF3i (<code>depthHeadline</code>), th\u1EBB KPI bi\u1EC3u \u0111\u1ED3 \u0111\u01B0\u1EDDng, d\u1EA3i \u1EA3nh B-roll \u0111a khung (<code>brollStrip</code>), th\u1EBB so s\xE1nh \u0111\xF4i, b\u1EA3ng th\xF4ng s\u1ED1 g\xF3c tr\u1EDDi v\xE0 ph\u1EE5 \u0111\u1EC1 kinetic \u0111a ki\u1EC3u ch\u1EEF.</li><li><b>T\u1EF1 ph\xE1t hi\u1EC7n nh\u1EA1c n\u1EC1n c\xF3 s\u1EB5n:</b> Tr\xE1nh ch\u1ED3ng 2 l\u1EDBp nh\u1EA1c g\xE2y r\u1ED1i ti\u1EBFng, t\u1EF1 l\u1ECDc nhi\u1EC5u gi\u1ECDng n\xF3i, g\u1EAFn SFX tinh t\u1EBF v\xE0 master chu\u1EA9n <b>-14.0 LUFS</b>.</li><li><b>Giao h\xE0ng k\xE9p:</b> T\u1EA3i ngay <b>Core-Kit ZIP + Video Demo 1080p g\u1ED1c tr\xEAn Google Drive</b> (g\u1EEDi ngay qua Gmail) v\xE0 k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp <b>MCP Server</b> b\u1EB1ng License Key.</li></ul><h3>Ph\xF9 h\u1EE3p v\u1EDBi ai?</h3><p>Creator quay vlog ngo\xE0i tr\u1EDDi, m\xF4i gi\u1EDBi B\u0110S \u0111i th\u1EF1c t\u1EBF d\u1EF1 \xE1n, ch\u1EE7 doanh nghi\u1EC7p/chuy\xEAn gia x\xE2y k\xEAnh Reels, TikTok, Shorts c\u1EA7n hi\u1EC7u \u1EE9ng d\u1EF1ng cao c\u1EA5p m\xE0 kh\xF4ng ph\u1EA3i ng\u1ED3i keyframe h\xE0ng gi\u1EDD trong After Effects.</p>",
+    "features": '["T\u1EF1 t\xE1ch ch\u1EE7 th\u1EC3 AI (ONNX U2-Net VP9 Alpha) \u0111\u1EB7t ch\u1EEF kh\u1ED5ng l\u1ED3 ph\xEDa sau ng\u01B0\u1EDDi n\xF3i", "14 component hi\u1EC7n \u0111\u1EA1i: KPI sparkline, B-roll multi-card, so s\xE1nh \u0111\xF4i, kinetic caption", "T\u1EF1 b\xF3c b\u0103ng Whisper kh\u1EDBp timing t\u1EEBng t\u1EEB + ph\xE1t hi\u1EC7n nh\u1EA1c n\u1EC1n s\u1EB5n trong clip th\xF4", "C\u1ED5ng QA t\u1EF1 \u0111\u1ED9ng tr\xEDch 20 khung h\xECnh ki\u1EC3m tra kh\xF4ng che m\u1EB7t, kh\xF4ng khung \u0111en", "D\xF9ng song song MCP (Claude / Codex / Antigravity) & b\u1ED9 Skill Kit t\u1EA3i t\u1EEB Google Drive", "T\u1EB7ng k\xE8m Video Demo 1080p g\u1ED1c + file INSTALL.md & h\u01B0\u1EDBng d\u1EABn ti\u1EBFng Vi\u1EC7t"]',
+    "tech_stack": '["MCP Protocol", "Claude", "Codex", "Antigravity", "HyperFrames", "GSAP", "ONNX U2-Net", "FFmpeg"]',
+    "version": "v2.0 MCP",
+    "price": 599e3,
+    "original_price": 1199e3,
+    "thumbnail": "/static/demos/poster-viral-talking-head-video-edit.jpg",
+    "demo_video_url": "/static/demos/demo-viral-talking-head-video-edit.mp4",
+    "download_url": "https://drive.google.com/drive/folders/1xQ8z5OZ2HbYx3EId5j9KuEf2C0SP68uN",
+    "doc_url": "https://drive.google.com/file/d/1xVZDRhleuhiHtcBmaHMKY13UKZlV2hPb/view?usp=sharing",
+    "file_size": "12.2 MB Kit + MCP",
+    "is_featured": 1,
+    "is_hot": 1,
+    "is_new": 1,
+    "sold_count": 53,
+    "view_count": 4120,
+    "rating": 5,
+    "rating_count": 24,
+    "mcp_server_name": "khoskill-viral-talking-head",
+    "mcp_clients": '["Claude", "Codex", "Antigravity"]',
+    "mcp_tools": '[{"name": "list_licensed_skills", "description": "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive"}, {"name": "get_skill_blueprint", "description": "N\u1EA1p to\xE0n b\u1ED9 SKILL.md ch\xEDnh th\u1EE9c m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill"}, {"name": "get_skill_assets_and_setup", "description": "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (starter template, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng"}, {"name": "generate_video_storyboard", "description": "T\u1EA1o k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT chu\u1EA9n Skill"}, {"name": "create_video_from_skill", "description": "Xu\u1EA5t g\xF3i th\u1EF1c thi t\u1EEBng pha (chu\u1ED7i l\u1EC7nh Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent d\u1EF1ng ra final.mp4"}]',
+    "mcp_skill_prompt": '---\nname: Viral-Talking-Head-Video-Edit\ndescription: Self-contained script-driven production skill for Walking & Spatial Talking Head videos (9:16 Reels/TikTok/Shorts). Synthesizes 3-plane AI depth masking (VP9 alpha subject cutouts in front of giant typography & blueprint grids), 3D perspective floor text, sky vector HUDs, dark sleek KPI sparkline cards, multi-card B-roll strips, dual comparison cards, and mixed-weight kinetic captions. Includes full template, self-contained scripts, creative playbook, and approved demo video.\n---\n\n# Field Motion v2 \u2014 Spatial Walking Talking Head Director\n\nProduce dynamic, **script-driven** Walking & Spatial Talking Head videos (`1080\xD71920`, `30fps`) using **HyperFrames + GSAP + ONNX U2-Net Subject Cutouts + FFmpeg**. Text and graphics integrate directly into the filmed environment\u2014**behind** the walking speaker (`#behind-stage` + VP9 alpha cutouts), tilted onto ground/horizon planes, or anchored cleanly in sky & edge HUDs\u2014never repeating cookie-cutter frosted-glass boxes across every video.\n\n**Read these bundled guides before designing `assets/edit.js`:**\n- [`references/creative-playbook.md`](references/creative-playbook.md) \u2014 Script-to-visual reasoning loop, 5 distinct blueprints, and verified QA guardrails\n- [`references/style-archetypes.md`](references/style-archetypes.md) \u2014 Themes (`Architect`, `Street Hustle`, `Organic Depth`, `Studio Authority`), caption dialects, and scene-aware rules\n- [`references/component-catalog.md`](references/component-catalog.md) \u2014 Full schema for all 14 modular components + caption markup\n- [`examples/demo-real-estate-walking/README.md`](examples/demo-real-estate-walking/README.md) \u2014 Full approved demo (`out/final.mp4`, `assets/edit.js`, `out/final.qa.jpg`)\n\nFor fresh environment setup on another machine, see [`INSTALL.md`](INSTALL.md).\n\n---\n\n## Phase 0 \u2014 Locate Skill Root, Activate Runtime & Copy Template\n\nSet `$SKILL_DIR` to the folder containing this `SKILL.md` (in `d:\\Skill Edit`, that is `d:\\Skill Edit\\.agents\\skills\\field-motion-walking`):\n\n```powershell\n# In d:\\Skill Edit workspace, activate Node 22 + Python tools:\nif (Test-Path "d:\\Skill Edit\\scripts\\activate-env.ps1") { . "d:\\Skill Edit\\scripts\\activate-env.ps1" }\n\n$SKILL_DIR = "<path-to-field-motion-walking>"\n$SCRIPTS   = "$SKILL_DIR\\scripts"\n$PROJ      = "<output-project-dir>"   # e.g. d:\\Skill Edit\\projects\\<slug>\n\nCopy-Item "$SKILL_DIR\\template" $PROJ -Recurse -Force\nNew-Item -ItemType Directory -Path "$PROJ\\probe","$PROJ\\snaps","$PROJ\\out","$PROJ\\assets\\icons" -Force | Out-Null\n```\n\nNever edit `$SKILL_DIR\\template\\` per project; always customize inside `$PROJ`.\n\n---\n\n## Phase 1 \u2014 Footage Audit, Scene Cuts & Embedded BGM Check\n\nRun the bundled analyzer on the raw footage:\n\n```powershell\npython "$SCRIPTS\\analyze_walking.py" "<raw_video.mp4>" --out-dir "$PROJ\\probe" --lang auto --model medium\n```\n\n1. **Inspect BOTH `$PROJ\\probe\\face_grid.jpg` AND `$PROJ\\probe\\timeline_grid.jpg` via `read_file`:**\n   - Map every shot type along `scene_cuts` (talking/walking on camera vs tour/B-roll vs drone aerial).\n   - Spot any **burned-in labels or watermarks** in raw footage so your overlays steer cleanly around them.\n   - Check `headTop` and wardrobe/background luminance to pick high-contrast `depthHeadline` colors.\n2. **Check `$PROJ\\probe\\raw_analysis.json`:**\n   - Note `audio.has_embedded_bgm`: if `true`, the raw video already has music in non-speech gaps \u2014 do **NOT** stack a second competing BGM track in Phase 5!\n   - Read `$PROJ\\probe\\transcript.json` for word-level timestamps (`@time`).\n3. **Bake a crisp, airy outdoor grade into `$PROJ\\assets\\a-roll.mp4` (`1080\xD71920`, `30fps`, `-g 10`):**\n   ```powershell\n   ffmpeg -y -v error -i "<raw_video.mp4>" `\n     -vf "fps=30,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,hqdn3d=1.0:1.0:3:3,eq=contrast=1.06:saturation=1.07:brightness=0.02:gamma=1.01,unsharp=5:5:0.45:5:5:0.0" `\n     -c:v libx264 -preset fast -crf 18 -g 10 -movflags +faststart -c:a aac -ar 48000 -ac 2 "$PROJ\\assets\\a-roll.mp4"\n   ```\n\n---\n\n## Phase 2 \u2014 Real Alpha Subject Cutouts (3-Plane Depth)\n\nIdentify every talking/walking-head interval where `depthHeadline` typography or translucent zoning/calendar grids should sit **behind** the speaker, then run the bundled `cutout_subject.py` (uses `onnxruntime` + `cv2` + `u2net.onnx`):\n\n```powershell\n# Use a Python interpreter with onnxruntime + cv2 + numpy installed (e.g. C:\\voice_pro_installer\\env\\python.exe)\npython "$SCRIPTS\\cutout_subject.py" "$PROJ\\assets\\a-roll.mp4" `\n  --out-dir "$PROJ\\assets" --range "0.0:6.967" --range "32.033:35.000"\n```\n\nThis outputs VP9 transparent WebMs (`assets/fg_01.webm`, `assets/fg_02.webm`, ... with `yuva420p` and `alpha_mode=1`). Declare them in `EDIT.cutouts` inside `assets/edit.js` (`engine.js` locks `EDIT.cam` onto both `#cam` and `#fg-cam` simultaneously!).\n\n---\n\n## Phase 3 \u2014 Script-Driven Creative Choreography & Assets\n\nFollow [`references/creative-playbook.md`](references/creative-playbook.md) to craft a unique `assets/edit.js` driven by **the script\'s meaning + visual shots** (never duplicate a previous project\'s exact sequence):\n- **Icons / B-Roll / SFX:** Use bundled `fetch_assets.py` or extract clean stills directly from `assets/a-roll.mp4` (`st_*.jpg` for `brollStrip` / `dualCompareCards`):\n  ```powershell\n  python "$SCRIPTS\\fetch_assets.py" --iconify "home,compass,trending-up,check-circle" --icon-color "#ffffff" --out "$PROJ\\assets"\n  ```\n- **Caption Design:** Mix `*accent` (gold highlight), `^cyan`, `#pill` (dark ink on bright pill), `[darkpill]`, `~serif` (`Playfair`), `{outline}`, and `sm / !HERO` or `-minimal` sentence lines synced word-by-word via `@time`. Always strip clutter and place captions cleanly (`y: 1410..1460` or dynamic per beat).\n\n---\n\n## Phase 4 \u2014 Compile, Pre-Flight Check & Snapshot QA\n\n```powershell\nSet-Location $PROJ\nnode tools\\build_edit.cjs\nnpx.cmd hyperframes check --json\nnpx.cmd hyperframes snapshot --at "1.2,5.4,8.8,15.2,22.5,29.6,33.8,36.1,38.8,42.2,45.8,48.6" --no-end -o snaps\n```\n\n**Mandatory:** Inspect `snaps\\contact-sheet*.jpg` via `read_file` BEFORE full render! Verify:\n- Subject cutouts isolate the speaker cleanly over `depthHeadline`\n- Zero overlap with faces, eyes, or burned-in source labels\n- All UI labels are `>= 28px` and crisp on bright/dark backgrounds\n\n---\n\n## Phase 5 \u2014 Render & Audio Master (`-14 LUFS`)\n\n```powershell\nSet-Location $PROJ\nffmpeg -y -v error -i "assets\\a-roll.mp4" -vn -af "highpass=f=70,acompressor=threshold=-20dB:ratio=2.2:attack=10:release=120:makeup=1.2" -ac 2 -ar 48000 "assets\\voice_clean.wav"\npython "$SCRIPTS\\sfx_planner_fm.py" "assets\\edit.js" --sfx-dir "assets\\sfx-lib" --out "assets\\sfx_plan.json"\nnpx.cmd hyperframes render --fps 30 --quality delivery --low-memory-mode -o "out\\video_silent.mp4"\n\n# If audio.has_embedded_bgm == false, add `--bgm "assets\\music\\chill-lofi.mp3" --bgm-db -19`\npython "$SCRIPTS\\audio_master.py" --voice "assets\\voice_clean.wav" --sfx "assets\\sfx_plan.json" --mux-video "out\\video_silent.mp4" --out "out\\final.mp4"\n```\n\n---\n\n## Phase 6 \u2014 Final Visual & Audio QA\n\n```powershell\npython "$SCRIPTS\\extract_qa_sheet.py" "$PROJ\\out\\final.mp4" --cols 5 --rows 4\n```\n\nInspect `out\\final.qa.jpg` via `read_file` and confirm:\n- `black_segments: []` (zero unintended black frames)\n- `measured_lufs` within `\xB10.5 LU` of `-14.0 LUFS` and `measured_true_peak_dbtp <= -1.0`\n- Bright, natural skin tones and sharp typography across every beat'
+  },
+  {
+    "slug": "skill-edit-bds",
+    "name": "Skill-Edit-BDS \u2014 Skill AI Agent D\u1EF1ng Video B\u0110S B\u1EA3n \u0110\u1ED3 GeoLayers & 3D Blender 9:16",
+    "short_desc": "Si\xEAu Skill AI Agent d\u1EF1ng video review B\u1EA5t \u0110\u1ED9ng S\u1EA3n 9:16 chu\u1EA9n Pure Cinema: t\u1EF1 l\u1EA5y b\u1EA3n \u0111\u1ED3 v\u1EC7 tinh & ranh gi\u1EDBi OSM th\u1EADt, t\xEDnh di\u1EC7n t\xEDch/kho\u1EA3ng c\xE1ch, d\u1EF1ng m\xF4 h\xECnh 3D ki\u1EBFn tr\xFAc b\u1EB1ng Blender, callout ti\u1EC7n \xEDch 45\xB0 & WebGL2 B-roll.",
+    "description": "<h3>Bi\u1EBFn AI Agent th\xE0nh \u0110\u1EA1o di\u1EC5n Video B\u1EA5t \u0110\u1ED9ng S\u1EA3n GeoLayers 3D \u0111\u1EB3ng c\u1EA5p</h3><p><b>Skill-Edit-BDS</b> l\xE0 g\xF3i Skill cao c\u1EA5p nh\u1EA5t d\xE0nh ri\xEAng cho ng\xE0nh <b>B\u1EA5t \u0110\u1ED9ng S\u1EA3n, Quy ho\u1EA1ch &amp; Review D\u1EF1 \xE1n</b>. Thay v\xEC ph\u1EA3i thu\xEA \u0111\u1ED9i d\u1EF1ng After Effects + GeoLayers 3 + Blender t\u1ED1n h\xE0ng tri\u1EC7u \u0111\u1ED3ng m\u1ED7i clip, AI Agent (<b>Claude Code, Codex, Antigravity</b>) t\u1EF1 ch\u1EA1y tr\u1ECDn b\u1ED9 quy tr\xECnh 8 pha \u0111\u1EC3 t\u1EA1o ra video d\u1ECDc <code>1080\xD71920</code> 30fps s\u1EAFc n\xE9t nh\u01B0 phim \u0111i\u1EC7n \u1EA3nh.</p><h3>Quy tr\xECnh 8 pha t\u1EF1 \u0111\u1ED9ng ho\xE0n ch\u1EC9nh b\xEAn trong Skill</h3><ul><li><b>B\u1EA3n \u0111\u1ED3 v\u1EC7 tinh &amp; d\u1EEF li\u1EC7u \u0111\u1ECBa l\xFD th\u1EADt (OpenStreetMap + MapLibre):</b> Script <code>fetch_geolayers_geo.py</code> t\u1EF1 l\u1EA5y ranh gi\u1EDBi l\xF4 \u0111\u1EA5t, tr\u1EE5c \u0111\u01B0\u1EDDng huy\u1EBFt m\u1EA1ch, t\u1EF1 t\xEDnh ch\xEDnh x\xE1c di\u1EC7n t\xEDch <code>ha</code> (Shoelace) v\xE0 kho\u1EA3ng c\xE1ch ti\u1EC7n \xEDch <code>km</code> (Haversine) \u2014 kh\xF4ng b\u1ECBa s\u1ED1 li\u1EC7u.</li><li><b>M\xF4 h\xECnh 3D ki\u1EBFn tr\xFAc \u0111\u1EB7t kh\u1EDBp t\u1EEBng m\xE9t tr\xEAn l\xF4 \u0111\u1EA5t (Blender 5.x ENU GLB):</b> Th\u01B0 vi\u1EC7n <code>architectural_3d_lib.py</code> d\u1EF1ng shophouse, bi\u1EC7t th\u1EF1, to\xE0 th\xE1p PBR n\u1ED5i l\xEAn theo 4 giai \u0111o\u1EA1n (<code>Stage_01..04</code>) k\xE8m \u1EA3nh preview ki\u1EC3m duy\u1EC7t.</li><li><b>Hi\u1EC7u \u1EE9ng \u0111i\u1EC7n \u1EA3nh Pure Cinema:</b> M\xE2y m\u1EDF m\xE0n FBM, camera zoom xuy\xEAn m\xE2y v\xE0o d\u1EF1 \xE1n, th\u1EBB callout ti\u1EC7n \xEDch k\xEDnh m\u1EDD g\xF3c 45\xB0 (Vincom, b\u1EC7nh vi\u1EC7n, tr\u01B0\u1EDDng h\u1ECDc), chuy\u1EC3n c\u1EA3nh WebGL2 (whip-blur, flash, gold/ice grade) v\xE0 typography kh\xF4ng khung h\u1ED9p sang tr\u1ECDng.</li><li><b>Tr\u1ECDn g\xF3i t\xE0i nguy\xEAn \u0111\xF3ng g\xF3i s\u1EB5n:</b> 42 font ch\u1EEF, Three.js + GSAP, 4 m\xF4 h\xECnh 3D GLB g\u1ED1c, 22 file \xE2m thanh SFX/BGM WAV, 10 script t\u1EF1 \u0111\u1ED9ng v\xE0 tr\u1ECDn b\u1ED9 d\u1EF1 \xE1n m\u1EABu <b>K\u0110T H\xE0 M\u1EF9 H\u01B0ng</b>.</li></ul><h3>Giao h\xE0ng ngay l\u1EADp t\u1EE9c</h3><p>Thanh to\xE1n xong nh\u1EADn ngay <b>Link Google Drive b\u1ED9 Skill Kit + Demo 1080p g\u1ED1c</b> qua Gmail &amp; T\xE0i kho\u1EA3n, k\xE8m <b>License Key k\u1EBFt n\u1ED1i MCP</b> v\xE0o Claude, Codex, Antigravity.</p>",
+    "features": '["D\u1EF1ng video B\u0110S b\u1EA3n \u0111\u1ED3 v\u1EC7 tinh GeoLayers 9:16 + zoom xuy\xEAn m\xE2y FBM chu\u1EA9n \u0111i\u1EC7n \u1EA3nh", "T\u1EF1 l\u1EA5y ranh gi\u1EDBi OSM th\u1EADt, t\u1EF1 t\xEDnh di\u1EC7n t\xEDch (ha) & kho\u1EA3ng c\xE1ch ti\u1EC7n \xEDch (km) chu\u1EA9n x\xE1c", "T\xEDch h\u1EE3p th\u01B0 vi\u1EC7n Blender 5.x d\u1EF1ng m\xF4 h\xECnh 3D ki\u1EBFn tr\xFAc (shophouse, bi\u1EC7t th\u1EF1) \u0111\u1EB7t kh\u1EDBp l\xF4 \u0111\u1EA5t", "Th\u1EBB POI k\xEDnh m\u1EDD 45\xB0, chuy\u1EC3n c\u1EA3nh WebGL2 B-roll FX, 42 font & 22 file SFX/BGM WAV", "H\u1ED7 tr\u1EE3 gi\u1ECDng thu \xE2m s\u1EB5n, Edge-TTS mi\u1EC5n ph\xED ho\u1EB7c Vbee TTS + master -14.0 LUFS", "D\xF9ng k\u1EBFt h\u1EE3p MCP (Claude / Codex / Antigravity) + tr\u1ECDn b\u1ED9 Core-Kit ZIP tr\xEAn Google Drive"]',
+    "tech_stack": '["MCP Protocol", "Claude", "Codex", "Antigravity", "GeoLayers / MapLibre", "Blender 3D", "Three.js", "HyperFrames"]',
+    "version": "v2.0 Pro MCP",
+    "price": 15e5,
+    "original_price": 299e4,
+    "thumbnail": "/static/demos/poster-skill-edit-bds.jpg",
+    "demo_video_url": "/static/demos/demo-skill-edit-bds.mp4",
+    "download_url": "https://drive.google.com/drive/folders/1HNySHC1dYMGKTHrPah0LeVIetGG0yLm5",
+    "doc_url": "https://drive.google.com/file/d/1lA9mXo5PPc0WbdPnFoZGR9eWT61HMjv3/view?usp=sharing",
+    "file_size": "15.2 MB Kit + MCP",
+    "is_featured": 1,
+    "is_hot": 1,
+    "is_new": 1,
+    "sold_count": 37,
+    "view_count": 5240,
+    "rating": 5,
+    "rating_count": 19,
+    "mcp_server_name": "khoskill-edit-bds",
+    "mcp_clients": '["Claude", "Codex", "Antigravity"]',
+    "mcp_tools": '[{"name": "list_licensed_skills", "description": "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive"}, {"name": "get_skill_blueprint", "description": "N\u1EA1p to\xE0n b\u1ED9 SKILL.md ch\xEDnh th\u1EE9c m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill"}, {"name": "get_skill_assets_and_setup", "description": "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (starter template, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng"}, {"name": "generate_video_storyboard", "description": "T\u1EA1o k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT chu\u1EA9n Skill"}, {"name": "create_video_from_skill", "description": "Xu\u1EA5t g\xF3i th\u1EF1c thi t\u1EEBng pha (chu\u1ED7i l\u1EC7nh Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent d\u1EF1ng ra final.mp4"}]',
+    "mcp_skill_prompt": '---\nname: Skill-Edit-BDS\ndescription: Autonomous Real Estate & GeoLayers 9:16 (1080x1920) vertical map explainer director in HyperFrames. Includes full creative & scriptwriting direction (FACTS.md verification, 4 hook archetypes, multi-genre adaptation, Less-Text visual hierarchy), dynamic WebGL2 B-roll transitions (whip-blur, snap ease, flash, UV pan, grade), official yt-dlp probe/crop workflows, Voice-First sync (user audio or Vbee/edge-tts), baked satellite maps with FBM opening clouds + radial whip-zoom + OSM arteries, custom PBR Blender GLBs with progressive Stage_01..04 reveals, frosted-glass map callouts with 45-degree leaders, sidechain-ducked SFX (-14 LUFS), and strict >=8.5/10 visual QA.\n---\n\n# GeoLayers 9:16 Vertical Map Reel Director\n\nTurnkey **all-inclusive** creative + multi-layer technical pipeline for `1080\xD71920` (30fps) Pure-Cinema map & real-estate reels.\n**Mandatory first reads before starting any new project**:\n1. Inspect the bundled reference showcase in `demo/` ([demo/README.md](demo/README.md), `demo/demo_qa_sheet.jpg` via `read_file`, `demo/FACTS.md`, `demo/reel_config.json`, and `demo/demo_final.mp4`) so you understand the exact quality bar (`>= 8.5/10`).\n2. Read `references/creative-direction.md` so you design the story, hook, B-roll FX, 3D models, typography hierarchy, and audio emotion specifically for your script instead of cloning one rigid formula.\n\n---\n\n## Phase 0 \u2014 Environment Activation & 1-Command Project Bootstrap\n\n1. Activate runtime (`node >= 22`, `hyperframes`, `ffmpeg`, `ffprobe`, `blender`, `playwright-core`, `yt-dlp`, Python venv). If working inside `D:\\Skill Edit`:\n```powershell\n. "d:\\Skill Edit\\scripts\\activate-env.ps1"\n```\n2. Set `$SKILL_DIR` (this skill folder) and initialize your fresh project in **one command** using the bundled `assets/starter-template/` (includes Pure Cinema engine JS/CSS, 42 fonts, Three.js + GSAP, 4 base 3D GLBs, and all 22 WAV BGM/SFX audio stems):\n```powershell\n$SKILL_DIR = "D:\\Skill Edit\\.agents\\skills\\geolayers-map-reel"   # Or path where this skill resides\n$SCRIPTS   = "$SKILL_DIR\\scripts"\n$PROJ      = "D:\\Skill Edit\\projects\\<slug>"\npython "$SCRIPTS\\bootstrap_project.py" --dest "$PROJ" --brand "<PROJECT_NAME>"\n```\nRun `python "$SCRIPTS\\bootstrap_project.py" --check-only` anytime to diagnose dependencies. Do **not** edit `assets/starter-template/` directly; edit inside `$PROJ`.\n\n---\n\n## Phase 1 \u2014 Authentic Geolocation & `FACTS.md` Research\n\nBefore scripting a single sentence, populate `$PROJ\\FACTS.md` cleanly per `references/creative-direction.md`:\n1. Run `search_web` on official portals (provincial resolutions/administrative mergers, CafeLand, developer docs) to lock **verified hard numbers**: developer, ward/city address (old & merged post-2025 names), scale (`ha`), unit breakdown, flagship arterial roads, nearby schools/hospitals/plazas/parks, handover stage, and pricing (`tri\u1EC7u/m\xB2`).\n2. Author `geo_query.json` in `$PROJ` using verified coordinates (`lng`, `lat`) for `project_center`, key `points` (surrounding landmarks), precise site `ring` polygon verified against satellite tiles, administrative `polygons`, and `roads_center`.\n3. Fetch authentic OpenStreetMap geometry (**use exact `--spec` and `--out` flags**). `fetch_geolayers_geo.py` automatically calculates Shoelace `area_ha` per polygon and Haversine `distances_from_origin_km` from your first point so you never invent distances or areas:\n```powershell\npython "$SCRIPTS\\fetch_geolayers_geo.py" --spec "$PROJ\\geo_query.json" --out "$PROJ\\assets\\geo\\geo_data.json"\n```\nInspect the JSON summary to confirm every polygon & landmark resolved cleanly (`area_ha` and `distances_from_origin_km` go straight into `$PROJ\\FACTS.md`).\n\n---\n\n## Phase 2 \u2014 Creative Scripting & Voice-First Audio Timing\n\nDesign the narration script (`$PROJ\\narration.txt`) using the hook formulas, multi-genre structure, and `0.25\u20130.40s` breathing pauses defined in `references/creative-direction.md` (`6\u20139 words/line`, ~`135\u2013165` words total for `50\u201360s`). Avoid bureaucratic phrasing; write natural spoken Vietnamese.\n\n### Option A \u2014 User-Provided Voice Recording\n```powershell\npython "$SCRIPTS\\analyze_voice.py" --audio "<user_voice.mp3>" --transcript "$PROJ\\narration.txt" --out "$PROJ\\assets\\audio\\voice_cues.json"\n```\n\n### Option B \u2014 Vbee TTS (Recommended Production Standard)\nAlways pass `--lead-in 0.8` (clean cloud dive opening before voice enters) and `--safe-tail` (prevents `*_zero_shot_*` voices from dropping the final syllable at buffer end):\n```powershell\npython "$SCRIPTS\\vbee_tts.py" --text-file "$PROJ\\narration.txt" `\n  --voice <VBEE_VOICE_CODE> --app-id $env:VBEE_APP_ID --token $env:VBEE_TOKEN `\n  --rate 1.0 --lead-in 0.8 --safe-tail --out "$PROJ\\assets\\audio\\voice.wav"\n```\nOutputs synced `voice.wav`, `voice_cues.json`, and `voice.srt`.\n\n### Option C \u2014 Offline Fallback (`edge-tts`)\nRun `edge-tts --voice vi-VN-NamMinhNeural -f "$PROJ\\narration.txt" --write-media "$PROJ\\assets\\audio\\voice.mp3"` followed by `analyze_voice.py`.\n\n**Mandatory Speech Verification**: Inspect `$PROJ\\assets\\audio\\voice_cues.json` AND listen to a trimmed ending preview slice if using a zero-shot voice to confirm zero clipped words before building video timings.\n\n---\n\n## Phase 3 \u2014 Official & Royalty-Free B-Roll Preparation\n\nEvery B-roll clip **must** be verified visually before compositing and compiled to 0-indexed frames (`f00000.jpg`...`f{N-1}.jpg`):\n\n1. Prefer verified official developer renders/flycams (`search_web` + `yt-dlp`) and supplement with Mixkit (`--search`):\n```powershell\npython "$SCRIPTS\\fetch_broll.py" --search "modern architecture aerial,luxury villa,city night lights" --out "$PROJ\\assets\\broll"\n```\n2. For any YouTube/official 16:9 flycam or review video, probe it first with `--probe-video` (downloads 1080p cache via `yt-dlp` and emits a timestamped `*.probe.jpg` sheet):\n```powershell\npython "$SCRIPTS\\fetch_broll.py" --probe-video "https://www.youtube.com/watch?v=..." --out "$PROJ\\assets\\broll"\n```\nInspect `*.probe.jpg` via `read_file`, discard split-screens/watermarks/hotlines, and put the clean `"yt_url"`, `"ss"`, `"dur"`, and vertical `"crop"` (e.g. `"608:1080:656:0"`) in `$PROJ\\broll_plan.json`.\n3. Download/crop/extract 30fps sequences & visual montage sheet (**use `--download-json` and `--out` flags**):\n```powershell\npython "$SCRIPTS\\fetch_broll.py" --download-json "$PROJ\\broll_plan.json" --out "$PROJ\\assets\\broll"\n```\n4. **Visually inspect `$PROJ\\assets\\broll\\_broll_verify.jpg` via `read_file`** to ensure zero upside-down crops, zero split screens, zero overlaid third-party logos, and confirm `assets\\broll\\broll_frames.json` was generated cleanly.\n\n---\n\n## Phase 4 \u2014 Satellite Camera Choreography & Bake\n\nAuthor `$PROJ\\camera_plan.json` aligned strictly to `voice_cues.json` beat windows (`references/grammar-and-keyframes.md`). Then bake deterministic satellite tiles + 2D screen projections from your fetched `$PROJ\\assets\\geo\\geo_data.json`:\n```powershell\nnode "$SCRIPTS\\bake_geolayers_camera.mjs" --plan "$PROJ\\camera_plan.json" `\n  --geo "$PROJ\\assets\\geo\\geo_data.json" --out "$PROJ\\assets\\maps"\n```\n\n---\n\n## Phase 5 \u2014 Blender 5.3 ENU Architectural 3D Models\n\nCreate bespoke project 3D models (not generic floating cubes!) aligned 1:1 to parcel coordinates (`references/3d-construction-pipeline.md`; inspect `demo/build_demo_3d.py` as a complete complex example):\n1. Write `$PROJ\\build_project_3d.py` importing `architectural_3d_lib.py` via `$SCRIPTS` (`os.path.join(SKILL_DIR, "scripts")` added to `sys.path`), compute real parcel `ring_bounds_enu(...)`, lay out `Stage_01..Stage_04` shophouses/villas/towers/monuments inside `75%\u201380%` parcel bounds, export GLB + `render_eevee_preview()`.\n2. Execute via headless Blender 5.3:\n```powershell\n& "C:\\Program Files\\Blender Foundation\\Blender 5.3\\blender.exe" --background --python "$PROJ\\build_project_3d.py"\n```\n3. **Visually inspect the `.preview.png` render via `read_file`** before moving on, and list every ENU GLB under `meta.preloadModels` with `"geo": true`.\n\n---\n\n## Phase 6 \u2014 Compose Pure Cinema `reel_config.json` & `sfx_plan.json`\n\n1. Wire `segments[]`, `overlays[]`, `poiMarkers[]`, `geoModels[]`, and `routes[]` in `$PROJ\\reel_config.json` following `references/creative-direction.md` and `references/template-library.md`:\n   - `showCaptions: false`, `showHud: false`, `showAttribution: false`\n   - Lock every segment transition and overlay entrance cleanly to `voice_cues.json` (`cue.start - 0.12s`)\n   - Enrich B-roll segments with WebGL2 motion FX (`ease: "snap"`, `whipIn`, `whipOut`, `flashIn`, `panFrom/panTo`, `grade: "gold" | "ice"`) suited to scene energy\n   - Use only boxless Cinema typography templates (`editorial_title`, `brand_flicker.cinema`, `kinetic_pop.cinema`, `utility_dock`, `blueprint_spec`, `stat_ticker`, `price_spotlight`, `ground_3d.cinema`, `facade_outro` with `style: "monogram"`)\n   - Treat on-screen copy as `<= 40%` visual anchors (`<= 14 words` max per beat, `1 Beat = 1 Focus`).\n2. Author `$PROJ\\assets\\audio\\sfx_plan.json` using **pre-lapped** cues (`time = cut - 0.08s` for whooshes/whips) across stems in `assets/audio/` at `-20.5` to `-23.0 dB` (`max_dur: 0.35\u20131.3s`), leaving silent breath before key financial/legal punchlines.\n\n---\n\n## Phase 7 \u2014 HyperFrames Render & `-14 LUFS` Mastering\n\n1. Run HyperFrames static & timeline preflight from `$PROJ`:\n```powershell\nSet-Location $PROJ\nnpx hyperframes check --json\n```\nFix any 404 frame/asset warning before rendering!\n2. Render clean 1080\xD71920 silent video + master voice/ducked-BGM/SFX audio to `-14.0 LUFS`:\n```powershell\nnpx hyperframes render --output "$PROJ\\out\\raw.mp4"\npython "$SCRIPTS\\audio_master.py" --voice "$PROJ\\assets\\audio\\voice.wav" `\n  --bgm "$PROJ\\assets\\audio\\bgm_pad.wav" --bgm-db -19.0 `\n  --sfx "$PROJ\\assets\\audio\\sfx_plan.json" --target-lufs -14.0 `\n  --mux-video "$PROJ\\out\\raw.mp4" --out "$PROJ\\out\\final_reel.mp4"\n```\n\n---\n\n## Phase 8 \u2014 Mandatory Multimodal Visual + Audio QA (`>= 8.5/10` Gate)\n\nNever declare completion without running & inspecting BOTH visual and audio diagnostics:\n1. Extract 16-tile contact sheet + `blackdetect` verification:\n```powershell\npython "$SCRIPTS\\extract_qa_sheet.py" "$PROJ\\out\\final_reel.mp4" --cols 4 --rows 4\n```\n2. Inspect `$PROJ\\out\\final_reel.qa.jpg` via `read_file` AND inspect opening/mid/ending audio slices (`0\u20136s`, mid, last `8s`) rendered from `final_reel.mp4` via `read_file`.\n3. Grade strictly (`>= 8.5/10` required; fix & re-render if lower):\n   - Zero `black_segments` and zero `404` missing frames\n   - Accurate geographic borders, inside-parcel 3D scale, non-overlapping 45\xB0 POI callouts\n   - Voice-First sync (narration aligns with visuals cleanly from start to end; zero clipped final syllable)\n   - Balanced `-14.0 LUFS` audio where SFX accents cuts lightly (`-20.5..-23 dB`) without masking speech\n   - Pure Cinema clean boxless text over dynamic imagery.'
+  },
+  {
+    "slug": "video-talking-head",
+    "name": "Video-Talking-Head \u2014 Skill AI Agent Edit Talking Head Viral Engine v6 (9:16)",
+    "short_desc": "Skill AI Agent d\u1EF1ng video Talking Head phong c\xE1ch Apple Sky / Sunlit Botanical / Editorial Warm: t\u1EF1 c\u1EAFt kho\u1EA3ng l\u1EB7ng kh\xF4ng l\u1EC7ch kh\u1EA9u h\xECnh, ch\u1EC9nh m\xE0u da s\xE1ng \u0111\u1EB9p, headroom motion UI k\xEDnh m\u1EDD, PiP & ph\u1EE5 \u0111\u1EC1 kh\u1EDBp t\u1EEBng t\u1EEB.",
+    "description": "<h3>D\u1EF1ng video Talking Head phong c\xE1ch Creator tri\u1EC7u view ch\u1EC9 t\u1EEB 1 file quay th\xF4</h3><p><b>Video-Talking-Head (Engine v6)</b> \u0111\xF3ng g\xF3i to\xE0n b\u1ED9 t\u01B0 duy \u0111\u1EA1o di\u1EC5n v\xE0 b\u1ED9 khung k\u1EF9 thu\u1EADt gi\xFAp <b>Claude Code, Codex, Antigravity</b> bi\u1EBFn video ng\u01B0\u1EDDi n\xF3i chuy\u1EC7n th\xF4 (<code>raw.mp4</code>) th\xE0nh video Reels/TikTok/Shorts m\u01B0\u1EE3t m\xE0, gi\xE0u c\u1EA3m x\xFAc v\xE0 gi\u1EEF ch\xE2n ng\u01B0\u1EDDi xem xuy\xEAn su\u1ED1t.</p><h3>Nh\u1EEFng \u0111i\u1EC3m \u0111\u1EAFt gi\xE1 b\xEAn trong Engine v6</h3><ul><li><b>3 b\u1ED9 theme th\u1EA9m m\u1EF9 chu\u1EA9n studio:</b> <code>apple-sky</code> (c\xF4ng ngh\u1EC7/ph\xE2n t\xEDch hi\u1EC7n \u0111\u1EA1i), <code>sunlit-botanical</code> (c\xE2u chuy\u1EC7n c\xE1 nh\xE2n/du l\u1ECBch/truy\u1EC1n c\u1EA3m h\u1EE9ng), <code>editorial-warm</code> (chia s\u1EBB g\u1EA7n g\u0169i/podcast).</li><li><b>Kho\xE1 khung h\xECnh th\xF4ng minh &amp; v\xF9ng an to\xE0n TikTok/Reels:</b> T\u1EF1 \u0111o to\u1EA1 \u0111\u1ED9 \u0111\u1EA7u, m\u1EAFt, c\u1EB1m v\xE0 tay t\u1EEB <code>face_grid.jpg</code> \u0111\u1EC3 \u0111\u1EB7t Motion UI ph\xEDa tr\xEAn tr\xE1n v\xE0 \u0111\u1EB7t ph\u1EE5 \u0111\u1EC1 \u0111\xFAng v\xF9ng an to\xE0n kh\xF4ng b\u1ECB thanh c\xF4ng c\u1EE5 TikTok che khu\u1EA5t.</li><li><b>C\u1EAFt kho\u1EA3ng l\u1EB7ng &amp; l\u1ED7i v\u1EA5p m\u01B0\u1EE3t m\xE0:</b> C\u1EAFt ch\xEDnh x\xE1c theo t\u1EEBng khung h\xECnh <code>1/30s</code> tr\xE1nh tr\u01B0\u1EE3t lip-sync, kh\u1EED nhi\u1EC5u, n\xE2ng n\xE9t &amp; ch\u1EC9nh m\xE0u da t\u1EF1 nhi\xEAn tr\u01B0\u1EDBc khi g\u1EAFn ph\u1EE5 \u0111\u1EC1 Whisper kh\u1EDBp t\u1EEBng t\u1EEB <code>0.01s</code>.</li><li><b>H\u1EC7 th\u1ED1ng UI chuy\u1EC3n \u0111\u1ED9ng phong ph\xFA:</b> <code>heroHook</code> \u0111\u1EA9y camera 10s \u0111\u1EA7u, <code>browserPip</code>, <code>storyBroll</code>, <code>splitGlassCompare</code>, <code>frostTitle</code> k\xEDnh m\u1EDD, <code>paradoxChart</code>, <code>empathyPulseCard</code>, SFX kh\xF4ng l\u1EB7p v\xE0 master <b>-14 LUFS</b>.</li></ul><h3>Giao h\xE0ng tr\u1ECDn g\xF3i</h3><p>Nh\u1EADn ngay <b>Link Google Drive b\u1ED9 Skill Kit (template + scripts + nh\u1EA1c/SFX + Demo 1080p)</b> qua Gmail v\xE0 k\xEDch ho\u1EA1t <b>MCP Server</b> d\xF9ng ngay trong Claude, Codex, Antigravity.</p>",
+    "features": '["3 theme thi\u1EBFt k\u1EBF s\u1EB5n: Apple Sky, Sunlit Botanical v\xE0 Editorial Warm chu\u1EA9n creator hi\u1EC7n \u0111\u1EA1i", "T\u1EF1 \u0111o khu\xF4n m\u1EB7t kho\xE1 v\xF9ng an to\xE0n headroom & ph\u1EE5 \u0111\u1EC1 kh\xF4ng b\u1ECB UI TikTok/Reels che", "T\u1EF1 c\u1EAFt kho\u1EA3ng l\u1EB7ng/n\xF3i v\u1EA5p chu\u1EA9n t\u1EEBng frame 1/30s kh\xF4ng l\u1EC7ch kh\u1EA9u h\xECnh + l\u1ECDc nhi\u1EC5u gi\u1ECDng", "B\xF3c b\u0103ng Whisper kh\u1EDBp t\u1EEBng t\u1EEB 0.01s + b\u1ED9 chuy\u1EC3n c\u1EA3nh k\xEDnh m\u1EDD, PiP, B-roll & bi\u1EC3u \u0111\u1ED3", "K\u1EBFt h\u1EE3p linh ho\u1EA1t MCP (Claude / Codex / Antigravity) & t\u1EA3i b\u1ED9 Skill Kit t\u1EEB Google Drive", "\u0110\xF3ng g\xF3i s\u1EB5n th\u01B0 vi\u1EC7n nh\u1EA1c n\u1EC1n, SFX, template Engine v6 & h\u01B0\u1EDBng d\u1EABn c\xE0i nhanh ti\u1EBFng Vi\u1EC7t"]',
+    "tech_stack": '["MCP Protocol", "Claude", "Codex", "Antigravity", "HyperFrames", "GSAP", "Whisper", "FFmpeg"]',
+    "version": "v6.0 MCP",
+    "price": 599e3,
+    "original_price": 1199e3,
+    "thumbnail": "/static/demos/poster-video-talking-head.jpg",
+    "demo_video_url": "/static/demos/demo-video-talking-head.mp4",
+    "download_url": "https://drive.google.com/drive/folders/16sEz_KfepuNM_RxWbCJsVd9pKtJsBh4I",
+    "doc_url": "https://drive.google.com/file/d/1lxzE8l4urPkRSc_0nTTIYDIFRfgFqTAL/view?usp=sharing",
+    "file_size": "16.2 MB Kit + MCP",
+    "is_featured": 1,
+    "is_hot": 0,
+    "is_new": 1,
+    "sold_count": 44,
+    "view_count": 3180,
+    "rating": 4.9,
+    "rating_count": 17,
+    "mcp_server_name": "khoskill-video-talking-head",
+    "mcp_clients": '["Claude", "Codex", "Antigravity"]',
+    "mcp_tools": '[{"name": "list_licensed_skills", "description": "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive"}, {"name": "get_skill_blueprint", "description": "N\u1EA1p to\xE0n b\u1ED9 SKILL.md ch\xEDnh th\u1EE9c m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill"}, {"name": "get_skill_assets_and_setup", "description": "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (starter template, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng"}, {"name": "generate_video_storyboard", "description": "T\u1EA1o k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT chu\u1EA9n Skill"}, {"name": "create_video_from_skill", "description": "Xu\u1EA5t g\xF3i th\u1EF1c thi t\u1EEBng pha (chu\u1ED7i l\u1EC7nh Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent d\u1EF1ng ra final.mp4"}]',
+    "mcp_skill_prompt": '---\nname: Video-Talking-Head\ndescription: Complete end-to-end Viral Talking Head video editor for AI Agents (9:16 Reels/TikTok/Shorts or 16:9). Turns raw talking-head footage into studio-polished viral MP4s with custom visual themes (Apple Sky-Blue Studio, Sunlit Botanical Travel & Positive Story, Editorial Warm), tailored color grades, tighter silence/stumble trims without lip-sync drift, 1:1 semantic B-roll & AI art, pure-visual headroom motion UI, Vietnamese/English typography, non-repeating SFX, -14 LUFS mastering, and strict visual QA. Use whenever asked to edit raw talking-head, creator story, podcast, founder, travel/tech explainer, or challenge footage into a final viral MP4.\n---\n\n# Viral Talking Head Studio \u2014 End-to-End AI Agent Playbook (Engine v6)\n\nThis skill packages everything required for an AI Agent to go from **raw footage (`raw.mp4`)** + optional user assets to a **studio-grade viral MP4 (`final.mp4`)** matching modern creator benchmarks (`jJwfodKvvj8` retention/motion craft + `9fafd4d9` frosted glass clarity + semantic storytelling B-roll).\n\nRead all three reference guides before writing your edit plan:\n1. [`references/creative-playbook.md`](references/creative-playbook.md) \u2014 Creative mindset ("t\u01B0 duy d\u1EF1ng"), hook rhythm, B-roll matching, and exact production pitfall prevention.\n2. [`references/style-archetypes.md`](references/style-archetypes.md) \u2014 Visual themes (`apple-sky`, `sunlit-botanical`, `editorial-warm`), skin-safe FFmpeg color grades, BGM pairing, and caption rules.\n3. [`references/component-catalog.md`](references/component-catalog.md) \u2014 Exact JSON schemas & placement geometry for all `EDIT.fx` components, caption tokens, and camera curves.\n\n---\n\n## Phase 0 \u2014 Environment Activation & Project Scaffold\n\nLet `$SKILL_DIR` point to this skill folder (`Video-Talking-Head`). Always copy `$SKILL_DIR\\template` into a fresh project folder (never edit `template\\` originals directly):\n\n```powershell\nif (Test-Path "d:\\Skill Edit\\scripts\\activate-env.ps1") { . "d:\\Skill Edit\\scripts\\activate-env.ps1" }\n$SKILL_DIR = "<path-to-Video-Talking-Head>"\n$SCRIPTS   = "$SKILL_DIR\\scripts"\n$PROJ      = "<output-project-dir>"   # e.g. ./projects/<slug>\nCopy-Item "$SKILL_DIR\\template" $PROJ -Recurse -Force\n```\n\n---\n\n## Phase 1 \u2014 Story Analysis, Raw Audit & Framing Lock\n\n1. **Run raw footage analysis first:**\n   ```powershell\n   python "$SCRIPTS\\analyze_raw.py" "<raw.mp4>" --out-dir "$PROJ\\probe" --lang auto --model medium\n   ```\n2. **Choose the Theme Archetype (`EDIT.theme`) from Story & Environment:**\n   - Analytical critique / tech / SaaS / indoor minimal -> `"apple-sky"` (`chill-lofi.mp3`)\n   - Positive personal journey / outdoor / travel / inspiration -> `"sunlit-botanical"` (`acoustic-uplift.mp3` or `uplifting-indie.mp3`)\n   - Cozy indoor craft / personal coffee talk -> `"editorial-warm"` (`acoustic-uplift.mp3`)\n   Never blindly force cold SaaS blue onto a warm positive personal story (or vice versa).\n3. **Inspect `$PROJ\\probe\\face_grid.jpg` via `read_file`:**\n   - Measure exact **`headTop`**, **`eyesCenterY`**, **`chinY`**, and **`handsTopY`**.\n   - Set `EDIT.face: [540, eyesCenterY]` so rounded PiP frames always keep the speaker centered!\n   - Lock **Headroom Zone (`y = 115 .. min(380, headTop - 30)`)** for floating UI cards. If `headTop < 360px`, apply baseline `EDIT.cam` zoom `>= 1.09, y: +55` to create headroom without exposing top black edges.\n   - Lock **Caption Safe Zone (`EDIT.capY`)** cleanly **below `chinY + 60px`** and **above `min(handsTopY - 40, 1500px)`** (`y = 1540` is TikTok/Reels bottom UI collision!).\n4. **Audio Envelope Check (`volumedetect` per `0.15s` window) for Clean Trims:**\n   - Trim dead pre-roll silence (`-26 dB` air) leaving ~`0.25\u20130.32s` smile before word 1.\n   - Cut clear verbal stumbles/restarts ONLY on frame-exact `1/30s` intervals using `concat=n=2:v=1:a=1` with `0.02s` `afade` micro-dips (avoiding `acrossfade` time shifts!) AND mask any visual jump-cut under a `frostTitle` or `storyBroll` beat!\n\n---\n\n## Phase 2 \u2014 Bake Denoise / Upscale / Skin-Safe Color Grade (`assets/a-roll.mp4`)\n\nAlways bake color grading + denoise/upscale directly into `assets/a-roll.mp4` (`1080\xD71920`, `fps=30`, `-g 10`, `-movflags +faststart`) and set `grade: "none"` in `edit.js`:\n- Extract a 480p -> 1080p clean upscale using `hqdn3d` **before** `scale=1080:1920:flags=lanczos`, then color curves + gentle `unsharp` (see exact recipes in `references/style-archetypes.md`).\n- **Mandatory check:** Extract 1\u20132 JPG frames of `assets/a-roll.mp4` (`graded_sample_1.jpg`) and inspect via `read_file`. Reject any orange/yellow mud cast or crushed darks.\n- Extract `assets/voice_clean.wav` (`highpass=f=85, afftdn=nf=-22:tn=1, acompressor=...`) and **re-run `analyze_raw.py` on the final trimmed `assets/a-roll.mp4`** so every `@time` word timestamp in `edit.js` matches the final cut to `0.01s`.\n- **Proofread Vietnamese/technical Whisper typos manually** (e.g., `d\u1EA5u k\xEDn` \u2192 `gi\u1EA5u k\xEDn`, `Gen Tour` \u2192 `Zen Tour`, `l\xE0m d\u1EA7u` \u2192 `l\xE0m gi\xE0u`, `th\u1ECDt tim` \u2192 `th\xF3t tim`, `kh\xF4ng d\xE0nh` \u2192 `kh\xF4ng r\xE0nh`, `v\u1EE5n v\u1EC1` \u2192 `v\u1EE5ng v\u1EC1`, `gi\u1EEFa tr\u1EEBng` \u2192 `gi\u1EEFa ch\u1EEBng`, `v\u1ECB x\xED` \u2192 `v\u1ECB tr\xED`).\n\n---\n\n## Phase 3 \u2014 Autonomous Asset Research (User First -> Mixkit -> Iconify -> AI Art)\n\n1. **Inspect user-provided folders first** (if supplied):\n   ```powershell\n   python "$SCRIPTS\\fetch_assets.py" --inspect-folder "<user_dir>" --out "$PROJ\\assets"\n   ```\n2. **Fetch matched B-Roll, SVG Icons, Music & SFX (`fetch_assets.py`):**\n   - Pass crisp domain keywords (`--mixkit-video "airplane,travel,laptop,city,notebook,nature,vacation,adventure"` + `--icon-color "#2563eb"` or `"#047857"`).\n   - **Visually inspect `$PROJ\\assets\\broll\\_broll_verify.jpg` via `read_file`** and drop any dark, irrelevant, or ugly clips before building `edit.js`.\n3. **Generate Bespoke 3D Editorial Artwork (`image-generator` subagent):**\n   - Request 2\u20133 landscape `3:2` Apple-style minimalist 3D renders tinted to match your chosen `EDIT.theme` (`#eef4ff` for `apple-sky` or `#faf6ee / #e6f4ee` for `sunlit-botanical`).\n   - **Strictly instruct ZERO text/words inside generated images** (captions & chrome are rendered crisply by HTML/CSS). Copy outputs to `$PROJ\\assets\\ai_gen\\` and verify with `read_file`.\n\n---\n\n## Phase 4 \u2014 Director Plan & `assets/edit.js` Authoring\n\nFollow these non-negotiable editorial standards (`references/creative-playbook.md`):\n- **First 10 Seconds (`jJwfodKvvj8` Hook Camera In-Out):** Open with `heroHook` + brisk `0.65\u20130.90s` camera push/pull keys synchronized to stressed words using strictly `*.inOut` eases (`power2.inOut`, `power3.inOut`, `back.inOut`, `sine.inOut`).\n- **Alternating Visual Cadence Every `1.5\u20133.5s`:** Rotate smoothly across A-Roll + pure-visual headroom UI (`bioCard`, `statMilestones`, `paradoxChart`, `polishMeterCard`, `empathyPulseCard`, `strikeIcons`, `visualFlowCard`, `heartBalance`, `dayCounter`, `commentPrompt`), full-bleed B-roll (`storyBroll` with optional `pip: true`), `recapStrip`, `splitGlassCompare`, `browserPip`, and `frostTitle` blurred glass interludes. **Never use dark/black void cutaways.**\n- **Zero Redundant Text Clutter:** Bottom captions already deliver the spoken script\u2014keep top headroom UI crisp and visual (icons, curves, numbers, 1\u20133 word labels, never repeating full sentences!).\n- **Strict Transition Hygiene (`browserPip` -> `storyBroll`):** Always add `{ type: "lightLeak", t }` and `snapStage: true` on `storyBroll` when immediately following a PiP component so the speaker window never sweeps diagonally mid-screen.\n- **Keep Captions Clean:** Never place `!` or `^` mid-line (`parseLines` only parses them at the start of `/` segments); keep `[pill]` and `#pill` badges compact (`1\u20132` words); set `y: 1435, darkInk: true` inside `browserPip` so captions sit above TikTok\'s `y = 1540` bottom bar.\n\n---\n\n## Phase 5 \u2014 Build, Check & Snapshot QA BEFORE Full Render\n\n1. Sync `index.html` static declarations & inspect automated layout/contrast/craft gates:\n   ```powershell\n   Set-Location $PROJ\n   node tools\\build_edit.cjs\n   npx.cmd hyperframes check --json\n   ```\n   Confirm `lint`, `layout`, `motion`, `contrast`, `craft`, `audio` are all `ok=True` with `0` GSAP warnings.\n2. **MANDATORY Multi-Beat Snapshot Inspection:**\n   ```powershell\n   npx.cmd hyperframes snapshot --at "1.5,6.5,12.5,18.0,22.5,34.5,42.5,48.6,56.5,66.8,73.5,83.0" --no-end -o snaps --json\n   ```\n   Read all `snaps\\contact-sheet*.jpg` via `read_file`. Fix ANY clipped text, pill mid-pop collisions, low contrast, card wrapping, face occlusion, or PiP sweeps immediately before spending time rendering.\n\n---\n\n## Phase 6 \u2014 Render, Master Audio (`-14 LUFS`) & Final QA Gate\n\n```powershell\npython "$SCRIPTS\\sfx_planner.py" "$PROJ\\assets\\edit.js" `\n  --sfx-dir "$PROJ\\assets\\sfx-lib" `\n  --out "$PROJ\\assets\\sfx_plan.json"\n\nnpx.cmd hyperframes render --fps 30 --quality delivery --low-memory-mode -o "$PROJ\\out\\video_silent.mp4"\n\npython "$SCRIPTS\\audio_master.py" `\n  --voice "$PROJ\\assets\\voice_clean.wav" `\n  --bgm "$PROJ\\assets\\music\\acoustic-uplift.mp3" --bgm-db -18 `\n  --sfx "$PROJ\\assets\\sfx_plan.json" `\n  --mux-video "$PROJ\\out\\video_silent.mp4" `\n  --out "$PROJ\\out\\final.mp4"\n\npython "$SCRIPTS\\extract_qa_sheet.py" "$PROJ\\out\\final.mp4" --cols 5 --rows 4\n```\n\n**Final Visual Sign-off:** Inspect `$PROJ\\out\\final.qa.jpg` via `read_file` across all 20 frames. Only hand over the final MP4 after confirming `black_segments: []`, `-14 \xB1 0.5 LUFS` audio master, crisp lip-synced captions, clean PiP geometry, and zero overlapping UI elements.'
+  },
+  {
+    "slug": "phan-tich-style-video-lich-su",
+    "name": "Phan-Tich-Style-Video-Lich-Su \u2014 Skill AI Agent Phim T\xE0i Li\u1EC7u & B\u1EA3n \u0110\u1ED3 L\u1ECBch S\u1EED 16:9",
+    "short_desc": "Skill AI Agent d\u1EF1ng phim t\xE0i li\u1EC7u l\u1ECBch s\u1EED 16:9 (1920\xD71080, 30fps) chu\u1EA9n t\u01B0 li\u1EC7u: t\xEDch h\u1EE3p s\u1EB5n GeoJSON b\u1EA3n \u0111\u1ED3 Vi\u1EC7t Nam 63 t\u1EC9nh + Ho\xE0ng Sa & Tr\u01B0\u1EDDng Sa, b\u1EA3n \u0111\u1ED3 chi\u1EBFn d\u1ECBch 3D, hi\u1EC7u \u1EE9ng phim nh\u1EF1a, Playwright DOM QA & -14 LUFS.",
+    "description": "<h3>X\xE2y k\xEAnh YouTube Phim T\xE0i Li\u1EC7u L\u1ECBch S\u1EED &amp; \u0110\u1ECBa Ch\xEDnh Tr\u1ECB 16:9 ho\xE0n to\xE0n b\u1EB1ng AI Agent</h3><p><b>Phan-Tich-Style-Video-Lich-Su</b> \u0111\u01B0\u1EE3c x\xE2y d\u1EF1ng chu\u1EA9n theo d\u1EF1 \xE1n m\u1EABu 5 ph\xFAt <b>Chi\u1EBFn d\u1ECBch \u0110i\u1EC7n Bi\xEAn Ph\u1EE7 1954</b>. B\u1ED9 Skill trao cho <b>Claude Code, Codex, Antigravity</b> to\xE0n b\u1ED9 c\xF4ng c\u1EE5 \u0111\u1EC3 nghi\xEAn c\u1EE9u s\u1EF1 ki\u1EC7n, vi\u1EBFt k\u1ECBch b\u1EA3n 6 h\u1ED3i ch\u1EB7t ch\u1EBD, bi\xEAn d\u1ECBch b\u1EA3n \u0111\u1ED3 GeoJSON ch\xEDnh x\xE1c v\xE0 d\u1EF1ng video t\xE0i li\u1EC7u Full HD <code>1920\xD71080</code> \u0111\u1EADm ch\u1EA5t \u0111i\u1EC7n \u1EA3nh t\u01B0 li\u1EC7u.</p><h3>T\xE0i nguy\xEAn &amp; c\xF4ng ngh\u1EC7 t\xEDch h\u1EE3p s\u1EB5n</h3><ul><li><b>B\u1EA3n \u0111\u1ED3 Vi\u1EC7t Nam GeoJSON chu\u1EA9n ch\u1EE7 quy\u1EC1n:</b> \u0110\xF3ng g\xF3i s\u1EB5n <code>vn_provinces_pre2025.geojson</code> &amp; <code>ne_50m_countries.geojson</code> hi\u1EC3n th\u1ECB ch\xEDnh x\xE1c 63 t\u1EC9nh th\xE0nh c\xF9ng <b>Qu\u1EA7n \u0111\u1EA3o Ho\xE0ng Sa (Vi\u1EC7t Nam)</b> v\xE0 <b>Qu\u1EA7n \u0111\u1EA3o Tr\u01B0\u1EDDng Sa (Vi\u1EC7t Nam)</b>, zoom m\u01B0\u1EE3t t\u1EEB b\u1EA3n \u0111\u1ED3 qu\u1ED1c gia xu\u1ED1ng m\u1EB7t tr\u1EADn chi\u1EBFn d\u1ECBch.</li><li><b>Hi\u1EC7u \u1EE9ng chi\u1EBFn d\u1ECBch &amp; t\u01B0 li\u1EC7u \u0111i\u1EC7n \u1EA3nh:</b> M\u0169i t\xEAn ti\u1EBFn c\xF4ng \u0111\u1ED9ng, m\xF4 h\xECnh c\u1EE9 \u0111i\u1EC3m/l\xF4 c\u1ED1t 3D, h\u1EA1t phim nh\u1EF1a film-grain, v\u1EC7t scanline c\u1ED5 \u0111i\u1EC3n, khung \u1EA3nh ch\xE2n dung n\u1ED5i tr\xEAn n\u1EC1n m\u1EDD v\xE0 ph\u1EE5 \u0111\u1EC1 2 d\xF2ng kh\xF4ng bao gi\u1EDD b\u1ECB g\xE3y ch\u1EEF.</li><li><b>7 c\xF4ng c\u1EE5 Python CLI \u0111\u1ED9c l\u1EADp:</b> <code>build_vietnam_atlas.py</code>, <code>tts_edge_vi.py</code> (gi\u1ECDng \u0111\u1ECDc ti\u1EBFng Vi\u1EC7t mi\u1EC5n ph\xED), <code>tts_elevenlabs_doc.py</code> (ElevenLabs \u0111i\u1EC7n \u1EA3nh), <code>slice_broll_clean.py</code> (c\u1EAFt s\u1EA1ch logo truy\u1EC1n h\xECnh), <code>audio_soundtrack_and_master.py</code> (-14 LUFS), <code>audit_doc_composition.py</code> (ki\u1EC3m tra DOM b\u1EB1ng tr\xECnh duy\u1EC7t th\u1EADt) v\xE0 <code>qa_rendered_mp4.py</code>.</li><li><b>Giao h\xE0ng tr\u1ECDn b\u1ED9:</b> Link Google Drive t\u1EA3i ngay <b>Core-Kit ZIP + Video Demo 5 ph\xFAt \u0110i\u1EC7n Bi\xEAn Ph\u1EE7 1954 Full HD</b> qua Gmail, k\xE8m <b>License Key MCP</b> k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp AI Agent.</li></ul>",
+    "features": '["D\u1EF1ng phim t\xE0i li\u1EC7u l\u1ECBch s\u1EED 16:9 (1920\xD71080, 30fps) theo c\u1EA5u tr\xFAc k\u1ECBch b\u1EA3n 6 h\u1ED3i chu\u1EA9n YouTube", "T\xEDch h\u1EE3p s\u1EB5n GeoJSON b\u1EA3n \u0111\u1ED3 Vi\u1EC7t Nam 63 t\u1EC9nh + Qu\u1EA7n \u0111\u1EA3o Ho\xE0ng Sa & Tr\u01B0\u1EDDng Sa chu\u1EA9n x\xE1c", "Hi\u1EC7u \u1EE9ng b\u1EA3n \u0111\u1ED3 chi\u1EBFn d\u1ECBch, m\u0169i t\xEAn ti\u1EBFn c\xF4ng, phim nh\u1EF1a archival grain & ph\u1EE5 \u0111\u1EC1 kh\xF4ng g\xE3y d\xF2ng", "7 script t\u1EF1 \u0111\u1ED9ng + Playwright DOM Auditor ki\u1EC3m duy\u1EC7t b\u1ED1 c\u1EE5c tr\u01B0\u1EDBc khi render", "H\u1ED7 tr\u1EE3 Edge-TTS ti\u1EBFng Vi\u1EC7t mi\u1EC5n ph\xED ho\u1EB7c ElevenLabs + t\u1EF1 h\xF2a \xE2m nh\u1EA1c n\u1EC1n chu\u1EA9n -14 LUFS", "T\u1EB7ng k\xE8m Demo Full HD 5 ph\xFAt \u0110i\u1EC7n Bi\xEAn Ph\u1EE7 1954 tr\xEAn Google Drive + k\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp"]',
+    "tech_stack": '["MCP Protocol", "Claude", "Codex", "Antigravity", "HyperFrames", "GeoJSON SVG", "GSAP", "Playwright QA"]',
+    "version": "v2.0 MCP",
+    "price": 599e3,
+    "original_price": 1199e3,
+    "thumbnail": "/static/demos/poster-phan-tich-style-video-lich-su.jpg",
+    "demo_video_url": "/static/demos/demo-phan-tich-style-video-lich-su.mp4",
+    "download_url": "https://drive.google.com/drive/folders/10voSUQhmKQ2I7Di1ExkS4q2hUgph7vE5",
+    "doc_url": "https://drive.google.com/file/d/1EwWVcR7pReM4kv5KXqD2TIbhb-FBCzvk/view?usp=sharing",
+    "file_size": "24.0 MB Kit + MCP",
+    "is_featured": 1,
+    "is_hot": 0,
+    "is_new": 1,
+    "sold_count": 39,
+    "view_count": 2940,
+    "rating": 4.9,
+    "rating_count": 16,
+    "mcp_server_name": "khoskill-video-lich-su",
+    "mcp_clients": '["Claude", "Codex", "Antigravity"]',
+    "mcp_tools": '[{"name": "list_licensed_skills", "description": "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive"}, {"name": "get_skill_blueprint", "description": "N\u1EA1p to\xE0n b\u1ED9 SKILL.md ch\xEDnh th\u1EE9c m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill"}, {"name": "get_skill_assets_and_setup", "description": "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (starter template, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng"}, {"name": "generate_video_storyboard", "description": "T\u1EA1o k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT chu\u1EA9n Skill"}, {"name": "create_video_from_skill", "description": "Xu\u1EA5t g\xF3i th\u1EF1c thi t\u1EEBng pha (chu\u1ED7i l\u1EC7nh Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent d\u1EF1ng ra final.mp4"}]',
+    "mcp_skill_prompt": '---\nname: Phan-Tich-Style-Video-Lich-Su\ndescription: End-to-end self-contained production kit and QA director for serious historical documentary videos (16:9, 1920x1080 @ 30fps) matching the studio archival style (Dien Bien Phu 1954 reference). Includes bundled official Vietnam/world GeoJSON borders with Ho\xE0ng Sa & Tr\u01B0\u1EDDng Sa, studio transition SFX, 7 standalone Python CLI tools, clean 4-scene starter composition, complete 5-minute rendered demo package, and strict Playwright + FFmpeg -14 LUFS QA gates. Use whenever asked to create, research, script, edit, audit, or render historical documentaries, timelines, biographies, or archival map explainers.\n---\n\n# Historical Archival Documentary Skill (`style-doc-history`)\n\nComplete, workspace-agnostic production kit for **16:9 (`1920x1080`, `30fps`)** archival documentaries modeled on `examples/dien-bien-phu-1954/dien_bien_phu_1954_5m_v5.mp4`. Everything needed \u2014 map geometry, SFX, scripts, HTML/CSS/GSAP starter, Playwright DOM auditor, FFmpeg `-14 LUFS` mastering, and the full 5-minute demo project \u2014 is self-contained inside this skill directory.\n\n---\n\n## Packaged Resources Inventory\n\n| Folder | Contents | Purpose |\n| :--- | :--- | :--- |\n| `starter/` | `index.html`, `package.json`, `hyperframes.json`, `meta.json`, sample plates, `assets/maps/doc_map_data.js`, `assets/audio/master.wav` | Clean 24s 4-scene turnkey project to copy when starting any new documentary |\n| `examples/dien-bien-phu-1954/` | **`dien_bien_phu_1954_5m_v5.mp4`**, `.qa.jpg`, `FACTS.md`, `SCRIPT_5M.md`, `index.html`, `51` curated stills, `11` B-roll clips, `master_5m.wav`, scrubbed helper scripts | Complete 5-minute reference project showing target visual, sound, and pacing bar |\n| `assets/maps/` | `vn_provinces_pre2025.geojson`, `ne_50m_countries.geojson` | Official 63-province mainland + regional GeoJSON geometry |\n| `assets/sfx/` | `sfx_impact_warm.wav`, `sfx_shutter.wav`, `sfx_switch.wav`, `sfx_whoosh_air.wav`, `sfx_whoosh_deep.wav` | Non-repeating transition & reveal sound effects |\n| `scripts/` | `build_vietnam_atlas.py`, `tts_elevenlabs_doc.py`, `tts_edge_vi.py`, `audio_soundtrack_and_master.py`, `slice_broll_clean.py`, `audit_doc_composition.py`, `qa_rendered_mp4.py` | 7 standalone CLI helpers replacing brittle ad-hoc glue |\n| `references/` | `style-guide.md`, `qa-fix-workflows.md`, `component-catalog.md`, `script-and-source-guide.md` | Visual rules, component HTML/JS specs, scriptwriting checklists, QA playbooks |\n\n---\n\n## End-to-End 8-Phase Director Workflow\n\nBefore running HyperFrames or Python tools in this workspace, activate the runtime:\n\n```powershell\n. "scripts/activate-env.ps1"\n```\n\n### Phase 1 \u2014 Research & Fact-Grounding (`FACTS.md`)\n1. Copy `starter/` to `projects/<slug>/` (also mirrored at `templates/hyperframes-doc-history/`).\n2. Read `references/script-and-source-guide.md`. Research primary historical sources (B\xE1o Nh\xE2n D\xE2n, TTXVN, National Archives, military museums) and record verified dates, troop counts, direct quotes, and named artifacts in `FACTS.md`.\n3. Collect at least **1.8x\u20132.2x unique historical photos as scenes** (no repeated still in adjacent scenes; include genuine portraits of named people and photos of specifically narrated items such as letters, vehicles, weapons).\n\n### Phase 2 \u2014 6-Act Script & Narration Blocks (`SCRIPT.md` + `audio_chunks.json`)\nWrite a 6-act narrative script matched to an explicit scene breakdown table, then create `audio_chunks.json` with one object per scene containing `id`, `act`, `text_v3` (with subtle tags like `[somber]`, `[measured]`, `[calm]`), plain `text_v2` fallback, `pause_before_s`, and `pause_after_s`.\n\n### Phase 3 \u2014 Official GeoJSON Map Compilation\nGenerate crisp equirectangular SVG geometry (with provincial borders AND both **`Q.\u0111. Ho\xE0ng Sa (Vi\u1EC7t Nam)`** & **`Q.\u0111. Tr\u01B0\u1EDDng Sa (Vi\u1EC7t Nam)`** plotted accurately):\n\n```powershell\npython "<SKILL_DIR>/scripts/build_vietnam_atlas.py" --out assets/maps/doc_map_data.js --global-var DOC_MAP_DATA\n```\n*(Pass `--config custom_map_config.json` to add custom operational theater paths/anchors from OSM Overpass JSON or custom GeoJSON.)*\n\n### Phase 4 \u2014 Voice Synthesis & Timings Alignment (`voice_master_raw.wav` + `voice_timings.json`)\n- **Studio Narration (ElevenLabs, recommended when `ELEVENLABS_API_KEY` is available):**\n  ```powershell\n  $env:ELEVENLABS_API_KEY = "<your-key>"\n  python "<SKILL_DIR>/scripts/tts_elevenlabs_doc.py" --voice-id <voice_id> --chunks audio_chunks.json --mode v4 --lang vi --output-dir assets/audio\n  ```\n- **Free Offline-Style Edge Neural TTS Fallback:**\n  ```powershell\n  python "<SKILL_DIR>/scripts/tts_edge_vi.py" --chunks audio_chunks.json --voice vi-male --rate="-4%" --output-dir assets/audio\n  ```\n*(Note: pass negative `--rate` using `--rate="-4%"` syntax so CLI arg parsing never mistakes `-4%` for a flag.)*\n\nLock every GSAP reveal, blast flash, and HUD transition window directly to the measured timestamps in `assets/audio/voice_timings.json`.\n\n### Phase 5 \u2014 Archive B-Roll Slicing & Watermark Cleanup\nCrop out broadcast tickers/watermarks, strip original audio (`-an`), normalize cadence to `30fps`, and apply `-movflags +faststart` so Chromium seeks deterministically:\n\n```powershell\npython "<SKILL_DIR>/scripts/slice_broll_clean.py" --manifest broll_plan.json\n```\n\n### Phase 6 \u2014 Soundtrack Synthesis & `-14.0 LUFS` Mastering\nGenerate the restrained historical minor-to-major score, synthesize foley effects, mix sidechain-ducked SFX cues under speech, and normalize to broadcast `-14.0 LUFS / <= -1.0 dBTP`:\n\n```powershell\npython "<SKILL_DIR>/scripts/audio_soundtrack_and_master.py" --voice assets/audio/voice_master_raw.wav --sfx-plan assets/audio/sfx_plan.json --out assets/audio/master.wav\n```\n\n### Phase 7 \u2014 Author HTML/GSAP Composition (`index.html`)\nRead `references/style-guide.md` and `references/component-catalog.md`, then populate `index.html`:\n- Root `#root[data-composition-id="main"][data-width="1920"][data-height="1080"][data-duration="<exact_sec>"][data-fps="30"]`.\n- Global `#film-fx-canvas` driven deterministically via `mulberry32` `prng(seed)` + `#tv-scanlines` (`z: 825`) + `#global-vignette` (`z: 820`) seated **under** `#global-hud` (`z: 870`).\n- **Two-line centered non-wrapping card captions** inside `.photo-card .card-caption`: `.cap-role` (`#f6ce56`, `white-space: nowrap`) + `.cap-sub` (`#e8e0cf`, `white-space: nowrap`). Scale text slightly smaller or tighten copy on narrow cards (`<= 500px`) rather than allowing orphan word wrapping.\n- **Portraits over atmospheric backdrops:** Float `.photo-card` portrait frames above a blurred, darkened full-bleed period photo instead of blank void.\n- **Macro -> Micro Maps & 3D Bastion Collapse:** Dive smoothly from national map into theater sector; strike enemy 3D watchtowers (`appendIsoMonumentCrest`) with `animateDynamicArrow` and trigger `collapseTowerToFlag` (`svgOrigin: "0 4"` inside local group transforms!) showing a white surrender pennant (`#f2efe6`) beside rubble and the crisp 5-pointed gold star `#c81e24` flag (`appendVietnamVictoryFlag`).\n- **Word-Synced Transitions:** Never place `data-start` on nested tags; place `<video class="clip">` top-level siblings cleanly; trigger blast flashes / cable shakes right at exact spoken beat seconds from `voice_timings.json`.\n\n### Phase 8 \u2014 Mandatory Audit, Render & Visual QA Gate\nBefore handing any rendered video to the user, run **all three gates** cleanly:\n\n```powershell\n# 1. Asset integrity, consecutive-image check, secret hygiene & live Chrome DOM caption-wrap check\npython "<SKILL_DIR>/scripts/audit_doc_composition.py" --project . --timings assets/audio/voice_timings.json --require-browser\n\n# 2. HyperFrames structural/runtime/layout/contrast check + visual frame snapshots\nnpx --yes hyperframes@0.9.41 check --json\nnpx --yes hyperframes@0.9.41 snapshot --at 1,15,45,90\n\n# 3. Render final 1920x1080 30fps MP4 & verify -14 LUFS + zero black gaps + contact sheet\nnpx --yes hyperframes@0.9.41 render\npython "<SKILL_DIR>/scripts/qa_rendered_mp4.py" out/final.mp4\n```\n\nInspect snapshots and `.qa.jpg` visually via `read_file` to catch layout drift, mid-fade overlaps, map label clashes, or caption wrapping before finishing. See `references/qa-fix-workflows.md` for step-by-step surgical remediation checklists.\n\n---\n\n## Reference Library\n\n- Visual rules, color grades & CRT limits: `references/style-guide.md`\n- HTML/CSS/SVG/GSAP component API: `references/component-catalog.md`\n- Fact verification, 6-act structure & B-roll checklist: `references/script-and-source-guide.md`\n- Targeted QA symptom-to-fix workflows: `references/qa-fix-workflows.md`'
+  },
+  {
+    "slug": "fitness-video-editing",
+    "name": "Fitness-Video-Editing \u2014 Skill AI Agent Video Gym & Calisthenics Manga 16:9",
+    "short_desc": "Si\xEAu Skill AI Agent d\u1EF1ng video khoa h\u1ECDc t\u1EADp luy\u1EC7n Gym/Calisthenics phong c\xE1ch Manga gi\u1EA3i ph\u1EABu (chu\u1EA9n \u5065\u8EAB\u5927\u4E66 / XXL\u5065\u8EAB): s\u1EB5n 52 t\u01B0 th\u1EBF nh\xE2n v\u1EADt RGBA, 21 archetype GSAP, c\u01A1 b\u1EAFp \u0111\u1ECF n\u1ED5i b\u1EADt, 43 SFX Foley & render song song nhi\u1EC1u ch\u01B0\u01A1ng.",
+    "description": "<h3>H\u1EC7 th\u1ED1ng s\u1EA3n xu\u1EA5t Video Khoa H\u1ECDc Gym &amp; Calisthenics phong c\xE1ch Manga tri\u1EC7u view</h3><p><b>Fitness-Video-Editing</b> t\xE1i hi\u1EC7n 1:1 phong c\xE1ch d\u1EF1ng \u0111\xECnh \u0111\xE1m c\u1EE7a c\xE1c k\xEAnh t\u1EF7 view nh\u01B0 <b>\u5065\u8EAB\u5927\u4E66 / XXL\u5065\u8EAB</b> \u2014 h\u1ED7 tr\u1EE3 song ng\u1EEF <b>Ti\u1EBFng Vi\u1EC7t &amp; Ti\u1EBFng Anh</b>, xu\u1EA5t chu\u1EA9n <code>1920\xD71080</code> (YouTube d\xE0i 5\u201315 ph\xFAt) ho\u1EB7c <code>1080\xD71920</code> (Reels/TikTok/Shorts) ho\xE0n to\xE0n t\u1EF1 \u0111\u1ED9ng b\u1EB1ng <b>Claude Code, Codex v\xE0 Antigravity</b>.</p><h3>S\u1EE9c m\u1EA1nh k\u1EF9 thu\u1EADt \u0111\u1EB3ng c\u1EA5p b\xEAn trong g\xF3i Pro</h3><ul><li><b>Kho t\xE0i s\u1EA3n nh\xE2n v\u1EADt \u0111\xF3ng g\xF3i s\u1EB5n c\u1EF1c l\u1EDBn:</b> <b>52 t\u01B0 th\u1EBF &amp; frame chuy\u1EC3n \u0111\u1ED9ng nh\xE2n v\u1EADt Manga RGBA \u0111\xE3 kho\xE1 n\u1EC1n</b> (k\xE9o x\xE0, treo ch\u1EE7 \u0111\u1ED9ng, kh\xE9p b\u1EA3 vai, g\u1EADp b\u1EE5ng, gh\u1EBF t\u1EF1a, s\u1EEDa l\u1ED7i sai...) c\xF9ng th\u1EBB \u0111\u1ECBnh danh <code>ref_identity_card.jpg</code>.</li><li><b>Giao th\u1EE9c 5-Lock Chained Cel \u0111\u1ED9c quy\u1EC1n (0.00px rung gi\u1EADt):</b> <code>build_pose_guides.py</code> + <code>register_and_lock_cels.py</code> c\u0103n ch\u1EC9nh \u0111i\u1EC3m n\u1EAFm x\xE0 \u1EDF m\u1EE9c sub-pixel, t\u1EA1o chu\u1ED7i chuy\u1EC3n \u0111\u1ED9ng t\u1EADp luy\u1EC7n m\u01B0\u1EE3t m\xE0 kh\xF4ng bao gi\u1EDD b\u1ECB nh\u1EA3y thanh x\xE0 hay bi\u1EBFn d\u1EA1ng nh\xE2n v\u1EADt.</li><li><b>\u0110a ngu\u1ED3n sinh \u1EA3nh AI linh ho\u1EA1t (<code>ai_image_hub.py</code>):</b> T\u1EADn d\u1EE5ng ngay tool t\u1EA1o \u1EA3nh t\xEDch h\u1EE3p c\u1EE7a AI Agent (Antigravity / Claude MCP) ho\u1EB7c k\u1EBFt n\u1ED1i Gemini API, OpenAI, CLIProxy, Stable Diffusion Forge/ComfyUI.</li><li><b>21 Archetype chuy\u1EC3n \u0111\u1ED9ng &amp; 100% Face-Safe:</b> Callout gi\u1EA3i ph\u1EABu \u0111\u1EB7t ngo\xE0i \u0111\u01B0\u1EDDng vi\u1EC1n c\u01A1 th\u1EC3 kh\xF4ng bao gi\u1EDD che m\u1EB7t/tay, th\u1EBB nghi\xEAn c\u1EE9u khoa h\u1ECDc k\xE8m \u1EA3nh t\u01B0 li\u1EC7u Wikimedia th\u1EADt, b\u1ED9 \u0111\u1EBFm rep/timer, <b>43 SFX Foley</b>, 5 nh\u1EA1c n\u1EC1n loop m\u01B0\u1EE3t kh\xF4ng gi\xE1n \u0111o\u1EA1n v\xE0 <code>render_chapters_parallel.py</code> render \u0111a ch\u01B0\u01A1ng si\xEAu t\u1ED1c.</li></ul><h3>Giao h\xE0ng \u0111\u1EA7y \u0111\u1EE7 ngay sau thanh to\xE1n</h3><p>Nh\u1EADn ngay <b>Link Google Drive tr\u1ECDn b\u1ED9 Core-Kit (52.3 MB) + Video Demo Master 10 ph\xFAt 41 gi\xE2y Full HD</b> qua Gmail &amp; T\xE0i kho\u1EA3n, k\xE8m <b>License Key k\u1EBFt n\u1ED1i MCP</b> tr\u1ECDn \u0111\u1EDDi.</p>",
+    "features": '["Phong c\xE1ch Manga gi\u1EA3i ph\u1EABu c\u01A1 b\u1EAFp chu\u1EA9n \u5065\u8EAB\u5927\u4E66 / XXL\u5065\u8EAB \u2014 h\u1ED7 tr\u1EE3 c\u1EA3 Ti\u1EBFng Vi\u1EC7t & Ti\u1EBFng Anh", "\u0110\xF3ng g\xF3i s\u1EB5n 52 t\u01B0 th\u1EBF nh\xE2n v\u1EADt Manga RGBA, 21 archetype GSAP, 43 SFX Foley & 5 nh\u1EA1c n\u1EC1n BGM", "C\xF4ng ngh\u1EC7 5-Lock AI Cel c\u0103n ch\u1EC9nh \u0111i\u1EC3m n\u1EAFm sub-pixel (0.00px rung gi\u1EADt) + 100% Face-Safe callouts", "H\u1ED7 tr\u1EE3 \u0111a ngu\u1ED3n sinh \u1EA3nh AI (Native Agent, Gemini, OpenAI, CLIProxy, SD-WebUI/ComfyUI)", "Render song song nhi\u1EC1u ch\u01B0\u01A1ng si\xEAu t\u1ED1c + t\u1EF1 loop BGM m\u01B0\u1EE3t + master gi\u1ECDng chu\u1EA9n -14.0 LUFS", "T\u1EB7ng k\xE8m Video Demo Master 10m41s Full HD tr\xEAn Google Drive + k\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp"]',
+    "tech_stack": '["MCP Protocol", "Claude", "Codex", "Antigravity", "HyperFrames", "GSAP", "AI Cel 5-Lock", "FFmpeg"]',
+    "version": "v2.0 Pro MCP",
+    "price": 15e5,
+    "original_price": 299e4,
+    "thumbnail": "/static/demos/poster-fitness-video-editing.jpg",
+    "demo_video_url": "/static/demos/demo-fitness-video-editing.mp4",
+    "download_url": "https://drive.google.com/drive/folders/1UtzYMeEjN6QiQyBLZNf7ieAPrQtDzMPp",
+    "doc_url": "https://drive.google.com/file/d/1hb8qu7BlB4-qhEZYlgOtRLTqVsn_lPMp/view?usp=sharing",
+    "file_size": "52.3 MB Kit + MCP",
+    "is_featured": 1,
+    "is_hot": 1,
+    "is_new": 1,
+    "sold_count": 33,
+    "view_count": 4890,
+    "rating": 5,
+    "rating_count": 18,
+    "mcp_server_name": "khoskill-fitness-video",
+    "mcp_clients": '["Claude", "Codex", "Antigravity"]',
+    "mcp_tools": '[{"name": "list_licensed_skills", "description": "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive"}, {"name": "get_skill_blueprint", "description": "N\u1EA1p to\xE0n b\u1ED9 SKILL.md ch\xEDnh th\u1EE9c m\u1EDBi nh\u1EA5t, quy tr\xECnh t\u1EEBng pha & ti\xEAu chu\u1EA9n QA c\u1EE7a Skill"}, {"name": "get_skill_assets_and_setup", "description": "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (starter template, scripts, SFX, fonts) v\xE0 l\u1EC7nh c\xE0i m\xF4i tr\u01B0\u1EDDng"}, {"name": "generate_video_storyboard", "description": "T\u1EA1o k\u1ECBch b\u1EA3n, chia beat th\u1EDDi gian, 3 bi\u1EBFn th\u1EC3 Hook A/B v\xE0 ph\u1EE5 \u0111\u1EC1 SRT chu\u1EA9n Skill"}, {"name": "create_video_from_skill", "description": "Xu\u1EA5t g\xF3i th\u1EF1c thi t\u1EEBng pha (chu\u1ED7i l\u1EC7nh Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent d\u1EF1ng ra final.mp4"}]',
+    "mcp_skill_prompt": '---\nname: Fitness-Video-Editing\ndescription: Self-contained, portable End-to-End Bilingual (Vietnamese & English) Fitness, Calisthenics & Gym Science Manga-Anatomical Motion-Graphics Director (16:9 YouTube Long-Form or 9:16 Reels/TikTok/Shorts), modeled 1:1 on `\u5065\u8EAB\u5927\u4E66` and `XXL\u5065\u8EAB`. Includes complete `starter/` composition (21 deterministic GSAP archetypes, 0.00px multi-worker jitter, 100% Face-Safe outer-silhouette callouts, 52 locked RGBA poses & consecutive AI cel frames, local `.ttf` fonts, 43 Foley SFX stems, 5 royalty-free BGM tracks, 7 archival documentary photos), universal AI image & chained-cel scripts (`ai_image_hub.py` supporting Native Agent tools, CLIProxy, Gemini/OpenAI APIs, ComfyUI/SD-WebUI open-source, plus user setup alerts), paragraph-flow Vbee/Edge-TTS + `faster-whisper` clause alignment, seamless crossfade-looped BGM `-14 LUFS` mastering, parallel chapter rendering, 4 deep Director Playbooks (`references/`), and the full 10m41s rendered flagship demo project (`examples/keo-xa-full-master/`). Use whenever asked to create, script, direct, animate, or edit fitness, calisthenics, workout progression, biomechanics, or fat-loss/muscle-building explainer videos.\n---\n\n# Fitness Manga-Anatomical Motion-Graphics Director (`fitness-manga-explainer`)\n\nAutonomous, 100% self-contained production system enabling **any AI Agent** to direct, illustrate, voice, animate, and master studio-grade bilingual (`lang: "vi" | "en"`) Fitness & Calisthenics Science Explainer videos matching **`\u5065\u8EAB\u5927\u4E66`** and **`XXL\u5065\u8EAB`**.\n\n---\n\n## Package Directory Map (100% Self-Contained Inside This Skill Folder)\n\nLet `$SKILL` denote the folder containing this `SKILL.md`:\n\n- **`$SKILL/starter/`**: Ready-to-copy project template (`index.html`, `hyperframes.json`, `package.json`, `tools/build_fitness.cjs`, `assets/engine.js` with 21 archetypes, `assets/styles.css` with zero-jitter local `.ttf` fonts, `assets/character/` with `ref_identity_card.jpg` + 52 locked RGBA poses & `cel_*` frames, `assets/photos/` archival documentary photos, `assets/sfx-lib/` 43 Foley stems, `assets/music/` looped BGM tracks).\n- **`$SKILL/scripts/`**: Standalone Python CLI toolchain:\n  - `ai_image_hub.py` \u2014 Universal 3-Tier AI Image Provider Detector & Chained Generator (Native Agent tool / CLIProxy / Gemini API / OpenAI / Local SD-WebUI Forge / Custom Open-Source CLI hook + clear user setup prompt when unconfigured).\n  - `build_pose_guides.py` \u2014 Deterministic spatial body-lift + locked bar/grip guide generator (`guide_01..guide_0N.jpg`) for consecutive AI cel sequences.\n  - `prepare_character_pose.py` \u2014 Single-pose `#161D29` RGBA isolator & `bar_y` detector.\n  - `register_and_lock_cels.py` \u2014 Sub-pixel `cv2.matchTemplate` grip/prop registration, enclosed-window RGBA cutout, outer bar-end fade trimming, and exposed steel bar pixel-locking (`0.00px` bar flicker).\n  - `vbee_tts_fitness.py` & `build_paragraph_voice.py` \u2014 Paragraph-flow natural coaching voice synthesis (Vbee TTS + Edge-TTS fallback for `vi`/`en`) + `faster-whisper` word-completeness check & millisecond clause alignment (`voice.wav`, `voice_cues.json`, `voice.srt`).\n  - `fetch_doc_photos.py` \u2014 Wikimedia Commons royalty-free archival documentary photo searcher & downloader for `photoDocCard`.\n  - `sfx_planner_fitness.py` \u2014 Non-repeating pre-baked Foley SFX timeline generator (`sfx_plan_baked.wav` & `sfx_plan.json`).\n  - `audio_master_loop.py` \u2014 Auto-trimmed seamless `acrossfade` BGM looper + Vocal-Pocket EQ + smooth sidechain ducking (`--bgm-db -17.5`) + `-14.0 LUFS` loudness master + lossless MP4 mux.\n  - `render_chapters_parallel.py` \u2014 Frame-snapped modular chapter splitter + parallel multi-worker HyperFrames renderer + lossless FFmpeg concatenation.\n  - `qa_rendered_mp4.py` \u2014 Timestamped `6x6` `.qa.jpg` contact sheet + black-frame + `-14 LUFS` verifier.\n- **`$SKILL/references/`** *(Read before authoring!)*:\n  1. `references/script-and-pedagogy.md` \u2014 **Scriptwriting & Voice Director** (6-Beat retention arc, natural spoken paragraph punctuation rules, Whisper alignment, dual-layer text discipline).\n  2. `references/camera-and-pacing-director.md` \u2014 **Camera, Visual Pacing & Face-Safe Layout Director** (`4.5\u20137s` pacing rule, static anatomy vs. cel rep choreography, `camKeyframes`, 100% Face-Safe outer-silhouette callouts, real documentary photo staging).\n  3. `references/character-nano-banana.md` \u2014 **Multi-Provider AI Image & 5-Lock Chained Cel Director** (Native Agent vs. CLIProxy/API/Open-Source setup, Character + Prop + Position + Grip Registration + Bar-End Trim locks).\n  4. `references/motion-components-catalog.md` \u2014 **Complete Schema & Recipes for all 21 Scene Archetypes** in `window.FITNESS_PLAN`.\n- **`$SKILL/examples/keo-xa-full-master/`**: Complete rendered 10m41s flagship reference project (`out/keo_xa_6_buoc_full_master.mp4`, `106` scenes, `145` Whisper-aligned clauses, `generate_chapters.py`, `.qa.jpg` sheets).\n\n---\n\n## Mandatory Step-by-Step Production Workflow (For Any AI Agent)\n\n### Phase 0 \u2014 Environment Activation & AI Image Capability Pre-Flight Check\n\n1. Ensure **Node.js >= 22**, **FFmpeg**, **HyperFrames** (`npx hyperframes --version`), and **Python 3.10+** (`opencv-python`, `numpy`, `edge-tts`; optional `faster-whisper`) are available. (In the `d:\\Skill Edit` workspace, run `. "d:\\Skill Edit\\scripts\\activate-env.ps1"`).\n2. **Check AI Image Generation Availability BEFORE Planning New Custom Poses**:\n   - **Case A \u2014 Your AI Agent has a Built-In Image Generation Tool** (e.g. Antigravity `image-generator` subagent, Claude/Cursor MCP image tool, or native multimodal image tool): Use **your own built-in model** directly in Phase 3, passing the exact locked prompt & reference image chain produced by `python "$SKILL/scripts/ai_image_hub.py" --print-agent-prompt ...`!\n   - **Case B \u2014 Your AI Agent does NOT have a Built-In Image Tool**: Run:\n     ```bash\n     python "$SKILL/scripts/ai_image_hub.py" --check\n     ```\n     - If `"has_external_provider": true` (`gemini`, `cliproxy`, `openai`, `sdwebui`, or `custom`), generate images via `ai_image_hub.py --backend auto`.\n     - If `"has_external_provider": false` AND the topic requires poses not already covered by the 52 bundled poses in `$SKILL/starter/assets/character/poses/`: **STOP and notify the user clearly** using `user_setup_message_vi` (or `user_setup_message_en`) from `ai_image_hub.py --check` so the user can connect an Image Plugin/MCP, **CLIProxy** (`CLIPROXY_BASE_URL=http://127.0.0.1:8317/v1` + `CLIPROXY_API_KEY` + `CLIPROXY_IMAGE_MODEL`), `GEMINI_API_KEY`, or a local open-source server (**SD-WebUI Forge `--api`** on `SD_WEBUI_URL`, **ComfyUI**, or `AI_IMAGE_CMD`). Never substitute crude stick-figure SVGs for manga character art!\n\n---\n\n### Phase 1 \u2014 Scaffold New Project From `$SKILL/starter/`\n\nCopy `$SKILL/starter/` into a clean project folder `$PROJ` (e.g. `projects/<slug>/`), never editing `$SKILL/starter/` or `$SKILL/examples/` in place:\n\n```powershell\nCopy-Item -Path "$SKILL\\starter" -Destination "$PROJ" -Recurse\n```\n\nChoose `lang: "vi"` (Vietnamese) or `lang: "en"` (English) in `$PROJ/assets/fitness-plan.js`.\n\n---\n\n### Phase 2 \u2014 Scriptwriting Direction & Natural Paragraph-Flow Voiceover (`40%` of Video Quality!)\n\nRead `references/script-and-pedagogy.md` first.\n\n1. **Structure the script in 6 high-retention beats**:\n   - Beat 1: Empathy Hook + Myth Reframe (`0 C\xC1I` -> `KH\xD4NG H\u1EC0 Y\u1EBEU!`, Relative Strength vs. Absolute Strength, Roadmap reveal).\n   - Beat 2: Interactive 10-second Self-Test + Zero-Equipment Home Reassurance.\n   - Beat 3: Real Peer-Reviewed Scientific Studies paired with Real Documentary Photos.\n   - Beat 4: Step-by-Step Unlock Loop (`Unlock Padlock -> Static Anatomy Breakdown -> Consecutive AI Cel Rep Demo -> Mistake vs. Clean Fix -> Regression Option & Pass Standard`).\n   - Beat 5: Joint Safety (`Muscle Burn \u2713` vs `Sharp Joint Pain \u2715`), Viewer FAQ, and Home Physics Substitute (`leverPhysics`).\n   - Beat 6: Weekly `3x/Week` Split + Self-Test Diagnostic Router + `SCREENSHOT THIS` Blueprint Summary.\n2. **Write Complete, Naturally-Punctuated Coaching Paragraphs (`paragraphs.json`)**:\n   - Group `2\u20134` related clauses (`10\u201318s`) into full paragraphs with natural `,`, `?`, `!`, `.` punctuation so the voice breathes naturally (never synthesize isolated 5-word fragments!).\n   - Spell out spoken symbols clearly in `spoken` (`"ba m\u01B0\u01A1i hai ph\u1EA7n tr\u0103m"`, `"n\u0103m nh\xE2n n\u0103m gi\xE2y"`) while keeping concise numerals in `display` (`"32%"`, `"5 \xD7 5 gi\xE2y"`), with each `display` subtitle fitting cleanly on **1 single line (`<= 58` chars)**.\n3. **Synthesize Voiceover & Millisecond Clause Timings (`build_paragraph_voice.py`)**:\n   ```bash\n   python "$SKILL/scripts/build_paragraph_voice.py" \\\n     --paragraphs "$PROJ/paragraphs.json" \\\n     --out-dir "$PROJ/assets/audio" \\\n     --lang vi \\\n     --voice n_hanoi_male_trietlygiongnam_zero_shot_book_vc \\\n     --rate 1.02\n   ```\n   Outputs `$PROJ/assets/audio/voice.wav`, `voice_cues.json` (`b001..bNNN` exact start/end seconds verified by `faster-whisper`), and `voice.srt`.\n\n---\n\n### Phase 3 \u2014 Direct AI Character Art, 5-Lock Consecutive Cels & Real Documentary Photos\n\nRead `references/character-nano-banana.md` first.\n\n1. **Reuse or Extend Character Poses (`assets/character/poses/`)**:\n   - Inspect `$PROJ/assets/character/poses/poses_manifest.json` (52 pull-up, scapular, hang, chair, table-row, core, and mistake poses/cels already bundled).\n2. **For Any New Single Pose (Prop-Included + Crimson Muscle Shading)**:\n   - Always pass `$PROJ/assets/character/ref_identity_card.jpg` (1:1 single-character card \u2014 NEVER pass the 3-figure sheet!).\n   - Draw physical props (bar, chair, table, dumbbells, ab wheel) with natural finger/foot contact AND crimson-red (`#EF4444`) target muscle fibers **directly inside the AI image** on a flat `#161D29` charcoal-slate background with ZERO text/arrows.\n   - Isolate RGBA & register `bar_y` with `prepare_character_pose.py`:\n     ```bash\n     python "$SKILL/scripts/prepare_character_pose.py" raw_pose.jpg \\\n       -o "$PROJ/assets/character/poses/<pose_id>.png" --bg-tol 20 --target-height 860\n     ```\n3. **For Any New Consecutive Movement Sequence (`cel_01 .. cel_07`) \u2014 Mandatory 5-Lock Protocol**:\n   - **Step 3a**: Generate Frame 1 (`raw/cel_01.jpg`, `3:4` on `#161D29`) with the horizontal bar at `Y = 247px` (`~21.5%` from top, leaving headroom for the head at top of pull!).\n   - **Step 3b**: Generate locked spatial body-lift guides (`guide_01..07.jpg`):\n     ```bash\n     python "$SKILL/scripts/build_pose_guides.py" \\\n       --base-frame "$PROJ/raw/cel_01.jpg" \\\n       --out-dir "$PROJ/guides" --num-cels 7 --bar-y 247 --total-lift-px 216\n     ```\n   - **Step 3c**: Generate Frames `2..7` sequentially (`Frame K-1` -> `Frame K`), passing `[ref_identity_card.jpg, raw/cel_{K-1}.jpg, guides/guide_0K.jpg]` + the locked prompt from `ai_image_hub.py --print-agent-prompt` (for Native Agent tools) or `ai_image_hub.py --backend auto`.\n   - **Step 3d**: Sub-pixel grip registration + RGBA cutout + **Outer Bar-End Trim & Steel Pixel-Lock** (`0.00px` bar flicker!):\n     ```bash\n     python "$SKILL/scripts/register_and_lock_cels.py" \\\n       --poses-dir "$PROJ/assets/character/poses" \\\n       --master-guide "$PROJ/guides/guide_01.jpg" \\\n       --register cel_01=raw/cel_01.jpg cel_02=raw/cel_02.jpg ... \\\n       --master-bar-cel cel_01 \\\n       --trim-lock-bars cel_01 cel_02 cel_03 cel_04 cel_05 cel_06 cel_07 \\\n       --qa-out "$PROJ/out/qa_cels.jpg"\n     ```\n     Inspect `$PROJ/out/qa_cels.jpg` visually via `read_file` and confirm `max_left_bar_diff_px: 0, max_right_bar_diff_px: 0`!\n4. **Fetch Real Archival Documentary Photos for Scientific / Real-World Studies (`fetch_doc_photos.py`)**:\n   - Whenever mentioning military fitness tests, lab trials, or gym comparisons, pair them with authentic documentary photos in `$PROJ/assets/photos/`:\n     ```bash\n     python "$SKILL/scripts/fetch_doc_photos.py" --search "military pull ups fitness test"\n     python "$SKILL/scripts/fetch_doc_photos.py" --download "File:..." --out "$PROJ/assets/photos/study_photo.jpg"\n     ```\n\n---\n\n### Phase 4 \u2014 Camera, Pacing & Face-Safe Scene Authoring (`assets/fitness-plan.js`)\n\nRead `references/camera-and-pacing-director.md` and `references/motion-components-catalog.md` (see `$SKILL/examples/keo-xa-full-master/generate_chapters.py` for a complete 106-scene reference script).\n\n1. **Enforce High-Retention Visual Pacing (`4.5s \u2013 7.0s` avg/scene)**:\n   - **NEVER** hold a single static screen or chart `> 10s`! Split 15\u201325s study/FAQ explanations into `4\u20136s` visual stages mixing `photoDocCard` (`study`, `dualPhoto`, `heroPhoto`), staged charts (`barsOnly` -> `tangledOnly` -> `morph`), `xraySlate`, and `faqSpectrum`.\n   - **NEVER** delay child items (`tiers`, `cards`, `bullets`, `steps`) by `> 0.3s` after `sc.t` (zero empty title screens!).\n2. **Enforce 100% Face-Safe & Outer-Silhouette Callouts**:\n   - **ZERO** circles, badges, or lines over the character\'s face (`x = 842..1078, y = 130..360`), chest, hands, or feet (`x = 875..1045`).\n   - Place `.body-point-card` boxes in outer left (`boxX: 70..110`) and right (`boxX: 1320..1390`) margins with pointer endpoints outside the silhouette (`x <= 840..875` left, `x >= 1045..1080` right).\n3. **Balance Static Anatomical Breakdowns & Consecutive AI Cel Reps**:\n   - Use static `pose` + `bodyPoints` / `guideLines` / `focusBox` + `camKeyframes` (`scale: 1.28, y: 115`) when teaching joint mechanics; use `frameSequence` (`crossfade: 0`) + `timer` / `repCounter` when demonstrating timed reps.\n4. **Sync `index.html`**:\n   ```bash\n   node "$PROJ/tools/build_fitness.cjs"\n   ```\n\n---\n\n### Phase 5 \u2014 Pre-Render `hyperframes check` & Snapshot Inspection\n\n```bash\ncd "$PROJ"\nnpx hyperframes check --json\nnpx hyperframes snapshot --at "2.0,15.0,42.5" --no-end -o "$PROJ/out/snaps_precheck"\n```\n\nVerify `0` lint/runtime/layout errors and visually inspect snapshots via `read_file` to confirm zero clipped text and 100% Face-Safe callouts before full render.\n\n---\n\n### Phase 6 \u2014 Fast Parallel Chapter Render + Foley SFX + Seamless Looped BGM (`-14.0 LUFS`)\n\n1. **Render Silent Video (Parallel Chapters for Long-Form!)**:\n   ```bash\n   python "$SKILL/scripts/render_chapters_parallel.py" \\\n     --project "$PROJ" \\\n     --target-chapter-sec 95 \\\n     --parallel-chapters 3 \\\n     --workers-per-chapter 5 \\\n     --out "$PROJ/out/video_silent.mp4"\n   ```\n2. **Pre-Bake Non-Repeating Foley SFX**:\n   ```bash\n   python "$SKILL/scripts/sfx_planner_fitness.py" \\\n     "$PROJ/assets/fitness-plan.js" \\\n     --sfx-dir "$PROJ/assets/sfx-lib" \\\n     --out "$PROJ/assets/sfx_plan.json"\n   ```\n3. **Master Voice + Seamlessly Looped BGM + Foley SFX to `-14.0 LUFS` & Losslessly Mux**:\n   - Uses `melodic-fitness-uplift.mp3` (or `workout-deep-urban.mp3` / user-provided BGM), automatically trimming silence tails and crossfade-looping (`acrossfade=2.2s`) when the song ends, with Vocal-Pocket EQ + `--bgm-db -17.5` smooth sidechain ducking so the music stays energetic yet never overpowers the voiceover:\n   ```bash\n   python "$SKILL/scripts/audio_master_loop.py" \\\n     --voice "$PROJ/assets/audio/voice.wav" \\\n     --bgm "$PROJ/assets/music/melodic-fitness-uplift.mp3" \\\n     --bgm-db -17.5 \\\n     --sfx "$PROJ/assets/sfx_plan.json" \\\n     --target-lufs -14.0 \\\n     --mux-video "$PROJ/out/video_silent.mp4" \\\n     --out "$PROJ/out/final.mp4"\n   ```\n\n---\n\n### Phase 7 \u2014 Mandatory Final Visual & Loudness QA Gate\n\n```bash\npython "$SKILL/scripts/qa_rendered_mp4.py" "$PROJ/out/final.mp4" --cols 6 --rows 6\n```\n\n1. **Visually read `$PROJ/out/final.qa.jpg`** via `read_file`!\n2. Confirm all 5 release gates before delivering `$PROJ/out/final.mp4`:\n   - `unintended_long_black_segments: []`\n   - `measured_lufs` within `-14.0 \xB1 0.5 LUFS` and `measured_true_peak_dbtp <= -0.9 dBTP`\n   - **100% Face-Safe**: zero callout badges or lines touching the character\'s face, hands, or feet\n   - **Zero text clipping, wrapping glitches, or empty delayed title screens**\n   - **Crisp consecutive cel motion** (`0px` bar flicker) and rich visual variety (`photoDocCard` archival photos + diagrams + dynamic motion UI).'
+  }
+];
+
 // src/lib/mcp-bootstrap.ts
 var _done = false;
 var _inflight = null;
-var STARTER_MCP_PRODUCTS = [
-  {
-    slug: "mcp-skill-agent-video-viral-30s",
-    name: "MCP Skill AI Agent \u2014 T\u1EF1 \u0110\u1ED9ng T\u1EA1o Video Viral 30s (Claude / Codex / Antigravity)",
-    short_desc: "Skill MCP k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp v\xE0o Claude, Codex, Antigravity: AI Agent t\u1EF1 g\u1ECDi tool n\u1EA1p quy tr\xECnh Skill, sinh k\u1ECBch b\u1EA3n kh\xF3a nh\xE2n v\u1EADt v\xE0 xu\u1EA5t l\u1EC7nh t\u1EA1o video 30s chu\u1EA9n viral ngay trong cu\u1ED9c h\u1ED9i tho\u1EA1i.",
-    description: "<h3>\u0110i\u1EC3m kh\xE1c bi\u1EC7t so v\u1EDBi Skill t\u1EF1 t\u1EA3i truy\u1EC1n th\u1ED1ng</h3><p>V\u1EDBi <b>Skill t\u1EF1 t\u1EA3i</b>, b\u1EA1n c\u1EA7n t\u1EA3i file ZIP/Drive v\u1EC1 \u0111\u1ECDc h\u01B0\u1EDBng d\u1EABn r\u1ED3i t\u1EF1 copy-paste t\u1EEBng prompt sang c\xF4ng c\u1EE5 t\u1EA1o video. V\u1EDBi <b>MCP Skill AI Agent</b>, b\u1EA1n ch\u1EC9 c\u1EA7n d\xE1n c\u1EA5u h\xECnh MCP 1 l\u1EA7n v\xE0o <b>Claude, Codex ho\u1EB7c Antigravity</b> \u2014 t\u1EEB \u0111\xF3 AI Agent s\u1EBD t\u1EF1 g\u1ECDi tr\u1EF1c ti\u1EBFp v\u1EC1 MCP Server b\u1EB1ng License Key c\u1EE7a b\u1EA1n \u0111\u1EC3 n\u1EA1p blueprint, t\xE1ch c\u1EA3nh kh\xF3a nh\xE2n v\u1EADt v\xE0 t\u1EA1o video 30s theo \u0111\xFAng chu\u1EA9n Skill.</p><h3>AI Agent c\u1EE7a b\u1EA1n s\u1EBD l\xE0m \u0111\u01B0\u1EE3c g\xEC?</h3><ul><li><b>T\u1EF1 \u0111\u1ED9ng n\u1EA1p Skill Blueprint:</b> Agent g\u1ECDi <code>get_skill_blueprint</code> \u0111\u1EC3 l\u1EA5y c\xF4ng th\u1EE9c Hook 3s, quy t\u1EAFc kh\xF3a nh\xE2n v\u1EADt/\xE1nh s\xE1ng v\xE0 c\u1EA5u tr\xFAc 4 ph\xE2n \u0111o\u1EA1n 30s.</li><li><b>T\u1EF1 sinh Storyboard &amp; Prompt \u0111a model:</b> Agent g\u1ECDi <code>generate_video_storyboard</code> \u0111\u1EC3 t\u1EA1o b\u1ED9 prompt t\u1EEBng c\u1EA3nh chu\u1EA9n Seedance 2.5, Muse AI ho\u1EB7c Veo 3 k\xE8m l\u1EDDi tho\u1EA1i ti\u1EBFng Vi\u1EC7t.</li><li><b>T\u1EF1 k\xEDch ho\u1EA1t pipeline t\u1EA1o video:</b> Agent g\u1ECDi <code>create_video_from_skill</code> \u0111\u1EC3 xu\u1EA5t g\xF3i render chu\u1EA9n 9:16 (ho\u1EB7c \u0111\u1EA9y th\u1EB3ng sang render API/webhook n\u1EBFu b\u1EA1n k\u1EBFt n\u1ED1i) k\xE8m ph\u1EE5 \u0111\u1EC1 SRT &amp; caption \u0111\u0103ng TikTok/Reels.</li><li><b>Lu\xF4n nh\u1EADn b\u1EA3n Skill m\u1EDBi nh\u1EA5t:</b> Khi KhoSkill n\xE2ng c\u1EA5p c\xF4ng th\u1EE9c prompt ho\u1EB7c model m\u1EDBi, Agent t\u1EF1 \u0111\u1ED9ng nh\u1EADn b\u1EA3n m\u1EDBi qua MCP m\xE0 b\u1EA1n kh\xF4ng c\u1EA7n t\u1EA3i l\u1EA1i file.</li></ul><h3>H\u1ED7 tr\u1EE3 \u0111\u1EA7y \u0111\u1EE7 AI Agent ph\u1ED5 bi\u1EBFn</h3><p>Cung c\u1EA5p s\u1EB5n \u0111o\u1EA1n c\u1EA5u h\xECnh copy-paste trong m\u1EE5c <b>S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i</b> cho <b>Claude Code / Claude Desktop</b>, <b>OpenAI Codex</b> v\xE0 <b>Antigravity</b>. C\xE0i \u0111\u1EB7t xong trong ch\u01B0a \u0111\u1EA7y 30 gi\xE2y.</p>",
-    features: JSON.stringify([
-      "K\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP v\xE0o Claude, Codex, Antigravity trong 30 gi\xE2y",
-      "AI Agent t\u1EF1 g\u1ECDi tool t\u1EA1o k\u1ECBch b\u1EA3n, prompt kh\xF3a nh\xE2n v\u1EADt & pipeline video 30s",
-      "Kh\xF4ng c\u1EA7n t\u1EA3i file th\u1EE7 c\xF4ng hay copy-paste r\u1EDDi r\u1EA1c t\u1EEBng b\u01B0\u1EDBc",
-      "X\xE1c th\u1EF1c b\u1EA3o m\u1EADt b\u1EB1ng License Key ri\xEAng \u2014 g\u1ECDi kh\xF4ng gi\u1EDBi h\u1EA1n",
-      "H\u1ED7 tr\u1EE3 chu\u1EA9n Streamable HTTP MCP (JSON-RPC 2.0) m\u1EDBi nh\u1EA5t",
-      "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n n\xE2ng c\u1EA5p Skill t\u1EEB server tr\u1ECDn \u0111\u1EDDi"
-    ]),
-    tech_stack: JSON.stringify(["MCP Protocol", "Claude", "Codex", "Antigravity", "Seedance 2.5", "Veo 3", "Muse AI"]),
-    version: "v1.0 MCP",
-    price: 99e4,
-    original_price: 199e4,
-    thumbnail: "/static/mcp-skill-viral-cover.svg",
-    demo_video_url: "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-khoa-hoc-seedance.mp4",
-    file_size: "MCP Live API",
-    is_featured: 1,
-    is_hot: 1,
-    is_new: 1,
-    sold_count: 64,
-    view_count: 4820,
-    rating: 5,
-    rating_count: 29,
-    mcp_server_name: "khoskill-video-viral",
-    mcp_clients: JSON.stringify(["Claude", "Codex", "Antigravity"]),
-    mcp_tools: JSON.stringify([
-      { name: "list_licensed_skills", description: "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill MCP \u0111ang ho\u1EA1t \u0111\u1ED9ng theo License Key c\u1EE7a b\u1EA1n" },
-      { name: "get_skill_blueprint", description: "N\u1EA1p to\xE0n b\u1ED9 quy tr\xECnh, lu\u1EADt kh\xF3a nh\xE2n v\u1EADt, c\xF4ng th\u1EE9c Hook-Body-CTA v\xE0 template prompt c\u1EE7a Skill" },
-      { name: "generate_video_storyboard", description: "T\u1EF1 \u0111\u1ED9ng t\xE1ch ch\u1EE7 \u0111\u1EC1 th\xE0nh storyboard 30s (4 c\u1EA3nh) k\xE8m prompt t\u1ED1i \u01B0u cho Seedance 2.5 / Muse AI / Veo 3" },
-      { name: "create_video_from_skill", description: "Ch\u1EA1y pipeline t\u1EA1o video theo chu\u1EA9n Skill, tr\u1EA3 v\u1EC1 g\xF3i render job + SRT ph\u1EE5 \u0111\u1EC1 ho\u1EB7c g\u1ECDi render webhook tr\u1EF1c ti\u1EBFp" }
-    ]),
-    mcp_skill_prompt: `# SKILL BLUEPRINT: AI AGENT VIDEO VIRAL 30S (MCP)
-
-## 1. M\u1EE5c ti\xEAu \u0111\u1EA7u ra
-- T\u1EA1o video ng\u1EAFn 30 gi\xE2y t\u1EF7 l\u1EC7 9:16 (TikTok / Facebook Reels / YouTube Shorts) c\xF3 t\u1EF7 l\u1EC7 gi\u1EEF ch\xE2n cao (>65% \u1EDF m\u1ED1c 3s \u0111\u1EA7u).
-- Duy tr\xEC t\xEDnh \u0111\u1ED3ng nh\u1EA5t tuy\u1EC7t \u0111\u1ED1i v\u1EC1 **nh\xE2n v\u1EADt, trang ph\u1EE5c, \xE1nh s\xE1ng, t\xF4ng m\xE0u v\xE0 kh\xF4ng gian** xuy\xEAn su\u1ED1t to\xE0n b\u1ED9 video.
-
-## 2. C\u1EA5u tr\xFAc 4 ph\xE2n \u0111o\u1EA1n chu\u1EA9n Viral 30s
-1. **C\u1EA3nh 1 \u2014 Visual Hook (00:00 - 00:05)**: M\u1EDF \u0111\u1EA7u b\u1EB1ng chuy\u1EC3n \u0111\u1ED9ng m\u1EA1nh, k\u1EBFt qu\u1EA3 g\xE2y t\xF2 m\xF2 ho\u1EB7c c\xE2u h\u1ECFi \u0111\xE1nh tr\xFAng n\u1ED7i \u0111au. Camera \u0111\u1EA9y nhanh (fast push-in / whip pan).
-2. **C\u1EA3nh 2 \u2014 B\u1ED1i c\u1EA3nh & V\u1EA5n \u0111\u1EC1 (00:05 - 00:13)**: Minh ho\u1EA1 v\u1EA5n \u0111\u1EC1 th\u1EF1c t\u1EBF ng\u01B0\u1EDDi xem g\u1EB7p ph\u1EA3i. \xC1nh s\xE1ng t\u01B0\u01A1ng ph\u1EA3n v\u1EEBa ph\u1EA3i, g\xF3c m\xE1y medium shot.
-3. **C\u1EA3nh 3 \u2014 Gi\u1EA3i ph\xE1p & Bi\u1EBFn \u0111\u1ED5i (00:13 - 00:24)**: Ph\xF4 di\u1EC5n quy tr\xECnh/s\u1EA3n ph\u1EA9m t\u1EA1o ra s\u1EF1 thay \u0111\u1ED5i r\xF5 r\u1EC7t (Before -> After). G\xF3c m\xE1y close-up s\u1EAFc n\xE9t, chi ti\u1EBFt ch\xE2n th\u1EF1c.
-4. **C\u1EA3nh 4 \u2014 Payoff & CTA (00:24 - 00:30)**: Khung h\xECnh th\xE0nh qu\u1EA3 \u0111\u1EB9p nh\u1EA5t + l\u1EDDi k\xEAu g\u1ECDi h\xE0nh \u0111\u1ED9ng t\u1EF1 nhi\xEAn (b\xECnh lu\u1EADn / l\u01B0u clip / b\u1EA5m gi\u1ECF h\xE0ng).
-
-## 3. Quy t\u1EAFc kh\xF3a nh\xE2n v\u1EADt & phong c\xE1ch (Character & Style Lock)
-- Lu\xF4n \u0111\u1ECBnh ngh\u0129a 1 **Character Anchor** c\u1ED1 \u0111\u1ECBnh (\u0111\u1ED9 tu\u1ED5i, ki\u1EC3u t\xF3c, trang ph\u1EE5c, ph\u1EE5 ki\u1EC7n, b\u1ED1i c\u1EA3nh n\u1EC1n) v\xE0 l\u1EB7p l\u1EA1i nguy\xEAn v\u0103n \u1EDF \u0111\u1EA7u prompt m\u1ECDi c\u1EA3nh.
-- H\u1ED7 tr\u1EE3 Seedance 2.5 (one-take 30s), Muse AI (clip 10s lip-sync ti\u1EBFng Vi\u1EC7t), Veo 3 (c\u1EA3nh \u0111i\u1EC7n \u1EA3nh + SFX).
-
-## 4. Quy tr\xECnh th\u1EF1c thi b\u1EAFt bu\u1ED9c cho AI Agent
-1. Thu th\u1EADp ch\u1EE7 \u0111\u1EC1, s\u1EA3n ph\u1EA9m/ng\xE1ch, \u0111\u1ED1i t\u01B0\u1EE3ng xem v\xE0 model m\u1EE5c ti\xEAu t\u1EEB ng\u01B0\u1EDDi d\xF9ng.
-2. G\u1ECDi \`generate_video_storyboard\` \u0111\u1EC3 t\u1EA1o \u0111\u1EE7 4 c\u1EA3nh c\xF3 kh\xF3a nh\xE2n v\u1EADt, l\u1EDDi tho\u1EA1i v\xE0 ph\u1EE5 \u0111\u1EC1.
-3. G\u1ECDi \`create_video_from_skill\` \u0111\u1EC3 \u0111\xF3ng g\xF3i render pipeline (ho\u1EB7c g\u1EEDi l\u1EC7nh render t\u1EF1 \u0111\u1ED9ng qua webhook/API n\u1EBFu c\xF3).`
-  },
-  {
-    slug: "mcp-skill-agent-affiliate-tiktok",
-    name: "MCP Skill AI Agent \u2014 T\u1EF1 \u0110\u1ED9ng S\u1EA3n Xu\u1EA5t Video Affiliate TikTok Shop",
-    short_desc: "K\u1EBFt n\u1ED1i MCP v\xE0o Claude, Codex, Antigravity: ch\u1EC9 c\u1EA7n \u0111\u01B0a t\xEAn ho\u1EB7c th\xF4ng tin s\u1EA3n ph\u1EA9m, AI Agent t\u1EF1 g\u1ECDi Skill xu\u1EA5t tr\u1ECDn b\u1ED9 k\u1ECBch b\u1EA3n ch\u1ED1t \u0111\u01A1n, prompt c\u1EA3nh quay 9:16, voiceover & l\u1EC7nh t\u1EA1o video Affiliate.",
-    description: "<h3>T\u1EF1 \u0111\u1ED9ng ho\xE1 d\xE2y chuy\u1EC1n l\xE0m video Affiliate b\u1EB1ng AI Agent</h3><p>Thay v\xEC t\u1EA3i b\u1ED9 prompt v\u1EC1 m\xE1y r\u1ED3i t\u1EF1 ch\u1EC9nh s\u1EEDa t\u1EEBng c\xE2u ch\u1EEF cho m\u1ED7i s\u1EA3n ph\u1EA9m m\u1EDBi, <b>MCP Skill Affiliate TikTok Shop</b> bi\u1EBFn <b>Claude, Codex v\xE0 Antigravity</b> th\xE0nh tr\u1EE3 l\xFD s\u1EA3n xu\u1EA5t video ch\u1ED1t \u0111\u01A1n chuy\xEAn nghi\u1EC7p qua k\u1EBFt n\u1ED1i MCP tr\u1EF1c ti\u1EBFp.</p><h3>Quy tr\xECnh Agent ch\u1EA1y t\u1EF1 \u0111\u1ED9ng qua MCP</h3><ul><li><b>B\u01B0\u1EDBc 1:</b> Nh\u1EADp t\xEAn s\u1EA3n ph\u1EA9m, \u0111i\u1EC3m b\xE1n h\xE0ng (USP) v\xE0 gi\xE1 \u01B0u \u0111\xE3i v\xE0o Claude / Codex / Antigravity.</li><li><b>B\u01B0\u1EDBc 2:</b> Agent t\u1EF1 \u0111\u1ED9ng g\u1ECDi MCP tool n\u1EA1p b\u1ED9 <b>25 c\xF4ng th\u1EE9c Hook ch\u1ED1t \u0111\u01A1n</b> &amp; c\u1EA5u tr\xFAc PAS/AIDA t\u1ED1i \u01B0u cho TikTok Shop.</li><li><b>B\u01B0\u1EDBc 3:</b> Agent g\u1ECDi <code>create_video_from_skill</code> xu\u1EA5t b\u1ED9 prompt kh\xF3a s\u1EA3n ph\u1EA9m/nh\xE2n v\u1EADt, l\u1EDDi tho\u1EA1i lip-sync ti\u1EBFng Vi\u1EC7t, file ph\u1EE5 \u0111\u1EC1 SRT v\xE0 th\xF4ng s\u1ED1 render h\xE0ng lo\u1EA1t.</li><li><b>B\u01B0\u1EDBc 4:</b> Xu\u1EA5t s\u1EB5n nhi\u1EC1u bi\u1EBFn th\u1EC3 Hook \u0111\u1EC3 b\u1EA1n ch\u1EA1y test A/B t\xECm video win c\u1EF1c nhanh.</li></ul><h3>Ph\xF9 h\u1EE3p v\u1EDBi ai?</h3><p>Ch\u1EE7 shop TikTok Shop, KOC/Affiliate creator, team media mu\u1ED1n scale 10\u201330 video b\xE1n h\xE0ng m\u1ED7i ng\xE0y ngay trong Claude, Codex ho\u1EB7c Antigravity.</p>",
-    features: JSON.stringify([
-      "T\xEDch h\u1EE3p tr\u1EF1c ti\u1EBFp v\xE0o Claude, Codex, Antigravity qua MCP",
-      "\u0110\u01B0a t\xEAn s\u1EA3n ph\u1EA9m -> Agent t\u1EF1 xu\u1EA5t tr\u1ECDn g\xF3i k\u1ECBch b\u1EA3n + prompt + l\u1EC7nh render",
-      "S\u1EB5n 25 khung Hook gi\u1EEF ch\xE2n 3 gi\xE2y & CTA chu\u1EA9n TikTok Shop",
-      "Sinh nhanh 3 bi\u1EBFn th\u1EC3 Hook \u0111\u1EC3 test A/B t\xECm clip ra \u0111\u01A1n",
-      "Xu\u1EA5t k\xE8m script voiceover ti\u1EBFng Vi\u1EC7t, ph\u1EE5 \u0111\u1EC1 SRT v\xE0 hashtag ng\xE1ch",
-      "C\u1EADp nh\u1EADt c\xF4ng th\u1EE9c ch\u1ED1t \u0111\u01A1n m\u1EDBi tr\u1EF1c ti\u1EBFp t\u1EEB MCP Server"
-    ]),
-    tech_stack: JSON.stringify(["MCP Protocol", "Claude", "Codex", "Antigravity", "Muse AI", "Seedance 2.5", "CapCut"]),
-    version: "v1.0 MCP",
-    price: 89e4,
-    original_price: 179e4,
-    thumbnail: "/static/mcp-skill-affiliate-cover.svg",
-    demo_video_url: "https://pub-f4217cb984184329a6951a68b9bd0b7c.r2.dev/videos/demo-skill-fitness.mp4",
-    file_size: "MCP Live API",
-    is_featured: 1,
-    is_hot: 0,
-    is_new: 1,
-    sold_count: 41,
-    view_count: 3190,
-    rating: 4.9,
-    rating_count: 18,
-    mcp_server_name: "khoskill-affiliate-agent",
-    mcp_clients: JSON.stringify(["Claude", "Codex", "Antigravity"]),
-    mcp_tools: JSON.stringify([
-      { name: "list_licensed_skills", description: "Ki\u1EC3m tra danh s\xE1ch MCP Skill \u0111\xE3 k\xEDch ho\u1EA1t" },
-      { name: "get_skill_blueprint", description: "N\u1EA1p c\xF4ng th\u1EE9c Hook 3s, c\u1EA5u tr\xFAc b\xE1n h\xE0ng PAS/AIDA v\xE0 lu\u1EADt kh\xF3a s\u1EA3n ph\u1EA9m TikTok Shop" },
-      { name: "generate_video_storyboard", description: "T\u1EA1o storyboard 30s ch\u1ED1t \u0111\u01A1n + 3 bi\u1EBFn th\u1EC3 Hook theo t\xEAn s\u1EA3n ph\u1EA9m v\xE0 USP" },
-      { name: "create_video_from_skill", description: "Xu\u1EA5t g\xF3i render video Affiliate 9:16 ho\xE0n ch\u1EC9nh k\xE8m voiceover, ph\u1EE5 \u0111\u1EC1 SRT & CTA gi\u1ECF h\xE0ng" }
-    ]),
-    mcp_skill_prompt: `# SKILL BLUEPRINT: AI AGENT AFFILIATE TIKTOK SHOP (MCP)
-
-## 1. C\xF4ng th\u1EE9c chuy\u1EC3n \u0111\u1ED5i 30s (Hook - Agitate - Demo - Social Proof - CTA)
-- **00:00 - 00:04 (Hook Ch\u1EB7n Cu\u1ED9n)**: G\u1ECDi th\u1EB3ng t\u1EC7p kh\xE1ch h\xE0ng + c\u1EADn c\u1EA3nh s\u1EA3n ph\u1EA9m \u0111ang ho\u1EA1t \u0111\u1ED9ng th\u1EF1c t\u1EBF.
-- **00:04 - 00:10 (N\u1ED7i \u0111au th\u1EF1c t\u1EBF)**: N\xEAu 1 v\u1EA5n \u0111\u1EC1 c\u1EE5 th\u1EC3 g\xE2y kh\xF3 ch\u1ECBu h\u1EB1ng ng\xE0y.
-- **00:10 - 00:21 (Demo USP s\u1EA3n ph\u1EA9m)**: T\u1EADp trung 2 l\u1EE3i \xEDch m\u1EA1nh nh\u1EA5t b\u1EB1ng g\xF3c quay c\u1EADn (macro / close-up).
-- **00:21 - 00:26 (B\u1EB1ng ch\u1EE9ng & X\u1EED l\xFD t\u1EEB ch\u1ED1i)**: So s\xE1nh gi\xE1 tr\u1ECB/chi ph\xED ho\u1EB7c \u0111\u1ED9 b\u1EC1n th\u1EF1c t\u1EBF.
-- **00:26 - 00:30 (CTA Gi\u1ECF H\xE0ng)**: Ch\u1EC9 gi\u1ECF h\xE0ng g\xF3c tr\xE1i t\u1EF1 nhi\xEAn.
-
-## 2. A/B Test 3 bi\u1EBFn th\u1EC3 Hook
-- M\u1ED7i l\u1EA7n ch\u1EA1y Skill lu\xF4n xu\u1EA5t k\xE8m **3 bi\u1EBFn th\u1EC3 Hook \u0111\u1EA7u 3 gi\xE2y** \u0111\u1EC3 test nhanh t\xECm video win.`
-  }
-];
 async function runOnce(db) {
   try {
-    const flag = await db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null);
-    if (flag?.value === "1") {
+    const [flag04, flag05] = await Promise.all([
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null)
+    ]);
+    if (flag04?.value === "1" && flag05?.value === "1") {
       _done = true;
       return;
     }
-    const alters = [
-      "ALTER TABLE products ADD COLUMN mcp_endpoint TEXT",
-      "ALTER TABLE products ADD COLUMN mcp_server_name TEXT",
-      "ALTER TABLE products ADD COLUMN mcp_clients TEXT",
-      "ALTER TABLE products ADD COLUMN mcp_tools TEXT",
-      "ALTER TABLE products ADD COLUMN mcp_skill_prompt TEXT",
-      "ALTER TABLE products ADD COLUMN mcp_render_webhook TEXT",
-      "ALTER TABLE licenses ADD COLUMN mcp_call_count INTEGER NOT NULL DEFAULT 0",
-      "ALTER TABLE licenses ADD COLUMN last_mcp_call_at TIMESTAMP"
-    ];
-    for (const sql of alters) {
-      await db.prepare(sql).run().catch(() => null);
-    }
-    await db.prepare(
-      `SELECT setval(pg_get_serial_sequence('categories', 'id'), COALESCE((SELECT MAX(id) FROM categories), 1), (SELECT COUNT(*) > 0 FROM categories))`
-    ).first().catch(() => null);
-    await db.prepare(
-      `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
-    ).first().catch(() => null);
-    const orders = [
-      ["skill-video-ai", 1],
-      ["khoa-hoc-video-ai", 3],
-      ["chatbot-ai", 4],
-      ["app-video-ai", 5],
-      ["combo", 6]
-    ];
-    for (const [slug, ord] of orders) {
-      await db.prepare("UPDATE categories SET sort_order=? WHERE slug=?").bind(ord, slug).run().catch(() => null);
-    }
-    let catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
-    if (!catRow) {
-      const ins = await db.prepare(
-        `INSERT INTO categories (slug, name, description, icon, color, sort_order) VALUES (?,?,?,?,?,?)`
-      ).bind(
-        "skill-ai-agent-mcp",
-        "Skill AI Agent (MCP)",
-        "Skill k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp d\u1EA1ng MCP cho Claude, Codex, Antigravity \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill, kh\xF4ng c\u1EA7n t\u1EA3i v\u1EC1 l\xE0m th\u1EE7 c\xF4ng",
-        "fa-plug-circle-bolt",
-        "cyan",
-        2
-      ).run();
-      catRow = { id: ins.meta.last_row_id };
-    }
-    if (!catRow?.id) {
-      catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
-    }
-    const catId = catRow?.id || null;
-    for (const p of STARTER_MCP_PRODUCTS) {
-      const exists = await db.prepare("SELECT id FROM products WHERE slug=?").bind(p.slug).first().catch(() => null);
-      if (!exists) {
-        await db.prepare(
-          `INSERT INTO products (
-            slug, name, category_id, short_desc, description, features, tech_stack, version,
-            price, original_price, thumbnail, demo_video_url, demo_url, download_url, doc_url,
-            file_size, product_type, is_featured, is_hot, is_new, status,
-            sold_count, view_count, rating, rating_count,
-            mcp_endpoint, mcp_server_name, mcp_clients, mcp_tools, mcp_skill_prompt, mcp_render_webhook
-          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-        ).bind(
-          p.slug,
-          p.name,
-          catId,
-          p.short_desc,
-          p.description,
-          p.features,
-          p.tech_stack,
-          p.version,
-          p.price,
-          p.original_price,
-          p.thumbnail,
-          p.demo_video_url,
-          "",
-          "",
-          "",
-          p.file_size,
-          "mcp_skill",
-          p.is_featured,
-          p.is_hot,
-          p.is_new,
-          "published",
-          p.sold_count,
-          p.view_count,
-          p.rating,
-          p.rating_count,
-          "",
-          p.mcp_server_name,
-          p.mcp_clients,
-          p.mcp_tools,
-          p.mcp_skill_prompt,
-          ""
-        ).run();
+    let mutated = false;
+    if (flag04?.value !== "1") {
+      const alters = [
+        "ALTER TABLE products ADD COLUMN mcp_endpoint TEXT",
+        "ALTER TABLE products ADD COLUMN mcp_server_name TEXT",
+        "ALTER TABLE products ADD COLUMN mcp_clients TEXT",
+        "ALTER TABLE products ADD COLUMN mcp_tools TEXT",
+        "ALTER TABLE products ADD COLUMN mcp_skill_prompt TEXT",
+        "ALTER TABLE products ADD COLUMN mcp_render_webhook TEXT",
+        "ALTER TABLE licenses ADD COLUMN mcp_call_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE licenses ADD COLUMN last_mcp_call_at TIMESTAMP"
+      ];
+      for (const sql of alters) {
+        await db.prepare(sql).run().catch(() => null);
       }
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('categories', 'id'), COALESCE((SELECT MAX(id) FROM categories), 1), (SELECT COUNT(*) > 0 FROM categories))`
+      ).first().catch(() => null);
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
+      ).first().catch(() => null);
+      const orders = [
+        ["skill-video-ai", 1],
+        ["khoa-hoc-video-ai", 3],
+        ["chatbot-ai", 4],
+        ["app-video-ai", 5],
+        ["combo", 6]
+      ];
+      for (const [slug, ord] of orders) {
+        await db.prepare("UPDATE categories SET sort_order=? WHERE slug=?").bind(ord, slug).run().catch(() => null);
+      }
+      const catExists = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
+      if (!catExists) {
+        await db.prepare(
+          `INSERT INTO categories (slug, name, description, icon, color, sort_order) VALUES (?,?,?,?,?,?)`
+        ).bind(
+          "skill-ai-agent-mcp",
+          "Skill AI Agent (MCP)",
+          "Skill d\u1EF1ng video b\u1EB1ng AI Agent (Claude, Codex, Antigravity) \u2014 k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP k\xE8m link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit",
+          "fa-plug-circle-bolt",
+          "cyan",
+          2
+        ).run().catch(() => null);
+      }
+      await db.prepare(
+        `INSERT INTO settings (key, value) VALUES ('mcp_migration_0004_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+      ).run();
+      mutated = true;
     }
-    await db.prepare(
-      `INSERT INTO settings (key, value) VALUES ('mcp_migration_0004_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
-    ).run();
-    invalidateCache();
+    if (flag05?.value !== "1") {
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('categories', 'id'), COALESCE((SELECT MAX(id) FROM categories), 1), (SELECT COUNT(*) > 0 FROM categories))`
+      ).first().catch(() => null);
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
+      ).first().catch(() => null);
+      let catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
+      if (!catRow) {
+        const ins = await db.prepare(
+          `INSERT INTO categories (slug, name, description, icon, color, sort_order) VALUES (?,?,?,?,?,?)`
+        ).bind(
+          "skill-ai-agent-mcp",
+          "Skill AI Agent (MCP)",
+          "Skill d\u1EF1ng video b\u1EB1ng AI Agent (Claude, Codex, Antigravity) \u2014 k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP k\xE8m link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit",
+          "fa-plug-circle-bolt",
+          "cyan",
+          2
+        ).run();
+        catRow = { id: ins.meta.last_row_id };
+      } else {
+        await db.prepare(
+          `UPDATE categories SET description=? WHERE id=?`
+        ).bind(
+          "Skill d\u1EF1ng video b\u1EB1ng AI Agent (Claude, Codex, Antigravity) \u2014 k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp MCP k\xE8m link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit",
+          catRow.id
+        ).run().catch(() => null);
+      }
+      if (!catRow?.id) {
+        catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
+      }
+      const catId = catRow?.id || null;
+      for (const oldSlug of LEGACY_PLACEHOLDER_MCP_SLUGS) {
+        const oldProd = await db.prepare("SELECT id FROM products WHERE slug=?").bind(oldSlug).first().catch(() => null);
+        if (!oldProd?.id) continue;
+        await db.prepare("DELETE FROM combo_items WHERE product_id=?").bind(oldProd.id).run().catch(() => null);
+        await db.prepare("DELETE FROM cart_items WHERE product_id=?").bind(oldProd.id).run().catch(() => null);
+        await db.prepare("DELETE FROM wishlists WHERE product_id=?").bind(oldProd.id).run().catch(() => null);
+        const refOrder = await db.prepare("SELECT id FROM order_items WHERE product_id=? LIMIT 1").bind(oldProd.id).first().catch(() => null);
+        const refLic = await db.prepare("SELECT id FROM licenses WHERE product_id=? LIMIT 1").bind(oldProd.id).first().catch(() => null);
+        if (!refOrder && !refLic) {
+          await db.prepare("DELETE FROM products WHERE id=?").bind(oldProd.id).run().catch(() => null);
+        } else {
+          await db.prepare(`UPDATE products SET status='draft' WHERE id=?`).bind(oldProd.id).run().catch(() => null);
+        }
+      }
+      for (const p of REAL_MCP_VIDEO_SKILLS) {
+        const exists = await db.prepare("SELECT id FROM products WHERE slug=?").bind(p.slug).first().catch(() => null);
+        if (!exists) {
+          await db.prepare(
+            `INSERT INTO products (
+              slug, name, category_id, short_desc, description, features, tech_stack, version,
+              price, original_price, thumbnail, demo_video_url, demo_url, download_url, doc_url,
+              file_size, product_type, is_featured, is_hot, is_new, status,
+              sold_count, view_count, rating, rating_count,
+              mcp_endpoint, mcp_server_name, mcp_clients, mcp_tools, mcp_skill_prompt, mcp_render_webhook
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+          ).bind(
+            p.slug,
+            p.name,
+            catId,
+            p.short_desc,
+            p.description,
+            p.features,
+            p.tech_stack,
+            p.version,
+            p.price,
+            p.original_price,
+            p.thumbnail,
+            p.demo_video_url,
+            "",
+            p.download_url,
+            p.doc_url,
+            p.file_size,
+            "mcp_skill",
+            p.is_featured,
+            p.is_hot,
+            p.is_new,
+            "published",
+            p.sold_count,
+            p.view_count,
+            p.rating,
+            p.rating_count,
+            "",
+            p.mcp_server_name,
+            p.mcp_clients,
+            p.mcp_tools,
+            p.mcp_skill_prompt,
+            ""
+          ).run();
+        }
+      }
+      await db.prepare(
+        `INSERT INTO settings (key, value) VALUES ('mcp_migration_0005_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+      ).run();
+      mutated = true;
+    }
+    if (mutated) invalidateCache();
     _done = true;
   } catch (err) {
     console.error("[MCP_BOOTSTRAP]", err);
@@ -17224,9 +17757,9 @@ app.get("/", async (c) => {
       db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                   FROM categories c ORDER BY c.sort_order`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.is_featured DESC, p.id DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.id ASC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                   WHERE p.status='published' AND p.product_type='skill' ORDER BY p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -17945,7 +18478,8 @@ async function notifyOrderPaid(env, db, order, origin = "https://khoskill.site")
     const [buyer, licenses] = await Promise.all([
       db.prepare("SELECT id, email, full_name, status FROM users WHERE id=?").bind(order.user_id).first(),
       db.prepare(
-        `SELECT l.license_key, p.name product_name
+        `SELECT l.license_key, p.name product_name, p.download_url, p.doc_url,
+                p.product_type, p.slug, p.mcp_endpoint, p.mcp_server_name
          FROM licenses l JOIN products p ON p.id=l.product_id
          WHERE l.order_id=? ORDER BY l.id`
       ).bind(order.id).all()

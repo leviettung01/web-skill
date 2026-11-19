@@ -177,9 +177,9 @@ app.get('/', async (c) => {
       db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                   FROM categories c ORDER BY c.sort_order`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.is_featured DESC, p.id DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.id ASC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                   WHERE p.status='published' AND p.product_type='skill' ORDER BY p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -903,7 +903,8 @@ async function notifyOrderPaid(env: any, db: D1Database, order: any, origin = 'h
     const [buyer, licenses] = await Promise.all([
       db.prepare('SELECT id, email, full_name, status FROM users WHERE id=?').bind(order.user_id).first<any>(),
       db.prepare(
-        `SELECT l.license_key, p.name product_name
+        `SELECT l.license_key, p.name product_name, p.download_url, p.doc_url,
+                p.product_type, p.slug, p.mcp_endpoint, p.mcp_server_name
          FROM licenses l JOIN products p ON p.id=l.product_id
          WHERE l.order_id=? ORDER BY l.id`
       ).bind(order.id).all()

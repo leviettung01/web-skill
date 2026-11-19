@@ -117,9 +117,10 @@ export interface McpToolDef {
 
 export const DEFAULT_MCP_TOOLS: McpToolDef[] = [
   { name: 'list_licensed_skills', description: 'Liệt kê toàn bộ Skill AI Agent (MCP) đang kích hoạt theo License Key' },
-  { name: 'get_skill_blueprint', description: 'Nạp quy trình, luật khóa nhân vật, Hook-Body-CTA và template prompt chuẩn của Skill' },
-  { name: 'generate_video_storyboard', description: 'Tự động tách chủ đề thành storyboard 30s kèm prompt từng cảnh cho Seedance 2.5 / Muse AI / Veo 3' },
-  { name: 'create_video_from_skill', description: 'Chạy pipeline tạo video theo Skill (xuất gói render + SRT phụ đề hoặc đẩy qua render webhook)' }
+  { name: 'get_skill_blueprint', description: 'Nạp toàn bộ SKILL.md, quy trình từng pha, thông số kỹ thuật & tiêu chuẩn QA của Skill' },
+  { name: 'get_skill_assets_and_setup', description: 'Lấy link Google Drive tải bộ Skill Kit (templates, scripts, SFX, fonts) và lệnh cài môi trường cho Claude/Codex/Antigravity' },
+  { name: 'generate_video_storyboard', description: 'Phân tích brief và xuất kịch bản, chia beat thời gian, cấu trúc cảnh & phụ đề SRT theo chuẩn Skill' },
+  { name: 'create_video_from_skill', description: 'Lập pipeline dựng video đầy đủ từng pha (kèm chuỗi lệnh script Python/Node/HyperFrames/FFmpeg -14 LUFS) cho AI Agent thực thi' }
 ]
 
 export function parseMcpTools(raw?: string | null): McpToolDef[] {
@@ -155,14 +156,18 @@ export function isDirectVideoUrl(url?: string | null): boolean {
   return /\.(mp4|webm|mov)(\?.*)?$/i.test(url.trim())
 }
 
-/** Chuẩn hóa link YouTube (/watch?v=, youtu.be/, /shorts/) sang URL embed */
+/** Chuẩn hóa link YouTube (/watch?v=, youtu.be/, /shorts/) hoặc Google Drive (/file/d/<ID>) sang URL embed */
 export function toEmbedVideoUrl(url?: string | null): string {
   const raw = (url || '').trim()
   if (!raw) return ''
-  if (raw.includes('/embed/')) return raw
+  if (raw.includes('/embed/') || raw.includes('/preview')) return raw
   try {
     const u = new URL(raw)
     const host = u.hostname.replace(/^www\./, '').toLowerCase()
+    if (host === 'drive.google.com') {
+      const m = u.pathname.match(/\/file\/d\/([^/]+)/)
+      if (m && m[1]) return `https://drive.google.com/file/d/${m[1]}/preview`
+    }
     let id = ''
     if (host === 'youtu.be') {
       id = u.pathname.split('/').filter(Boolean)[0] || ''

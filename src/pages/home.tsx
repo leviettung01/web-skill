@@ -159,6 +159,121 @@ const DEMO_VIDEOS = [
     slug: 'skill-video-affiliate-fitness',
     price: 449000,
     originalPrice: 899000
+  },
+  {
+    id: 'mcp-travel-video',
+    title: 'Travel-Video-Editing — Skill AI Agent Dựng Video Du Lịch 9:16',
+    shortTitle: 'AI Agent Travel Video 9:16',
+    tag: 'AI Agent MCP',
+    dur: '0:38',
+    orient: 'portrait' as const,
+    platform: 'tiktok' as const,
+    handle: '@khoskill.agent',
+    caption: 'AI Agent tự dựng trọn gói video quảng cáo Tour Nhật Bản 4K + Voice + GSAP + -14 LUFS #TravelAI #MCP',
+    music: '♫ Autumn Gold Travel Cinema',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=travelmcp',
+    likes: '198.4K',
+    comments: '3.2K',
+    saves: '29.5K',
+    shares: '8.7K',
+    desc: 'Skill AI Agent dựng video quảng cáo tour 9:16: tự tìm B-roll 4K, ghép giọng Vbee/Edge-TTS, 47 SFX & render tự động.',
+    videoUrl: '/static/demos/demo-travel-video-editing.mp4',
+    posterUrl: '/static/demos/poster-travel-video-editing.jpg',
+    slug: 'travel-video-editing',
+    price: 599000,
+    originalPrice: 1199000
+  },
+  {
+    id: 'mcp-edit-bds',
+    title: 'Skill-Edit-BDS — Skill AI Agent Video BĐS GeoLayers & 3D Blender',
+    shortTitle: 'AI Agent BĐS GeoLayers 3D',
+    tag: 'AI Agent MCP',
+    dur: '0:59',
+    orient: 'portrait' as const,
+    platform: 'reels' as const,
+    handle: '@khoskill.bds',
+    caption: 'AI Agent tự dựng video review BĐS bản đồ vệ tinh GeoLayers + mô hình 3D Blender + callout tiện ích 45° #BDS #GeoLayers',
+    music: '♫ Pure Cinema Real Estate',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=bdsmcp',
+    likes: '312.6K',
+    comments: '6.8K',
+    saves: '54.2K',
+    shares: '19.3K',
+    desc: 'Skill AI Agent cao cấp dựng video BĐS bản đồ vệ tinh OSM, mô hình 3D Blender ENU & chuyển cảnh WebGL2.',
+    videoUrl: '/static/demos/demo-skill-edit-bds.mp4',
+    posterUrl: '/static/demos/poster-skill-edit-bds.jpg',
+    slug: 'skill-edit-bds',
+    price: 1500000,
+    originalPrice: 2990000
+  },
+  {
+    id: 'mcp-viral-talking-head',
+    title: 'Viral-Talking-Head-Video-Edit — AI Agent Walking 3-Plane Depth',
+    shortTitle: 'AI Agent Walking 3-Plane Depth',
+    tag: 'AI Agent MCP',
+    dur: '0:50',
+    orient: 'portrait' as const,
+    platform: 'tiktok' as const,
+    handle: '@khoskill.motion',
+    caption: 'Tự tách chủ thể AI (U2-Net) đặt chữ khổng lồ sau lưng người nói + KPI sparkline & phụ đề động #TalkingHead #MCP',
+    music: '♫ Field Motion Studio Beat',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=walkingmcp',
+    likes: '264.1K',
+    comments: '4.4K',
+    saves: '41.8K',
+    shares: '12.6K',
+    desc: 'Skill AI Agent dựng Walking Talking Head 3 lớp chiều sâu với ONNX U2-Net VP9 Alpha & 14 component GSAP.',
+    videoUrl: '/static/demos/demo-viral-talking-head-video-edit.mp4',
+    posterUrl: '/static/demos/poster-viral-talking-head-video-edit.jpg',
+    slug: 'viral-talking-head-video-edit',
+    price: 599000,
+    originalPrice: 1199000
+  },
+  {
+    id: 'mcp-lich-su',
+    title: 'Phan-Tich-Style-Video-Lich-Su — AI Agent Phim Tài Liệu 16:9',
+    shortTitle: 'AI Agent Tài Liệu Lịch Sử 16:9',
+    tag: 'AI Agent MCP',
+    dur: '1:05',
+    orient: 'landscape' as const,
+    platform: 'shorts' as const,
+    handle: '@khoskill.history',
+    caption: 'Dựng phim tài liệu lịch sử Điện Biên Phủ 1954 bằng AI Agent: Bản đồ GeoJSON VN + Hoàng Sa & Trường Sa #LichSu #YouTube',
+    music: '♫ Archival Documentary Score',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=historymcp',
+    likes: '289.0K',
+    comments: '7.1K',
+    saves: '48.9K',
+    shares: '16.2K',
+    desc: 'Skill AI Agent dựng phim tài liệu lịch sử 16:9 chuẩn tư liệu kèm GeoJSON Việt Nam & kiểm duyệt Playwright QA.',
+    videoUrl: '/static/demos/demo-phan-tich-style-video-lich-su.mp4',
+    posterUrl: '/static/demos/poster-phan-tich-style-video-lich-su.jpg',
+    slug: 'phan-tich-style-video-lich-su',
+    price: 599000,
+    originalPrice: 1199000
+  },
+  {
+    id: 'mcp-fitness-manga',
+    title: 'Fitness-Video-Editing — AI Agent Video Gym Manga 16:9',
+    shortTitle: 'AI Agent Fitness Manga 16:9',
+    tag: 'AI Agent MCP',
+    dur: '1:05',
+    orient: 'landscape' as const,
+    platform: 'shorts' as const,
+    handle: '@khoskill.fitness',
+    caption: 'AI Agent dựng video khoa học Calisthenics phong cách Manga giải phẫu (52 tư thế RGBA + 5-Lock Cel) #Fitness #Calisthenics',
+    music: '♫ Melodic Fitness Uplift',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=fitmcp',
+    likes: '345.2K',
+    comments: '8.3K',
+    saves: '63.5K',
+    shares: '21.9K',
+    desc: 'Skill AI Agent dựng video Fitness Manga song ngữ Việt/Anh: 52 tư thế RGBA, 21 archetype GSAP & render song song.',
+    videoUrl: '/static/demos/demo-fitness-video-editing.mp4',
+    posterUrl: '/static/demos/poster-fitness-video-editing.jpg',
+    slug: 'fitness-video-editing',
+    price: 1500000,
+    originalPrice: 2990000
   }
 ]
 
@@ -622,16 +737,16 @@ export const HomePage: FC<Props> = (props) => {
                       <i class="fas fa-plug-circle-bolt" aria-hidden="true"></i>
                     </div>
                     <div>
-                      <h3 class="font-bold text-white text-base">Skill AI Agent (MCP Live)</h3>
-                      <div class="text-[11px] text-cyan-300 font-semibold">Kết nối trực tiếp · Từ 890.000đ</div>
+                      <h3 class="font-bold text-white text-base">Skill AI Agent (MCP + Drive Kit)</h3>
+                      <div class="text-[11px] text-cyan-300 font-semibold">Kết nối trực tiếp MCP · Từ 599.000đ</div>
                     </div>
                   </div>
-                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black uppercase">AI Agent tự chạy</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black uppercase">AI Agent tự dựng</span>
                 </div>
                 <ul class="space-y-2.5 text-xs sm:text-sm text-[#e2e1f5] mb-4">
-                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span><b>Kết nối trực tiếp qua MCP</b> vào Claude, Codex, Antigravity bằng License Key.</span></li>
-                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span>Ra lệnh 1 câu — AI Agent tự gọi tool nạp Skill, khóa nhân vật &amp; xuất gói tạo video 30s.</span></li>
-                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span>Không cần tải lại file khi có bản mới — Agent luôn gọi phiên bản Skill mới nhất trên server.</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span><b>Kết nối trực tiếp qua MCP</b> vào Claude, Codex, Antigravity + nhận <b>Link Google Drive trọn bộ Skill Kit</b> qua Gmail.</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span>AI Agent tự đọc <code>SKILL.md</code>, chạy script dựng video 1080p (BĐS GeoLayers 3D, Du lịch, Talking Head, Lịch sử, Fitness Manga).</span></li>
+                  <li class="flex gap-2.5"><i class="fas fa-bolt text-cyan-300 mt-1 shrink-0" aria-hidden="true"></i><span>Đầy đủ starter templates, SFX, fonts, video demo 1080p gốc và đồng bộ bản mới qua MCP Server trọn đời.</span></li>
                 </ul>
                 <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-cyan-500/20 text-[11px]">
                   <span class="text-[#9492b8] font-semibold">Tương thích sẵn:</span>
@@ -644,7 +759,7 @@ export const HomePage: FC<Props> = (props) => {
 
             {mcpSkills.length > 0 && (
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {mcpSkills.slice(0, 3).map(p => <ProductCard p={p} />)}
+                {mcpSkills.slice(0, 6).map(p => <ProductCard p={p} />)}
               </div>
             )}
           </div>
@@ -678,7 +793,7 @@ export const HomePage: FC<Props> = (props) => {
 
         <div role="tabpanel" class="tab-panel" data-tab="featured" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {featured.slice(0, 8).map(p => <ProductCard p={p} />)}
+            {featured.slice(0, 12).map(p => <ProductCard p={p} />)}
           </div>
         </div>
         <div role="tabpanel" class="tab-panel hidden" data-tab="mcp" data-group="hp">

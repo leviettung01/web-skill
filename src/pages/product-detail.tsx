@@ -122,17 +122,17 @@ export const ProductDetailPage: FC<Props> = (props) => {
                     </div>
                   </div>
                   <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fas fa-key" aria-hidden="true"></i></div>
+                    <div class="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-sm shrink-0"><i class="fab fa-google-drive" aria-hidden="true"></i></div>
                     <div>
-                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Kích hoạt</div>
-                      <div class="text-xs font-bold text-white">License Key tức thì 24/7</div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Giao hàng kép</div>
+                      <div class="text-xs font-bold text-white">Link Drive + Gmail + MCP Key</div>
                     </div>
                   </div>
                   <div class="p-3.5 rounded-xl bg-gradient-to-br from-[#0f0e24] to-[#161436] border border-[#221e54] flex items-center gap-3">
                     <div class="w-9 h-9 rounded-lg bg-fuchsia-500/15 text-fuchsia-300 grid place-items-center text-sm shrink-0"><i class="fas fa-arrows-rotate" aria-hidden="true"></i></div>
                     <div>
-                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Cập nhật</div>
-                      <div class="text-xs font-bold text-white">Đồng bộ live từ Server</div>
+                      <div class="text-[10px] text-[#9492b8] uppercase font-bold tracking-wider">Bản quyền</div>
+                      <div class="text-xs font-bold text-white">Trọn đời + Update miễn phí</div>
                     </div>
                   </div>
                 </div>
@@ -409,7 +409,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
                     <i class="fas fa-plug-circle-bolt text-cyan-400" aria-hidden="true"></i>Xem trước cấu hình kết nối MCP
                   </h3>
                   <p class="text-sm text-[#c2c0e0] leading-relaxed">
-                    Sau khi thanh toán, License Key thật của bạn sẽ tự động điền sẵn vào từng đoạn cấu hình dưới đây trong mục <a href="/tai-khoan/san-pham" class="text-cyan-300 underline font-semibold">Sản phẩm của tôi</a>. Bạn chỉ cần bấm Copy và dán 1 lần duy nhất.
+                    Ngay sau khi thanh toán, hệ thống tự động gửi về <b>Gmail của bạn</b> và mở trong mục <a href="/tai-khoan/san-pham" class="text-cyan-300 underline font-semibold">Sản phẩm của tôi</a> cả <b>2 kênh sử dụng</b>: (1) <b>Link Google Drive tải trọn bộ Skill Kit</b> (starter template, scripts Python/Node, SFX, fonts &amp; video demo 1080p gốc) để giải nén vào thư mục skills của AI Agent; (2) <b>License Key + cấu hình MCP copy-paste 1 click</b> cho Claude, Codex, Antigravity.
                   </p>
                 </div>
 

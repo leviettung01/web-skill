@@ -19,7 +19,7 @@ export const POLICY_DOCS: Record<string, { heading: string; html: string }> = {
 <p>Tuỳ loại sản phẩm, bạn sẽ nhận được:</p>
 <ul>
 <li><b>Skill AI (tự tải &amp; làm theo):</b> link Google Drive / bộ ZIP chứa trọn bộ prompt, quy trình từng bước và checklist theo ngách để bạn tự thao tác</li>
-<li><b>Skill AI Agent (MCP):</b> URL MCP Server + License Key riêng + đoạn cấu hình copy-paste sẵn cho <b>Claude, Codex, Antigravity</b> — AI Agent tự gọi tool và tạo video theo Skill ngay, không cần tải file thủ công</li>
+<li><b>Skill AI Agent (MCP):</b> nhận đồng thời <b>Link Google Drive tải trọn bộ Skill Kit + Demo 1080p gốc</b> (gửi ngay qua Gmail &amp; trang Tài khoản) và <b>URL MCP Server + License Key riêng</b> copy-paste sẵn cho <b>Claude, Codex, Antigravity</b></li>
 <li><b>Chatbot / App (khi mở bán):</b> link kích hoạt hoặc bộ cài riêng theo hướng dẫn</li>
 <li><b>Combo (khi mở bán):</b> toàn bộ sản phẩm con được kích hoạt cùng lúc</li>
 </ul>

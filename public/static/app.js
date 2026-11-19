@@ -206,6 +206,10 @@
       var m3 = url.match(/shorts\/([^?&/]+)/);
       if (m3) return 'https://www.youtube.com/embed/' + m3[1] + '?autoplay=1&rel=0';
     }
+    if (url.indexOf('drive.google.com/file/d/') !== -1) {
+      var m4 = url.match(/\/file\/d\/([^/?#]+)/);
+      if (m4) return 'https://drive.google.com/file/d/' + m4[1] + '/preview';
+    }
     return url;
   }
 

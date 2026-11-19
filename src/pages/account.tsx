@@ -327,6 +327,11 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[]; origin?: string
                           </div>
                         </div>
 
+                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-100 leading-relaxed">
+                          <b class="text-emerald-300"><i class="fas fa-circle-info mr-1" aria-hidden="true"></i>Cách dùng chuẩn 2 bước:</b>{' '}
+                          (1) Bấm <b>Tải bộ Skill Kit (Google Drive)</b> bên dưới, giải nén vào thư mục skills của AI Agent (<code class="text-white">.claude/skills/</code>, <code class="text-white">.codex/skills/</code> hoặc <code class="text-white">.agents/skills/</code>) để có đủ template, scripts, SFX, fonts &amp; demo gốc; (2) Dán cấu hình <b>MCP</b> bên trên để AI Agent tự nạp <code class="text-white">SKILL.md</code> mới nhất và dựng video tự động!
+                        </div>
+
                         {/* Sample Agent Prompt */}
                         <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex flex-col sm:flex-row sm:items-center gap-2.5 justify-between">
                           <div class="text-xs text-cyan-100 leading-relaxed min-w-0">
@@ -355,10 +360,18 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[]; origin?: string
 
                     <div class="flex flex-wrap gap-2">
                       {mcp ? (
-                        <button type="button" data-license-id={l.id}
-                          class="btn-test-mcp inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
-                          <i class="fas fa-plug-circle-check" aria-hidden="true"></i>Kiểm tra kết nối MCP
-                        </button>
+                        <>
+                          {l.download_url && (
+                            <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
+                              class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-emerald-500/20 transition">
+                              <i class="fab fa-google-drive" aria-hidden="true"></i>Tải bộ Skill Kit (Google Drive)
+                            </a>
+                          )}
+                          <button type="button" data-license-id={l.id}
+                            class="btn-test-mcp inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
+                            <i class="fas fa-plug-circle-check" aria-hidden="true"></i>Kiểm tra kết nối MCP
+                          </button>
+                        </>
                       ) : l.download_url ? (
                         <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
                           class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-indigo-500/20 transition">
@@ -368,12 +381,6 @@ export const MyProductsPage: FC<LayoutProps & { licenses: any[]; origin?: string
                         <span class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-sm">
                           <i class="fas fa-clock" aria-hidden="true"></i>Đang chuẩn bị link...
                         </span>
-                      )}
-                      {mcp && l.download_url && (
-                        <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
-                          class="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-cyan-400 hover:text-white font-semibold text-sm transition">
-                          <i class="fas fa-download" aria-hidden="true"></i>Tài nguyên bổ sung
-                        </a>
                       )}
                       {l.doc_url && (
                         <a href={l.doc_url} target="_blank" rel="noopener"
