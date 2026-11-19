@@ -1,4 +1,4 @@
-import app from '../src/index'
+import app from './index'
 
 function readBody(req: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {

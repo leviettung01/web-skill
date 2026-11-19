@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "vite",
     "dev:sandbox": "wrangler pages dev dist --d1=webapp-production --local --ip 0.0.0.0 --port 3000",
-    "build": "npm run build:css && esbuild api/index.ts --bundle --platform=node --format=esm --jsx=automatic --jsx-import-source=hono/jsx --outfile=api/index.js && vite build",
+    "build:vercel": "npm run build:css && esbuild src/vercel-entry.ts --bundle --platform=node --format=esm --jsx=automatic --jsx-import-source=hono/jsx --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=api/index.js",
+    "build": "npm run build:vercel && vite build",
     "preview": "wrangler pages dev dist",
     "deploy": "npm run build && wrangler pages deploy dist",
     "deploy:prod": "npm run build && wrangler pages deploy dist --project-name webapp",
@@ -26,11 +27,13 @@
     "@cloudflare/workers-types": "^4.20250705.0",
     "@hono/vite-build": "^1.11.1",
     "@hono/vite-dev-server": "^0.26.1",
-    "@rolldown/binding-win32-x64-msvc": "^1.1.5",
     "@tailwindcss/cli": "^4.3.3",
     "esbuild": "^0.28.2",
     "tailwindcss": "^4.3.3",
     "vite": "^8.1.4",
     "wrangler": "^4.110.0"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.1.5"
   }
 }

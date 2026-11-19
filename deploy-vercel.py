@@ -63,8 +63,10 @@ PID = proj["id"]
 step("Build api/index.js bundle with esbuild")
 fn_path = os.path.join(SITE, "api", "index.js")
 cmd = (
-    f'npx esbuild api/index.ts --bundle --platform=node --format=esm '
-    f'--jsx=automatic --jsx-import-source=hono/jsx --outfile="{fn_path}" --log-level=error'
+    f'npx esbuild src/vercel-entry.ts --bundle --platform=node --format=esm '
+    f'--jsx=automatic --jsx-import-source=hono/jsx '
+    f'--banner:js="import {{ createRequire }} from \'node:module\'; const require = createRequire(import.meta.url);" '
+    f'--outfile="{fn_path}" --log-level=error'
 )
 code = os.system(f'cd "{SITE}" && {cmd}')
 if code != 0 or not os.path.exists(fn_path):

@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -19310,9 +19311,9 @@ app.onError((err, c) => {
   if (c.req.path.startsWith("/api/")) return c.json({ error: "L\u1ED7i h\u1EC7 th\u1ED1ng, vui l\xF2ng th\u1EED l\u1EA1i" }, 500);
   return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 500);
 });
-var src_default = app;
+var index_default = app;
 
-// api/index.ts
+// src/vercel-entry.ts
 function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -19340,7 +19341,7 @@ async function handler(req, res) {
       body: rawBody && rawBody.length ? rawBody : void 0
     });
     const env = { ...process.env };
-    const response = await src_default.fetch(request, env);
+    const response = await index_default.fetch(request, env);
     res.statusCode = response.status;
     const setCookies = response.headers.getSetCookie?.();
     response.headers.forEach((v, k) => {

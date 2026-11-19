@@ -1,0 +1,14 @@
+.wrangler
+dist
+node_modules
+src
+package-lock.json
+migrations
+migrations-pg
+scripts
+seed.sql
+deploy-cloudflare.py
+deploy-vercel.py
+HUONG-DAN-DEPLOY.md
+ecosystem.config.cjs
+wrangler.jsonc

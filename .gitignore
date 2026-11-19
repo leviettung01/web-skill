@@ -9,3 +9,5 @@ logs/
 *.tar.gz
 .DS_Store
 __pycache__/
+.vercel
+.env*.local
