@@ -52,7 +52,7 @@ app.use('*', async (c, next) => {
   }
   const pathname = new URL(c.req.url).pathname
   if (c.env.DB && !pathname.startsWith('/static/') && pathname !== '/favicon.ico' && !pathname.startsWith('/videos/')) {
-    await ensureMcpMigration(c.env.DB)
+    await ensureMcpMigration(c.env.DB, c.env)
   }
   await next()
 })

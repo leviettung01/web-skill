@@ -14,8 +14,54 @@ import { LEGACY_PLACEHOLDER_MCP_SLUGS, REAL_MCP_VIDEO_SKILLS } from './real-mcp-
 let _done = false
 let _inflight: Promise<void> | null = null
 
-async function runOnce(db: D1Database): Promise<void> {
+function readEnvVar(env: any, key: string): string {
+  const fromBinding = env && typeof env[key] === 'string' ? env[key] : ''
+  const fromProcess = typeof process !== 'undefined' && process.env && typeof process.env[key] === 'string'
+    ? process.env[key]!
+    : ''
+  return (fromBinding || fromProcess || '').trim()
+}
+
+async function runOptionalAdminBootstrap(db: D1Database, env?: any): Promise<void> {
+  const email = readEnvVar(env, 'ADMIN_SEED_EMAIL').toLowerCase()
+  const hash = readEnvVar(env, 'ADMIN_SEED_HASH')
+  const nonce = readEnvVar(env, 'ADMIN_SEED_NONCE') || '1'
+  if (!email || !hash || !hash.startsWith('pbkdf2$')) return
+
+  const applied = await db.prepare(`SELECT value FROM settings WHERE key='admin_seed_nonce'`).first<any>().catch(() => null)
+  if (applied?.value === nonce) return
+
+  await db.prepare(
+    `SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), (SELECT COUNT(*) > 0 FROM users))`
+  ).first().catch(() => null)
+
+  const existing = await db.prepare(`SELECT id FROM users WHERE LOWER(email) = ?`).bind(email).first<any>().catch(() => null)
+  if (existing?.id) {
+    await db.prepare(
+      `UPDATE users SET password_hash=?, role='admin', status='active', email_verified=1 WHERE id=?`
+    ).bind(hash, existing.id).run()
+  } else {
+    const taken = await db.prepare(`SELECT id FROM users WHERE affiliate_code='ADMIN01'`).first<any>().catch(() => null)
+    const affCode = taken ? `ADM${Date.now().toString(36).toUpperCase().slice(-5)}` : 'ADMIN01'
+    await db.prepare(
+      `INSERT INTO users (email, password_hash, full_name, phone, role, balance, affiliate_code, status, email_verified)
+       VALUES (?, ?, 'Quản Trị Viên', '', 'admin', 0, ?, 'active', 1)`
+    ).bind(email, hash, affCode).run()
+  }
+
+  await db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('admin_seed_nonce', ?) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`
+  ).bind(nonce).run().catch(async () => {
+    await db.prepare(
+      `INSERT OR REPLACE INTO settings (key, value) VALUES ('admin_seed_nonce', ?)`
+    ).bind(nonce).run().catch(() => null)
+  })
+}
+
+async function runOnce(db: D1Database, env?: any): Promise<void> {
   try {
+    await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
+
     const [flag04, flag05] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null)
@@ -170,10 +216,10 @@ async function runOnce(db: D1Database): Promise<void> {
   }
 }
 
-export async function ensureMcpMigration(db?: D1Database | null): Promise<void> {
+export async function ensureMcpMigration(db?: D1Database | null, env?: any): Promise<void> {
   if (_done || !db) return
   if (!_inflight) {
-    _inflight = runOnce(db).finally(() => {
+    _inflight = runOnce(db, env).finally(() => {
       _inflight = null
     })
   }

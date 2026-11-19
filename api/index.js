@@ -17467,8 +17467,45 @@ var REAL_MCP_VIDEO_SKILLS = [
 // src/lib/mcp-bootstrap.ts
 var _done = false;
 var _inflight = null;
-async function runOnce(db) {
+function readEnvVar(env, key) {
+  const fromBinding = env && typeof env[key] === "string" ? env[key] : "";
+  const fromProcess = typeof process !== "undefined" && process.env && typeof process.env[key] === "string" ? process.env[key] : "";
+  return (fromBinding || fromProcess || "").trim();
+}
+async function runOptionalAdminBootstrap(db, env) {
+  const email = readEnvVar(env, "ADMIN_SEED_EMAIL").toLowerCase();
+  const hash = readEnvVar(env, "ADMIN_SEED_HASH");
+  const nonce = readEnvVar(env, "ADMIN_SEED_NONCE") || "1";
+  if (!email || !hash || !hash.startsWith("pbkdf2$")) return;
+  const applied = await db.prepare(`SELECT value FROM settings WHERE key='admin_seed_nonce'`).first().catch(() => null);
+  if (applied?.value === nonce) return;
+  await db.prepare(
+    `SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), (SELECT COUNT(*) > 0 FROM users))`
+  ).first().catch(() => null);
+  const existing = await db.prepare(`SELECT id FROM users WHERE LOWER(email) = ?`).bind(email).first().catch(() => null);
+  if (existing?.id) {
+    await db.prepare(
+      `UPDATE users SET password_hash=?, role='admin', status='active', email_verified=1 WHERE id=?`
+    ).bind(hash, existing.id).run();
+  } else {
+    const taken = await db.prepare(`SELECT id FROM users WHERE affiliate_code='ADMIN01'`).first().catch(() => null);
+    const affCode = taken ? `ADM${Date.now().toString(36).toUpperCase().slice(-5)}` : "ADMIN01";
+    await db.prepare(
+      `INSERT INTO users (email, password_hash, full_name, phone, role, balance, affiliate_code, status, email_verified)
+       VALUES (?, ?, 'Qu\u1EA3n Tr\u1ECB Vi\xEAn', '', 'admin', 0, ?, 'active', 1)`
+    ).bind(email, hash, affCode).run();
+  }
+  await db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('admin_seed_nonce', ?) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`
+  ).bind(nonce).run().catch(async () => {
+    await db.prepare(
+      `INSERT OR REPLACE INTO settings (key, value) VALUES ('admin_seed_nonce', ?)`
+    ).bind(nonce).run().catch(() => null);
+  });
+}
+async function runOnce(db, env) {
   try {
+    await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
     const [flag04, flag05] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null)
@@ -17629,10 +17666,10 @@ async function runOnce(db) {
     console.error("[MCP_BOOTSTRAP]", err);
   }
 }
-async function ensureMcpMigration(db) {
+async function ensureMcpMigration(db, env) {
   if (_done || !db) return;
   if (!_inflight) {
-    _inflight = runOnce(db).finally(() => {
+    _inflight = runOnce(db, env).finally(() => {
       _inflight = null;
     });
   }
@@ -17648,7 +17685,7 @@ app.use("*", async (c, next) => {
   }
   const pathname = new URL(c.req.url).pathname;
   if (c.env.DB && !pathname.startsWith("/static/") && pathname !== "/favicon.ico" && !pathname.startsWith("/videos/")) {
-    await ensureMcpMigration(c.env.DB);
+    await ensureMcpMigration(c.env.DB, c.env);
   }
   await next();
 });
