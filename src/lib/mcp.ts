@@ -272,6 +272,29 @@ const SKILL_ENGINE_PROFILES: Record<string, SkillEngineProfile> = {
       'Phase 6 — Parallel Chapter Render & Seamless Looped Audio: `render_chapters_parallel.py` -> `sfx_planner_fitness.py` -> `audio_master_loop.py --target-lufs -14.0`',
       'Phase 7 — Final QA Gate: `python "$SKILL_DIR/scripts/qa_rendered_mp4.py" "$PROJ/out/final.mp4" --cols 6 --rows 6` -> duyệt `final.qa.jpg`'
     ]
+  },
+  'roblox-3d-animation': {
+    folderName: 'roblox-3d-animation',
+    defaultAspect: '9:16',
+    defaultDurationSec: 42,
+    resolution: '1080x1920 @ 30fps (-14.0 LUFS, hỗ trợ cả 16:9)',
+    engineSummary: 'Autonomous 3D Roblox R6 Animation Studio (Blender 4.2+/5.x EEVEE + AgX + Motion Blur + Fog Glow) — Official 16-Bone RoBone Rig + 28 Faces + 18 Clothes + 11 3D Hairs + Hard ANATOMY_LIMITS + OTS POV Cameras + Edge-TTS & -14 LUFS Master',
+    prerequisites: [
+      'Blender 4.2+ (khuyên dùng Blender 5.x, miễn phí tại blender.org) — tự động tìm hoặc đặt biến `BLENDER_BIN`',
+      'FFmpeg & FFprobe trên PATH (libx264, ass, loudnorm, sidechaincompress)',
+      'Python 3.10+ (`pip install -r roblox-3d-animation/requirements.txt`: edge-tts, Pillow, numpy)',
+      'Đã đóng gói sẵn 100% bên trong Skill: Rig R6 16 xương, 28 biểu cảm mặt, 18 quần áo Hi-Res, 11 tóc/phụ kiện 3D, starter room & dự án mẫu Floor Is Lava'
+    ],
+    verifyCommand: 'python "$SKILL_DIR/scripts/env_utils.py"',
+    phaseCommands: [
+      'Phase 0-1 — Preflight & Scaffold: `python "$SKILL_DIR/scripts/env_utils.py"` -> `python "$SKILL_DIR/scripts/scaffold_project.py" --dest "$PROJ"`',
+      'Phase 2 — 5-Act Script & Multi-Voice TTS: chỉnh `SCRIPT` & `VOICES` trong `$PROJ/build_voice.py` -> `python run.py voice` (tạo `voice_raw.wav` + `voice_shots.json`)',
+      'Phase 3 — Cast, 3D Set & Prop Textures: tuỳ biến `$PROJ/build_textures.py` + `$PROJ/build_room.py` -> `python run.py textures`',
+      'Phase 4 — Physics-Locked Choreography & OTS Cameras: viết `CAST_DEFS` & `SHOTS` trong `$PROJ/shots.py` (dùng `motion_lib.py` & `ANATOMY_LIMITS`, góc quay OTS POV rõ màn hình)',
+      'Phase 5 — Pre-Render Visual QA Gate: `python run.py stills` -> duyệt `stills_sheet.jpg` & `python run.py probe <f_start> <f_mid> <f_end>`',
+      'Phase 6 — Full Parallel EEVEE Render: `python run.py render 2` (tối ưu sẵn 2 worker an toàn VRAM 4GB+)',
+      'Phase 7-8 — Captions, SFX/BGM, -14 LUFS Master & Final QA: `python run.py post final_<slug>.mp4` -> kiểm tra `out/final_<slug>.qa.jpg`, `-14.0 LUFS` & `black_segments: []`'
+    ]
   }
 }
 
@@ -318,6 +341,12 @@ const SKILL_QUICK_START: Record<string, SkillQuickStartGuide> = {
     inputLabel: 'Bài tập gym / chủ đề thể hình (tuỳ chọn)',
     inputPlaceholder: 'Ví dụ: Hướng dẫn 4 lỗi sai hay gặp khi tập Squat cho người mới, giọng tiếng Việt...',
     promptTemplate: 'Hãy dùng Skill "fitness-video-editing" trên KhoSkill AI để dựng video hướng dẫn thể hình minh hoạ giải phẫu Manga cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, rồi dựng hoàn chỉnh xuất ra out/final.mp4.'
+  },
+  'roblox-3d-animation': {
+    shortName: 'Roblox-3D-Animation',
+    inputLabel: 'Ý tưởng tập phim hoạt hình Roblox 3D (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: Noob vs Pro vs Hacker thử thách Sàn Nhà Dung Nham 40 giây, giọng tiếng Việt...',
+    promptTemplate: 'Hãy dùng Skill "roblox-3d-animation" trên KhoSkill AI để dựng phim hoạt hình 3D Roblox R6 (Blender) cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, kiểm tra môi trường bằng env_utils.py, duyệt stills QA rồi render hoàn chỉnh xuất ra out/final.mp4.'
   }
 }
 

@@ -91,10 +91,10 @@ const PLANS = [
     cta: 'Xem Skill tự tải', href: '/san-pham?type=skill'
   },
   {
-    name: 'Skill AI Agent (MCP)', price: 599000, tag: 'MỚI · Kết nối MCP + Drive Kit', icon: 'fa-plug-circle-bolt', highlight: true, available: true, isMcp: true,
-    desc: '6 bộ Skill AI Agent dựng video thực chiến (Du lịch, Talking Head, BĐS GeoLayers 3D, Lịch sử, Fitness Manga) cho Claude, Codex, Antigravity — từ 599K đến 1.500K.',
-    features: ['Kết nối trực tiếp MCP cho Claude, Codex, Antigravity', 'Tặng kèm link Google Drive tải trọn bộ Skill Kit + Demo 1080p gửi thẳng qua Gmail', 'AI Agent tự dựng video 1080p chuẩn -14 LUFS ngay trên máy bạn', 'Tự động đồng bộ bản SKILL.md mới nhất từ server', 'Kèm License Key riêng & nút test MCP trực tiếp', 'Hỗ trợ cài đặt môi trường & MCP 1-1 qua Zalo / Ultraview'],
-    cta: 'Xem 6 Skill AI Agent (MCP)', href: '/san-pham?type=mcp_skill'
+    name: 'Skill AI Agent (MCP)', price: 499000, tag: 'MỚI · Kết nối MCP + Drive Kit', icon: 'fa-plug-circle-bolt', highlight: true, available: true, isMcp: true,
+    desc: '7 bộ Skill AI Agent dựng video thực chiến (Roblox 3D Animation, Du lịch, Talking Head, BĐS GeoLayers 3D, Lịch sử, Fitness Manga) cho Claude, ChatGPT, Codex, Antigravity — từ 499K đến 1.500K.',
+    features: ['Kết nối 1 chạm với Claude, ChatGPT, Claude Code, Codex, Antigravity', 'Tặng kèm link Google Drive tải trọn bộ Skill Kit + Demo 1080p gửi thẳng qua Gmail', 'AI Agent tự dựng video 1080p chuẩn -14 LUFS ngay trên máy bạn', 'Tự động đồng bộ bản SKILL.md mới nhất từ server', 'Chọn bật/tắt hoặc mở dùng ngay từng Skill cụ thể', 'Hỗ trợ cài đặt môi trường & AI Agent 1-1 qua Zalo / Ultraview'],
+    cta: 'Xem 7 Skill AI Agent (MCP)', href: '/san-pham?type=mcp_skill'
   },
   {
     name: 'Combo & Chatbot / App', price: 1999000, tag: 'Chưa mở bán', icon: 'fa-clock', highlight: false, available: false, isMcp: false,

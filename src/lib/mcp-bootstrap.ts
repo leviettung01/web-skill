@@ -99,13 +99,14 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
     await runOptionalDemoUserBootstrap(db, env).catch(err => console.error('[DEMO_USER_BOOTSTRAP]', err))
 
-    const [flag04, flag05, flag06, flag07, flag08, flag09] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0007_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0008_done'`).first<any>().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0009_done'`).first<any>().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0009_done'`).first<any>().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first<any>().catch(() => null)
     ])
 
     if (
@@ -114,7 +115,8 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       flag06?.value === '1' &&
       flag07?.value === '1' &&
       flag08?.value === '1' &&
-      flag09?.value === '1'
+      flag09?.value === '1' &&
+      flag10?.value === '1'
     ) {
       _done = true
       return
@@ -416,6 +418,49 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
         ).run().catch(async () => {
           await db.prepare(
             `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0009_done', '1')`
+          ).run().catch(() => null)
+        })
+        mutated = true
+      }
+    }
+
+    // ---- Stage 7: Migration 0010 (Add 7th Real AI Agent Skill: roblox-3d-animation, 499K) ----
+    if (flag10?.value !== '1') {
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
+      ).first().catch(() => null)
+
+      const catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first<any>().catch(() => null)
+      const catId = catRow?.id || null
+      const p = REAL_MCP_VIDEO_SKILLS.find(x => x.slug === 'roblox-3d-animation')
+      if (p) {
+        const exists = await db.prepare('SELECT id FROM products WHERE slug=?').bind(p.slug).first<any>().catch(() => null)
+        if (!exists) {
+          await db.prepare(
+            `INSERT INTO products (
+              slug, name, category_id, short_desc, description, features, tech_stack, version,
+              price, original_price, thumbnail, demo_video_url, raw_video_url, demo_url, download_url, doc_url,
+              file_size, product_type, is_featured, is_hot, is_new, status,
+              sold_count, view_count, rating, rating_count,
+              mcp_endpoint, mcp_server_name, mcp_clients, mcp_tools, mcp_skill_prompt, mcp_render_webhook
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+          ).bind(
+            p.slug, p.name, catId, p.short_desc, p.description, p.features, p.tech_stack, p.version,
+            p.price, p.original_price, p.thumbnail, p.demo_video_url, p.raw_video_url || '', '', p.download_url, p.doc_url,
+            p.file_size, 'mcp_skill', p.is_featured, p.is_hot, p.is_new, 'published',
+            p.sold_count, p.view_count, p.rating, p.rating_count,
+            '', p.mcp_server_name, p.mcp_clients, p.mcp_tools, p.mcp_skill_prompt, ''
+          ).run()
+        }
+      }
+
+      const verifiedRow = await db.prepare(`SELECT id FROM products WHERE slug='roblox-3d-animation'`).first<any>().catch(() => null)
+      if (verifiedRow?.id) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0010_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0010_done', '1')`
           ).run().catch(() => null)
         })
         mutated = true
