@@ -58,9 +58,46 @@ async function runOptionalAdminBootstrap(db: D1Database, env?: any): Promise<voi
   })
 }
 
+async function runOptionalDemoUserBootstrap(db: D1Database, env?: any): Promise<void> {
+  const email = readEnvVar(env, 'DEMO_USER_EMAIL').toLowerCase()
+  const hash = readEnvVar(env, 'DEMO_USER_HASH')
+  const nonce = readEnvVar(env, 'DEMO_USER_NONCE') || '1'
+  const fullName = readEnvVar(env, 'DEMO_USER_NAME') || 'Khách Demo Test'
+  if (!email || !hash || !hash.startsWith('pbkdf2$')) return
+
+  const applied = await db.prepare(`SELECT value FROM settings WHERE key='demo_user_seed_nonce'`).first<any>().catch(() => null)
+  if (applied?.value === nonce) return
+
+  await db.prepare(
+    `SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), (SELECT COUNT(*) > 0 FROM users))`
+  ).first().catch(() => null)
+
+  const existing = await db.prepare(`SELECT id FROM users WHERE LOWER(email) = ?`).bind(email).first<any>().catch(() => null)
+  if (existing?.id) {
+    await db.prepare(
+      `UPDATE users SET password_hash=?, full_name=?, role='user', status='active', email_verified=1 WHERE id=?`
+    ).bind(hash, fullName, existing.id).run()
+  } else {
+    const affCode = `DM${Date.now().toString(36).toUpperCase().slice(-6)}`
+    await db.prepare(
+      `INSERT INTO users (email, password_hash, full_name, phone, role, balance, affiliate_code, status, email_verified)
+       VALUES (?, ?, ?, '', 'user', 0, ?, 'active', 1)`
+    ).bind(email, hash, fullName, affCode).run()
+  }
+
+  await db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('demo_user_seed_nonce', ?) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`
+  ).bind(nonce).run().catch(async () => {
+    await db.prepare(
+      `INSERT OR REPLACE INTO settings (key, value) VALUES ('demo_user_seed_nonce', ?)`
+    ).bind(nonce).run().catch(() => null)
+  })
+}
+
 async function runOnce(db: D1Database, env?: any): Promise<void> {
   try {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
+    await runOptionalDemoUserBootstrap(db, env).catch(err => console.error('[DEMO_USER_BOOTSTRAP]', err))
 
     const [flag04, flag05, flag06] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),

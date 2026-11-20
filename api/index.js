@@ -13754,12 +13754,27 @@ var CartPage = (props) => {
   ] }) });
 };
 var CheckoutPage = (props) => {
-  const { items, subtotal, balance } = props;
+  const { items, subtotal, balance, isDemoFree = false } = props;
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Thanh to\xE1n", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng", href: "/gio-hang" }, { label: "Thanh to\xE1n" }] }),
       /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-5", children: "Thanh to\xE1n" }),
       /* @__PURE__ */ jsxDEV(CheckoutSteps, { step: 2 }),
+      isDemoFree && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-9 h-9 rounded-xl bg-emerald-500/25 text-emerald-300 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-flask-vial", "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-sm text-emerald-100 leading-relaxed", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-emerald-300", children: "Ch\u1EBF \u0111\u1ED9 Kh\xE1ch Demo Test (Mi\u1EC5n ph\xED 0\u0111 \u2014 kh\xF4ng c\u1EA7n chuy\u1EC3n kho\u1EA3n)" }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            "B\u1EA5m ",
+            /* @__PURE__ */ jsxDEV("b", { children: "K\xEDch ho\u1EA1t \u0111\u01A1n Demo ngay (0\u0111)" }),
+            " \u0111\u1EC3 h\u1EC7 th\u1ED1ng t\u1EF1 k\xEDch ho\u1EA1t b\u1EA3n quy\u1EC1n, c\u1EA5p License Key + c\u1EA5u h\xECnh MCP v\xE0 g\u1EEDi ",
+            /* @__PURE__ */ jsxDEV("b", { children: "email giao h\xE0ng th\u1EADt k\xE8m link Google Drive" }),
+            " v\u1EC1 h\u1ED9p th\u01B0 ",
+            /* @__PURE__ */ jsxDEV("b", { children: props.user?.email }),
+            "."
+          ] })
+        ] })
+      ] }),
       /* @__PURE__ */ jsxDEV("form", { id: "checkout-form", class: "grid lg:grid-cols-[1fr_380px] gap-6", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
@@ -13800,8 +13815,17 @@ var CheckoutPage = (props) => {
               "Ph\u01B0\u01A1ng th\u1EE9c thanh to\xE1n"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5", children: [
-              /* @__PURE__ */ jsxDEV("label", { class: "flex items-center gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer", children: [
-                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "bank", checked: true, class: "accent-indigo-500" }),
+              isDemoFree && /* @__PURE__ */ jsxDEV("label", { class: "flex items-center gap-3.5 p-4 rounded-xl border-2 border-emerald-400 bg-emerald-500/15 cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "demo_free", checked: true, class: "accent-emerald-500" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-400/40 grid place-items-center text-emerald-300 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt", "aria-hidden": "true" }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: "K\xEDch ho\u1EA1t Demo Test Mi\u1EC5n Ph\xED (0\u0111)" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-emerald-200", children: "T\u1EF1 \u0111\u1ED9ng duy\u1EC7t \u0111\u01A1n ngay l\u1EADp t\u1EE9c, c\u1EA5p License Key + MCP v\xE0 g\u1EEDi link Google Drive qua Gmail" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-400 text-slate-950 text-[10px] font-black", children: "DEMO 0\u0110" })
+              ] }),
+              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer ${isDemoFree ? "border-[#2a2559] bg-[#161436]/50 opacity-60" : "border-indigo-500 bg-indigo-500/10"}`, children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "bank", checked: !isDemoFree, class: "accent-indigo-500" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-[#161436] border border-indigo-500/30 grid place-items-center text-indigo-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode", "aria-hidden": "true" }) }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm", children: "Chuy\u1EC3n kho\u1EA3n VietQR (Ng\xE2n h\xE0ng / MoMo)" }),
@@ -13873,24 +13897,30 @@ var CheckoutPage = (props) => {
               /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "T\u1EA1m t\xEDnh" }),
               /* @__PURE__ */ jsxDEV("b", { id: "sum-subtotal", class: "text-white", children: formatVND(subtotal) })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", id: "discount-row", style: "display:none", children: [
+            isDemoFree ? /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "\u01AFu \u0111\xE3i Demo Test" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: [
+                "-",
+                formatVND(subtotal)
+              ] })
+            ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", id: "discount-row", style: "display:none", children: [
               /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Gi\u1EA3m gi\xE1" }),
               /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", id: "sum-discount", children: "-0\u0111" })
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng thanh to\xE1n" }),
-            /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-extrabold text-rose-400", id: "sum-total", "data-subtotal": subtotal, children: formatVND(subtotal) })
+            /* @__PURE__ */ jsxDEV("span", { class: `text-2xl font-extrabold ${isDemoFree ? "text-emerald-400" : "text-rose-400"}`, id: "sum-total", "data-subtotal": subtotal, children: isDemoFree ? "0\u0111" : formatVND(subtotal) })
           ] }),
           /* @__PURE__ */ jsxDEV(
             "button",
             {
               type: "submit",
               id: "place-order-btn",
-              class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 shadow-lg shadow-rose-500/25 transition cursor-pointer",
+              class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl text-white font-bold hover:opacity-95 shadow-lg transition cursor-pointer ${isDemoFree ? "bg-gradient-to-r from-emerald-500 to-cyan-600 shadow-emerald-500/25" : "bg-gradient-to-r from-rose-500 to-orange-500 shadow-rose-500/25"}`,
               children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle", "aria-hidden": "true" }),
-                "\u0110\u1EB7t h\xE0ng ngay"
+                /* @__PURE__ */ jsxDEV("i", { class: `fas ${isDemoFree ? "fa-bolt" : "fa-check-circle"}`, "aria-hidden": "true" }),
+                isDemoFree ? "K\xEDch ho\u1EA1t \u0111\u01A1n Demo ngay (0\u0111)" : "\u0110\u1EB7t h\xE0ng ngay"
               ]
             }
           ),
@@ -13906,12 +13936,17 @@ var CheckoutPage = (props) => {
       __html: `
 (function(){
   var subtotal = ${subtotal};
+  var isDemoFree = ${isDemoFree ? "true" : "false"};
   var coupon = null, discount = 0;
   function fmt(n){ return new Intl.NumberFormat('vi-VN').format(n)+'\u0111'; }
   function render(){
-    document.getElementById('sum-discount').textContent = '-'+fmt(discount);
-    document.getElementById('discount-row').style.display = discount>0?'flex':'none';
-    document.getElementById('sum-total').textContent = fmt(Math.max(0, subtotal-discount));
+    if (isDemoFree) return;
+    var sd = document.getElementById('sum-discount');
+    var dr = document.getElementById('discount-row');
+    var st = document.getElementById('sum-total');
+    if (sd) sd.textContent = '-'+fmt(discount);
+    if (dr) dr.style.display = discount>0?'flex':'none';
+    if (st) st.textContent = fmt(Math.max(0, subtotal-discount));
   }
   document.querySelectorAll('.coupon-quick').forEach(function(b){
     b.onclick=function(){ document.getElementById('coupon-input').value=b.dataset.code; document.getElementById('apply-coupon').click(); };
@@ -14071,7 +14106,7 @@ var OrderPage = (props) => {
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
                 /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Thanh to\xE1n" }),
-                /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: order.payment_method === "bank" ? "VietQR" : order.payment_method === "momo" ? "MoMo" : "S\u1ED1 d\u01B0 v\xED" })
+                /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: order.payment_method === "demo_free" ? "Demo Test (0\u0111)" : order.payment_method === "bank" ? "VietQR" : order.payment_method === "momo" ? "MoMo" : "S\u1ED1 d\u01B0 v\xED" })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
                 /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Tr\u1EA1ng th\xE1i" }),
@@ -17780,9 +17815,41 @@ async function runOptionalAdminBootstrap(db, env) {
     ).bind(nonce).run().catch(() => null);
   });
 }
+async function runOptionalDemoUserBootstrap(db, env) {
+  const email = readEnvVar(env, "DEMO_USER_EMAIL").toLowerCase();
+  const hash = readEnvVar(env, "DEMO_USER_HASH");
+  const nonce = readEnvVar(env, "DEMO_USER_NONCE") || "1";
+  const fullName = readEnvVar(env, "DEMO_USER_NAME") || "Kh\xE1ch Demo Test";
+  if (!email || !hash || !hash.startsWith("pbkdf2$")) return;
+  const applied = await db.prepare(`SELECT value FROM settings WHERE key='demo_user_seed_nonce'`).first().catch(() => null);
+  if (applied?.value === nonce) return;
+  await db.prepare(
+    `SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), (SELECT COUNT(*) > 0 FROM users))`
+  ).first().catch(() => null);
+  const existing = await db.prepare(`SELECT id FROM users WHERE LOWER(email) = ?`).bind(email).first().catch(() => null);
+  if (existing?.id) {
+    await db.prepare(
+      `UPDATE users SET password_hash=?, full_name=?, role='user', status='active', email_verified=1 WHERE id=?`
+    ).bind(hash, fullName, existing.id).run();
+  } else {
+    const affCode = `DM${Date.now().toString(36).toUpperCase().slice(-6)}`;
+    await db.prepare(
+      `INSERT INTO users (email, password_hash, full_name, phone, role, balance, affiliate_code, status, email_verified)
+       VALUES (?, ?, ?, '', 'user', 0, ?, 'active', 1)`
+    ).bind(email, hash, fullName, affCode).run();
+  }
+  await db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('demo_user_seed_nonce', ?) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`
+  ).bind(nonce).run().catch(async () => {
+    await db.prepare(
+      `INSERT OR REPLACE INTO settings (key, value) VALUES ('demo_user_seed_nonce', ?)`
+    ).bind(nonce).run().catch(() => null);
+  });
+}
 async function runOnce(db, env) {
   try {
     await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
+    await runOptionalDemoUserBootstrap(db, env).catch((err) => console.error("[DEMO_USER_BOOTSTRAP]", err));
     const [flag04, flag05, flag06] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null),
@@ -18691,6 +18758,13 @@ app.get("/gio-hang", requireAuth, async (c) => {
   const items = rows.results;
   return c.html(/* @__PURE__ */ jsxDEV(CartPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0) }));
 });
+function isDemoFreeUser(env, email) {
+  if (!email) return false;
+  const raw2 = ((env && typeof env.DEMO_FREE_EMAILS === "string" ? env.DEMO_FREE_EMAILS : "") || (typeof process !== "undefined" && process.env && typeof process.env.DEMO_FREE_EMAILS === "string" ? process.env.DEMO_FREE_EMAILS : "")).trim();
+  if (!raw2) return false;
+  const target = email.trim().toLowerCase();
+  return raw2.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean).includes(target);
+}
 app.get("/thanh-toan", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
   const rows = await db.prepare(
@@ -18699,7 +18773,7 @@ app.get("/thanh-toan", requireAuth, async (c) => {
   const items = rows.results;
   if (items.length === 0) return c.redirect("/gio-hang");
   const me = await db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first();
-  return c.html(/* @__PURE__ */ jsxDEV(CheckoutPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0), balance: me?.balance || 0 }));
+  return c.html(/* @__PURE__ */ jsxDEV(CheckoutPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0), balance: me?.balance || 0, isDemoFree: isDemoFreeUser(c.env, u.email) }));
 });
 app.post("/api/coupons/check", async (c) => {
   const { code, subtotal } = await c.req.json();
@@ -18740,9 +18814,13 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   if (items.some((i) => i.status !== "published")) {
     return c.json({ error: "Gi\u1ECF h\xE0ng c\xF3 s\u1EA3n ph\u1EA9m ch\u01B0a m\u1EDF b\xE1n. Vui l\xF2ng x\xF3a kh\u1ECFi gi\u1ECF h\xE0ng tr\u01B0\u1EDBc khi thanh to\xE1n." }, 400);
   }
+  const demoFree = isDemoFreeUser(c.env, u.email);
   const subtotal = items.reduce((s, i) => s + i.price, 0);
   let discount = 0, couponCode = null;
-  if (b.coupon_code) {
+  if (demoFree) {
+    discount = subtotal;
+    couponCode = "DEMO_FREE";
+  } else if (b.coupon_code) {
     const cp = await db.prepare(`SELECT * FROM coupons WHERE code=? AND status='active'`).bind(String(b.coupon_code).toUpperCase()).first();
     if (cp && subtotal >= cp.min_order && (cp.max_uses === 0 || cp.used_count < cp.max_uses)) {
       discount = cp.type === "percent" ? Math.floor(subtotal * cp.value / 100) : Math.min(cp.value, subtotal);
@@ -18750,10 +18828,10 @@ app.post("/api/orders/create", requireAuth, async (c) => {
       await db.prepare("UPDATE coupons SET used_count=used_count+1 WHERE id=?").bind(cp.id).run();
     }
   }
-  const total = Math.max(0, subtotal - discount);
-  const pm = ["bank", "momo", "balance"].includes(b.payment_method) ? b.payment_method : "bank";
-  let status = "pending";
-  if (pm === "balance") {
+  const total = demoFree ? 0 : Math.max(0, subtotal - discount);
+  const pm = demoFree ? "demo_free" : ["bank", "momo", "balance"].includes(b.payment_method) ? b.payment_method : "bank";
+  let status = demoFree ? "paid" : "pending";
+  if (!demoFree && pm === "balance") {
     const me = await db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first();
     if ((me?.balance || 0) < total) return c.json({ error: "S\u1ED1 d\u01B0 v\xED kh\xF4ng \u0111\u1EE7" }, 400);
     await db.prepare("UPDATE users SET balance=balance-? WHERE id=?").bind(total, u.id).run();
@@ -18761,8 +18839,8 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   }
   const code = genCode("DH", 8);
   const ord = await db.prepare(
-    `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, status, note, paid_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?)`
+    `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, status, note, paid_at, paid_amount, paid_via)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(
     code,
     u.id,
@@ -18772,8 +18850,10 @@ app.post("/api/orders/create", requireAuth, async (c) => {
     couponCode,
     pm,
     status,
-    b.note || null,
-    status === "paid" ? (/* @__PURE__ */ new Date()).toISOString() : null
+    b.note || (demoFree ? "\u0110\u01A1n test mi\u1EC5n ph\xED (Demo Account)" : null),
+    status === "paid" ? (/* @__PURE__ */ new Date()).toISOString() : null,
+    status === "paid" ? total : null,
+    demoFree ? "demo_free" : status === "paid" ? "balance" : null
   ).run();
   const orderId = ord.meta.last_row_id;
   for (const it of items) {
@@ -18782,7 +18862,7 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   await db.prepare("DELETE FROM cart_items WHERE user_id=?").bind(u.id).run();
   if (status === "paid") {
     await grantLicenses(db, u.id, orderId);
-    await creditAffiliate(db, u.id, total);
+    if (!demoFree) await creditAffiliate(db, u.id, total);
     await notifyOrderPaid(c.env, db, { id: orderId, order_code: code, user_id: u.id, total }, getRequestOrigin(c));
   }
   return c.json({ ok: true, order_code: code });
@@ -18812,9 +18892,11 @@ async function notifyOrderPaid(env, db, order, origin = "https://khoskill.site")
       db.prepare(
         `SELECT l.license_key, p.name product_name, p.download_url, p.doc_url,
                 p.product_type, p.slug, p.mcp_endpoint, p.mcp_server_name
-         FROM licenses l JOIN products p ON p.id=l.product_id
-         WHERE l.order_id=? ORDER BY l.id`
-      ).bind(order.id).all()
+         FROM order_items oi
+         JOIN products p ON p.id = oi.product_id
+         LEFT JOIN licenses l ON l.user_id = ? AND l.product_id = oi.product_id
+         WHERE oi.order_id = ? ORDER BY oi.id`
+      ).bind(order.user_id, order.id).all()
     ]);
     if (!buyer) return;
     const licList = licenses.results;

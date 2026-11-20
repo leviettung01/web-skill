@@ -777,6 +777,17 @@ app.get('/gio-hang', requireAuth, async (c) => {
 /* ============================================================
    CHECKOUT & ORDERS
    ============================================================ */
+function isDemoFreeUser(env: any, email?: string | null): boolean {
+  if (!email) return false
+  const raw = (
+    (env && typeof env.DEMO_FREE_EMAILS === 'string' ? env.DEMO_FREE_EMAILS : '') ||
+    (typeof process !== 'undefined' && process.env && typeof process.env.DEMO_FREE_EMAILS === 'string' ? process.env.DEMO_FREE_EMAILS : '')
+  ).trim()
+  if (!raw) return false
+  const target = email.trim().toLowerCase()
+  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean).includes(target)
+}
+
 app.get('/thanh-toan', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
   const rows = await db.prepare(
@@ -785,7 +796,7 @@ app.get('/thanh-toan', requireAuth, async (c) => {
   const items = rows.results as any[]
   if (items.length === 0) return c.redirect('/gio-hang')
   const me = await db.prepare('SELECT balance FROM users WHERE id=?').bind(u.id).first<any>()
-  return c.html(<CheckoutPage {...base(c)} items={items} subtotal={items.reduce((s, i) => s + i.price, 0)} balance={me?.balance || 0} />)
+  return c.html(<CheckoutPage {...base(c)} items={items} subtotal={items.reduce((s, i) => s + i.price, 0)} balance={me?.balance || 0} isDemoFree={isDemoFreeUser(c.env, u.email)} />)
 })
 
 app.post('/api/coupons/check', async (c) => {
@@ -833,9 +844,13 @@ app.post('/api/orders/create', requireAuth, async (c) => {
     return c.json({ error: 'Giỏ hàng có sản phẩm chưa mở bán. Vui lòng xóa khỏi giỏ hàng trước khi thanh toán.' }, 400)
   }
 
+  const demoFree = isDemoFreeUser(c.env, u.email)
   const subtotal = items.reduce((s, i) => s + i.price, 0)
   let discount = 0, couponCode: string | null = null
-  if (b.coupon_code) {
+  if (demoFree) {
+    discount = subtotal
+    couponCode = 'DEMO_FREE'
+  } else if (b.coupon_code) {
     const cp = await db.prepare(`SELECT * FROM coupons WHERE code=? AND status='active'`).bind(String(b.coupon_code).toUpperCase()).first<any>()
     if (cp && subtotal >= cp.min_order && (cp.max_uses === 0 || cp.used_count < cp.max_uses)) {
       discount = cp.type === 'percent' ? Math.floor(subtotal * cp.value / 100) : Math.min(cp.value, subtotal)
@@ -843,12 +858,12 @@ app.post('/api/orders/create', requireAuth, async (c) => {
       await db.prepare('UPDATE coupons SET used_count=used_count+1 WHERE id=?').bind(cp.id).run()
     }
   }
-  const total = Math.max(0, subtotal - discount)
-  const pm = ['bank', 'momo', 'balance'].includes(b.payment_method) ? b.payment_method : 'bank'
+  const total = demoFree ? 0 : Math.max(0, subtotal - discount)
+  const pm = demoFree ? 'demo_free' : (['bank', 'momo', 'balance'].includes(b.payment_method) ? b.payment_method : 'bank')
 
-  // Thanh toán bằng ví
-  let status = 'pending'
-  if (pm === 'balance') {
+  // Thanh toán bằng ví hoặc tài khoản Demo Test miễn phí 0đ
+  let status = demoFree ? 'paid' : 'pending'
+  if (!demoFree && pm === 'balance') {
     const me = await db.prepare('SELECT balance FROM users WHERE id=?').bind(u.id).first<any>()
     if ((me?.balance || 0) < total) return c.json({ error: 'Số dư ví không đủ' }, 400)
     await db.prepare('UPDATE users SET balance=balance-? WHERE id=?').bind(total, u.id).run()
@@ -857,10 +872,12 @@ app.post('/api/orders/create', requireAuth, async (c) => {
 
   const code = genCode('DH', 8)
   const ord = await db.prepare(
-    `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, status, note, paid_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?)`
-  ).bind(code, u.id, subtotal, discount, total, couponCode, pm, status, b.note || null,
-    status === 'paid' ? new Date().toISOString() : null).run()
+    `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, status, note, paid_at, paid_amount, paid_via)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(code, u.id, subtotal, discount, total, couponCode, pm, status, b.note || (demoFree ? 'Đơn test miễn phí (Demo Account)' : null),
+    status === 'paid' ? new Date().toISOString() : null,
+    status === 'paid' ? total : null,
+    demoFree ? 'demo_free' : (status === 'paid' ? 'balance' : null)).run()
   const orderId = ord.meta.last_row_id as number
 
   for (const it of items) {
@@ -871,7 +888,7 @@ app.post('/api/orders/create', requireAuth, async (c) => {
 
   if (status === 'paid') {
     await grantLicenses(db, u.id, orderId)
-    await creditAffiliate(db, u.id, total)
+    if (!demoFree) await creditAffiliate(db, u.id, total)
     await notifyOrderPaid(c.env, db, { id: orderId, order_code: code, user_id: u.id, total }, getRequestOrigin(c))
   }
   return c.json({ ok: true, order_code: code })
@@ -905,9 +922,11 @@ async function notifyOrderPaid(env: any, db: D1Database, order: any, origin = 'h
       db.prepare(
         `SELECT l.license_key, p.name product_name, p.download_url, p.doc_url,
                 p.product_type, p.slug, p.mcp_endpoint, p.mcp_server_name
-         FROM licenses l JOIN products p ON p.id=l.product_id
-         WHERE l.order_id=? ORDER BY l.id`
-      ).bind(order.id).all()
+         FROM order_items oi
+         JOIN products p ON p.id = oi.product_id
+         LEFT JOIN licenses l ON l.user_id = ? AND l.product_id = oi.product_id
+         WHERE oi.order_id = ? ORDER BY oi.id`
+      ).bind(order.user_id, order.id).all()
     ])
     if (!buyer) return
     const licList = licenses.results as any[]

@@ -6,6 +6,7 @@ export type Bindings = {
   GOOGLE_CLIENT_ID?: string
   GOOGLE_CLIENT_SECRET?: string
   SITE_URL?: string
+  DEMO_FREE_EMAILS?: string
 }
 
 export type Variables = {

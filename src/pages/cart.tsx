@@ -114,14 +114,26 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
 }
 
 /* ================= CHECKOUT ================= */
-export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number; balance: number }> = (props) => {
-  const { items, subtotal, balance } = props
+export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number; balance: number; isDemoFree?: boolean }> = (props) => {
+  const { items, subtotal, balance, isDemoFree = false } = props
   return (
     <Layout {...props} title="Thanh toán">
       <div class="max-w-7xl mx-auto px-4 py-8">
         <Breadcrumb items={[{ label: 'Giỏ hàng', href: '/gio-hang' }, { label: 'Thanh toán' }]} />
         <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-5">Thanh toán</h1>
         <CheckoutSteps step={2} />
+
+        {isDemoFree && (
+          <div class="mb-5 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/25 text-emerald-300 grid place-items-center shrink-0">
+              <i class="fas fa-flask-vial" aria-hidden="true"></i>
+            </div>
+            <div class="text-sm text-emerald-100 leading-relaxed">
+              <div class="font-bold text-emerald-300">Chế độ Khách Demo Test (Miễn phí 0đ — không cần chuyển khoản)</div>
+              <div>Bấm <b>Kích hoạt đơn Demo ngay (0đ)</b> để hệ thống tự kích hoạt bản quyền, cấp License Key + cấu hình MCP và gửi <b>email giao hàng thật kèm link Google Drive</b> về hộp thư <b>{props.user?.email}</b>.</div>
+            </div>
+          </div>
+        )}
 
         <form id="checkout-form" class="grid lg:grid-cols-[1fr_380px] gap-6">
           <div class="space-y-4">
@@ -147,8 +159,20 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
             <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
               <h3 class="font-bold text-white mb-4"><i class="fas fa-credit-card mr-2 text-indigo-400" aria-hidden="true"></i>Phương thức thanh toán</h3>
               <div class="space-y-2.5">
-                <label class="flex items-center gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer">
-                  <input type="radio" name="payment_method" value="bank" checked class="accent-indigo-500" />
+                {isDemoFree && (
+                  <label class="flex items-center gap-3.5 p-4 rounded-xl border-2 border-emerald-400 bg-emerald-500/15 cursor-pointer">
+                    <input type="radio" name="payment_method" value="demo_free" checked class="accent-emerald-500" />
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-400/40 grid place-items-center text-emerald-300 shrink-0"><i class="fas fa-bolt" aria-hidden="true"></i></div>
+                    <div class="flex-1">
+                      <div class="font-semibold text-white text-sm">Kích hoạt Demo Test Miễn Phí (0đ)</div>
+                      <div class="text-xs text-emerald-200">Tự động duyệt đơn ngay lập tức, cấp License Key + MCP và gửi link Google Drive qua Gmail</div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-emerald-400 text-slate-950 text-[10px] font-black">DEMO 0Đ</span>
+                  </label>
+                )}
+
+                <label class={`flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer ${isDemoFree ? 'border-[#2a2559] bg-[#161436]/50 opacity-60' : 'border-indigo-500 bg-indigo-500/10'}`}>
+                  <input type="radio" name="payment_method" value="bank" checked={!isDemoFree} class="accent-indigo-500" />
                   <div class="w-10 h-10 rounded-lg bg-[#161436] border border-indigo-500/30 grid place-items-center text-indigo-400 shrink-0"><i class="fas fa-qrcode" aria-hidden="true"></i></div>
                   <div class="flex-1">
                     <div class="font-semibold text-white text-sm">Chuyển khoản VietQR (Ngân hàng / MoMo)</div>
@@ -203,17 +227,23 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
               </div>
               <div class="space-y-2.5 text-sm py-4 border-b border-[#221e54] tabular-nums">
                 <div class="flex justify-between"><span class="text-[#9492b8]">Tạm tính</span><b id="sum-subtotal" class="text-white">{formatVND(subtotal)}</b></div>
-                <div class="flex justify-between" id="discount-row" style="display:none">
-                  <span class="text-[#9492b8]">Giảm giá</span><b class="text-emerald-400" id="sum-discount">-0đ</b>
-                </div>
+                {isDemoFree ? (
+                  <div class="flex justify-between">
+                    <span class="text-[#9492b8]">Ưu đãi Demo Test</span><b class="text-emerald-400">-{formatVND(subtotal)}</b>
+                  </div>
+                ) : (
+                  <div class="flex justify-between" id="discount-row" style="display:none">
+                    <span class="text-[#9492b8]">Giảm giá</span><b class="text-emerald-400" id="sum-discount">-0đ</b>
+                  </div>
+                )}
               </div>
               <div class="flex justify-between items-end py-4 tabular-nums">
                 <span class="font-bold text-white">Tổng thanh toán</span>
-                <span class="text-2xl font-extrabold text-rose-400" id="sum-total" data-subtotal={subtotal}>{formatVND(subtotal)}</span>
+                <span class={`text-2xl font-extrabold ${isDemoFree ? 'text-emerald-400' : 'text-rose-400'}`} id="sum-total" data-subtotal={subtotal}>{isDemoFree ? '0đ' : formatVND(subtotal)}</span>
               </div>
               <button type="submit" id="place-order-btn"
-                class="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 shadow-lg shadow-rose-500/25 transition cursor-pointer">
-                <i class="fas fa-check-circle" aria-hidden="true"></i>Đặt hàng ngay
+                class={`flex items-center justify-center gap-2 w-full h-12 rounded-xl text-white font-bold hover:opacity-95 shadow-lg transition cursor-pointer ${isDemoFree ? 'bg-gradient-to-r from-emerald-500 to-cyan-600 shadow-emerald-500/25' : 'bg-gradient-to-r from-rose-500 to-orange-500 shadow-rose-500/25'}`}>
+                <i class={`fas ${isDemoFree ? 'fa-bolt' : 'fa-check-circle'}`} aria-hidden="true"></i>{isDemoFree ? 'Kích hoạt đơn Demo ngay (0đ)' : 'Đặt hàng ngay'}
               </button>
               <p class="mt-3 text-[11px] text-[#9492b8] text-center leading-relaxed">
                 Bằng việc đặt hàng, bạn đồng ý với <a href="/dieu-khoan" class="text-indigo-400 hover:underline">Điều khoản sử dụng</a> của chúng tôi.
@@ -227,12 +257,17 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
         __html: `
 (function(){
   var subtotal = ${subtotal};
+  var isDemoFree = ${isDemoFree ? 'true' : 'false'};
   var coupon = null, discount = 0;
   function fmt(n){ return new Intl.NumberFormat('vi-VN').format(n)+'đ'; }
   function render(){
-    document.getElementById('sum-discount').textContent = '-'+fmt(discount);
-    document.getElementById('discount-row').style.display = discount>0?'flex':'none';
-    document.getElementById('sum-total').textContent = fmt(Math.max(0, subtotal-discount));
+    if (isDemoFree) return;
+    var sd = document.getElementById('sum-discount');
+    var dr = document.getElementById('discount-row');
+    var st = document.getElementById('sum-total');
+    if (sd) sd.textContent = '-'+fmt(discount);
+    if (dr) dr.style.display = discount>0?'flex':'none';
+    if (st) st.textContent = fmt(Math.max(0, subtotal-discount));
   }
   document.querySelectorAll('.coupon-quick').forEach(function(b){
     b.onclick=function(){ document.getElementById('coupon-input').value=b.dataset.code; document.getElementById('apply-coupon').click(); };
@@ -392,7 +427,7 @@ export const OrderPage: FC<LayoutProps & {
               <div class="space-y-2.5 text-sm">
                 <div class="flex justify-between"><span class="text-[#9492b8]">Mã đơn</span><b class="text-indigo-300 font-mono">{order.order_code}</b></div>
                 <div class="flex justify-between"><span class="text-[#9492b8]">Ngày tạo</span><b class="text-white tabular-nums">{formatDateTime(order.created_at)}</b></div>
-                <div class="flex justify-between"><span class="text-[#9492b8]">Thanh toán</span><b class="text-white">{order.payment_method === 'bank' ? 'VietQR' : order.payment_method === 'momo' ? 'MoMo' : 'Số dư ví'}</b></div>
+                <div class="flex justify-between"><span class="text-[#9492b8]">Thanh toán</span><b class="text-white">{order.payment_method === 'demo_free' ? 'Demo Test (0đ)' : order.payment_method === 'bank' ? 'VietQR' : order.payment_method === 'momo' ? 'MoMo' : 'Số dư ví'}</b></div>
                 <div class="flex justify-between"><span class="text-[#9492b8]">Trạng thái</span><StatusBadge status={order.status} /></div>
               </div>
               <div class="mt-4 pt-4 border-t border-[#221e54] space-y-2.5 text-sm tabular-nums">
