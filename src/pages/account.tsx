@@ -293,49 +293,91 @@ export const MyProductsPage: FC<LayoutProps & {
                   <p>4. Xong. Bấm <b class="text-white">Dùng Skill này</b> ở danh sách bên dưới để chép câu nhắn mẫu gửi cho ChatGPT.</p>
                 </div>
 
-                {/* Tab 3: Claude Code */}
+                {/* Tab 3: Claude Code — 1-paste into chat */}
                 <div role="tabpanel" data-tab="claude-code" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
                   <div>
-                    <p>1. Mở <b class="text-white">Claude Code</b>, dán dòng lệnh này rồi bấm <b class="text-white">Enter</b>:</p>
-                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
-                      <code id="unified-claude-code" class="flex-1 min-w-0 text-xs font-mono text-cyan-200 break-all leading-relaxed select-all">{unified.claudeCodeCli}</code>
-                      <button type="button" data-copy-target="unified-claude-code"
-                        class="shrink-0 self-start sm:self-center h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                    <p>1. Bấm <b class="text-white">Chép</b> rồi <b class="text-white">dán thẳng vào khung chat Claude Code</b> (AI tự cài giúp bạn, không cần chỉnh tay):</p>
+                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
+                      <pre id="unified-claude-code-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all">{unified.claudeCodePrompt}</pre>
+                      <button type="button" data-copy-target="unified-claude-code-prompt"
+                        class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
                         Chép
                       </button>
                     </div>
                   </div>
-                  <p>2. Xong. Bấm <b class="text-white">Dùng Skill này</b> ở danh sách bên dưới để chép câu nhắn chạy ngay Skill bạn muốn.</p>
+                  <p>2. Khi Claude Code hỏi quyền chạy lệnh → bấm <b class="text-white">Cho phép (Allow)</b> là xong — áp dụng cho mọi dự án.</p>
+                  <details class="rounded-xl bg-[#09081b]/60 border border-[#221e54] px-3.5 py-2.5 text-xs">
+                    <summary class="cursor-pointer font-semibold text-[#a9a7ce] hover:text-white select-none">
+                      Hoặc chỉ lấy 1 dòng lệnh Terminal (nếu bạn muốn tự chạy)
+                    </summary>
+                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
+                      <code id="unified-claude-code" class="flex-1 min-w-0 font-mono text-[11px] text-cyan-200 break-all select-all">{unified.claudeCodeCli}</code>
+                      <button type="button" data-copy-target="unified-claude-code"
+                        class="shrink-0 self-start sm:self-center h-8 px-3.5 rounded-full bg-[#161436] border border-[#2e2968] hover:border-indigo-400 text-white font-semibold text-[11px] transition cursor-pointer">
+                        Chép lệnh
+                      </button>
+                    </div>
+                  </details>
                 </div>
 
-                {/* Tab 4: Codex */}
+                {/* Tab 4: Codex — 1-paste into chat */}
                 <div role="tabpanel" data-tab="codex" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
                   <div>
-                    <p>1. Dán đoạn này vào file <code class="px-1.5 py-0.5 rounded bg-[#161436] text-white text-xs font-mono">~/.codex/config.toml</code> (hoặc nhờ Codex tự dán giúp):</p>
+                    <p>1. Bấm <b class="text-white">Chép</b> rồi <b class="text-white">dán thẳng vào khung chat Codex</b> (Codex tự mở file và cài giúp bạn):</p>
                     <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
-                      <pre id="unified-codex-toml" class="flex-1 min-w-0 text-xs font-mono text-emerald-200 whitespace-pre-wrap break-all leading-relaxed select-all">{unified.codexToml}</pre>
-                      <button type="button" data-copy-target="unified-codex-toml"
+                      <pre id="unified-codex-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all">{unified.codexPrompt}</pre>
+                      <button type="button" data-copy-target="unified-codex-prompt"
                         class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
                         Chép
                       </button>
                     </div>
                   </div>
-                  <p>2. Mở lại <b class="text-white">Codex</b> là xong — bấm <b class="text-white">Dùng Skill này</b> bên dưới để chạy ngay.</p>
+                  <p>2. Khi Codex hỏi quyền lưu file cài đặt → bấm <b class="text-white">Cho phép (Allow)</b> → đóng và mở lại <b class="text-white">Codex</b> là xong.</p>
+                  <details class="rounded-xl bg-[#09081b]/60 border border-[#221e54] px-3.5 py-2.5 text-xs">
+                    <summary class="cursor-pointer font-semibold text-[#a9a7ce] hover:text-white select-none">
+                      Hoặc tự dán thủ công vào ~/.codex/config.toml
+                    </summary>
+                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2">
+                      <pre id="unified-codex-toml" class="flex-1 min-w-0 font-mono text-[11px] text-emerald-200 whitespace-pre-wrap break-all select-all">{unified.codexToml}</pre>
+                      <button type="button" data-copy-target="unified-codex-toml"
+                        class="shrink-0 self-start h-8 px-3.5 rounded-full bg-[#161436] border border-[#2e2968] hover:border-emerald-400 text-white font-semibold text-[11px] transition cursor-pointer">
+                        Chép TOML
+                      </button>
+                    </div>
+                  </details>
                 </div>
 
-                {/* Tab 5: Antigravity */}
+                {/* Tab 5: Antigravity — 1-paste into chat */}
                 <div role="tabpanel" data-tab="antigravity" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
                   <div>
-                    <p>1. Mở <b class="text-white">Antigravity</b> → <b class="text-white">MCP Servers</b> → dán đoạn này vào <code class="px-1.5 py-0.5 rounded bg-[#161436] text-white text-xs font-mono">mcp_config.json</code>:</p>
+                    <p>1. Bấm <b class="text-white">Chép</b> rồi <b class="text-white">dán thẳng vào khung chat Antigravity</b> (AI tự cài vào máy giúp bạn, không phải tự tìm file):</p>
                     <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
-                      <pre id="unified-agy-json" class="flex-1 min-w-0 text-xs font-mono text-violet-200 overflow-x-auto whitespace-pre leading-relaxed select-all">{unified.antigravityJson}</pre>
-                      <button type="button" data-copy-target="unified-agy-json"
+                      <pre id="unified-agy-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all">{unified.antigravityPrompt}</pre>
+                      <button type="button" data-copy-target="unified-agy-prompt"
                         class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
                         Chép
                       </button>
                     </div>
                   </div>
-                  <p>2. Xong. Bấm <b class="text-white">Dùng Skill này</b> bên dưới để chép câu nhắn giao việc cho Antigravity.</p>
+                  <p>2. Khi Antigravity hiện hộp xác nhận sửa file cài đặt → bấm <b class="text-white">Cho phép (Allow)</b>.</p>
+                  <p>3. Xong. Mở <b class="text-white">đoạn chat mới</b> (hoặc bấm dấu <b class="text-white">...</b> → <b class="text-white">MCP Servers</b> → <b class="text-white">Refresh</b>) là AI tự dùng mọi Skill của bạn.</p>
+                  <details class="rounded-xl bg-[#09081b]/60 border border-[#221e54] px-3.5 py-2.5 text-xs space-y-2.5">
+                    <summary class="cursor-pointer font-semibold text-[#a9a7ce] hover:text-white select-none">
+                      Hoặc xem hướng dẫn tự dán thủ công từng bước (4 bước)
+                    </summary>
+                    <ol class="list-decimal list-inside space-y-1 text-[#b8b6d9] pt-1">
+                      <li>Trong Antigravity, bấm nút <b class="text-white">...</b> (góc trên phải) → <b class="text-white">MCP Servers</b> → <b class="text-white">Manage MCP Servers</b> → <b class="text-white">View raw config</b>.</li>
+                      <li>Gộp mục bên dưới vào trong <code class="text-white">"mcpServers"</code> (đừng xoá server cũ nếu đã có):</li>
+                    </ol>
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                      <pre id="unified-agy-json" class="flex-1 min-w-0 font-mono text-[11px] text-violet-200 overflow-x-auto whitespace-pre select-all">{unified.antigravityJson}</pre>
+                      <button type="button" data-copy-target="unified-agy-json"
+                        class="shrink-0 self-start h-8 px-3.5 rounded-full bg-[#161436] border border-[#2e2968] hover:border-violet-400 text-white font-semibold text-[11px] transition cursor-pointer">
+                        Chép JSON
+                      </button>
+                    </div>
+                    <p class="text-[#b8b6d9]">3. Bấm <b class="text-white">Ctrl + S</b> lưu file → quay lại <b class="text-white">MCP Servers</b> bấm <b class="text-white">Refresh</b> là xong.</p>
+                  </details>
                 </div>
 
                 {/* Connected AI Clients List */}

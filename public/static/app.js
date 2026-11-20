@@ -1868,19 +1868,29 @@
       card.querySelectorAll('.ai-mcp-url').forEach(function (el) { el.textContent = endpointUrl; });
       card.querySelectorAll('.ai-mcp-copy-url').forEach(function (btn) { btn.dataset.copy = endpointUrl; });
 
+      var ccCli = 'claude mcp add --transport http --scope user ' + serverName + ' "' + endpointUrl + '" --header "Authorization: Bearer ' + token + '"';
       var ccEl = document.getElementById('unified-claude-code');
-      if (ccEl) {
-        ccEl.textContent = 'claude mcp add --transport http ' + serverName + ' "' + endpointUrl + '" --header "Authorization: Bearer ' + token + '"';
+      if (ccEl) ccEl.textContent = ccCli;
+      var ccPromptEl = document.getElementById('unified-claude-code-prompt');
+      if (ccPromptEl) {
+        ccPromptEl.textContent = 'Hãy tự cài kết nối KhoSkill AI giúp tôi vào Claude Code bằng cách chạy đúng lệnh này:\n' + ccCli;
       }
+
+      var codexToml = '[mcp_servers.' + serverName + ']\nurl = "' + endpointUrl + '"\nhttp_headers = { Authorization = "Bearer ' + token + '" }';
       var codexEl = document.getElementById('unified-codex-toml');
-      if (codexEl) {
-        codexEl.textContent = '[mcp_servers.' + serverName + ']\nurl = "' + endpointUrl + '"\nhttp_headers = { Authorization = "Bearer ' + token + '" }';
+      if (codexEl) codexEl.textContent = codexToml;
+      var codexPromptEl = document.getElementById('unified-codex-prompt');
+      if (codexPromptEl) {
+        codexPromptEl.textContent = 'Hãy tự cài kết nối KhoSkill AI giúp tôi vào Codex: mở file ~/.codex/config.toml (tạo mới nếu chưa có) và thêm đoạn sau vào cuối file (không xoá cấu hình cũ):\n\n' + codexToml + '\n\nLưu file xong hãy báo tôi mở lại Codex để bắt đầu dùng Skill.';
       }
+
+      var agyObj = { mcpServers: {} };
+      agyObj.mcpServers[serverName] = { serverUrl: endpointUrl, headers: { Authorization: 'Bearer ' + token } };
       var agyEl = document.getElementById('unified-agy-json');
-      if (agyEl) {
-        var obj = { mcpServers: {} };
-        obj.mcpServers[serverName] = { serverUrl: endpointUrl, headers: { Authorization: 'Bearer ' + token } };
-        agyEl.textContent = JSON.stringify(obj, null, 2);
+      if (agyEl) agyEl.textContent = JSON.stringify(agyObj, null, 2);
+      var agyPromptEl = document.getElementById('unified-agy-prompt');
+      if (agyPromptEl) {
+        agyPromptEl.textContent = 'Hãy tự cài kết nối KhoSkill AI giúp tôi vào Antigravity trong 1 bước:\n1. Mở file ~/.gemini/config/mcp_config.json (nếu máy dùng bản cũ chưa có thì kiểm tra ~/.gemini/antigravity/mcp_config.json; chưa có thì tạo mới).\n2. Gộp thêm server "' + serverName + '" vào bên trong "mcpServers" (GIỮ NGUYÊN các server khác đang có):\n   "' + serverName + '": { "serverUrl": "' + endpointUrl + '", "headers": { "Authorization": "Bearer ' + token + '" } }\n3. Lưu file lại rồi báo tôi biết đã xong (nhắc tôi bấm Refresh ở mục MCP Servers hoặc mở đoạn chat mới là dùng được ngay).';
       }
 
       var noteEl = document.getElementById('ai-scope-note');

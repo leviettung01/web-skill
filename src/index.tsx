@@ -1688,7 +1688,10 @@ async function handleMcpEndpoint(c: any, targetSlug?: string) {
     ? `${origin}/.well-known/oauth-protected-resource/api/mcp/${encodeURIComponent(targetSlug)}`
     : `${origin}/.well-known/oauth-protected-resource`
 
+  c.header('Cache-Control', 'no-store')
+
   if (c.req.method === 'GET') {
+    const accept = (c.req.header('accept') || '').toLowerCase()
     if (licenseKey) {
       const auth = await authenticateMcpLicense(db, licenseKey, targetSlug)
       if (!auth.ok) {
@@ -1697,15 +1700,19 @@ async function handleMcpEndpoint(c: any, targetSlug?: string) {
         }
         return c.json({ ok: false, error: auth.error }, auth.status as any)
       }
+      // Streamable HTTP spec (2025-03-26): GET with Accept: text/event-stream MUST return SSE or 405
+      if (accept.includes('text/event-stream')) {
+        c.header('Allow', 'POST, DELETE, OPTIONS')
+        return c.body(null, 405)
+      }
       return c.json({
         ok: true,
         protocol: 'MCP Streamable HTTP (JSON-RPC 2.0)',
         server: auth.authMode === 'license_key' && auth.primary ? resolveMcpServerName(auth.primary) : 'khoskill',
-        endpoint: auth.authMode === 'license_key' && auth.primary ? resolveMcpEndpoint(origin, auth.primary) : `${origin}/api/mcp`,
+        endpoint: targetSlug ? `${origin}/api/mcp/${targetSlug}` : `${origin}/api/mcp`,
         active_skills: auth.skills.map(s => ({ slug: s.slug, name: s.name, version: s.version }))
       })
     }
-    const accept = (c.req.header('accept') || '').toLowerCase()
     if (accept.includes('text/event-stream')) {
       c.header('WWW-Authenticate', `Bearer realm="KhoSkill AI", resource_metadata="${resourceMetaUrl}"`)
       return c.json({ ok: false, error: 'Cần xác thực OAuth hoặc Bearer token để kết nối KhoSkill AI MCP.' }, 401)

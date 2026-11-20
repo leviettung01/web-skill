@@ -9388,12 +9388,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261126", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261127", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261126", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261127", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -9885,7 +9885,7 @@ var Layout = (props) => {
       ] }),
       /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261126" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261127" })
     ] })
   ] });
 };
@@ -11383,15 +11383,23 @@ async function rotateUserMcpToken(db, userId) {
 }
 function buildUnifiedMcpConfigs(opts) {
   const cleanOrigin = opts.origin.replace(/\/+$/, "");
-  const endpointUrl = `${cleanOrigin}/api/mcp`;
+  const endpointUrl = opts.slug ? `${cleanOrigin}/api/mcp/${opts.slug}` : `${cleanOrigin}/api/mcp`;
+  const serverName = opts.serverName || (opts.slug ? resolveMcpServerName({ slug: opts.slug }) : "khoskill");
   const token = opts.userToken;
-  const claudeCodeCli = `claude mcp add --transport http khoskill "${endpointUrl}" --header "Authorization: Bearer ${token}"`;
-  const codexToml = `[mcp_servers.khoskill]
+  const claudeCodeCli = `claude mcp add --transport http --scope user ${serverName} "${endpointUrl}" --header "Authorization: Bearer ${token}"`;
+  const claudeCodePrompt = `H\xE3y t\u1EF1 c\xE0i k\u1EBFt n\u1ED1i KhoSkill AI gi\xFAp t\xF4i v\xE0o Claude Code b\u1EB1ng c\xE1ch ch\u1EA1y \u0111\xFAng l\u1EC7nh n\xE0y:
+${claudeCodeCli}`;
+  const codexToml = `[mcp_servers.${serverName}]
 url = "${endpointUrl}"
 http_headers = { Authorization = "Bearer ${token}" }`;
+  const codexPrompt = `H\xE3y t\u1EF1 c\xE0i k\u1EBFt n\u1ED1i KhoSkill AI gi\xFAp t\xF4i v\xE0o Codex: m\u1EDF file ~/.codex/config.toml (t\u1EA1o m\u1EDBi n\u1EBFu ch\u01B0a c\xF3) v\xE0 th\xEAm \u0111o\u1EA1n sau v\xE0o cu\u1ED1i file (kh\xF4ng xo\xE1 c\u1EA5u h\xECnh c\u0169):
+
+${codexToml}
+
+L\u01B0u file xong h\xE3y b\xE1o t\xF4i m\u1EDF l\u1EA1i Codex \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u d\xF9ng Skill.`;
   const antigravityJson = JSON.stringify({
     mcpServers: {
-      khoskill: {
+      [serverName]: {
         serverUrl: endpointUrl,
         headers: {
           Authorization: `Bearer ${token}`
@@ -11399,10 +11407,19 @@ http_headers = { Authorization = "Bearer ${token}" }`;
       }
     }
   }, null, 2);
+  const antigravityPrompt = `H\xE3y t\u1EF1 c\xE0i k\u1EBFt n\u1ED1i KhoSkill AI gi\xFAp t\xF4i v\xE0o Antigravity trong 1 b\u01B0\u1EDBc:
+1. M\u1EDF file ~/.gemini/config/mcp_config.json (n\u1EBFu m\xE1y d\xF9ng b\u1EA3n c\u0169 ch\u01B0a c\xF3 th\xEC ki\u1EC3m tra ~/.gemini/antigravity/mcp_config.json; ch\u01B0a c\xF3 th\xEC t\u1EA1o m\u1EDBi).
+2. G\u1ED9p th\xEAm server "${serverName}" v\xE0o b\xEAn trong "mcpServers" (GI\u1EEE NGUY\xCAN c\xE1c server kh\xE1c \u0111ang c\xF3):
+   "${serverName}": { "serverUrl": "${endpointUrl}", "headers": { "Authorization": "Bearer ${token}" } }
+3. L\u01B0u file l\u1EA1i r\u1ED3i b\xE1o t\xF4i bi\u1EBFt \u0111\xE3 xong (nh\u1EAFc t\xF4i b\u1EA5m Refresh \u1EDF m\u1EE5c MCP Servers ho\u1EB7c m\u1EDF \u0111o\u1EA1n chat m\u1EDBi l\xE0 d\xF9ng \u0111\u01B0\u1EE3c ngay).`;
   return {
     endpointUrl,
+    serverName,
+    claudeCodePrompt,
     claudeCodeCli,
+    codexPrompt,
     codexToml,
+    antigravityPrompt,
     antigravityJson
   };
 }
@@ -14790,77 +14807,107 @@ var MyProductsPage = (props) => {
                 /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", "data-tab": "claude-code", "data-group": "ai-connect", class: "tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed", children: [
                   /* @__PURE__ */ jsxDEV("div", { children: [
                     /* @__PURE__ */ jsxDEV("p", { children: [
-                      "1. M\u1EDF ",
-                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Claude Code" }),
-                      ", d\xE1n d\xF2ng l\u1EC7nh n\xE0y r\u1ED3i b\u1EA5m ",
-                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Enter" }),
-                      ":"
+                      "1. B\u1EA5m ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Ch\xE9p" }),
+                      " r\u1ED3i ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "d\xE1n th\u1EB3ng v\xE0o khung chat Claude Code" }),
+                      " (AI t\u1EF1 c\xE0i gi\xFAp b\u1EA1n, kh\xF4ng c\u1EA7n ch\u1EC9nh tay):"
                     ] }),
-                    /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
-                      /* @__PURE__ */ jsxDEV("code", { id: "unified-claude-code", class: "flex-1 min-w-0 text-xs font-mono text-cyan-200 break-all leading-relaxed select-all", children: unified.claudeCodeCli }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-claude-code-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.claudeCodePrompt }),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          "data-copy-target": "unified-claude-code-prompt",
+                          class: "shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer",
+                          children: "Ch\xE9p"
+                        }
+                      )
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("p", { children: [
+                    "2. Khi Claude Code h\u1ECFi quy\u1EC1n ch\u1EA1y l\u1EC7nh \u2192 b\u1EA5m ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Cho ph\xE9p (Allow)" }),
+                    " l\xE0 xong \u2014 \xE1p d\u1EE5ng cho m\u1ECDi d\u1EF1 \xE1n."
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("details", { class: "rounded-xl bg-[#09081b]/60 border border-[#221e54] px-3.5 py-2.5 text-xs", children: [
+                    /* @__PURE__ */ jsxDEV("summary", { class: "cursor-pointer font-semibold text-[#a9a7ce] hover:text-white select-none", children: "Ho\u1EB7c ch\u1EC9 l\u1EA5y 1 d\xF2ng l\u1EC7nh Terminal (n\u1EBFu b\u1EA1n mu\u1ED1n t\u1EF1 ch\u1EA1y)" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2", children: [
+                      /* @__PURE__ */ jsxDEV("code", { id: "unified-claude-code", class: "flex-1 min-w-0 font-mono text-[11px] text-cyan-200 break-all select-all", children: unified.claudeCodeCli }),
                       /* @__PURE__ */ jsxDEV(
                         "button",
                         {
                           type: "button",
                           "data-copy-target": "unified-claude-code",
-                          class: "shrink-0 self-start sm:self-center h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer",
-                          children: "Ch\xE9p"
+                          class: "shrink-0 self-start sm:self-center h-8 px-3.5 rounded-full bg-[#161436] border border-[#2e2968] hover:border-indigo-400 text-white font-semibold text-[11px] transition cursor-pointer",
+                          children: "Ch\xE9p l\u1EC7nh"
                         }
                       )
                     ] })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("p", { children: [
-                    "2. Xong. B\u1EA5m ",
-                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "D\xF9ng Skill n\xE0y" }),
-                    " \u1EDF danh s\xE1ch b\xEAn d\u01B0\u1EDBi \u0111\u1EC3 ch\xE9p c\xE2u nh\u1EAFn ch\u1EA1y ngay Skill b\u1EA1n mu\u1ED1n."
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", "data-tab": "codex", "data-group": "ai-connect", class: "tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed", children: [
                   /* @__PURE__ */ jsxDEV("div", { children: [
                     /* @__PURE__ */ jsxDEV("p", { children: [
-                      "1. D\xE1n \u0111o\u1EA1n n\xE0y v\xE0o file ",
-                      /* @__PURE__ */ jsxDEV("code", { class: "px-1.5 py-0.5 rounded bg-[#161436] text-white text-xs font-mono", children: "~/.codex/config.toml" }),
-                      " (ho\u1EB7c nh\u1EDD Codex t\u1EF1 d\xE1n gi\xFAp):"
+                      "1. B\u1EA5m ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Ch\xE9p" }),
+                      " r\u1ED3i ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "d\xE1n th\u1EB3ng v\xE0o khung chat Codex" }),
+                      " (Codex t\u1EF1 m\u1EDF file v\xE0 c\xE0i gi\xFAp b\u1EA1n):"
                     ] }),
                     /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
-                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-codex-toml", class: "flex-1 min-w-0 text-xs font-mono text-emerald-200 whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.codexToml }),
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-codex-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.codexPrompt }),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          "data-copy-target": "unified-codex-prompt",
+                          class: "shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer",
+                          children: "Ch\xE9p"
+                        }
+                      )
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("p", { children: [
+                    "2. Khi Codex h\u1ECFi quy\u1EC1n l\u01B0u file c\xE0i \u0111\u1EB7t \u2192 b\u1EA5m ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Cho ph\xE9p (Allow)" }),
+                    " \u2192 \u0111\xF3ng v\xE0 m\u1EDF l\u1EA1i ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Codex" }),
+                    " l\xE0 xong."
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("details", { class: "rounded-xl bg-[#09081b]/60 border border-[#221e54] px-3.5 py-2.5 text-xs", children: [
+                    /* @__PURE__ */ jsxDEV("summary", { class: "cursor-pointer font-semibold text-[#a9a7ce] hover:text-white select-none", children: "Ho\u1EB7c t\u1EF1 d\xE1n th\u1EE7 c\xF4ng v\xE0o ~/.codex/config.toml" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2", children: [
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-codex-toml", class: "flex-1 min-w-0 font-mono text-[11px] text-emerald-200 whitespace-pre-wrap break-all select-all", children: unified.codexToml }),
                       /* @__PURE__ */ jsxDEV(
                         "button",
                         {
                           type: "button",
                           "data-copy-target": "unified-codex-toml",
-                          class: "shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer",
-                          children: "Ch\xE9p"
+                          class: "shrink-0 self-start h-8 px-3.5 rounded-full bg-[#161436] border border-[#2e2968] hover:border-emerald-400 text-white font-semibold text-[11px] transition cursor-pointer",
+                          children: "Ch\xE9p TOML"
                         }
                       )
                     ] })
-                  ] }),
-                  /* @__PURE__ */ jsxDEV("p", { children: [
-                    "2. M\u1EDF l\u1EA1i ",
-                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Codex" }),
-                    " l\xE0 xong \u2014 b\u1EA5m ",
-                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "D\xF9ng Skill n\xE0y" }),
-                    " b\xEAn d\u01B0\u1EDBi \u0111\u1EC3 ch\u1EA1y ngay."
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", "data-tab": "antigravity", "data-group": "ai-connect", class: "tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed", children: [
                   /* @__PURE__ */ jsxDEV("div", { children: [
                     /* @__PURE__ */ jsxDEV("p", { children: [
-                      "1. M\u1EDF ",
-                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Antigravity" }),
-                      " \u2192 ",
-                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "MCP Servers" }),
-                      " \u2192 d\xE1n \u0111o\u1EA1n n\xE0y v\xE0o ",
-                      /* @__PURE__ */ jsxDEV("code", { class: "px-1.5 py-0.5 rounded bg-[#161436] text-white text-xs font-mono", children: "mcp_config.json" }),
-                      ":"
+                      "1. B\u1EA5m ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Ch\xE9p" }),
+                      " r\u1ED3i ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "d\xE1n th\u1EB3ng v\xE0o khung chat Antigravity" }),
+                      " (AI t\u1EF1 c\xE0i v\xE0o m\xE1y gi\xFAp b\u1EA1n, kh\xF4ng ph\u1EA3i t\u1EF1 t\xECm file):"
                     ] }),
                     /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
-                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-agy-json", class: "flex-1 min-w-0 text-xs font-mono text-violet-200 overflow-x-auto whitespace-pre leading-relaxed select-all", children: unified.antigravityJson }),
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-agy-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.antigravityPrompt }),
                       /* @__PURE__ */ jsxDEV(
                         "button",
                         {
                           type: "button",
-                          "data-copy-target": "unified-agy-json",
+                          "data-copy-target": "unified-agy-prompt",
                           class: "shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer",
                           children: "Ch\xE9p"
                         }
@@ -14868,9 +14915,62 @@ var MyProductsPage = (props) => {
                     ] })
                   ] }),
                   /* @__PURE__ */ jsxDEV("p", { children: [
-                    "2. Xong. B\u1EA5m ",
-                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "D\xF9ng Skill n\xE0y" }),
-                    " b\xEAn d\u01B0\u1EDBi \u0111\u1EC3 ch\xE9p c\xE2u nh\u1EAFn giao vi\u1EC7c cho Antigravity."
+                    "2. Khi Antigravity hi\u1EC7n h\u1ED9p x\xE1c nh\u1EADn s\u1EEDa file c\xE0i \u0111\u1EB7t \u2192 b\u1EA5m ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Cho ph\xE9p (Allow)" }),
+                    "."
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("p", { children: [
+                    "3. Xong. M\u1EDF ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "\u0111o\u1EA1n chat m\u1EDBi" }),
+                    " (ho\u1EB7c b\u1EA5m d\u1EA5u ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "..." }),
+                    " \u2192 ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "MCP Servers" }),
+                    " \u2192 ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Refresh" }),
+                    ") l\xE0 AI t\u1EF1 d\xF9ng m\u1ECDi Skill c\u1EE7a b\u1EA1n."
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("details", { class: "rounded-xl bg-[#09081b]/60 border border-[#221e54] px-3.5 py-2.5 text-xs space-y-2.5", children: [
+                    /* @__PURE__ */ jsxDEV("summary", { class: "cursor-pointer font-semibold text-[#a9a7ce] hover:text-white select-none", children: "Ho\u1EB7c xem h\u01B0\u1EDBng d\u1EABn t\u1EF1 d\xE1n th\u1EE7 c\xF4ng t\u1EEBng b\u01B0\u1EDBc (4 b\u01B0\u1EDBc)" }),
+                    /* @__PURE__ */ jsxDEV("ol", { class: "list-decimal list-inside space-y-1 text-[#b8b6d9] pt-1", children: [
+                      /* @__PURE__ */ jsxDEV("li", { children: [
+                        "Trong Antigravity, b\u1EA5m n\xFAt ",
+                        /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "..." }),
+                        " (g\xF3c tr\xEAn ph\u1EA3i) \u2192 ",
+                        /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "MCP Servers" }),
+                        " \u2192 ",
+                        /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Manage MCP Servers" }),
+                        " \u2192 ",
+                        /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "View raw config" }),
+                        "."
+                      ] }),
+                      /* @__PURE__ */ jsxDEV("li", { children: [
+                        "G\u1ED9p m\u1EE5c b\xEAn d\u01B0\u1EDBi v\xE0o trong ",
+                        /* @__PURE__ */ jsxDEV("code", { class: "text-white", children: '"mcpServers"' }),
+                        " (\u0111\u1EEBng xo\xE1 server c\u0169 n\u1EBFu \u0111\xE3 c\xF3):"
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row sm:items-start gap-2", children: [
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-agy-json", class: "flex-1 min-w-0 font-mono text-[11px] text-violet-200 overflow-x-auto whitespace-pre select-all", children: unified.antigravityJson }),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          "data-copy-target": "unified-agy-json",
+                          class: "shrink-0 self-start h-8 px-3.5 rounded-full bg-[#161436] border border-[#2e2968] hover:border-violet-400 text-white font-semibold text-[11px] transition cursor-pointer",
+                          children: "Ch\xE9p JSON"
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("p", { class: "text-[#b8b6d9]", children: [
+                      "3. B\u1EA5m ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Ctrl + S" }),
+                      " l\u01B0u file \u2192 quay l\u1EA1i ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "MCP Servers" }),
+                      " b\u1EA5m ",
+                      /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "Refresh" }),
+                      " l\xE0 xong."
+                    ] })
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxDEV("div", { class: "pt-5 border-t border-[#221e54]", children: [
@@ -20298,7 +20398,9 @@ async function handleMcpEndpoint(c, targetSlug) {
   const origin = getRequestOrigin(c);
   const licenseKey = extractLicenseKey(c.req.raw, c.req.query("key"));
   const resourceMetaUrl = targetSlug ? `${origin}/.well-known/oauth-protected-resource/api/mcp/${encodeURIComponent(targetSlug)}` : `${origin}/.well-known/oauth-protected-resource`;
+  c.header("Cache-Control", "no-store");
   if (c.req.method === "GET") {
+    const accept = (c.req.header("accept") || "").toLowerCase();
     if (licenseKey) {
       const auth2 = await authenticateMcpLicense(db, licenseKey, targetSlug);
       if (!auth2.ok) {
@@ -20307,15 +20409,18 @@ async function handleMcpEndpoint(c, targetSlug) {
         }
         return c.json({ ok: false, error: auth2.error }, auth2.status);
       }
+      if (accept.includes("text/event-stream")) {
+        c.header("Allow", "POST, DELETE, OPTIONS");
+        return c.body(null, 405);
+      }
       return c.json({
         ok: true,
         protocol: "MCP Streamable HTTP (JSON-RPC 2.0)",
         server: auth2.authMode === "license_key" && auth2.primary ? resolveMcpServerName(auth2.primary) : "khoskill",
-        endpoint: auth2.authMode === "license_key" && auth2.primary ? resolveMcpEndpoint(origin, auth2.primary) : `${origin}/api/mcp`,
+        endpoint: targetSlug ? `${origin}/api/mcp/${targetSlug}` : `${origin}/api/mcp`,
         active_skills: auth2.skills.map((s) => ({ slug: s.slug, name: s.name, version: s.version }))
       });
     }
-    const accept = (c.req.header("accept") || "").toLowerCase();
     if (accept.includes("text/event-stream")) {
       c.header("WWW-Authenticate", `Bearer realm="KhoSkill AI", resource_metadata="${resourceMetaUrl}"`);
       return c.json({ ok: false, error: "C\u1EA7n x\xE1c th\u1EF1c OAuth ho\u1EB7c Bearer token \u0111\u1EC3 k\u1EBFt n\u1ED1i KhoSkill AI MCP." }, 401);

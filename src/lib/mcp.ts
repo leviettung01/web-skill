@@ -19,8 +19,12 @@ import { genTokenHex, sha256Hex } from './email'
 
 export interface UnifiedMcpConfigs {
   endpointUrl: string
+  serverName: string
+  claudeCodePrompt: string
   claudeCodeCli: string
+  codexPrompt: string
   codexToml: string
+  antigravityPrompt: string
   antigravityJson: string
 }
 
@@ -76,18 +80,21 @@ export async function rotateUserMcpToken(db: D1Database, userId: number): Promis
   return fresh
 }
 
-export function buildUnifiedMcpConfigs(opts: { origin: string; userToken: string }): UnifiedMcpConfigs {
+export function buildUnifiedMcpConfigs(opts: { origin: string; userToken: string; slug?: string; serverName?: string }): UnifiedMcpConfigs {
   const cleanOrigin = opts.origin.replace(/\/+$/, '')
-  const endpointUrl = `${cleanOrigin}/api/mcp`
+  const endpointUrl = opts.slug ? `${cleanOrigin}/api/mcp/${opts.slug}` : `${cleanOrigin}/api/mcp`
+  const serverName = opts.serverName || (opts.slug ? resolveMcpServerName({ slug: opts.slug }) : 'khoskill')
   const token = opts.userToken
 
-  const claudeCodeCli = `claude mcp add --transport http khoskill "${endpointUrl}" --header "Authorization: Bearer ${token}"`
+  const claudeCodeCli = `claude mcp add --transport http --scope user ${serverName} "${endpointUrl}" --header "Authorization: Bearer ${token}"`
+  const claudeCodePrompt = `Hãy tự cài kết nối KhoSkill AI giúp tôi vào Claude Code bằng cách chạy đúng lệnh này:\n${claudeCodeCli}`
 
-  const codexToml = `[mcp_servers.khoskill]\nurl = "${endpointUrl}"\nhttp_headers = { Authorization = "Bearer ${token}" }`
+  const codexToml = `[mcp_servers.${serverName}]\nurl = "${endpointUrl}"\nhttp_headers = { Authorization = "Bearer ${token}" }`
+  const codexPrompt = `Hãy tự cài kết nối KhoSkill AI giúp tôi vào Codex: mở file ~/.codex/config.toml (tạo mới nếu chưa có) và thêm đoạn sau vào cuối file (không xoá cấu hình cũ):\n\n${codexToml}\n\nLưu file xong hãy báo tôi mở lại Codex để bắt đầu dùng Skill.`
 
   const antigravityJson = JSON.stringify({
     mcpServers: {
-      khoskill: {
+      [serverName]: {
         serverUrl: endpointUrl,
         headers: {
           Authorization: `Bearer ${token}`
@@ -96,10 +103,16 @@ export function buildUnifiedMcpConfigs(opts: { origin: string; userToken: string
     }
   }, null, 2)
 
+  const antigravityPrompt = `Hãy tự cài kết nối KhoSkill AI giúp tôi vào Antigravity trong 1 bước:\n1. Mở file ~/.gemini/config/mcp_config.json (nếu máy dùng bản cũ chưa có thì kiểm tra ~/.gemini/antigravity/mcp_config.json; chưa có thì tạo mới).\n2. Gộp thêm server "${serverName}" vào bên trong "mcpServers" (GIỮ NGUYÊN các server khác đang có):\n   "${serverName}": { "serverUrl": "${endpointUrl}", "headers": { "Authorization": "Bearer ${token}" } }\n3. Lưu file lại rồi báo tôi biết đã xong (nhắc tôi bấm Refresh ở mục MCP Servers hoặc mở đoạn chat mới là dùng được ngay).`
+
   return {
     endpointUrl,
+    serverName,
+    claudeCodePrompt,
     claudeCodeCli,
+    codexPrompt,
     codexToml,
+    antigravityPrompt,
     antigravityJson
   }
 }
