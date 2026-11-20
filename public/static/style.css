@@ -1680,6 +1680,8 @@ body.dark-portal textarea:focus {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  max-width: 500px;
+  margin: 0 auto;
   position: relative;
 }
 .ba-compare-card[data-mode="split"] .ba-pane {
@@ -1722,7 +1724,7 @@ body.dark-portal textarea:focus {
 .ba-compare-card[data-mode="wipe"] .ba-stage {
   position: relative;
   width: 100%;
-  max-width: 340px;
+  max-width: 265px;
   margin: 0 auto;
   aspect-ratio: 9 / 16;
   border-radius: 16px;

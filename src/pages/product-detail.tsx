@@ -58,7 +58,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
             { label: p.name }
           ]} />
 
-          <div class={`grid ${hasBeforeAfter ? 'lg:grid-cols-[minmax(0,580px)_1fr]' : 'lg:grid-cols-[minmax(0,520px)_1fr]'} gap-8 mt-4 items-start`}>
+          <div class={`grid ${hasBeforeAfter ? 'lg:grid-cols-[minmax(0,540px)_1fr]' : 'lg:grid-cols-[minmax(0,520px)_1fr]'} gap-8 mt-4 items-start`}>
             {/* COLUMN 1: Before/After Synced Comparison Player (for Talking Head) OR Adaptive Video Player */}
             <div>
               {hasBeforeAfter ? (

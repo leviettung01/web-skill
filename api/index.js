@@ -9401,12 +9401,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261121", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261123", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261121", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261123", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -9898,7 +9898,7 @@ var Layout = (props) => {
       ] }),
       /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261121" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261123" })
     ] })
   ] });
 };
@@ -12230,7 +12230,7 @@ var ProductDetailPage = (props) => {
             ...p.category_slug ? [{ label: p.category_name, href: `/danh-muc/${p.category_slug}` }] : [],
             { label: p.name }
           ] }),
-          /* @__PURE__ */ jsxDEV("div", { class: `grid ${hasBeforeAfter ? "lg:grid-cols-[minmax(0,580px)_1fr]" : "lg:grid-cols-[minmax(0,520px)_1fr]"} gap-8 mt-4 items-start`, children: [
+          /* @__PURE__ */ jsxDEV("div", { class: `grid ${hasBeforeAfter ? "lg:grid-cols-[minmax(0,540px)_1fr]" : "lg:grid-cols-[minmax(0,520px)_1fr]"} gap-8 mt-4 items-start`, children: [
             /* @__PURE__ */ jsxDEV("div", { children: [
               hasBeforeAfter ? /* @__PURE__ */ jsxDEV(
                 "div",
@@ -15571,7 +15571,7 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     } }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap", rel: "stylesheet" }),
     /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261121", rel: "stylesheet" })
+    /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261123", rel: "stylesheet" })
   ] }),
   /* @__PURE__ */ jsxDEV("body", { class: "bg-slate-100 text-slate-800 antialiased", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "flex min-h-screen", children: [
@@ -15624,8 +15624,8 @@ var AdminShell = (props) => /* @__PURE__ */ jsxDEV("html", { lang: "vi", childre
     ] }),
     /* @__PURE__ */ jsxDEV("div", { id: "toast-container", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
     /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261121" }),
-    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261121" })
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261123" }),
+    /* @__PURE__ */ jsxDEV("script", { src: "/static/admin.js?v=20261123" })
   ] })
 ] });
 var AdminDashboard = (props) => {

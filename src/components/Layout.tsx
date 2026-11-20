@@ -74,12 +74,12 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         {props.ogImage && <meta property="og:image" content={props.ogImage} />}
         {canonical && <link rel="canonical" href={canonical} />}
         <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
-        <link href="/static/tailwind.css?v=20261121" rel="stylesheet" />
+        <link href="/static/tailwind.css?v=20261123" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
-        <link href="/static/style.css?v=20261121" rel="stylesheet" />
+        <link href="/static/style.css?v=20261123" rel="stylesheet" />
         <script dangerouslySetInnerHTML={{
           __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
         }}></script>
@@ -437,7 +437,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = (props) => {
         <div id="toast-container" aria-live="polite" aria-atomic="true" role="status" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-        <script src="/static/app.js?v=20261121"></script>
+        <script src="/static/app.js?v=20261123"></script>
       </body>
     </html>
   )
