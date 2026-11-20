@@ -99,13 +99,14 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
     await runOptionalDemoUserBootstrap(db, env).catch(err => console.error('[DEMO_USER_BOOTSTRAP]', err))
 
-    const [flag04, flag05, flag06] = await Promise.all([
+    const [flag04, flag05, flag06, flag07] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0007_done'`).first<any>().catch(() => null)
     ])
 
-    if (flag04?.value === '1' && flag05?.value === '1' && flag06?.value === '1') {
+    if (flag04?.value === '1' && flag05?.value === '1' && flag06?.value === '1' && flag07?.value === '1') {
       _done = true
       return
     }
@@ -263,6 +264,24 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       ).run().catch(async () => {
         await db.prepare(
           `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0006_done', '1')`
+        ).run().catch(() => null)
+      })
+      mutated = true
+    }
+
+    // ---- Stage 4: Migration 0007 (Sync field-motion-walking SKILL.md for Walking Talking Head) ----
+    if (flag07?.value !== '1') {
+      const fmw = REAL_MCP_VIDEO_SKILLS.find(x => x.slug === 'viral-talking-head-video-edit')
+      if (fmw) {
+        await db.prepare(
+          `UPDATE products SET mcp_skill_prompt=? WHERE slug='viral-talking-head-video-edit'`
+        ).bind(fmw.mcp_skill_prompt).run().catch(() => null)
+      }
+      await db.prepare(
+        `INSERT INTO settings (key, value) VALUES ('mcp_migration_0007_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+      ).run().catch(async () => {
+        await db.prepare(
+          `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0007_done', '1')`
         ).run().catch(() => null)
       })
       mutated = true

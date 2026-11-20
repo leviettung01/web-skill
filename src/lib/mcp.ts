@@ -62,7 +62,7 @@ const SKILL_ENGINE_PROFILES: Record<string, SkillEngineProfile> = {
     ]
   },
   'viral-talking-head-video-edit': {
-    folderName: 'Viral-Talking-Head-Video-Edit',
+    folderName: 'field-motion-walking',
     defaultAspect: '9:16',
     defaultDurationSec: 50,
     resolution: '1080x1920 @ 30fps (-14.0 LUFS)',
@@ -107,7 +107,7 @@ const SKILL_ENGINE_PROFILES: Record<string, SkillEngineProfile> = {
     ]
   },
   'video-talking-head': {
-    folderName: 'Video-Talking-Head',
+    folderName: 'viral-talking-head',
     defaultAspect: '9:16',
     defaultDurationSec: 55,
     resolution: '1080x1920 @ 30fps (-14.0 LUFS)',
