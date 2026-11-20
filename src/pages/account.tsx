@@ -298,7 +298,7 @@ export const MyProductsPage: FC<LayoutProps & {
                   <div>
                     <p>1. Bấm <b class="text-white">Chép</b> rồi <b class="text-white">dán thẳng vào khung chat Claude Code</b> (AI tự cài giúp bạn, không cần chỉnh tay):</p>
                     <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
-                      <pre id="unified-claude-code-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all">{unified.claudeCodePrompt}</pre>
+                      <pre id="unified-claude-code-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-anywhere leading-relaxed select-all">{unified.claudeCodePrompt}</pre>
                       <button type="button" data-copy-target="unified-claude-code-prompt"
                         class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
                         Chép
@@ -325,7 +325,7 @@ export const MyProductsPage: FC<LayoutProps & {
                   <div>
                     <p>1. Bấm <b class="text-white">Chép</b> rồi <b class="text-white">dán thẳng vào khung chat Codex</b> (Codex tự mở file và cài giúp bạn):</p>
                     <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
-                      <pre id="unified-codex-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all">{unified.codexPrompt}</pre>
+                      <pre id="unified-codex-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-anywhere leading-relaxed select-all">{unified.codexPrompt}</pre>
                       <button type="button" data-copy-target="unified-codex-prompt"
                         class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
                         Chép
@@ -352,7 +352,7 @@ export const MyProductsPage: FC<LayoutProps & {
                   <div>
                     <p>1. Bấm <b class="text-white">Chép</b> rồi <b class="text-white">dán thẳng vào khung chat Antigravity</b> (AI tự cài vào máy giúp bạn, không phải tự tìm file):</p>
                     <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
-                      <pre id="unified-agy-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all">{unified.antigravityPrompt}</pre>
+                      <pre id="unified-agy-prompt" class="flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-anywhere leading-relaxed select-all">{unified.antigravityPrompt}</pre>
                       <button type="button" data-copy-target="unified-agy-prompt"
                         class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
                         Chép

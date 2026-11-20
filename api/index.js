@@ -14814,7 +14814,7 @@ var MyProductsPage = (props) => {
                       " (AI t\u1EF1 c\xE0i gi\xFAp b\u1EA1n, kh\xF4ng c\u1EA7n ch\u1EC9nh tay):"
                     ] }),
                     /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
-                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-claude-code-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.claudeCodePrompt }),
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-claude-code-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-anywhere leading-relaxed select-all", children: unified.claudeCodePrompt }),
                       /* @__PURE__ */ jsxDEV(
                         "button",
                         {
@@ -14857,7 +14857,7 @@ var MyProductsPage = (props) => {
                       " (Codex t\u1EF1 m\u1EDF file v\xE0 c\xE0i gi\xFAp b\u1EA1n):"
                     ] }),
                     /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
-                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-codex-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.codexPrompt }),
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-codex-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-anywhere leading-relaxed select-all", children: unified.codexPrompt }),
                       /* @__PURE__ */ jsxDEV(
                         "button",
                         {
@@ -14902,7 +14902,7 @@ var MyProductsPage = (props) => {
                       " (AI t\u1EF1 c\xE0i v\xE0o m\xE1y gi\xFAp b\u1EA1n, kh\xF4ng ph\u1EA3i t\u1EF1 t\xECm file):"
                     ] }),
                     /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]", children: [
-                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-agy-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-all leading-relaxed select-all", children: unified.antigravityPrompt }),
+                      /* @__PURE__ */ jsxDEV("pre", { id: "unified-agy-prompt", class: "flex-1 min-w-0 text-xs font-sans text-[#e8e7fb] whitespace-pre-wrap break-anywhere leading-relaxed select-all", children: unified.antigravityPrompt }),
                       /* @__PURE__ */ jsxDEV(
                         "button",
                         {
