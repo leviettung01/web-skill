@@ -99,12 +99,13 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
     await runOptionalDemoUserBootstrap(db, env).catch(err => console.error('[DEMO_USER_BOOTSTRAP]', err))
 
-    const [flag04, flag05, flag06, flag07, flag08] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0007_done'`).first<any>().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0008_done'`).first<any>().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0008_done'`).first<any>().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0009_done'`).first<any>().catch(() => null)
     ])
 
     if (
@@ -112,7 +113,8 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       flag05?.value === '1' &&
       flag06?.value === '1' &&
       flag07?.value === '1' &&
-      flag08?.value === '1'
+      flag08?.value === '1' &&
+      flag09?.value === '1'
     ) {
       _done = true
       return
@@ -398,6 +400,22 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
         ).run().catch(async () => {
           await db.prepare(
             `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0008_done', '1')`
+          ).run().catch(() => null)
+        })
+        mutated = true
+      }
+    }
+
+    // ---- Stage 6: Migration 0009 (Per-skill enable/disable toggle for AI) ----
+    if (flag09?.value !== '1') {
+      await db.prepare('ALTER TABLE licenses ADD COLUMN mcp_enabled INTEGER NOT NULL DEFAULT 1').run().catch(() => null)
+      const colOk = await db.prepare('SELECT mcp_enabled FROM licenses LIMIT 1').all().catch(() => null)
+      if (colOk !== null) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0009_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0009_done', '1')`
           ).run().catch(() => null)
         })
         mutated = true

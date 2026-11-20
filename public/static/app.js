@@ -1846,6 +1846,189 @@
       return;
     }
 
+    // Skill Scope Picker inside "Kết nối AI của bạn" (All active skills vs 1 specific skill)
+    var scopeChip = e.target.closest('.ai-scope-chip');
+    if (scopeChip) {
+      e.preventDefault();
+      var card = document.getElementById('ai-connect-card');
+      if (!card) return;
+      var origin = (card.dataset.origin || location.origin).replace(/\/+$/, '');
+      var token = card.dataset.mcpToken || '';
+      var slug = scopeChip.dataset.scopeSlug || '';
+      var scopeName = scopeChip.dataset.scopeName || 'Tất cả Skill đang bật';
+      var serverName = scopeChip.dataset.scopeServer || 'khoskill';
+
+      document.querySelectorAll('.ai-scope-chip').forEach(function (btn) {
+        var on = btn === scopeChip;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+
+      var endpointUrl = slug ? (origin + '/api/mcp/' + slug) : (origin + '/api/mcp');
+      card.querySelectorAll('.ai-mcp-url').forEach(function (el) { el.textContent = endpointUrl; });
+      card.querySelectorAll('.ai-mcp-copy-url').forEach(function (btn) { btn.dataset.copy = endpointUrl; });
+
+      var ccEl = document.getElementById('unified-claude-code');
+      if (ccEl) {
+        ccEl.textContent = 'claude mcp add --transport http ' + serverName + ' "' + endpointUrl + '" --header "Authorization: Bearer ' + token + '"';
+      }
+      var codexEl = document.getElementById('unified-codex-toml');
+      if (codexEl) {
+        codexEl.textContent = '[mcp_servers.' + serverName + ']\nurl = "' + endpointUrl + '"\nhttp_headers = { Authorization = "Bearer ' + token + '" }';
+      }
+      var agyEl = document.getElementById('unified-agy-json');
+      if (agyEl) {
+        var obj = { mcpServers: {} };
+        obj.mcpServers[serverName] = { serverUrl: endpointUrl, headers: { Authorization: 'Bearer ' + token } };
+        agyEl.textContent = JSON.stringify(obj, null, 2);
+      }
+
+      var noteEl = document.getElementById('ai-scope-note');
+      if (noteEl) {
+        var escName = scopeName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        noteEl.innerHTML = slug
+          ? 'Đang chọn riêng Skill <b class="text-cyan-300">' + escName + '</b> — địa chỉ và lệnh bên dưới chỉ kết nối đúng Skill này.'
+          : 'Đang nối <b class="text-white">toàn bộ Skill đang bật</b> — mua thêm Skill mới AI sẽ tự dùng ngay.';
+      }
+      return;
+    }
+
+    // Toggle specific MCP Skill ON/OFF for AI
+    var toggleSkillBtn = e.target.closest('.btn-toggle-mcp-skill');
+    if (toggleSkillBtn) {
+      e.preventDefault();
+      var licId = Number(toggleSkillBtn.dataset.licenseId);
+      if (!licId || toggleSkillBtn.disabled) return;
+      var curOn = toggleSkillBtn.dataset.enabled === '1';
+      var nextOn = !curOn;
+      toggleSkillBtn.disabled = true;
+      axios.post('/api/account/mcp/skills/' + licId + '/toggle', { enabled: nextOn })
+        .then(function (r) {
+          var d = r.data || {};
+          var isOn = Number(d.enabled) === 1;
+          toggleSkillBtn.dataset.enabled = isOn ? '1' : '0';
+          toggleSkillBtn.setAttribute('aria-checked', isOn ? 'true' : 'false');
+          toggleSkillBtn.title = isOn ? 'Bấm để tạm tắt Skill này khỏi AI' : 'Bấm để bật lại Skill này cho AI';
+          toggleSkillBtn.className = 'btn-toggle-mcp-skill inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-bold transition cursor-pointer ' +
+            (isOn
+              ? 'is-on bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+              : 'bg-[#161436] border-[#2e2968] text-[#9492b8]');
+          var lbl = toggleSkillBtn.querySelector('.skill-toggle-label');
+          if (lbl) lbl.textContent = isOn ? 'Đang bật cho AI' : 'Đang tắt';
+
+          var rowCard = document.querySelector('[data-skill-card="' + licId + '"]');
+          if (rowCard) rowCard.classList.toggle('opacity-75', !isOn);
+
+          var dot = document.querySelector('[data-scope-dot="' + licId + '"]');
+          if (dot) {
+            dot.classList.toggle('bg-emerald-400', isOn);
+            dot.classList.toggle('bg-slate-500', !isOn);
+          }
+
+          var counter = document.getElementById('mcp-enabled-counter');
+          if (counter && d.total_mcp_count != null) {
+            counter.textContent = 'Đang bật ' + d.enabled_count + '/' + d.total_mcp_count + ' Skill cho AI';
+          }
+          var scopeCnt = document.getElementById('ai-scope-enabled-count');
+          if (scopeCnt && d.enabled_count != null) {
+            scopeCnt.textContent = String(d.enabled_count);
+          }
+          toast(d.message || (isOn ? 'Đã bật Skill cho AI' : 'Đã tạm tắt Skill khỏi AI'), 'success');
+        })
+        .catch(function (err) {
+          toast((err.response && err.response.data && err.response.data.error) || 'Không thể cập nhật trạng thái Skill', 'error');
+        })
+        .finally(function () {
+          toggleSkillBtn.disabled = false;
+        });
+      return;
+    }
+
+    // Open 1-click "Dùng Skill này" modal for a specific Skill
+    var useSkillBtn = e.target.closest('.btn-use-skill');
+    if (useSkillBtn) {
+      e.preventDefault();
+      var modal = document.getElementById('use-skill-modal');
+      if (!modal) return;
+      var slug = useSkillBtn.dataset.slug || '';
+      var shortName = useSkillBtn.dataset.shortName || useSkillBtn.dataset.name || slug;
+      var inputLabel = useSkillBtn.dataset.inputLabel || 'Chủ đề hoặc đường dẫn video của bạn (tuỳ chọn)';
+      var placeholder = useSkillBtn.dataset.placeholder || 'Nhập yêu cầu của bạn...';
+      var tmpl = useSkillBtn.dataset.promptTemplate || '';
+      var dlHref = useSkillBtn.dataset.downloadHref || '';
+
+      modal.dataset.activeSlug = slug;
+      modal.dataset.promptTemplate = tmpl;
+
+      var titleEl = document.getElementById('use-skill-modal-title');
+      if (titleEl) titleEl.textContent = 'Dùng ngay: ' + shortName;
+      var lblEl = document.getElementById('use-skill-input-label');
+      if (lblEl) lblEl.textContent = '1. ' + inputLabel + ':';
+      var inp = document.getElementById('use-skill-user-input');
+      var preview = document.getElementById('use-skill-prompt-preview');
+      if (inp) {
+        inp.value = '';
+        inp.placeholder = placeholder;
+      }
+      if (preview) {
+        preview.textContent = tmpl.replace('{{INPUT}}', '[nhập chủ đề hoặc đường dẫn video của bạn]');
+      }
+      var driveLink = document.getElementById('use-skill-drive-link');
+      if (driveLink) {
+        if (dlHref) {
+          driveLink.href = dlHref;
+          driveLink.classList.remove('hidden');
+        } else {
+          driveLink.classList.add('hidden');
+        }
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (inp) setTimeout(function () { inp.focus(); }, 50);
+      return;
+    }
+
+    // Close / copy / select-only actions inside "Dùng Skill này" modal
+    var useModal = document.getElementById('use-skill-modal');
+    if (useModal && !useModal.classList.contains('hidden')) {
+      if (e.target === useModal || e.target.closest('#use-skill-close-btn')) {
+        e.preventDefault();
+        useModal.classList.add('hidden');
+        useModal.classList.remove('flex');
+        return;
+      }
+      var copyPromptBtn = e.target.closest('#use-skill-copy-btn');
+      if (copyPromptBtn) {
+        e.preventDefault();
+        var prev = document.getElementById('use-skill-prompt-preview');
+        var promptTxt = prev ? (prev.textContent || '').trim() : '';
+        if (!promptTxt) return;
+        navigator.clipboard.writeText(promptTxt).then(function () {
+          toast('Đã chép câu nhắn! Dán vào Claude / ChatGPT / Antigravity để chạy ngay.', 'success');
+          var sp = copyPromptBtn.querySelector('span');
+          if (sp) {
+            var old = sp.textContent;
+            sp.textContent = 'Đã chép!';
+            setTimeout(function () { sp.textContent = old; }, 1600);
+          }
+        }).catch(function () { toast('Không thể sao chép', 'error'); });
+        return;
+      }
+      var selectOnlyBtn = e.target.closest('#use-skill-select-only');
+      if (selectOnlyBtn) {
+        e.preventDefault();
+        var sSlug = useModal.dataset.activeSlug || '';
+        useModal.classList.add('hidden');
+        useModal.classList.remove('flex');
+        var targetChip = document.querySelector('.ai-scope-chip[data-scope-slug="' + sSlug + '"]');
+        if (targetChip) targetChip.click();
+        var head = document.getElementById('ai-connect-heading');
+        if (head && head.scrollIntoView) head.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+
     // Test MCP Connection button in My Products
     var mcpTestBtn = e.target.closest('.btn-test-mcp');
     if (mcpTestBtn) {
@@ -1982,9 +2165,26 @@
     }
   });
 
+  // Live prompt update when user types custom topic/video path in "Dùng Skill này" modal
+  document.addEventListener('input', function (e) {
+    if (!e.target || e.target.id !== 'use-skill-user-input') return;
+    var modal = document.getElementById('use-skill-modal');
+    var preview = document.getElementById('use-skill-prompt-preview');
+    if (!modal || !preview) return;
+    var tmpl = modal.dataset.promptTemplate || '';
+    var val = (e.target.value || '').trim();
+    preview.textContent = tmpl.replace('{{INPUT}}', val || '[nhập chủ đề hoặc đường dẫn video của bạn]');
+  });
+
   // Global Keyboard Shortcuts: "/" or "Ctrl+K" focuses header search; "Escape" closes menus
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
+      var useM = document.getElementById('use-skill-modal');
+      if (useM && !useM.classList.contains('hidden')) {
+        useM.classList.add('hidden');
+        useM.classList.remove('flex');
+        return;
+      }
       var dd = document.getElementById('user-dropdown');
       var ub = document.getElementById('user-menu-btn');
       if (dd && !dd.classList.contains('hidden')) {

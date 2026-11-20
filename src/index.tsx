@@ -1268,10 +1268,11 @@ app.get('/tai-khoan/san-pham', requireAuth, async (c) => {
  *  MCP OAUTH 2.1 + PKCE + DYNAMIC CLIENT REGISTRATION (RFC 9728 / 8414 / 7591)
  *  Cho phép Claude.ai và ChatGPT kết nối 1 lần không cần copy key
  * ========================================================== */
-function buildProtectedResourceMetadata(origin: string) {
+function buildProtectedResourceMetadata(origin: string, resourcePath = '/api/mcp') {
   const cleanOrigin = origin.replace(/\/+$/, '')
+  const cleanPath = resourcePath.startsWith('/') ? resourcePath : '/' + resourcePath
   return {
-    resource: `${cleanOrigin}/api/mcp`,
+    resource: `${cleanOrigin}${cleanPath}`,
     authorization_servers: [cleanOrigin],
     scopes_supported: ['mcp'],
     bearer_methods_supported: ['header'],
@@ -1281,10 +1282,13 @@ function buildProtectedResourceMetadata(origin: string) {
 }
 
 app.get('/.well-known/oauth-protected-resource', (c) => {
-  return c.json(buildProtectedResourceMetadata(getRequestOrigin(c)))
+  return c.json(buildProtectedResourceMetadata(getRequestOrigin(c), '/api/mcp'))
 })
 app.get('/.well-known/oauth-protected-resource/*', (c) => {
-  return c.json(buildProtectedResourceMetadata(getRequestOrigin(c)))
+  const pathname = new URL(c.req.url).pathname
+  const suffix = pathname.slice('/.well-known/oauth-protected-resource'.length) || '/api/mcp'
+  const safePath = suffix.startsWith('/api/mcp') ? suffix : '/api/mcp'
+  return c.json(buildProtectedResourceMetadata(getRequestOrigin(c), safePath))
 })
 
 function buildAuthServerMetadata(origin: string) {
@@ -1621,6 +1625,57 @@ app.post('/api/account/mcp/revoke-all', requireAuth, async (c) => {
   return c.json({ ok: true, message: 'Đã ngắt mọi kết nối AI và tạo mã bảo mật mới!' })
 })
 
+/* Bật / tắt từng Skill AI Agent cụ thể cho AI đã kết nối */
+app.post('/api/account/mcp/skills/:id/toggle', requireAuth, async (c) => {
+  const db = c.env.DB
+  const u = c.get('user')!
+  const licId = Number(c.req.param('id'))
+  if (!licId) return c.json({ error: 'ID bản quyền không hợp lệ' }, 400)
+
+  const row = await db.prepare(
+    `SELECT l.id, COALESCE(l.mcp_enabled, 1) AS mcp_enabled, p.name, p.product_type
+     FROM licenses l JOIN products p ON p.id = l.product_id
+     WHERE l.id = ? AND l.user_id = ?`
+  ).bind(licId, u.id).first<any>()
+
+  if (!row) return c.json({ error: 'Không tìm thấy Skill này trong tài khoản của bạn' }, 404)
+  if (row.product_type !== 'mcp_skill') return c.json({ error: 'Sản phẩm này không phải Skill AI Agent' }, 400)
+
+  const body = await c.req.json<any>().catch(() => ({}))
+  const nextEnabled = typeof body.enabled === 'boolean'
+    ? (body.enabled ? 1 : 0)
+    : (Number(row.mcp_enabled) === 0 ? 1 : 0)
+
+  await db.prepare('UPDATE licenses SET mcp_enabled = ? WHERE id = ? AND user_id = ?')
+    .bind(nextEnabled, licId, u.id).run()
+
+  const counts = await db.prepare(
+    `SELECT COUNT(*) AS total,
+            SUM(CASE WHEN COALESCE(l.mcp_enabled, 1) = 1 THEN 1 ELSE 0 END) AS enabled_count
+     FROM licenses l JOIN products p ON p.id = l.product_id
+     WHERE l.user_id = ? AND p.product_type = 'mcp_skill'`
+  ).bind(u.id).first<any>()
+
+  return c.json({
+    ok: true,
+    license_id: licId,
+    enabled: nextEnabled,
+    enabled_count: Number(counts?.enabled_count || 0),
+    total_mcp_count: Number(counts?.total || 0),
+    message: nextEnabled ? `Đã bật "${row.name}" cho AI` : `Đã tạm tắt "${row.name}" khỏi AI`
+  })
+})
+
+app.post('/api/account/mcp/skills/enable-all', requireAuth, async (c) => {
+  const db = c.env.DB
+  const u = c.get('user')!
+  await db.prepare(
+    `UPDATE licenses SET mcp_enabled = 1
+     WHERE user_id = ? AND product_id IN (SELECT id FROM products WHERE product_type = 'mcp_skill')`
+  ).bind(u.id).run()
+  return c.json({ ok: true, message: 'Đã bật lại toàn bộ Skill AI Agent!' })
+})
+
 /* ============================================================
  *  BUILT-IN MCP SERVER (Streamable HTTP JSON-RPC 2.0)
  *  Hỗ trợ OAuth 2.1 (Claude / ChatGPT), Personal Token & License Key
@@ -1629,7 +1684,9 @@ async function handleMcpEndpoint(c: any, targetSlug?: string) {
   const db = c.env.DB
   const origin = getRequestOrigin(c)
   const licenseKey = extractLicenseKey(c.req.raw, c.req.query('key'))
-  const resourceMetaUrl = `${origin}/.well-known/oauth-protected-resource`
+  const resourceMetaUrl = targetSlug
+    ? `${origin}/.well-known/oauth-protected-resource/api/mcp/${encodeURIComponent(targetSlug)}`
+    : `${origin}/.well-known/oauth-protected-resource`
 
   if (c.req.method === 'GET') {
     if (licenseKey) {

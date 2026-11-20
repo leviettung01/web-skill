@@ -1636,6 +1636,48 @@ body.dark-portal textarea:focus {
   border-color: transparent !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
 }
+.ai-scope-chip {
+  background: #09081b;
+  border-color: #272258;
+  color: #c2c0e0;
+}
+.ai-scope-chip:hover {
+  border-color: #6366f1;
+  color: #ffffff;
+}
+.ai-scope-chip.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #818cf8;
+  color: #ffffff;
+  box-shadow: 0 4px 16px -4px rgba(99, 102, 241, 0.45);
+}
+.skill-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #332e66;
+  transition: background-color 0.18s ease;
+  flex-shrink: 0;
+}
+.skill-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #cbd5e1;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+.btn-toggle-mcp-skill.is-on .skill-toggle-track {
+  background: #10b981;
+}
+.btn-toggle-mcp-skill.is-on .skill-toggle-thumb {
+  transform: translateX(12px);
+  background: #ffffff;
+}
 .tab-panel:not(.hidden) {
   animation: tabPanelIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

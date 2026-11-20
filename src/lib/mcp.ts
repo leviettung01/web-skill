@@ -262,6 +262,63 @@ const SKILL_ENGINE_PROFILES: Record<string, SkillEngineProfile> = {
   }
 }
 
+export interface SkillQuickStartGuide {
+  shortName: string
+  inputLabel: string
+  inputPlaceholder: string
+  promptTemplate: string
+}
+
+const SKILL_QUICK_START: Record<string, SkillQuickStartGuide> = {
+  'travel-video-editing': {
+    shortName: 'Travel-Video-Editing',
+    inputLabel: 'Tên tour, giá và điểm nổi bật (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: Tour Phú Quốc 3N2Đ giá 4tr9, bay Vietjet, khách sạn 4 sao gần biển...',
+    promptTemplate: 'Hãy dùng Skill "travel-video-editing" trên KhoSkill AI để dựng video du lịch 9:16 hoàn chỉnh cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, hướng dẫn tôi nếu máy chưa có bộ Skill Kit, rồi dựng ra file out/final.mp4.'
+  },
+  'viral-talking-head-video-edit': {
+    shortName: 'Walking Talking Head',
+    inputLabel: 'Đường dẫn file video thô hoặc chủ đề (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: D:\\Videos\\walking_raw.mp4 — giữ giọng thật, tách nền 3 lớp chữ sau lưng...',
+    promptTemplate: 'Hãy dùng Skill "viral-talking-head-video-edit" trên KhoSkill AI để dựng video Walking Talking Head 3 lớp chiều sâu cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, rồi dựng hoàn chỉnh xuất ra out/final.mp4.'
+  },
+  'skill-edit-bds': {
+    shortName: 'Skill-Edit-BDS',
+    inputLabel: 'Tên dự án BĐS, vị trí và điểm nhấn (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: Vinhomes Global Gate Đông Anh, gần cầu Tứ Liên, phân khu Tinh Hoa...',
+    promptTemplate: 'Hãy dùng Skill "skill-edit-bds" trên KhoSkill AI để dựng video bất động sản bản đồ GeoLayers 3D 9:16 cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, rồi dựng hoàn chỉnh xuất ra out/final.mp4.'
+  },
+  'video-talking-head': {
+    shortName: 'Video-Talking-Head',
+    inputLabel: 'Đường dẫn file video thô hoặc nội dung nói (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: D:\\Videos\\talking_raw.mp4 — cắt khoảng lặng, làm phụ đề + hiệu ứng kính mờ...',
+    promptTemplate: 'Hãy dùng Skill "video-talking-head" trên KhoSkill AI để edit video Talking Head 9:16 cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, kiểm tra bộ Skill Kit trên máy rồi dựng hoàn chỉnh xuất ra out/final.mp4.'
+  },
+  'phan-tich-style-video-lich-su': {
+    shortName: 'Video Lịch Sử 16:9',
+    inputLabel: 'Sự kiện / nhân vật lịch sử muốn làm (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: Chiến dịch Điện Biên Phủ 1954, thời lượng khoảng 3 phút phong cách tư liệu...',
+    promptTemplate: 'Hãy dùng Skill "phan-tich-style-video-lich-su" trên KhoSkill AI để dựng video tài liệu lịch sử 16:9 kèm bản đồ chiến dịch cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, rồi dựng hoàn chỉnh xuất ra out/final.mp4.'
+  },
+  'fitness-video-editing': {
+    shortName: 'Fitness-Video-Editing',
+    inputLabel: 'Bài tập gym / chủ đề thể hình (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: Hướng dẫn 4 lỗi sai hay gặp khi tập Squat cho người mới, giọng tiếng Việt...',
+    promptTemplate: 'Hãy dùng Skill "fitness-video-editing" trên KhoSkill AI để dựng video hướng dẫn thể hình minh hoạ giải phẫu Manga cho: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, rồi dựng hoàn chỉnh xuất ra out/final.mp4.'
+  }
+}
+
+export function getSkillQuickStartGuide(slug: string, fallbackName: string): SkillQuickStartGuide {
+  if (SKILL_QUICK_START[slug]) return SKILL_QUICK_START[slug]
+  const cleanShort = String(fallbackName || slug).split('—')[0].split('-')[0].trim() || slug
+  return {
+    shortName: cleanShort.slice(0, 28),
+    inputLabel: 'Chủ đề hoặc đường dẫn video của bạn (tuỳ chọn)',
+    inputPlaceholder: 'Ví dụ: Mô tả ngắn nội dung bạn muốn AI dựng...',
+    promptTemplate: `Hãy dùng Skill "${slug}" trên KhoSkill AI cho yêu cầu sau: {{INPUT}}. Hãy gọi get_skill_assets_and_setup và get_skill_blueprint trước, sau đó chạy create_video_from_skill để dựng hoàn chỉnh.`
+  }
+}
+
 export function getSkillEngineProfile(slug: string): SkillEngineProfile | null {
   return SKILL_ENGINE_PROFILES[slug] || null
 }
@@ -345,6 +402,7 @@ export function buildMcpConfigs(opts: {
 export interface LicensedMcpSkillRow {
   license_id: number
   license_key: string
+  mcp_enabled?: number
   user_id: number
   user_email: string
   user_name: string
@@ -387,35 +445,63 @@ export interface McpAuthContext {
 }
 
 async function fetchUserOwnedMcpSkills(db: D1Database, userId: number, preferLicenseId?: number): Promise<LicensedMcpSkillRow[]> {
-  const res = preferLicenseId
-    ? await db.prepare(
-        `SELECT l.id AS license_id, l.license_key, l.user_id,
-                u.email AS user_email, u.full_name AS user_name,
-                p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
-                p.features, p.tech_stack, p.download_url, p.doc_url,
-                p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
-                p.mcp_skill_prompt, p.mcp_render_webhook
-         FROM licenses l
-         JOIN users u ON u.id = l.user_id
-         JOIN products p ON p.id = l.product_id
-         WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
-         ORDER BY (CASE WHEN l.id = ? THEN 0 ELSE 1 END), l.id DESC`
-      ).bind(userId, preferLicenseId).all()
-    : await db.prepare(
-        `SELECT l.id AS license_id, l.license_key, l.user_id,
-                u.email AS user_email, u.full_name AS user_name,
-                p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
-                p.features, p.tech_stack, p.download_url, p.doc_url,
-                p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
-                p.mcp_skill_prompt, p.mcp_render_webhook
-         FROM licenses l
-         JOIN users u ON u.id = l.user_id
-         JOIN products p ON p.id = l.product_id
-         WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
-         ORDER BY l.id DESC`
-      ).bind(userId).all()
+  const withEnabled = preferLicenseId
+    ? `SELECT l.id AS license_id, l.license_key, COALESCE(l.mcp_enabled, 1) AS mcp_enabled, l.user_id,
+              u.email AS user_email, u.full_name AS user_name,
+              p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
+              p.features, p.tech_stack, p.download_url, p.doc_url,
+              p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+              p.mcp_skill_prompt, p.mcp_render_webhook
+       FROM licenses l
+       JOIN users u ON u.id = l.user_id
+       JOIN products p ON p.id = l.product_id
+       WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
+       ORDER BY (CASE WHEN l.id = ? THEN 0 ELSE 1 END), l.id DESC`
+    : `SELECT l.id AS license_id, l.license_key, COALESCE(l.mcp_enabled, 1) AS mcp_enabled, l.user_id,
+              u.email AS user_email, u.full_name AS user_name,
+              p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
+              p.features, p.tech_stack, p.download_url, p.doc_url,
+              p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+              p.mcp_skill_prompt, p.mcp_render_webhook
+       FROM licenses l
+       JOIN users u ON u.id = l.user_id
+       JOIN products p ON p.id = l.product_id
+       WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
+       ORDER BY l.id DESC`
+
+  const res = await (preferLicenseId
+    ? db.prepare(withEnabled).bind(userId, preferLicenseId).all()
+    : db.prepare(withEnabled).bind(userId).all()
+  ).catch(async () => {
+    const fallbackSql = withEnabled.replace('COALESCE(l.mcp_enabled, 1) AS mcp_enabled, ', '')
+    return preferLicenseId
+      ? db.prepare(fallbackSql).bind(userId, preferLicenseId).all()
+      : db.prepare(fallbackSql).bind(userId).all()
+  })
 
   return (res.results || []) as LicensedMcpSkillRow[]
+}
+
+function selectActiveSkills(
+  ownedSkills: LicensedMcpSkillRow[],
+  targetSlug?: string | null
+): { ok: true; primary: LicensedMcpSkillRow | null; skills: LicensedMcpSkillRow[] } | { ok: false; status: number; error: string } {
+  const enabledSkills = ownedSkills.filter(s => s.mcp_enabled === undefined || Number(s.mcp_enabled) !== 0)
+  if (targetSlug) {
+    const ownedMatch = ownedSkills.find(s => s.slug === targetSlug)
+    if (!ownedMatch) {
+      return { ok: false, status: 403, error: `Tài khoản của bạn chưa kích hoạt Skill AI Agent "${targetSlug}".` }
+    }
+    if (ownedMatch.mcp_enabled !== undefined && Number(ownedMatch.mcp_enabled) === 0) {
+      return {
+        ok: false,
+        status: 403,
+        error: `Skill "${targetSlug}" hiện đang tạm tắt trong tài khoản của bạn. Hãy bật lại công tắc ở mục "Sản phẩm của tôi" trên KhoSkill AI.`
+      }
+    }
+    return { ok: true, primary: ownedMatch, skills: [ownedMatch] }
+  }
+  return { ok: true, primary: enabledSkills[0] || null, skills: enabledSkills }
 }
 
 export async function authenticateMcpLicense(
@@ -454,16 +540,9 @@ export async function authenticateMcpLicense(
 
     const ownedSkills = await fetchUserOwnedMcpSkills(db, conn.user_id)
     const user = { id: conn.user_id, email: conn.user_email, name: conn.user_name }
-
-    if (targetSlug) {
-      const matched = ownedSkills.find(s => s.slug === targetSlug)
-      if (!matched) {
-        return { ok: false, status: 403, error: `Tài khoản của bạn chưa kích hoạt Skill AI Agent "${targetSlug}".` }
-      }
-      return { ok: true, authMode: 'oauth', user, connectionId: conn.conn_id, primary: matched, skills: [matched] }
-    }
-
-    return { ok: true, authMode: 'oauth', user, connectionId: conn.conn_id, primary: ownedSkills[0] || null, skills: ownedSkills }
+    const picked = selectActiveSkills(ownedSkills, targetSlug)
+    if (!picked.ok) return picked
+    return { ok: true, authMode: 'oauth', user, connectionId: conn.conn_id, primary: picked.primary, skills: picked.skills }
   }
 
   // 2) Personal Account MCP Token (ks_u_...) — Claude Code / Codex / Antigravity
@@ -481,16 +560,9 @@ export async function authenticateMcpLicense(
 
     const ownedSkills = await fetchUserOwnedMcpSkills(db, u.id)
     const user = { id: u.id, email: u.email, name: u.full_name }
-
-    if (targetSlug) {
-      const matched = ownedSkills.find(s => s.slug === targetSlug)
-      if (!matched) {
-        return { ok: false, status: 403, error: `Tài khoản của bạn chưa kích hoạt Skill AI Agent "${targetSlug}".` }
-      }
-      return { ok: true, authMode: 'user_token', user, primary: matched, skills: [matched] }
-    }
-
-    return { ok: true, authMode: 'user_token', user, primary: ownedSkills[0] || null, skills: ownedSkills }
+    const picked = selectActiveSkills(ownedSkills, targetSlug)
+    if (!picked.ok) return picked
+    return { ok: true, authMode: 'user_token', user, primary: picked.primary, skills: picked.skills }
   }
 
   // 3) Legacy Per-Product License Key (XXXX-XXXX-XXXX-XXXX)
@@ -523,20 +595,9 @@ export async function authenticateMcpLicense(
 
   const ownedSkills = await fetchUserOwnedMcpSkills(db, primary.user_id, primary.license_id)
   const user = { id: primary.user_id, email: primary.user_email, name: primary.user_name }
-
-  if (targetSlug) {
-    const matched = ownedSkills.find(s => s.slug === targetSlug)
-    if (!matched) {
-      return {
-        ok: false,
-        status: 403,
-        error: `License Key của bạn chưa kích hoạt Skill MCP "${targetSlug}".`
-      }
-    }
-    return { ok: true, authMode: 'license_key', user, primary: matched, skills: [matched] }
-  }
-
-  return { ok: true, authMode: 'license_key', user, primary, skills: ownedSkills.length > 0 ? ownedSkills : [primary] }
+  const picked = selectActiveSkills(ownedSkills, targetSlug)
+  if (!picked.ok) return picked
+  return { ok: true, authMode: 'license_key', user, primary: picked.primary || primary, skills: picked.skills.length > 0 ? picked.skills : [primary] }
 }
 
 function buildFallbackBlueprint(skill: LicensedMcpSkillRow): string {
