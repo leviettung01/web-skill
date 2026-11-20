@@ -14807,7 +14807,7 @@ var MyProductsPage = (props) => {
                   href: `/san-pham/${l.slug}`,
                   class: "block w-full sm:w-36 h-40 sm:h-24 self-start shrink-0 rounded-xl overflow-hidden bg-[#09081b] border border-white/10",
                   style: l.thumbnail ? "" : `background:${gradientFor(l.product_id)}`,
-                  children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: l.name, class: "w-full h-full object-cover object-top", loading: "lazy" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${mcp ? "fa-plug-circle-bolt" : l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-xl`, "aria-hidden": "true" }) })
+                  children: l.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: l.thumbnail, alt: l.name, class: "w-full h-full object-cover object-[50%_35%]", loading: "lazy" }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${mcp ? "fa-plug-circle-bolt" : l.product_type === "skill" ? "fa-wand-magic-sparkles" : l.product_type === "chatbot" ? "fa-robot" : "fa-code"} text-xl`, "aria-hidden": "true" }) })
                 }
               ),
               /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0 w-full", children: [
@@ -14944,7 +14944,7 @@ var OAuthConsentPage = (props) => {
       ] })
     ] }),
     /* @__PURE__ */ jsxDEV("div", { class: "p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3", children: [
-      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-check text-emerald-400 mt-0.5 text-base shrink-0", "aria-hidden": "true" }),
+      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-shield-halved text-emerald-400 mt-0.5 text-base shrink-0", "aria-hidden": "true" }),
       /* @__PURE__ */ jsxDEV("div", { class: "text-xs leading-relaxed", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "text-emerald-200 font-bold", children: [
           "T\xEAn mi\u1EC1n x\xE1c th\u1EF1c: ",

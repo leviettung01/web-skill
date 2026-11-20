@@ -365,7 +365,7 @@ export const MyProductsPage: FC<LayoutProps & {
                       class="block w-full sm:w-36 h-40 sm:h-24 self-start shrink-0 rounded-xl overflow-hidden bg-[#09081b] border border-white/10"
                       style={l.thumbnail ? '' : `background:${gradientFor(l.product_id)}`}>
                       {l.thumbnail ? (
-                        <img src={l.thumbnail} alt={l.name} class="w-full h-full object-cover object-top" loading="lazy" />
+                        <img src={l.thumbnail} alt={l.name} class="w-full h-full object-cover object-[50%_35%]" loading="lazy" />
                       ) : (
                         <div class="w-full h-full grid place-items-center text-white">
                           <i class={`fas ${mcp ? 'fa-plug-circle-bolt' : l.product_type === 'skill' ? 'fa-wand-magic-sparkles' : l.product_type === 'chatbot' ? 'fa-robot' : 'fa-code'} text-xl`} aria-hidden="true"></i>
@@ -514,7 +514,7 @@ export const OAuthConsentPage: FC<LayoutProps & {
 
               {/* Verified Domain Pill */}
               <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
-                <i class="fas fa-shield-check text-emerald-400 mt-0.5 text-base shrink-0" aria-hidden="true"></i>
+                <i class="fas fa-shield-halved text-emerald-400 mt-0.5 text-base shrink-0" aria-hidden="true"></i>
                 <div class="text-xs leading-relaxed">
                   <div class="text-emerald-200 font-bold">
                     Tên miền xác thực: <span class="font-mono text-white">{props.clientDomain}</span>
