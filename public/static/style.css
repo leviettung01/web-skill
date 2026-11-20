@@ -1630,6 +1630,12 @@ body.dark-portal textarea:focus {
   border-color: rgba(129, 140, 248, 0.65) !important;
   box-shadow: 0 8px 22px -6px rgba(99, 102, 241, 0.5);
 }
+.ai-connect-tab.tab-btn.active {
+  background: #ffffff !important;
+  color: #111028 !important;
+  border-color: transparent !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+}
 .tab-panel:not(.hidden) {
   animation: tabPanelIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

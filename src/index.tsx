@@ -22,7 +22,7 @@ import { ProductListPage } from './pages/products'
 import { ProductDetailPage } from './pages/product-detail'
 import { LoginPage, RegisterPage, ForgotPage, ResetPasswordPage, VerifyEmailResultPage } from './pages/auth'
 import { CartPage, CheckoutPage, OrderPage } from './pages/cart'
-import { AccountDashboard, MyProductsPage, MyOrdersPage, WishlistPage, AffiliateDashboard, ProfilePage, NotificationsPage } from './pages/account'
+import { AccountDashboard, MyProductsPage, OAuthConsentPage, MyOrdersPage, WishlistPage, AffiliateDashboard, ProfilePage, NotificationsPage } from './pages/account'
 import {
   BlogListPage, BlogDetailPage, PricingPage, AboutPage, ContactPage,
   AffiliateLandingPage, DocPage, NotFoundPage
@@ -37,7 +37,9 @@ import { pgDb, pgConnectionString } from './lib/pg'
 import { cached, invalidateCache } from './lib/cache'
 import {
   extractLicenseKey, authenticateMcpLicense, handleMcpJsonRpc,
-  resolveMcpEndpoint, resolveMcpServerName
+  resolveMcpEndpoint, resolveMcpServerName,
+  ensureUserMcpToken, rotateUserMcpToken, sha256Base64Url,
+  extractVerifiedDomain, inferClientNameFromDomain
 } from './lib/mcp'
 import { ensureMcpMigration } from './lib/mcp-bootstrap'
 
@@ -57,18 +59,16 @@ app.use('*', async (c, next) => {
   await next()
 })
 
-app.use('/api/mcp', cors({
+const mcpCors = cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'X-License-Key', 'X-Api-Key'],
-  exposeHeaders: ['Mcp-Session-Id']
-}))
-app.use('/api/mcp/*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'X-License-Key', 'X-Api-Key'],
-  exposeHeaders: ['Mcp-Session-Id']
-}))
+  allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'Mcp-Protocol-Version', 'X-License-Key', 'X-Api-Key'],
+  exposeHeaders: ['Mcp-Session-Id', 'WWW-Authenticate']
+})
+app.use('/api/mcp', mcpCors)
+app.use('/api/mcp/*', mcpCors)
+app.use('/.well-known/*', mcpCors)
+app.use('/oauth/*', mcpCors)
 app.use('/api/*', cors())
 
 async function fetchSettings(db: D1Database): Promise<Record<string, string>> {
@@ -609,7 +609,7 @@ app.post('/api/auth/register', async (c) => {
   })
   const user: SessionUser = { id: userId, email, full_name, role: 'user', email_verified: 0 }
   await setSession(c, user)
-  return c.json({ ok: true, redirect: '/tai-khoan' })
+  return c.json({ ok: true, redirect: safeRedirectPath(b.next, '/tai-khoan') })
 })
 
 app.post('/api/auth/login', async (c) => {
@@ -1229,50 +1229,436 @@ app.get('/tai-khoan', requireAuth, async (c) => {
 })
 
 app.get('/tai-khoan/san-pham', requireAuth, async (c) => {
+  const db = c.env.DB
   const u = c.get('user')!
-  const rows = await c.env.DB.prepare(
-    `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
-       p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
-       (SELECT r.changelog FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_changelog,
-       (SELECT r.version FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_version,
-       (SELECT r.created_at FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_release_at
-     FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
-  ).bind(u.id).all().catch(() =>
-    c.env.DB.prepare(
-      `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size
+  const [rows, mcpToken, connRows] = await Promise.all([
+    db.prepare(
+      `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
+         p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+         (SELECT r.changelog FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_changelog,
+         (SELECT r.version FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_version,
+         (SELECT r.created_at FROM product_releases r WHERE r.product_id=p.id ORDER BY r.id DESC LIMIT 1) latest_release_at
        FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
-    ).bind(u.id).all()
+    ).bind(u.id).all().catch(() =>
+      db.prepare(
+        `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size
+         FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.user_id=? ORDER BY l.id DESC`
+      ).bind(u.id).all()
+    ),
+    ensureUserMcpToken(db, u.id),
+    db.prepare(
+      `SELECT id, client_name, client_domain, created_at, last_used_at
+       FROM mcp_connections
+       WHERE user_id = ? AND revoked_at IS NULL
+       ORDER BY id DESC`
+    ).bind(u.id).all().catch(() => ({ results: [] }))
+  ])
+  return c.html(
+    <MyProductsPage
+      {...base(c)}
+      licenses={rows.results as any}
+      origin={getRequestOrigin(c)}
+      mcpToken={mcpToken}
+      mcpConnections={(connRows.results || []) as any}
+    />
   )
-  return c.html(<MyProductsPage {...base(c)} licenses={rows.results as any} origin={getRequestOrigin(c)} />)
+})
+
+/* ============================================================
+ *  MCP OAUTH 2.1 + PKCE + DYNAMIC CLIENT REGISTRATION (RFC 9728 / 8414 / 7591)
+ *  Cho phép Claude.ai và ChatGPT kết nối 1 lần không cần copy key
+ * ========================================================== */
+function buildProtectedResourceMetadata(origin: string) {
+  const cleanOrigin = origin.replace(/\/+$/, '')
+  return {
+    resource: `${cleanOrigin}/api/mcp`,
+    authorization_servers: [cleanOrigin],
+    scopes_supported: ['mcp'],
+    bearer_methods_supported: ['header'],
+    resource_name: 'KhoSkill AI',
+    resource_documentation: `${cleanOrigin}/tai-khoan/san-pham`
+  }
+}
+
+app.get('/.well-known/oauth-protected-resource', (c) => {
+  return c.json(buildProtectedResourceMetadata(getRequestOrigin(c)))
+})
+app.get('/.well-known/oauth-protected-resource/*', (c) => {
+  return c.json(buildProtectedResourceMetadata(getRequestOrigin(c)))
+})
+
+function buildAuthServerMetadata(origin: string) {
+  const cleanOrigin = origin.replace(/\/+$/, '')
+  return {
+    issuer: cleanOrigin,
+    authorization_endpoint: `${cleanOrigin}/oauth/authorize`,
+    token_endpoint: `${cleanOrigin}/oauth/token`,
+    registration_endpoint: `${cleanOrigin}/oauth/register`,
+    response_types_supported: ['code'],
+    grant_types_supported: ['authorization_code'],
+    code_challenge_methods_supported: ['S256'],
+    token_endpoint_auth_methods_supported: ['none', 'client_secret_post', 'client_secret_basic'],
+    scopes_supported: ['mcp']
+  }
+}
+
+app.get('/.well-known/oauth-authorization-server', (c) => {
+  return c.json(buildAuthServerMetadata(getRequestOrigin(c)))
+})
+app.get('/.well-known/openid-configuration', (c) => {
+  return c.json(buildAuthServerMetadata(getRequestOrigin(c)))
+})
+
+app.post('/oauth/register', async (c) => {
+  const db = c.env.DB
+  const body = await c.req.json<any>().catch(() => null)
+  if (!body || typeof body !== 'object') {
+    return c.json({ error: 'invalid_client_metadata', error_description: 'Body JSON không hợp lệ' }, 400)
+  }
+
+  const rawUris = Array.isArray(body.redirect_uris) ? body.redirect_uris : []
+  const validUris: string[] = []
+  let primaryDomain: string | null = null
+
+  for (const item of rawUris) {
+    if (typeof item !== 'string') continue
+    const uri = item.trim()
+    const domain = extractVerifiedDomain(uri)
+    if (!domain) continue
+    if (!primaryDomain) primaryDomain = domain
+    if (!validUris.includes(uri)) validUris.push(uri)
+  }
+
+  if (validUris.length === 0) {
+    return c.json({
+      error: 'invalid_redirect_uri',
+      error_description: 'Cần ít nhất 1 redirect_uri HTTPS hợp lệ (hoặc http://localhost)'
+    }, 400)
+  }
+
+  const rawName = String(body.client_name || '').trim().slice(0, 80)
+  const clientName = rawName || inferClientNameFromDomain(primaryDomain || '')
+  const clientId = 'ks_cl_' + genTokenHex(16)
+
+  await db.prepare(
+    `INSERT INTO mcp_oauth_clients (client_id, client_name, redirect_uris, client_domain)
+     VALUES (?, ?, ?, ?)`
+  ).bind(clientId, clientName, JSON.stringify(validUris), primaryDomain).run()
+
+  return c.json({
+    client_id: clientId,
+    client_id_issued_at: Math.floor(Date.now() / 1000),
+    client_name: clientName,
+    redirect_uris: validUris,
+    grant_types: ['authorization_code'],
+    response_types: ['code'],
+    token_endpoint_auth_method: 'none'
+  }, 201)
+})
+
+async function resolveOAuthClient(db: D1Database, clientId: string, redirectUri: string) {
+  const domain = extractVerifiedDomain(redirectUri)
+  if (!domain) {
+    return { ok: false as const, error: 'Địa chỉ chuyển hướng (redirect_uri) không hợp lệ.' }
+  }
+  if (!clientId) {
+    return { ok: false as const, error: 'Thiếu mã ứng dụng (client_id).' }
+  }
+
+  const row = await db.prepare(
+    'SELECT client_id, client_name, redirect_uris, client_domain FROM mcp_oauth_clients WHERE client_id = ?'
+  ).bind(clientId).first<any>().catch(() => null)
+
+  if (row) {
+    let uris: string[] = []
+    try { uris = JSON.parse(row.redirect_uris || '[]') } catch { uris = [] }
+    if (!uris.includes(redirectUri)) {
+      return { ok: false as const, error: 'Địa chỉ chuyển hướng không khớp với ứng dụng đã đăng ký.' }
+    }
+    return {
+      ok: true as const,
+      clientId: String(row.client_id),
+      clientName: String(row.client_name || inferClientNameFromDomain(domain)),
+      clientDomain: domain
+    }
+  }
+
+  // Hỗ trợ Client ID Metadata URL (https://...) hoặc tên miền AI phổ biến (Claude / ChatGPT / localhost)
+  const trustedDomain =
+    domain === 'claude.ai' || domain.endsWith('.claude.ai') ||
+    domain === 'chatgpt.com' || domain.endsWith('.chatgpt.com') ||
+    domain === 'chat.openai.com' || domain.endsWith('.openai.com') ||
+    domain === 'localhost' || domain === '127.0.0.1'
+  const cidDomain = clientId.startsWith('https://') ? extractVerifiedDomain(clientId) : null
+
+  if (trustedDomain || (cidDomain && cidDomain === domain)) {
+    return {
+      ok: true as const,
+      clientId,
+      clientName: inferClientNameFromDomain(domain),
+      clientDomain: domain
+    }
+  }
+
+  return { ok: false as const, error: 'Ứng dụng AI này chưa được đăng ký hợp lệ với KhoSkill AI.' }
+}
+
+app.get('/oauth/authorize', async (c) => {
+  const u = c.get('user')
+  const parsedUrl = new URL(c.req.url)
+  const fullPath = parsedUrl.pathname + parsedUrl.search
+
+  if (!u) {
+    return c.redirect('/dang-nhap?next=' + encodeURIComponent(fullPath))
+  }
+
+  const responseType = (c.req.query('response_type') || 'code').trim()
+  const clientId = (c.req.query('client_id') || '').trim()
+  const redirectUri = (c.req.query('redirect_uri') || '').trim()
+  const state = (c.req.query('state') || '').trim()
+  const scope = (c.req.query('scope') || 'mcp').trim() || 'mcp'
+  const codeChallenge = (c.req.query('code_challenge') || '').trim()
+  const codeChallengeMethod = (c.req.query('code_challenge_method') || 'S256').trim()
+
+  if (responseType !== 'code') {
+    return c.html(<OAuthConsentPage {...base(c)} errorMsg="Yêu cầu OAuth không hỗ trợ response_type này (chỉ hỗ trợ code)." />, 400)
+  }
+  if (codeChallenge && codeChallengeMethod !== 'S256') {
+    return c.html(<OAuthConsentPage {...base(c)} errorMsg="Chỉ hỗ trợ mã hoá PKCE S256." />, 400)
+  }
+
+  const client = await resolveOAuthClient(c.env.DB, clientId, redirectUri)
+  if (!client.ok) {
+    return c.html(<OAuthConsentPage {...base(c)} errorMsg={client.error} />, 400)
+  }
+
+  const skillsRes = await c.env.DB.prepare(
+    `SELECT p.name, p.slug
+     FROM licenses l JOIN products p ON p.id = l.product_id
+     WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
+     ORDER BY l.id DESC`
+  ).bind(u.id).all().catch(() => ({ results: [] }))
+
+  return c.html(
+    <OAuthConsentPage
+      {...base(c)}
+      clientName={client.clientName}
+      clientDomain={client.clientDomain}
+      clientId={client.clientId}
+      redirectUri={redirectUri}
+      state={state}
+      scope={scope}
+      codeChallenge={codeChallenge}
+      codeChallengeMethod={codeChallengeMethod}
+      ownedSkills={(skillsRes.results || []) as any}
+      reloginUrl={'/dang-nhap?next=' + encodeURIComponent(fullPath)}
+    />
+  )
+})
+
+app.post('/oauth/authorize', async (c) => {
+  const u = c.get('user')
+  if (!u) {
+    return c.redirect('/dang-nhap')
+  }
+
+  const body = await c.req.parseBody().catch(() => ({} as Record<string, any>))
+  const clientId = String(body.client_id || '').trim()
+  const redirectUri = String(body.redirect_uri || '').trim()
+  const state = String(body.state || '').trim()
+  const scope = String(body.scope || 'mcp').trim() || 'mcp'
+  const codeChallenge = String(body.code_challenge || '').trim()
+  const codeChallengeMethod = String(body.code_challenge_method || 'S256').trim()
+  const decision = String(body.decision || '').trim()
+
+  const client = await resolveOAuthClient(c.env.DB, clientId, redirectUri)
+  if (!client.ok) {
+    return c.html(<OAuthConsentPage {...base(c)} errorMsg={client.error} />, 400)
+  }
+
+  const dest = new URL(redirectUri)
+  if (decision !== 'allow') {
+    dest.searchParams.set('error', 'access_denied')
+    dest.searchParams.set('error_description', 'Người dùng đã huỷ kết nối')
+    if (state) dest.searchParams.set('state', state)
+    return c.redirect(dest.toString(), 302)
+  }
+
+  const code = 'ks_oc_' + genTokenHex(24)
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+
+  await c.env.DB.prepare(
+    `INSERT INTO mcp_oauth_codes (code, client_id, client_name, client_domain, user_id, redirect_uri, code_challenge, code_challenge_method, scope, expires_at, used)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+  ).bind(
+    code,
+    client.clientId,
+    client.clientName,
+    client.clientDomain,
+    u.id,
+    redirectUri,
+    codeChallenge || null,
+    codeChallenge ? (codeChallengeMethod || 'S256') : null,
+    scope,
+    expiresAt
+  ).run()
+
+  dest.searchParams.set('code', code)
+  if (state) dest.searchParams.set('state', state)
+  return c.redirect(dest.toString(), 302)
+})
+
+app.post('/oauth/token', async (c) => {
+  const db = c.env.DB
+  const ct = (c.req.header('content-type') || '').toLowerCase()
+  let params: Record<string, any> = {}
+  if (ct.includes('application/json')) {
+    params = await c.req.json<any>().catch(() => ({}))
+  } else {
+    params = await c.req.parseBody().catch(() => ({}))
+  }
+
+  let clientId = String(params.client_id || '').trim()
+  if (!clientId) {
+    const authHeader = c.req.header('authorization') || ''
+    if (/^Basic\s+/i.test(authHeader)) {
+      try {
+        const decoded = atob(authHeader.replace(/^Basic\s+/i, '').trim())
+        const colon = decoded.indexOf(':')
+        clientId = colon >= 0 ? decoded.slice(0, colon) : decoded
+      } catch { /* ignore */ }
+    }
+  }
+
+  const grantType = String(params.grant_type || '').trim()
+  const code = String(params.code || '').trim()
+  const redirectUri = String(params.redirect_uri || '').trim()
+  const codeVerifier = String(params.code_verifier || '').trim()
+
+  if (grantType !== 'authorization_code') {
+    return c.json({ error: 'unsupported_grant_type', error_description: 'Chỉ hỗ trợ grant_type=authorization_code' }, 400)
+  }
+  if (!code) {
+    return c.json({ error: 'invalid_request', error_description: 'Thiếu authorization code' }, 400)
+  }
+
+  const row = await db.prepare('SELECT * FROM mcp_oauth_codes WHERE code = ?').bind(code).first<any>()
+  if (!row || Number(row.used) !== 0) {
+    return c.json({ error: 'invalid_grant', error_description: 'Mã xác thực không hợp lệ hoặc đã được sử dụng' }, 400)
+  }
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    return c.json({ error: 'invalid_grant', error_description: 'Mã xác thực đã hết hạn' }, 400)
+  }
+  if (clientId && row.client_id && clientId !== row.client_id) {
+    return c.json({ error: 'invalid_grant', error_description: 'client_id không khớp' }, 400)
+  }
+  if (redirectUri && row.redirect_uri && redirectUri !== row.redirect_uri) {
+    return c.json({ error: 'invalid_grant', error_description: 'redirect_uri không khớp' }, 400)
+  }
+
+  if (row.code_challenge) {
+    if (!codeVerifier) {
+      return c.json({ error: 'invalid_grant', error_description: 'Thiếu PKCE code_verifier' }, 400)
+    }
+    const computed = await sha256Base64Url(codeVerifier)
+    if (computed !== row.code_challenge) {
+      return c.json({ error: 'invalid_grant', error_description: 'PKCE code_verifier không hợp lệ' }, 400)
+    }
+  }
+
+  const mark = await db.prepare('UPDATE mcp_oauth_codes SET used = 1 WHERE id = ? AND used = 0').bind(row.id).run()
+  if (!mark.meta || mark.meta.changes === 0) {
+    return c.json({ error: 'invalid_grant', error_description: 'Mã xác thực đã được sử dụng' }, 400)
+  }
+
+  const accessToken = 'ks_oa_' + genTokenHex(24)
+  const tokenHash = await sha256Hex(accessToken)
+
+  await db.prepare(
+    `INSERT INTO mcp_connections (user_id, token_hash, client_id, client_name, client_domain, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).bind(
+    row.user_id,
+    tokenHash,
+    row.client_id,
+    row.client_name || inferClientNameFromDomain(row.client_domain || ''),
+    row.client_domain || extractVerifiedDomain(row.redirect_uri) || null,
+    new Date().toISOString()
+  ).run()
+
+  c.header('Cache-Control', 'no-store')
+  c.header('Pragma', 'no-cache')
+  return c.json({
+    access_token: accessToken,
+    token_type: 'Bearer',
+    scope: row.scope || 'mcp'
+  })
+})
+
+/* Quản lý kết nối AI trên trang Sản phẩm của tôi */
+app.post('/api/account/mcp/connections/:id/revoke', requireAuth, async (c) => {
+  const u = c.get('user')!
+  const connId = Number(c.req.param('id'))
+  if (!connId) return c.json({ error: 'ID kết nối không hợp lệ' }, 400)
+
+  const res = await c.env.DB.prepare(
+    `UPDATE mcp_connections SET revoked_at = ? WHERE id = ? AND user_id = ? AND revoked_at IS NULL`
+  ).bind(new Date().toISOString(), connId, u.id).run()
+
+  if (!res.meta || res.meta.changes === 0) {
+    return c.json({ error: 'Không tìm thấy kết nối AI đang hoạt động' }, 404)
+  }
+  return c.json({ ok: true, message: 'Đã ngắt kết nối AI!' })
+})
+
+app.post('/api/account/mcp/revoke-all', requireAuth, async (c) => {
+  const db = c.env.DB
+  const u = c.get('user')!
+  await db.prepare(
+    `UPDATE mcp_connections SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL`
+  ).bind(new Date().toISOString(), u.id).run().catch(() => null)
+  await rotateUserMcpToken(db, u.id)
+  return c.json({ ok: true, message: 'Đã ngắt mọi kết nối AI và tạo mã bảo mật mới!' })
 })
 
 /* ============================================================
  *  BUILT-IN MCP SERVER (Streamable HTTP JSON-RPC 2.0)
- *  Cho phép Claude, Codex, Antigravity gọi trực tiếp Skill bằng License Key
+ *  Hỗ trợ OAuth 2.1 (Claude / ChatGPT), Personal Token & License Key
  * ========================================================== */
 async function handleMcpEndpoint(c: any, targetSlug?: string) {
   const db = c.env.DB
   const origin = getRequestOrigin(c)
   const licenseKey = extractLicenseKey(c.req.raw, c.req.query('key'))
+  const resourceMetaUrl = `${origin}/.well-known/oauth-protected-resource`
 
   if (c.req.method === 'GET') {
     if (licenseKey) {
       const auth = await authenticateMcpLicense(db, licenseKey, targetSlug)
-      if (!auth.ok) return c.json({ ok: false, error: auth.error }, auth.status as any)
+      if (!auth.ok) {
+        if (auth.status === 401) {
+          c.header('WWW-Authenticate', `Bearer realm="KhoSkill AI", resource_metadata="${resourceMetaUrl}"`)
+        }
+        return c.json({ ok: false, error: auth.error }, auth.status as any)
+      }
       return c.json({
         ok: true,
         protocol: 'MCP Streamable HTTP (JSON-RPC 2.0)',
-        server: resolveMcpServerName(auth.primary),
-        endpoint: resolveMcpEndpoint(origin, auth.primary),
+        server: auth.authMode === 'license_key' && auth.primary ? resolveMcpServerName(auth.primary) : 'khoskill',
+        endpoint: auth.authMode === 'license_key' && auth.primary ? resolveMcpEndpoint(origin, auth.primary) : `${origin}/api/mcp`,
         active_skills: auth.skills.map(s => ({ slug: s.slug, name: s.name, version: s.version }))
       })
+    }
+    const accept = (c.req.header('accept') || '').toLowerCase()
+    if (accept.includes('text/event-stream')) {
+      c.header('WWW-Authenticate', `Bearer realm="KhoSkill AI", resource_metadata="${resourceMetaUrl}"`)
+      return c.json({ ok: false, error: 'Cần xác thực OAuth hoặc Bearer token để kết nối KhoSkill AI MCP.' }, 401)
     }
     return c.json({
       ok: true,
       name: 'KhoSkill AI MCP Server',
-      protocol: 'Model Context Protocol (Streamable HTTP / JSON-RPC 2.0)',
-      usage: 'POST JSON-RPC 2.0 requests with header "Authorization: Bearer <YOUR_LICENSE_KEY>"',
-      supported_clients: ['Claude Code', 'Claude Desktop', 'OpenAI Codex', 'Antigravity']
+      protocol: 'Model Context Protocol (Streamable HTTP / JSON-RPC 2.0 + OAuth 2.1)',
+      oauth_protected_resource: resourceMetaUrl,
+      supported_clients: ['Claude', 'ChatGPT', 'Claude Code', 'OpenAI Codex', 'Antigravity']
     })
   }
 
@@ -1282,6 +1668,9 @@ async function handleMcpEndpoint(c: any, targetSlug?: string) {
 
   const auth = await authenticateMcpLicense(db, licenseKey, targetSlug)
   if (!auth.ok) {
+    if (auth.status === 401) {
+      c.header('WWW-Authenticate', `Bearer realm="KhoSkill AI", resource_metadata="${resourceMetaUrl}"`)
+    }
     return c.json({
       jsonrpc: '2.0',
       id: null,

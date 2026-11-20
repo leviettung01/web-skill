@@ -15,6 +15,94 @@
  */
 
 import { parseJSON, parseMcpClients, parseMcpTools, stripHtml } from './utils'
+import { genTokenHex, sha256Hex } from './email'
+
+export interface UnifiedMcpConfigs {
+  endpointUrl: string
+  claudeCodeCli: string
+  codexToml: string
+  antigravityJson: string
+}
+
+export async function sha256Base64Url(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  const bytes = new Uint8Array(digest)
+  let bin = ''
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+export function extractVerifiedDomain(rawUri: string): string | null {
+  try {
+    const u = new URL(String(rawUri || '').trim())
+    const host = u.hostname.toLowerCase()
+    if (!host) return null
+    if (u.protocol === 'https:') {
+      return host.replace(/^www\./, '')
+    }
+    if (u.protocol === 'http:' && (host === 'localhost' || host === '127.0.0.1' || host === '[::1]')) {
+      return host === '[::1]' ? 'localhost' : host
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export function inferClientNameFromDomain(domain: string): string {
+  const d = (domain || '').toLowerCase()
+  if (d === 'claude.ai' || d.endsWith('.claude.ai') || d.endsWith('.anthropic.com') || d === 'anthropic.com') return 'Claude'
+  if (d === 'chatgpt.com' || d.endsWith('.chatgpt.com') || d === 'chat.openai.com' || d.endsWith('.openai.com')) return 'ChatGPT'
+  return d || 'Ứng dụng AI'
+}
+
+export async function ensureUserMcpToken(db: D1Database, userId: number): Promise<string> {
+  try {
+    const row = await db.prepare('SELECT mcp_token FROM users WHERE id = ?').bind(userId).first<any>()
+    const existing = String(row?.mcp_token || '').trim()
+    if (existing && existing.startsWith('ks_u_')) return existing
+    const fresh = 'ks_u_' + genTokenHex(24)
+    await db.prepare('UPDATE users SET mcp_token = ? WHERE id = ?').bind(fresh, userId).run()
+    return fresh
+  } catch {
+    return ''
+  }
+}
+
+export async function rotateUserMcpToken(db: D1Database, userId: number): Promise<string> {
+  const fresh = 'ks_u_' + genTokenHex(24)
+  await db.prepare('UPDATE users SET mcp_token = ? WHERE id = ?').bind(fresh, userId).run()
+  return fresh
+}
+
+export function buildUnifiedMcpConfigs(opts: { origin: string; userToken: string }): UnifiedMcpConfigs {
+  const cleanOrigin = opts.origin.replace(/\/+$/, '')
+  const endpointUrl = `${cleanOrigin}/api/mcp`
+  const token = opts.userToken
+
+  const claudeCodeCli = `claude mcp add --transport http khoskill "${endpointUrl}" --header "Authorization: Bearer ${token}"`
+
+  const codexToml = `[mcp_servers.khoskill]\nurl = "${endpointUrl}"\nhttp_headers = { Authorization = "Bearer ${token}" }`
+
+  const antigravityJson = JSON.stringify({
+    mcpServers: {
+      khoskill: {
+        serverUrl: endpointUrl,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    }
+  }, null, 2)
+
+  return {
+    endpointUrl,
+    claudeCodeCli,
+    codexToml,
+    antigravityJson
+  }
+}
 
 export interface McpClientConfigs {
   endpointUrl: string
@@ -289,19 +377,123 @@ export function extractLicenseKey(req: Request, queryKey?: string | null): strin
   return (queryKey || '').trim()
 }
 
+export interface McpAuthContext {
+  ok: true
+  authMode: 'oauth' | 'user_token' | 'license_key'
+  user: { id: number; email: string; name: string }
+  connectionId?: number
+  primary: LicensedMcpSkillRow | null
+  skills: LicensedMcpSkillRow[]
+}
+
+async function fetchUserOwnedMcpSkills(db: D1Database, userId: number, preferLicenseId?: number): Promise<LicensedMcpSkillRow[]> {
+  const res = preferLicenseId
+    ? await db.prepare(
+        `SELECT l.id AS license_id, l.license_key, l.user_id,
+                u.email AS user_email, u.full_name AS user_name,
+                p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
+                p.features, p.tech_stack, p.download_url, p.doc_url,
+                p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+                p.mcp_skill_prompt, p.mcp_render_webhook
+         FROM licenses l
+         JOIN users u ON u.id = l.user_id
+         JOIN products p ON p.id = l.product_id
+         WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
+         ORDER BY (CASE WHEN l.id = ? THEN 0 ELSE 1 END), l.id DESC`
+      ).bind(userId, preferLicenseId).all()
+    : await db.prepare(
+        `SELECT l.id AS license_id, l.license_key, l.user_id,
+                u.email AS user_email, u.full_name AS user_name,
+                p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
+                p.features, p.tech_stack, p.download_url, p.doc_url,
+                p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
+                p.mcp_skill_prompt, p.mcp_render_webhook
+         FROM licenses l
+         JOIN users u ON u.id = l.user_id
+         JOIN products p ON p.id = l.product_id
+         WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
+         ORDER BY l.id DESC`
+      ).bind(userId).all()
+
+  return (res.results || []) as LicensedMcpSkillRow[]
+}
+
 export async function authenticateMcpLicense(
   db: D1Database,
   licenseKey: string,
   targetSlug?: string | null
-): Promise<{ ok: true; primary: LicensedMcpSkillRow; skills: LicensedMcpSkillRow[] } | { ok: false; status: number; error: string }> {
-  if (!licenseKey || licenseKey.length < 8) {
+): Promise<McpAuthContext | { ok: false; status: number; error: string }> {
+  const token = (licenseKey || '').trim()
+  if (!token || token.length < 8) {
     return {
       ok: false,
       status: 401,
-      error: 'Thiếu License Key. Truyền header "Authorization: Bearer <LICENSE_KEY>" hoặc "X-License-Key: <LICENSE_KEY>".'
+      error: 'Thiếu thông tin xác thực. Hãy kết nối qua OAuth (Claude / ChatGPT) hoặc truyền header "Authorization: Bearer <TOKEN>".'
     }
   }
 
+  // 1) OAuth 2.1 Access Token (ks_oa_...)
+  if (token.startsWith('ks_oa_')) {
+    const hash = await sha256Hex(token)
+    const conn = await db.prepare(
+      `SELECT c.id AS conn_id, c.user_id, u.email AS user_email, u.full_name AS user_name, u.status AS user_status
+       FROM mcp_connections c
+       JOIN users u ON u.id = c.user_id
+       WHERE c.token_hash = ? AND c.revoked_at IS NULL`
+    ).bind(hash).first<any>().catch(() => null)
+
+    if (!conn) {
+      return { ok: false, status: 401, error: 'Kết nối AI đã bị ngắt hoặc không hợp lệ. Vui lòng kết nối lại với KhoSkill AI.' }
+    }
+    if (conn.user_status !== 'active') {
+      return { ok: false, status: 403, error: 'Tài khoản của bạn hiện đang bị khoá.' }
+    }
+
+    await db.prepare('UPDATE mcp_connections SET last_used_at = ? WHERE id = ?')
+      .bind(new Date().toISOString(), conn.conn_id).run().catch(() => null)
+
+    const ownedSkills = await fetchUserOwnedMcpSkills(db, conn.user_id)
+    const user = { id: conn.user_id, email: conn.user_email, name: conn.user_name }
+
+    if (targetSlug) {
+      const matched = ownedSkills.find(s => s.slug === targetSlug)
+      if (!matched) {
+        return { ok: false, status: 403, error: `Tài khoản của bạn chưa kích hoạt Skill AI Agent "${targetSlug}".` }
+      }
+      return { ok: true, authMode: 'oauth', user, connectionId: conn.conn_id, primary: matched, skills: [matched] }
+    }
+
+    return { ok: true, authMode: 'oauth', user, connectionId: conn.conn_id, primary: ownedSkills[0] || null, skills: ownedSkills }
+  }
+
+  // 2) Personal Account MCP Token (ks_u_...) — Claude Code / Codex / Antigravity
+  if (token.startsWith('ks_u_')) {
+    const u = await db.prepare(
+      `SELECT id, email, full_name, status FROM users WHERE mcp_token = ?`
+    ).bind(token).first<any>().catch(() => null)
+
+    if (!u) {
+      return { ok: false, status: 401, error: 'Mã kết nối AI không hợp lệ hoặc đã được làm mới. Hãy lấy lại lệnh tại mục Sản phẩm của tôi.' }
+    }
+    if (u.status !== 'active') {
+      return { ok: false, status: 403, error: 'Tài khoản của bạn hiện đang bị khoá.' }
+    }
+
+    const ownedSkills = await fetchUserOwnedMcpSkills(db, u.id)
+    const user = { id: u.id, email: u.email, name: u.full_name }
+
+    if (targetSlug) {
+      const matched = ownedSkills.find(s => s.slug === targetSlug)
+      if (!matched) {
+        return { ok: false, status: 403, error: `Tài khoản của bạn chưa kích hoạt Skill AI Agent "${targetSlug}".` }
+      }
+      return { ok: true, authMode: 'user_token', user, primary: matched, skills: [matched] }
+    }
+
+    return { ok: true, authMode: 'user_token', user, primary: ownedSkills[0] || null, skills: ownedSkills }
+  }
+
+  // 3) Legacy Per-Product License Key (XXXX-XXXX-XXXX-XXXX)
   const primary = await db.prepare(
     `SELECT l.id AS license_id, l.license_key, l.user_id,
             u.email AS user_email, u.full_name AS user_name, u.status AS user_status,
@@ -313,10 +505,10 @@ export async function authenticateMcpLicense(
      JOIN users u ON u.id = l.user_id
      JOIN products p ON p.id = l.product_id
      WHERE l.license_key = ?`
-  ).bind(licenseKey).first<any>()
+  ).bind(token).first<any>()
 
   if (!primary) {
-    return { ok: false, status: 401, error: 'License Key không hợp lệ hoặc đã bị thu hồi.' }
+    return { ok: false, status: 401, error: 'Mã xác thực không hợp lệ hoặc đã bị thu hồi.' }
   }
   if (primary.user_status !== 'active') {
     return { ok: false, status: 403, error: 'Tài khoản sở hữu License Key hiện đang bị khoá.' }
@@ -325,25 +517,12 @@ export async function authenticateMcpLicense(
     return {
       ok: false,
       status: 403,
-      error: 'License Key này thuộc dòng Skill tự tải (không phải Skill AI Agent MCP). Vui lòng dùng License Key của sản phẩm Skill AI Agent (MCP).'
+      error: 'License Key này thuộc dòng Skill tự tải (không phải Skill AI Agent MCP). Vui lòng dùng Skill AI Agent.'
     }
   }
 
-  const allRes = await db.prepare(
-    `SELECT l.id AS license_id, l.license_key, l.user_id,
-            u.email AS user_email, u.full_name AS user_name,
-            p.id AS product_id, p.slug, p.name, p.version, p.short_desc, p.description,
-            p.features, p.tech_stack, p.download_url, p.doc_url,
-            p.mcp_endpoint, p.mcp_server_name, p.mcp_clients, p.mcp_tools,
-            p.mcp_skill_prompt, p.mcp_render_webhook
-     FROM licenses l
-     JOIN users u ON u.id = l.user_id
-     JOIN products p ON p.id = l.product_id
-     WHERE l.user_id = ? AND p.product_type = 'mcp_skill'
-     ORDER BY (CASE WHEN l.id = ? THEN 0 ELSE 1 END), l.id DESC`
-  ).bind(primary.user_id, primary.license_id).all()
-
-  const ownedSkills = (allRes.results || []) as LicensedMcpSkillRow[]
+  const ownedSkills = await fetchUserOwnedMcpSkills(db, primary.user_id, primary.license_id)
+  const user = { id: primary.user_id, email: primary.user_email, name: primary.user_name }
 
   if (targetSlug) {
     const matched = ownedSkills.find(s => s.slug === targetSlug)
@@ -354,10 +533,10 @@ export async function authenticateMcpLicense(
         error: `License Key của bạn chưa kích hoạt Skill MCP "${targetSlug}".`
       }
     }
-    return { ok: true, primary: matched, skills: [matched] }
+    return { ok: true, authMode: 'license_key', user, primary: matched, skills: [matched] }
   }
 
-  return { ok: true, primary, skills: ownedSkills.length > 0 ? ownedSkills : [primary] }
+  return { ok: true, authMode: 'license_key', user, primary, skills: ownedSkills.length > 0 ? ownedSkills : [primary] }
 }
 
 function buildFallbackBlueprint(skill: LicensedMcpSkillRow): string {
@@ -536,20 +715,28 @@ function generateStoryboardPayload(skill: LicensedMcpSkillRow, args: Record<stri
 
 export function buildToolsManifest(skills: LicensedMcpSkillRow[]) {
   const slugEnum = skills.map(s => s.slug)
-  const slugNote = slugEnum.length === 1
-    ? `Mặc định dùng "${slugEnum[0]}".`
-    : `Chọn 1 trong các skill đã kích hoạt: ${slugEnum.join(', ')} (để trống sẽ dùng "${slugEnum[0]}").`
+  const slugNote = slugEnum.length === 0
+    ? 'Bạn chưa kích hoạt Skill AI Agent nào trên KhoSkill AI.'
+    : slugEnum.length === 1
+      ? `Mặc định dùng "${slugEnum[0]}".`
+      : `Chọn 1 trong các skill đã kích hoạt: ${slugEnum.join(', ')} (để trống sẽ dùng "${slugEnum[0]}").`
+
+  const listTool = {
+    name: 'list_licensed_skills',
+    description: 'Liệt kê tất cả Skill AI Agent bạn đã mua trên KhoSkill AI kèm link tải Google Drive.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false
+    }
+  }
+
+  if (skills.length === 0) {
+    return [listTool]
+  }
 
   const baseTools = [
-    {
-      name: 'list_licensed_skills',
-      description: 'Liệt kê tất cả Skill AI Agent (MCP) đang được kích hoạt bởi License Key của người dùng trên KhoSkill AI kèm link tải Google Drive.',
-      inputSchema: {
-        type: 'object',
-        properties: {},
-        additionalProperties: false
-      }
-    },
+    listTool,
     {
       name: 'get_skill_blueprint',
       description: `Nạp toàn bộ tài liệu SKILL.md chuẩn mới nhất, quy trình từng pha, thông số kỹ thuật và cổng QA bắt buộc của Skill AI Agent. ${slugNote}`,
@@ -644,7 +831,7 @@ function rpcError(id: any, code: number, message: string, data?: any) {
 
 export async function handleMcpJsonRpc(opts: {
   db: D1Database
-  auth: { primary: LicensedMcpSkillRow; skills: LicensedMcpSkillRow[] }
+  auth: McpAuthContext
   payload: any
   origin: string
 }): Promise<{ status: number; body: any | null }> {
@@ -669,7 +856,9 @@ export async function handleMcpJsonRpc(opts: {
     const clientVer = typeof params?.protocolVersion === 'string' ? params.protocolVersion : '2025-03-26'
     const supported = ['2025-06-18', '2025-03-26', '2024-11-05']
     const negotiated = supported.includes(clientVer) ? clientVer : '2025-03-26'
-    const serverName = resolveMcpServerName(auth.primary)
+    const serverName = auth.authMode === 'license_key' && auth.primary
+      ? resolveMcpServerName(auth.primary)
+      : 'khoskill'
     return {
       status: 200,
       body: rpcResult(id, {
@@ -681,9 +870,11 @@ export async function handleMcpJsonRpc(opts: {
         },
         serverInfo: {
           name: serverName,
-          version: auth.primary.version || '2.0.0'
+          version: auth.primary?.version || '2.0.0'
         },
-        instructions: `Bạn đã kết nối thành công với KhoSkill AI MCP Server (${auth.skills.length} Skill AI Agent dựng video đang kích hoạt). Bước 1: gọi "get_skill_assets_and_setup" để kiểm tra bộ Skill Kit cục bộ (hoặc lấy link Google Drive tải về) và kiểm tra môi trường. Bước 2: gọi "get_skill_blueprint" để nạp toàn bộ SKILL.md mới nhất. Bước 3: gọi "create_video_from_skill" để lập pipeline dựng video chuẩn studio và thực thi các lệnh dựng ra file MP4 -14 LUFS.`
+        instructions: auth.skills.length > 0
+          ? `Bạn đã kết nối thành công với KhoSkill AI (${auth.skills.length} Skill AI Agent đang sẵn sàng: ${auth.skills.map(s => s.slug).join(', ')}). Bước 1: gọi "list_licensed_skills" để xem danh sách Skill đã mua hoặc "get_skill_assets_and_setup" để kiểm tra bộ Skill Kit cục bộ / link Google Drive. Bước 2: gọi "get_skill_blueprint" để nạp toàn bộ SKILL.md mới nhất. Bước 3: gọi "create_video_from_skill" để lập pipeline dựng video hoàn chỉnh.`
+          : `Bạn đã kết nối thành công với tài khoản KhoSkill AI (${auth.user.email}), nhưng tài khoản hiện chưa có Skill AI Agent nào. Khi người dùng mua Skill mới tại ${origin}/san-pham?type=mcp_skill, Skill sẽ tự động xuất hiện mà không cần kết nối lại.`
       })
     }
   }
@@ -709,6 +900,9 @@ export async function handleMcpJsonRpc(opts: {
   if (method === 'prompts/get') {
     const pName = String(params?.name || '')
     const matched = auth.skills.find(s => `skill_${s.slug.replace(/[^a-z0-9_]/gi, '_')}` === pName) || auth.primary
+    if (!matched) {
+      return { status: 200, body: rpcError(id, -32602, 'Tài khoản của bạn chưa có Skill AI Agent nào được kích hoạt.') }
+    }
     const topic = String(params?.arguments?.topic || '[chủ đề của người dùng]')
     const blueprint = (matched.mcp_skill_prompt || '').trim() || buildFallbackBlueprint(matched)
     const driveNote = matched.download_url ? `\nLink Google Drive tải bộ Skill Kit (templates/scripts/SFX): ${matched.download_url}\n` : ''
@@ -743,6 +937,9 @@ export async function handleMcpJsonRpc(opts: {
     const uri = String(params?.uri || '')
     const m = uri.match(/^khoskill:\/\/skills\/([^/]+)\/blueprint\.md$/)
     const matched = (m && auth.skills.find(s => s.slug === m[1])) || auth.primary
+    if (!matched) {
+      return { status: 200, body: rpcError(id, -32602, 'Tài khoản của bạn chưa có Skill AI Agent nào được kích hoạt.') }
+    }
     const blueprint = (matched.mcp_skill_prompt || '').trim() || buildFallbackBlueprint(matched)
     return {
       status: 200,
@@ -761,12 +958,6 @@ export async function handleMcpJsonRpc(opts: {
   if (method === 'tools/call') {
     const toolName = String(params?.name || '').trim()
     const args = (params?.arguments && typeof params.arguments === 'object') ? params.arguments : {}
-    const requestedSlug = String(args.skill_slug || '').trim()
-    const targetSkill = (requestedSlug && auth.skills.find(s => s.slug === requestedSlug)) || auth.primary
-
-    await db.prepare(
-      `UPDATE licenses SET mcp_call_count = COALESCE(mcp_call_count, 0) + 1, last_mcp_call_at = ? WHERE id = ?`
-    ).bind(new Date().toISOString(), targetSkill.license_id).run().catch(() => null)
 
     if (toolName === 'list_licensed_skills') {
       const summary = auth.skills.map(s => ({
@@ -781,13 +972,42 @@ export async function handleMcpJsonRpc(opts: {
         tech_stack: parseJSON<string[]>(s.tech_stack, []),
         render_webhook_connected: Boolean((s.mcp_render_webhook || '').trim())
       }))
+      if (auth.primary) {
+        await db.prepare(
+          `UPDATE licenses SET mcp_call_count = COALESCE(mcp_call_count, 0) + 1, last_mcp_call_at = ? WHERE id = ?`
+        ).bind(new Date().toISOString(), auth.primary.license_id).run().catch(() => null)
+      }
       return {
         status: 200,
         body: rpcResult(id, {
-          content: [{ type: 'text', text: JSON.stringify({ owner: auth.primary.user_email, active_skills: summary }, null, 2) }]
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              owner: auth.user.email,
+              total_skills: summary.length,
+              active_skills: summary,
+              ...(summary.length === 0 ? { message: `Tài khoản chưa có Skill AI Agent nào. Khi mua tại ${origin}/san-pham?type=mcp_skill, AI sẽ tự dùng ngay mà không cần kết nối lại.` } : {})
+            }, null, 2)
+          }]
         })
       }
     }
+
+    const requestedSlug = String(args.skill_slug || '').trim()
+    const targetSkill = (requestedSlug && auth.skills.find(s => s.slug === requestedSlug)) || auth.primary
+    if (!targetSkill) {
+      return {
+        status: 200,
+        body: rpcResult(id, {
+          isError: true,
+          content: [{ type: 'text', text: `Tài khoản ${auth.user.email} hiện chưa kích hoạt Skill AI Agent nào trên KhoSkill AI. Hãy mua Skill tại ${origin}/san-pham?type=mcp_skill rồi gọi lại.` }]
+        })
+      }
+    }
+
+    await db.prepare(
+      `UPDATE licenses SET mcp_call_count = COALESCE(mcp_call_count, 0) + 1, last_mcp_call_at = ? WHERE id = ?`
+    ).bind(new Date().toISOString(), targetSkill.license_id).run().catch(() => null)
 
     if (toolName === 'get_skill_assets_and_setup') {
       const setupInfo = buildSetupAndAssetsPayload(targetSkill)

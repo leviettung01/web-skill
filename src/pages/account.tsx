@@ -1,8 +1,8 @@
 import type { FC, PropsWithChildren } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { EmptyState, StatusBadge, Stars } from '../components/ui'
-import { formatVND, formatDate, formatDateTime, gradientFor, PRODUCT_TYPE_LABEL, isMcpSkill, parseMcpClients } from '../lib/utils'
-import { buildMcpConfigs } from '../lib/mcp'
+import { formatVND, formatDate, formatDateTime, gradientFor, PRODUCT_TYPE_LABEL, isMcpSkill } from '../lib/utils'
+import { buildUnifiedMcpConfigs } from '../lib/mcp'
 
 const MENU = [
   { href: '/tai-khoan', icon: 'fa-gauge', label: 'Tổng quan', key: 'dash' },
@@ -156,251 +156,439 @@ export const AccountDashboard: FC<LayoutProps & {
   )
 }
 
-/* ---------- My Products (source code & MCP Agent Skill delivery) ---------- */
-export const MyProductsPage: FC<LayoutProps & { licenses: any[]; origin?: string }> = (props) => {
-  const origin = props.origin || 'https://khoskill.site'
+export interface McpConnectionRow {
+  id: number
+  client_name: string
+  client_domain?: string | null
+  created_at?: string | null
+  last_used_at?: string | null
+}
+
+/* ---------- My Products (Simple Non-Tech AI Connect + Clean Skill List) ---------- */
+export const MyProductsPage: FC<LayoutProps & {
+  licenses: any[]
+  origin?: string
+  mcpToken?: string
+  mcpConnections?: McpConnectionRow[]
+}> = (props) => {
+  const origin = (props.origin || 'https://khoskill.site').replace(/\/+$/, '')
+  const hasMcp = props.licenses.some(l => isMcpSkill(l.product_type))
+  const connections = props.mcpConnections || []
+  const unified = buildUnifiedMcpConfigs({ origin, userToken: props.mcpToken || '' })
+
   return (
     <AccountShell {...props} activeKey="products" title="Sản phẩm của tôi" heading="Sản phẩm của tôi"
-      sub="Truy cập link tải Skill tự tải, hoặc lấy MCP Endpoint + License Key + cấu hình copy sẵn cho Claude, Codex, Antigravity.">
+      sub="Kết nối AI một lần để dùng mọi Skill bạn đã mua, hoặc tải bộ Skill về máy bất cứ lúc nào.">
       {props.licenses.length === 0 ? (
         <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54]">
           <EmptyState icon="fa-box-archive" title="Bạn chưa sở hữu sản phẩm nào"
-            desc="Sau khi thanh toán thành công, link tải Skill hoặc cấu hình kết nối MCP cho AI Agent sẽ xuất hiện tại đây."
+            desc="Sau khi thanh toán thành công, hướng dẫn kết nối AI và link tải Skill sẽ xuất hiện ngay tại đây."
             action={{ href: '/san-pham', label: 'Khám phá sản phẩm' }} />
         </div>
       ) : (
-        <div class="space-y-4">
-          {props.licenses.map(l => {
-            const mcp = isMcpSkill(l.product_type)
-            const mcpCfg = mcp ? buildMcpConfigs({
-              origin,
-              slug: l.slug,
-              productName: l.name,
-              licenseKey: l.license_key,
-              mcpEndpoint: l.mcp_endpoint,
-              mcpServerName: l.mcp_server_name
-            }) : null
-            const mcpClients = mcp ? parseMcpClients(l.mcp_clients) : []
-            const tabGroup = `mcp-${l.id}`
-            return (
-              <div class={`bg-[#0f0e24] rounded-2xl border overflow-hidden ${mcp ? 'border-cyan-500/40 shadow-lg shadow-cyan-950/20' : 'border-[#221e54]'}`}>
-                <div class="p-5 flex flex-col sm:flex-row gap-4">
-                  <div class="sm:w-40 aspect-video rounded-xl shrink-0 grid place-items-center text-white overflow-hidden"
-                    style={l.thumbnail ? '' : `background:${gradientFor(l.product_id)}`}>
-                    {l.thumbnail ? <img src={l.thumbnail} alt={l.name} class="w-full h-full object-cover rounded-xl" loading="lazy" />
-                      : <i class={`fas ${mcp ? 'fa-plug-circle-bolt' : l.product_type === 'skill' ? 'fa-wand-magic-sparkles' : l.product_type === 'chatbot' ? 'fa-robot' : 'fa-code'} text-2xl`} aria-hidden="true"></i>}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                      {mcp ? (
-                        <span class="px-2.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-[11px] font-bold inline-flex items-center gap-1">
-                          <i class="fas fa-plug-circle-bolt text-[10px]" aria-hidden="true"></i>{PRODUCT_TYPE_LABEL[l.product_type]}
-                        </span>
-                      ) : (
-                        <span class="px-2.5 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold">{PRODUCT_TYPE_LABEL[l.product_type]}</span>
-                      )}
-                      <span class="px-2.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
-                        <i class="fas fa-circle-check mr-1" aria-hidden="true"></i>Đã kích hoạt
-                      </span>
-                      <span class="text-[11px] text-[#9492b8] font-mono">{l.version}</span>
-                    </div>
-                    <h2 class="font-bold text-white leading-snug mb-2 text-base">
-                      <a href={`/san-pham/${l.slug}`} class={`transition ${mcp ? 'hover:text-cyan-300' : 'hover:text-indigo-300'}`}>{l.name}</a>
-                    </h2>
-                    <div class="text-xs text-[#9492b8] mb-3 flex flex-wrap gap-x-4 gap-y-1 tabular-nums">
-                      <span><i class="far fa-calendar mr-1" aria-hidden="true"></i>Mua ngày {formatDate(l.created_at)}</span>
-                      {mcp ? (
-                        <>
-                          <span class="text-cyan-300"><i class="fas fa-bolt mr-1" aria-hidden="true"></i>{l.mcp_call_count || 0} lượt Agent gọi MCP</span>
-                          {l.last_mcp_call_at && <span><i class="far fa-clock mr-1" aria-hidden="true"></i>Gần nhất: {formatDateTime(l.last_mcp_call_at)}</span>}
-                        </>
-                      ) : (
-                        <>
-                          <span><i class="fas fa-download mr-1" aria-hidden="true"></i>{l.download_count} lượt tải</span>
-                          {l.file_size && l.file_size !== '—' && <span><i class="fas fa-hard-drive mr-1" aria-hidden="true"></i>{l.file_size}</span>}
-                        </>
-                      )}
-                    </div>
+        <div class="space-y-7">
+          {hasMcp && (
+            <section aria-labelledby="ai-connect-heading">
+              <div class="mb-3.5">
+                <h2 id="ai-connect-heading" class="text-xl font-extrabold text-white tracking-tight">Kết nối AI của bạn</h2>
+                <p class="text-sm text-[#a9a7ce] mt-1 leading-relaxed">
+                  Kết nối một lần, AI của bạn tự dùng và tự cài mọi Skill bạn đã mua — kể cả Skill mua sau này. Không cần tải file hay dán link từng Skill nữa.
+                </p>
+              </div>
 
-                    <div class="p-3 rounded-xl bg-[#161436] border border-[#221e54] mb-3">
-                      <div class="text-[11px] text-[#9492b8] mb-1 font-semibold uppercase tracking-wide">
-                        {mcp ? 'License Key (MCP Bearer Token)' : 'License Key'}
+              <div class="bg-[#0f0e24] rounded-2xl border border-[#2a2559] shadow-xl shadow-black/25 p-5 sm:p-6 space-y-6">
+                {/* Pill Tab Switcher */}
+                <div role="tablist" aria-label="Chọn ứng dụng AI để kết nối"
+                  class="ai-connect-tabs grid grid-cols-2 sm:grid-cols-5 gap-1 p-1.5 rounded-2xl sm:rounded-full bg-[#09081b] border border-[#242054]">
+                  <button type="button" role="tab" aria-selected="true" data-tab="claude" data-group="ai-connect"
+                    class="ai-connect-tab tab-btn active h-10 px-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-bold transition cursor-pointer">
+                    Claude
+                  </button>
+                  <button type="button" role="tab" aria-selected="false" data-tab="chatgpt" data-group="ai-connect"
+                    class="ai-connect-tab tab-btn h-10 px-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-semibold text-[#b8b6d9] hover:text-white transition cursor-pointer">
+                    ChatGPT
+                  </button>
+                  <button type="button" role="tab" aria-selected="false" data-tab="claude-code" data-group="ai-connect"
+                    class="ai-connect-tab tab-btn h-10 px-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-semibold text-[#b8b6d9] hover:text-white transition cursor-pointer">
+                    Claude Code
+                  </button>
+                  <button type="button" role="tab" aria-selected="false" data-tab="codex" data-group="ai-connect"
+                    class="ai-connect-tab tab-btn h-10 px-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-semibold text-[#b8b6d9] hover:text-white transition cursor-pointer">
+                    Codex
+                  </button>
+                  <button type="button" role="tab" aria-selected="false" data-tab="antigravity" data-group="ai-connect"
+                    class="ai-connect-tab tab-btn col-span-2 sm:col-span-1 h-10 px-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-semibold text-[#b8b6d9] hover:text-white transition cursor-pointer">
+                    Antigravity
+                  </button>
+                </div>
+
+                {/* Tab 1: Claude (claude.ai OAuth) */}
+                <div role="tabpanel" data-tab="claude" data-group="ai-connect" class="tab-panel space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
+                  <p>1. Mở <b class="text-white">claude.ai</b> → <b class="text-white">Cài đặt (Settings)</b> → <b class="text-white">Trình kết nối (Connectors)</b> → <b class="text-white">Thêm trình kết nối tuỳ chỉnh</b>.</p>
+                  <div>
+                    <p>2. Đặt tên <b class="text-white">KhoSkill AI</b>, dán địa chỉ này:</p>
+                    <div class="mt-2.5 flex items-center gap-2.5">
+                      <div class="flex-1 min-w-0 h-12 px-4 rounded-full bg-[#09081b] border border-[#2a2559] flex items-center">
+                        <code class="text-xs sm:text-sm font-mono text-[#e8e7fb] truncate select-all">{unified.endpointUrl}</code>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <code class={`flex-1 font-mono text-sm font-bold tracking-wider truncate ${mcp ? 'text-cyan-300' : 'text-indigo-300'}`}>{l.license_key}</code>
-                        <button type="button" data-copy={l.license_key} aria-label="Sao chép license key"
-                          class="shrink-0 w-9 h-9 rounded-lg bg-[#0f0e24] border border-[#2e2968] hover:border-indigo-400 hover:text-indigo-300 text-[#b8b6d9] text-xs transition grid place-items-center">
-                          <i class="far fa-copy" aria-hidden="true"></i>
+                      <button type="button" data-copy={unified.endpointUrl}
+                        class="shrink-0 h-12 px-6 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                        Chép
+                      </button>
+                    </div>
+                  </div>
+                  <p>3. Bấm <b class="text-white">Kết nối (Connect)</b> → đăng nhập tài khoản <b class="text-white">KhoSkill AI</b> → bấm <b class="text-white">Cho phép</b>.</p>
+                  <p>4. Xong. Từ giờ cứ nhờ Claude làm việc, nó tự mở Skill phù hợp.</p>
+                </div>
+
+                {/* Tab 2: ChatGPT (chatgpt.com OAuth) */}
+                <div role="tabpanel" data-tab="chatgpt" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
+                  <p>1. Mở <b class="text-white">chatgpt.com</b> → <b class="text-white">Cài đặt (Settings)</b> → <b class="text-white">Ứng dụng &amp; Trình kết nối (Connectors)</b> → <b class="text-white">Tạo mới</b>.</p>
+                  <div>
+                    <p>2. Đặt tên <b class="text-white">KhoSkill AI</b>, dán địa chỉ này:</p>
+                    <div class="mt-2.5 flex items-center gap-2.5">
+                      <div class="flex-1 min-w-0 h-12 px-4 rounded-full bg-[#09081b] border border-[#2a2559] flex items-center">
+                        <code class="text-xs sm:text-sm font-mono text-[#e8e7fb] truncate select-all">{unified.endpointUrl}</code>
+                      </div>
+                      <button type="button" data-copy={unified.endpointUrl}
+                        class="shrink-0 h-12 px-6 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                        Chép
+                      </button>
+                    </div>
+                  </div>
+                  <p>3. Chọn xác thực <b class="text-white">OAuth</b> → đăng nhập tài khoản <b class="text-white">KhoSkill AI</b> → bấm <b class="text-white">Cho phép</b>.</p>
+                  <p>4. Xong. Từ giờ cứ nhờ ChatGPT làm việc, nó tự mở Skill phù hợp.</p>
+                </div>
+
+                {/* Tab 3: Claude Code */}
+                <div role="tabpanel" data-tab="claude-code" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
+                  <div>
+                    <p>1. Mở <b class="text-white">Claude Code</b>, dán dòng lệnh này rồi bấm <b class="text-white">Enter</b>:</p>
+                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
+                      <code id="unified-claude-code" class="flex-1 min-w-0 text-xs font-mono text-cyan-200 break-all leading-relaxed select-all">{unified.claudeCodeCli}</code>
+                      <button type="button" data-copy-target="unified-claude-code"
+                        class="shrink-0 self-start sm:self-center h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                        Chép
+                      </button>
+                    </div>
+                  </div>
+                  <p>2. Xong. Từ giờ cứ nhờ Claude Code dựng video, nó tự mở mọi Skill bạn đã mua.</p>
+                </div>
+
+                {/* Tab 4: Codex */}
+                <div role="tabpanel" data-tab="codex" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
+                  <div>
+                    <p>1. Dán đoạn này vào file <code class="px-1.5 py-0.5 rounded bg-[#161436] text-white text-xs font-mono">~/.codex/config.toml</code> (hoặc nhờ Codex tự dán giúp):</p>
+                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
+                      <pre id="unified-codex-toml" class="flex-1 min-w-0 text-xs font-mono text-emerald-200 whitespace-pre-wrap break-all leading-relaxed select-all">{unified.codexToml}</pre>
+                      <button type="button" data-copy-target="unified-codex-toml"
+                        class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                        Chép
+                      </button>
+                    </div>
+                  </div>
+                  <p>2. Mở lại <b class="text-white">Codex</b> là xong — AI tự nhận mọi Skill bạn đã mua.</p>
+                </div>
+
+                {/* Tab 5: Antigravity */}
+                <div role="tabpanel" data-tab="antigravity" data-group="ai-connect" class="tab-panel hidden space-y-3.5 text-sm text-[#d6d4ee] leading-relaxed">
+                  <div>
+                    <p>1. Mở <b class="text-white">Antigravity</b> → <b class="text-white">MCP Servers</b> → dán đoạn này vào <code class="px-1.5 py-0.5 rounded bg-[#161436] text-white text-xs font-mono">mcp_config.json</code>:</p>
+                    <div class="mt-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5 p-3.5 rounded-2xl bg-[#09081b] border border-[#2a2559]">
+                      <pre id="unified-agy-json" class="flex-1 min-w-0 text-xs font-mono text-violet-200 overflow-x-auto whitespace-pre leading-relaxed select-all">{unified.antigravityJson}</pre>
+                      <button type="button" data-copy-target="unified-agy-json"
+                        class="shrink-0 self-start h-10 px-5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                        Chép
+                      </button>
+                    </div>
+                  </div>
+                  <p>2. Xong. Từ giờ cứ nhắn Antigravity dùng Skill bạn đã mua để bắt đầu.</p>
+                </div>
+
+                {/* Connected AI Clients List */}
+                <div class="pt-5 border-t border-[#221e54]">
+                  <h3 class="text-sm font-bold text-white mb-3">AI đang kết nối</h3>
+                  {connections.length > 0 ? (
+                    <div class="space-y-2.5" id="mcp-connections-list">
+                      {connections.map(conn => (
+                        <div class="flex items-center justify-between gap-3 py-2.5 px-3.5 rounded-xl bg-[#09081b]/75 border border-[#221e54]" data-conn-row={conn.id}>
+                          <div class="min-w-0">
+                            <div class="font-bold text-sm text-white truncate">{conn.client_name}</div>
+                            <div class="text-xs text-[#9492b8] mt-0.5 flex flex-wrap items-center gap-x-1.5">
+                              <span class="text-emerald-300 font-medium">{conn.client_domain || 'không rõ tên miền'}</span>
+                              <span>· nối ngày {formatDate(conn.created_at || '')}</span>
+                              <span>· {conn.last_used_at ? `dùng gần nhất ${formatDate(conn.last_used_at)}` : 'chưa dùng lần nào'}</span>
+                            </div>
+                          </div>
+                          <button type="button" data-conn-id={conn.id} data-conn-name={conn.client_name}
+                            class="btn-revoke-mcp-conn shrink-0 h-9 px-4 rounded-full border border-[#322d6e] bg-[#161436] hover:border-rose-400 hover:text-rose-300 text-xs font-semibold text-[#e2e1f5] transition cursor-pointer">
+                            Ngắt
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p class="text-xs text-[#9492b8]">Chưa có AI nào đang kết nối. Làm theo các bước ở trên để kết nối Claude hoặc ChatGPT.</p>
+                  )}
+                  <p class="text-xs text-[#8b89b0] mt-3 leading-relaxed">
+                    Tên ứng dụng do chính ứng dụng tự khai. Tên miền bên dưới mới là thứ không giả được — thấy tên miền lạ thì ngắt ngay.
+                  </p>
+                </div>
+
+                {/* Security Warning + Revoke All */}
+                <div class="pt-4 border-t border-[#221e54] text-xs text-[#9492b8] leading-relaxed">
+                  <p>
+                    Lệnh ở tab Claude Code / Codex / Antigravity chứa mã riêng của bạn — đừng gửi cho người khác. Nếu lỡ để lộ, hoặc muốn gỡ quyền của mọi AI đã kết nối:
+                  </p>
+                  <button type="button"
+                    class="btn-revoke-all-mcp mt-1.5 inline-flex items-center gap-1.5 font-semibold text-rose-400 hover:text-rose-300 hover:underline transition cursor-pointer">
+                    Ngắt mọi kết nối AI
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Owned Skills List (Clean, Compact, Fixed Thumbnail) */}
+          <section aria-labelledby="owned-skills-heading">
+            <div class="flex items-center justify-between gap-3 mb-3.5">
+              <h2 id="owned-skills-heading" class="text-lg font-extrabold text-white tracking-tight">Skill bạn đã mua</h2>
+              <span class="text-xs text-[#9492b8] tabular-nums">{props.licenses.length} sản phẩm</span>
+            </div>
+
+            <div class="space-y-3">
+              {props.licenses.map(l => {
+                const mcp = isMcpSkill(l.product_type)
+                return (
+                  <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] hover:border-indigo-500/40 transition p-4 flex flex-col sm:flex-row items-start gap-4">
+                    <a href={`/san-pham/${l.slug}`}
+                      class="block w-full sm:w-36 h-40 sm:h-24 self-start shrink-0 rounded-xl overflow-hidden bg-[#09081b] border border-white/10"
+                      style={l.thumbnail ? '' : `background:${gradientFor(l.product_id)}`}>
+                      {l.thumbnail ? (
+                        <img src={l.thumbnail} alt={l.name} class="w-full h-full object-cover object-top" loading="lazy" />
+                      ) : (
+                        <div class="w-full h-full grid place-items-center text-white">
+                          <i class={`fas ${mcp ? 'fa-plug-circle-bolt' : l.product_type === 'skill' ? 'fa-wand-magic-sparkles' : l.product_type === 'chatbot' ? 'fa-robot' : 'fa-code'} text-xl`} aria-hidden="true"></i>
+                        </div>
+                      )}
+                    </a>
+
+                    <div class="flex-1 min-w-0 w-full">
+                      <div class="flex flex-wrap items-center gap-2 mb-1">
+                        {mcp ? (
+                          <span class="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/35 text-cyan-200 text-[11px] font-bold">
+                            Skill AI Agent
+                          </span>
+                        ) : (
+                          <span class="px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold">
+                            {PRODUCT_TYPE_LABEL[l.product_type]}
+                          </span>
+                        )}
+                        <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold">
+                          <i class="fas fa-circle-check mr-1" aria-hidden="true"></i>Đã kích hoạt
+                        </span>
+                        <span class="text-[11px] text-[#9492b8] font-mono">{l.version}</span>
+                      </div>
+
+                      <h3 class="font-bold text-white leading-snug text-[15px]">
+                        <a href={`/san-pham/${l.slug}`} class="hover:text-indigo-300 transition">{l.name}</a>
+                      </h3>
+
+                      <div class="text-xs text-[#9492b8] mt-1 flex flex-wrap gap-x-2 gap-y-0.5 tabular-nums">
+                        <span>Mua ngày {formatDate(l.created_at)}</span>
+                        {mcp ? (
+                          <span class="text-cyan-300/90">· Tự động sẵn sàng trong kết nối AI ở trên</span>
+                        ) : (
+                          <>
+                            <span>· {l.download_count} lượt tải</span>
+                            {l.file_size && l.file_size !== '—' && <span>· {l.file_size}</span>}
+                          </>
+                        )}
+                      </div>
+
+                      {l.latest_changelog && (
+                        <div class="mt-2.5 p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-xs text-[#d6d4ee]">
+                          <div class="flex items-center justify-between gap-2 mb-0.5">
+                            <span class="font-bold text-indigo-300"><i class="fas fa-sparkles mr-1" aria-hidden="true"></i>Cập nhật {l.latest_version || l.version}</span>
+                            {l.latest_release_at && <span class="text-[11px] text-[#9492b8]">{formatDate(l.latest_release_at)}</span>}
+                          </div>
+                          <p class="whitespace-pre-line text-[#c2c0e0] leading-relaxed">{l.latest_changelog}</p>
+                        </div>
+                      )}
+
+                      <div class="flex flex-wrap items-center gap-2 mt-3">
+                        {l.download_url ? (
+                          <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
+                            class={`inline-flex items-center gap-1.5 h-9 px-4 rounded-xl text-white font-semibold text-xs sm:text-sm transition ${mcp
+                              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 shadow-md shadow-emerald-500/20'
+                              : 'bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:brightness-110 shadow-md shadow-indigo-500/20'}`}>
+                            <i class={mcp ? 'fab fa-google-drive' : 'fas fa-download'} aria-hidden="true"></i>
+                            {mcp ? 'Tải bộ Skill (Google Drive)' : l.product_type === 'skill' ? 'Tải bộ Skill AI' : l.product_type === 'chatbot' ? 'Mở Chatbot' : 'Tải xuống'}
+                          </a>
+                        ) : (
+                          <span class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-xs">
+                            <i class="fas fa-clock" aria-hidden="true"></i>Đang chuẩn bị link...
+                          </span>
+                        )}
+
+                        {l.doc_url && (
+                          <a href={l.doc_url} target="_blank" rel="noopener"
+                            class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-xs transition">
+                            <i class="fas fa-book" aria-hidden="true"></i>Hướng dẫn
+                          </a>
+                        )}
+
+                        <a href={`/san-pham/${l.slug}#reviews`}
+                          class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-amber-400 hover:text-amber-300 font-semibold text-xs transition">
+                          <i class="far fa-star" aria-hidden="true"></i>Đánh giá
+                        </a>
+
+                        <button type="button" data-copy={l.license_key} title={`Sao chép mã bản quyền: ${l.license_key}`}
+                          class="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-[#262258] bg-[#141332] hover:border-indigo-400 hover:text-white text-[#9e9cc2] font-medium text-xs transition cursor-pointer">
+                          <i class="far fa-copy text-[11px]" aria-hidden="true"></i>Chép mã
                         </button>
                       </div>
                     </div>
-
-                    {mcp && mcpCfg && (
-                      <div class="rounded-2xl bg-[#09081b] border border-cyan-500/35 p-4 mb-4 space-y-3.5">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                          <div class="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fas fa-plug-circle-bolt" aria-hidden="true"></i>Cấu hình kết nối MCP cho AI Agent
-                          </div>
-                          <div class="flex flex-wrap gap-1">
-                            {mcpClients.map(cl => (
-                              <span class="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-[10px] font-bold">{cl}</span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <div class="text-[11px] text-[#9492b8] font-semibold mb-1">MCP Server Endpoint (Streamable HTTP)</div>
-                          <div class="flex items-center gap-2">
-                            <input type="text" readonly value={mcpCfg.endpointUrl}
-                              class="flex-1 h-9 px-3 rounded-lg bg-[#0f0e24] border border-[#242054] text-cyan-200 font-mono text-xs outline-none" />
-                            <button type="button" data-copy={mcpCfg.endpointUrl} aria-label="Sao chép MCP Endpoint"
-                              class="shrink-0 h-9 px-3 rounded-lg bg-[#161436] border border-[#2e2968] hover:border-cyan-400 text-[#c2c0e0] hover:text-white text-xs font-semibold transition">
-                              <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy URL
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Client Config Tabs: Claude / Codex / Antigravity */}
-                        <div>
-                          <div role="tablist" aria-label="Chọn AI Agent để lấy cấu hình MCP" class="flex flex-wrap gap-1.5 mb-2.5">
-                            <button type="button" role="tab" aria-selected="true" data-tab="claude" data-group={tabGroup}
-                              class="tab-btn active h-8 px-3 rounded-lg border border-[#2a2559] bg-[#141332] text-xs font-bold text-[#c2c0e0] cursor-pointer">
-                              Claude Code / Desktop
-                            </button>
-                            <button type="button" role="tab" aria-selected="false" data-tab="codex" data-group={tabGroup}
-                              class="tab-btn h-8 px-3 rounded-lg border border-[#2a2559] bg-[#141332] text-xs font-bold text-[#c2c0e0] cursor-pointer">
-                              OpenAI Codex
-                            </button>
-                            <button type="button" role="tab" aria-selected="false" data-tab="antigravity" data-group={tabGroup}
-                              class="tab-btn h-8 px-3 rounded-lg border border-[#2a2559] bg-[#141332] text-xs font-bold text-[#c2c0e0] cursor-pointer">
-                              Antigravity
-                            </button>
-                          </div>
-
-                          <div role="tabpanel" data-tab="claude" data-group={tabGroup} class="tab-panel space-y-2.5">
-                            <div class="rounded-xl bg-[#070614] border border-[#221e54] p-3">
-                              <div class="flex items-center justify-between gap-2 mb-1.5">
-                                <span class="text-[11px] font-semibold text-orange-300">Cách 1 — Chạy 1 dòng lệnh trong Claude Code CLI:</span>
-                                <button type="button" data-copy-target={`mcp-claude-cli-${l.id}`}
-                                  class="text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-indigo-600 text-white font-semibold transition cursor-pointer">
-                                  <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy lệnh
-                                </button>
-                              </div>
-                              <pre id={`mcp-claude-cli-${l.id}`} class="text-[11px] font-mono text-cyan-200 overflow-x-auto whitespace-pre-wrap break-all">{mcpCfg.claudeCli}</pre>
-                            </div>
-                            <div class="rounded-xl bg-[#070614] border border-[#221e54] p-3">
-                              <div class="flex items-center justify-between gap-2 mb-1.5">
-                                <span class="text-[11px] font-semibold text-[#b8b6d9]">Cách 2 — Dán vào <code class="text-white">.mcp.json</code> hoặc Claude Desktop config:</span>
-                                <button type="button" data-copy-target={`mcp-claude-json-${l.id}`}
-                                  class="text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-indigo-600 text-white font-semibold transition cursor-pointer">
-                                  <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy JSON
-                                </button>
-                              </div>
-                              <pre id={`mcp-claude-json-${l.id}`} class="text-[11px] font-mono text-[#d6d4ee] overflow-x-auto whitespace-pre">{mcpCfg.claudeJson}</pre>
-                            </div>
-                          </div>
-
-                          <div role="tabpanel" data-tab="codex" data-group={tabGroup} class="tab-panel hidden space-y-2.5">
-                            <div class="rounded-xl bg-[#070614] border border-[#221e54] p-3">
-                              <div class="flex items-center justify-between gap-2 mb-1.5">
-                                <span class="text-[11px] font-semibold text-emerald-300">Dán vào <code class="text-white">~/.codex/config.toml</code> (OpenAI Codex):</span>
-                                <button type="button" data-copy-target={`mcp-codex-toml-${l.id}`}
-                                  class="text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-emerald-600 text-white font-semibold transition cursor-pointer">
-                                  <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy TOML
-                                </button>
-                              </div>
-                              <pre id={`mcp-codex-toml-${l.id}`} class="text-[11px] font-mono text-emerald-200 overflow-x-auto whitespace-pre-wrap break-all">{mcpCfg.codexToml}</pre>
-                            </div>
-                          </div>
-
-                          <div role="tabpanel" data-tab="antigravity" data-group={tabGroup} class="tab-panel hidden space-y-2.5">
-                            <div class="rounded-xl bg-[#070614] border border-[#221e54] p-3">
-                              <div class="flex items-center justify-between gap-2 mb-1.5">
-                                <span class="text-[11px] font-semibold text-violet-300">Dán vào <code class="text-white">mcp_config.json</code> trong Antigravity:</span>
-                                <button type="button" data-copy-target={`mcp-agy-json-${l.id}`}
-                                  class="text-[11px] px-2.5 py-1 rounded-md bg-white/10 hover:bg-violet-600 text-white font-semibold transition cursor-pointer">
-                                  <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy JSON
-                                </button>
-                              </div>
-                              <pre id={`mcp-agy-json-${l.id}`} class="text-[11px] font-mono text-violet-200 overflow-x-auto whitespace-pre">{mcpCfg.antigravityJson}</pre>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-100 leading-relaxed">
-                          <b class="text-emerald-300"><i class="fas fa-circle-info mr-1" aria-hidden="true"></i>Cách dùng chuẩn 2 bước:</b>{' '}
-                          (1) Bấm <b>Tải bộ Skill Kit (Google Drive)</b> bên dưới, giải nén vào thư mục skills của AI Agent (<code class="text-white">.claude/skills/</code>, <code class="text-white">.codex/skills/</code> hoặc <code class="text-white">.agents/skills/</code>) để có đủ template, scripts, SFX, fonts &amp; demo gốc; (2) Dán cấu hình <b>MCP</b> bên trên để AI Agent tự nạp <code class="text-white">SKILL.md</code> mới nhất và dựng video tự động!
-                        </div>
-
-                        {/* Sample Agent Prompt */}
-                        <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex flex-col sm:flex-row sm:items-center gap-2.5 justify-between">
-                          <div class="text-xs text-cyan-100 leading-relaxed min-w-0">
-                            <b class="text-cyan-300">Prompt thử nhanh trong AI Agent:</b>{' '}
-                            <span id={`mcp-sample-prompt-${l.id}`} class="text-white/95">{mcpCfg.samplePrompt}</span>
-                          </div>
-                          <button type="button" data-copy-target={`mcp-sample-prompt-${l.id}`}
-                            class="shrink-0 h-8 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-400/40 text-cyan-200 text-xs font-bold transition cursor-pointer">
-                            <i class="far fa-copy mr-1" aria-hidden="true"></i>Copy prompt
-                          </button>
-                        </div>
-
-                        <div id={`mcp-test-result-${l.id}`} class="hidden rounded-xl p-3 text-xs"></div>
-                      </div>
-                    )}
-
-                    {l.latest_changelog && (
-                      <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 mb-3 text-xs text-[#d6d4ee]">
-                        <div class="flex items-center justify-between gap-2 mb-1">
-                          <span class="font-bold text-indigo-300"><i class="fas fa-sparkles mr-1" aria-hidden="true"></i>Cập nhật {l.latest_version || l.version}</span>
-                          {l.latest_release_at && <span class="text-[11px] text-[#9492b8]">{formatDate(l.latest_release_at)}</span>}
-                        </div>
-                        <p class="whitespace-pre-line text-[#c2c0e0] leading-relaxed">{l.latest_changelog}</p>
-                      </div>
-                    )}
-
-                    <div class="flex flex-wrap gap-2">
-                      {mcp ? (
-                        <>
-                          {l.download_url && (
-                            <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
-                              class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-emerald-500/20 transition">
-                              <i class="fab fa-google-drive" aria-hidden="true"></i>Tải bộ Skill Kit (Google Drive)
-                            </a>
-                          )}
-                          <button type="button" data-license-id={l.id}
-                            class="btn-test-mcp inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-semibold text-sm hover:opacity-95 shadow-lg shadow-cyan-500/20 transition cursor-pointer">
-                            <i class="fas fa-plug-circle-check" aria-hidden="true"></i>Kiểm tra kết nối MCP
-                          </button>
-                        </>
-                      ) : l.download_url ? (
-                        <a href={`/tai-xuong/${l.id}`} target="_blank" rel="noopener"
-                          class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-90 shadow-lg shadow-indigo-500/20 transition">
-                          <i class="fas fa-download" aria-hidden="true"></i>{l.product_type === 'skill' ? 'Tải bộ Skill AI' : l.product_type === 'chatbot' ? 'Mở Chatbot' : 'Mở & Tải xuống'}
-                        </a>
-                      ) : (
-                        <span class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-sm">
-                          <i class="fas fa-clock" aria-hidden="true"></i>Đang chuẩn bị link...
-                        </span>
-                      )}
-                      {l.doc_url && (
-                        <a href={l.doc_url} target="_blank" rel="noopener"
-                          class="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-indigo-400 hover:text-white font-semibold text-sm transition">
-                          <i class="fas fa-book" aria-hidden="true"></i>Tài liệu
-                        </a>
-                      )}
-                      <a href={`/san-pham/${l.slug}#reviews`}
-                        class="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#2e2968] text-[#c2c0e0] hover:border-amber-400 hover:text-amber-300 font-semibold text-sm transition">
-                        <i class="far fa-star" aria-hidden="true"></i>Đánh giá
-                      </a>
-                    </div>
                   </div>
-                </div>
-              </div>
-            )
-          })}
+                )
+              })}
+            </div>
+          </section>
         </div>
       )}
     </AccountShell>
+  )
+}
+
+/* ---------- MCP OAuth 2.1 Consent Page (Claude / ChatGPT 1-click connect) ---------- */
+export const OAuthConsentPage: FC<LayoutProps & {
+  clientName?: string
+  clientDomain?: string
+  clientId?: string
+  redirectUri?: string
+  state?: string
+  scope?: string
+  codeChallenge?: string
+  codeChallengeMethod?: string
+  ownedSkills?: { name: string; slug: string }[]
+  errorMsg?: string
+  reloginUrl?: string
+}> = (props) => {
+  const skills = props.ownedSkills || []
+  return (
+    <Layout {...props} title="Cho phép kết nối AI" bodyClass="dark-portal bg-[#070614] text-slate-100">
+      <div class="max-w-lg mx-auto px-4 py-12 sm:py-16">
+        <div class="bg-[#0f0e24] rounded-3xl border border-[#2a2559] shadow-2xl shadow-indigo-950/40 p-6 sm:p-8">
+          {props.errorMsg ? (
+            <div class="text-center space-y-4">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 grid place-items-center text-xl">
+                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+              </div>
+              <h1 class="text-xl font-extrabold text-white">Không thể kết nối AI</h1>
+              <p class="text-sm text-[#b8b6d9] leading-relaxed">{props.errorMsg}</p>
+              <a href="/tai-khoan/san-pham"
+                class="inline-flex items-center justify-center h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition">
+                Quay về Sản phẩm của tôi
+              </a>
+            </div>
+          ) : (
+            <div class="space-y-5">
+              <div class="flex items-center justify-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center text-lg shadow-lg shadow-indigo-500/25">
+                  <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                </div>
+                <i class="fas fa-arrows-left-right text-[#7d7ba6] text-sm" aria-hidden="true"></i>
+                <div class="w-12 h-12 rounded-2xl bg-[#161436] border border-[#2e2968] text-cyan-300 grid place-items-center text-lg">
+                  <i class="fas fa-robot" aria-hidden="true"></i>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                  Cho phép {props.clientName || 'Ứng dụng AI'} kết nối?
+                </h1>
+                <p class="text-xs sm:text-sm text-[#a9a7ce] mt-1.5">
+                  Ứng dụng này muốn dùng các Skill bạn đã mua trên <b class="text-white">KhoSkill AI</b>.
+                </p>
+              </div>
+
+              {/* Verified Domain Pill */}
+              <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
+                <i class="fas fa-shield-check text-emerald-400 mt-0.5 text-base shrink-0" aria-hidden="true"></i>
+                <div class="text-xs leading-relaxed">
+                  <div class="text-emerald-200 font-bold">
+                    Tên miền xác thực: <span class="font-mono text-white">{props.clientDomain}</span>
+                  </div>
+                  <div class="text-emerald-200/80 mt-0.5">
+                    Tên miền này được xác thực trực tiếp từ địa chỉ kết nối. Chỉ bấm Cho phép nếu bạn nhận ra ứng dụng này.
+                  </div>
+                </div>
+              </div>
+
+              {/* Signed-in Account */}
+              <div class="p-3.5 rounded-2xl bg-[#09081b] border border-[#221e54] flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white grid place-items-center font-bold text-sm shrink-0">
+                    {(props.user?.full_name || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-bold text-white truncate">{props.user?.full_name}</div>
+                    <div class="text-xs text-[#9492b8] truncate">{props.user?.email}</div>
+                  </div>
+                </div>
+                {props.reloginUrl && (
+                  <a href={props.reloginUrl} data-no-pjax class="shrink-0 text-xs font-semibold text-indigo-300 hover:text-indigo-200 hover:underline">
+                    Đổi tài khoản
+                  </a>
+                )}
+              </div>
+
+              {/* Plain-language Permissions */}
+              <div class="space-y-2 text-xs sm:text-sm text-[#d6d4ee]">
+                <div class="flex items-start gap-2.5">
+                  <i class="fas fa-circle-check text-emerald-400 mt-1 text-xs shrink-0" aria-hidden="true"></i>
+                  <span>
+                    Dùng toàn bộ <b class="text-white">Skill AI Agent</b> bạn đã mua ({skills.length} Skill hiện có) và tự nhận Skill mới khi bạn mua thêm.
+                  </span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <i class="fas fa-lock text-indigo-400 mt-1 text-xs shrink-0" aria-hidden="true"></i>
+                  <span>Không xem mật khẩu, không sửa hồ sơ và không thể thanh toán thay bạn. Bạn có thể bấm <b>Ngắt</b> bất cứ lúc nào.</span>
+                </div>
+              </div>
+
+              {skills.length > 0 && (
+                <div class="flex flex-wrap gap-1.5">
+                  {skills.slice(0, 6).map(s => (
+                    <span class="px-2.5 py-1 rounded-lg bg-[#161436] border border-[#2a2559] text-[11px] font-semibold text-cyan-200">
+                      {s.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <form method="post" action="/oauth/authorize" class="grid grid-cols-2 gap-3 pt-2">
+                <input type="hidden" name="client_id" value={props.clientId || ''} />
+                <input type="hidden" name="redirect_uri" value={props.redirectUri || ''} />
+                <input type="hidden" name="state" value={props.state || ''} />
+                <input type="hidden" name="scope" value={props.scope || 'mcp'} />
+                <input type="hidden" name="code_challenge" value={props.codeChallenge || ''} />
+                <input type="hidden" name="code_challenge_method" value={props.codeChallengeMethod || 'S256'} />
+
+                <button type="submit" name="decision" value="deny"
+                  class="h-11 rounded-xl border border-[#2e2968] bg-[#161436] hover:bg-[#1e1b46] text-[#d6d4ee] font-semibold text-sm transition cursor-pointer">
+                  Huỷ
+                </button>
+                <button type="submit" name="decision" value="allow"
+                  class="h-11 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:brightness-110 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition cursor-pointer">
+                  Cho phép
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
   )
 }
 

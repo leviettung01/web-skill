@@ -532,8 +532,8 @@
       if (u.origin !== location.origin) return false;
       var p = u.pathname;
       if (p.indexOf('/admin') === 0 || p.indexOf('/api/') === 0 || p.indexOf('/static/') === 0 ||
-          p.indexOf('/tai-xuong/') === 0 || p.indexOf('/videos/') === 0 || p === '/dang-xuat' ||
-          p === '/xac-minh-email' || p === '/dat-lai-mat-khau' || p.slice(-4) === '/doc') {
+          p.indexOf('/tai-xuong/') === 0 || p.indexOf('/videos/') === 0 || p.indexOf('/oauth/') === 0 ||
+          p === '/dang-xuat' || p === '/xac-minh-email' || p === '/dat-lai-mat-khau' || p.slice(-4) === '/doc') {
         return false;
       }
       return true;
@@ -1760,7 +1760,15 @@
       navigator.clipboard.writeText(cpBtn.dataset.copy).then(function () {
         toast('Đã sao chép!', 'success');
         var i = cpBtn.querySelector('i');
-        if (i) { var old = i.className; i.className = 'fas fa-check'; setTimeout(function () { i.className = old; }, 1500); }
+        if (i) {
+          var old = i.className;
+          i.className = 'fas fa-check';
+          setTimeout(function () { i.className = old; }, 1500);
+        } else {
+          var oldTxt = cpBtn.textContent;
+          cpBtn.textContent = 'Đã chép';
+          setTimeout(function () { cpBtn.textContent = oldTxt; }, 1500);
+        }
       }).catch(function () { toast('Không thể sao chép', 'error'); });
       return;
     }
@@ -1773,10 +1781,68 @@
       var txt = targetNode ? (targetNode.textContent || '').trim() : '';
       if (!txt) return;
       navigator.clipboard.writeText(txt).then(function () {
-        toast('Đã sao chép cấu hình MCP!', 'success');
+        toast('Đã sao chép!', 'success');
         var i = cpTargetBtn.querySelector('i');
-        if (i) { var old = i.className; i.className = 'fas fa-check'; setTimeout(function () { i.className = old; }, 1500); }
+        if (i) {
+          var old = i.className;
+          i.className = 'fas fa-check';
+          setTimeout(function () { i.className = old; }, 1500);
+        } else {
+          var oldTxt = cpTargetBtn.textContent;
+          cpTargetBtn.textContent = 'Đã chép';
+          setTimeout(function () { cpTargetBtn.textContent = oldTxt; }, 1500);
+        }
       }).catch(function () { toast('Không thể sao chép', 'error'); });
+      return;
+    }
+
+    // Revoke single OAuth AI connection
+    var revokeBtn = e.target.closest('.btn-revoke-mcp-conn');
+    if (revokeBtn) {
+      e.preventDefault();
+      var connId = Number(revokeBtn.dataset.connId);
+      var connName = revokeBtn.dataset.connName || 'ứng dụng AI này';
+      if (!connId) return;
+      if (!confirm('Bạn muốn ngắt kết nối với "' + connName + '"?')) return;
+      var origLabel = revokeBtn.textContent;
+      revokeBtn.disabled = true;
+      revokeBtn.textContent = 'Đang ngắt...';
+      axios.post('/api/account/mcp/connections/' + connId + '/revoke')
+        .then(function () {
+          toast('Đã ngắt kết nối ' + connName, 'success');
+          var row = revokeBtn.closest('[data-conn-row]');
+          var list = document.getElementById('mcp-connections-list');
+          if (row) row.remove();
+          if (list && list.children.length === 0) {
+            list.outerHTML = '<p class="text-xs text-[#9492b8]">Chưa có AI nào đang kết nối. Làm theo các bước ở trên để kết nối Claude hoặc ChatGPT.</p>';
+          }
+        })
+        .catch(function (err) {
+          revokeBtn.disabled = false;
+          revokeBtn.textContent = origLabel;
+          toast((err.response && err.response.data && err.response.data.error) || 'Không thể ngắt kết nối', 'error');
+        });
+      return;
+    }
+
+    // Revoke ALL AI connections + rotate personal MCP token
+    var revokeAllBtn = e.target.closest('.btn-revoke-all-mcp');
+    if (revokeAllBtn) {
+      e.preventDefault();
+      if (!confirm('Ngắt toàn bộ kết nối AI và tạo mã bảo mật mới? Tất cả Claude, ChatGPT, Claude Code, Codex, Antigravity đang kết nối sẽ cần nối lại.')) return;
+      var origAll = revokeAllBtn.textContent;
+      revokeAllBtn.disabled = true;
+      revokeAllBtn.textContent = 'Đang ngắt tất cả...';
+      axios.post('/api/account/mcp/revoke-all')
+        .then(function (r) {
+          toast((r.data && r.data.message) || 'Đã ngắt mọi kết nối AI!', 'success');
+          setTimeout(function () { location.reload(); }, 650);
+        })
+        .catch(function (err) {
+          revokeAllBtn.disabled = false;
+          revokeAllBtn.textContent = origAll;
+          toast((err.response && err.response.data && err.response.data.error) || 'Có lỗi xảy ra', 'error');
+        });
       return;
     }
 

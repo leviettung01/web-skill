@@ -49,7 +49,7 @@ console.log('== reset schema')
 await q('DROP SCHEMA public CASCADE')
 await q('CREATE SCHEMA public')
 
-for (const f of ['0001_initial_schema.sql', '0002_bank_webhook.sql', '0003_auth_notifications.sql', '0004_mcp_agent_skills.sql', '0005_real_mcp_video_skills.sql', '0006_before_after_raw_video.sql', 'seed.sql']) {
+for (const f of ['0001_initial_schema.sql', '0002_bank_webhook.sql', '0003_auth_notifications.sql', '0004_mcp_agent_skills.sql', '0005_real_mcp_video_skills.sql', '0006_before_after_raw_video.sql', '0008_mcp_oauth_and_unified_connect.sql', 'seed.sql']) {
   const stmts = splitStmts(readFileSync(join(dir, f), 'utf8'))
   console.log('==', f, `(${stmts.length} statements)`)
   for (const s of stmts) await q(s)

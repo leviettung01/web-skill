@@ -247,29 +247,18 @@ export function buildOrderPaidEmail(opts: {
   const itemsHtml = opts.items.map(it => {
     const isMcp = it.product_type === 'mcp_skill'
     const dlUrl = (it.download_url || '').trim()
-    const mcpEndpoint = (it.mcp_endpoint || '').trim() || (it.slug ? `${cleanOrigin}/api/mcp/${it.slug}` : `${cleanOrigin}/api/mcp`)
-    const serverName = (it.mcp_server_name || '').trim() || (it.slug ? `khoskill-${it.slug.slice(0, 24)}` : 'khoskill-agent')
-    const claudeCmd = it.license_key
-      ? `claude mcp add --transport http ${serverName} "${mcpEndpoint}" --header "Authorization: Bearer ${it.license_key}"`
-      : ''
 
     return `<li style="margin:12px 0;padding:14px 16px;border-radius:12px;background:#161436;border:1px solid ${isMcp ? '#0e7490' : '#2a2559'};">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:${isMcp ? '#22d3ee' : '#a5b4fc'};margin-bottom:4px;">
-        ${isMcp ? 'Skill AI Agent (MCP + Google Drive Kit)' : 'Skill AI Bản Quyền'}
+        ${isMcp ? 'Skill AI Agent' : 'Skill AI Bản Quyền'}
       </div>
       <div style="font-weight:700;font-size:15px;color:#ffffff;line-height:1.35;">${escHtml(it.product_name)}</div>
-      ${it.license_key ? `<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#0b0a1f;border:1px solid #262254;font-family:monospace;font-size:12px;color:#34d399;word-break:break-all;">License Key: ${escHtml(it.license_key)}</div>` : ''}
+      ${it.license_key ? `<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#0b0a1f;border:1px solid #262254;font-family:monospace;font-size:12px;color:#34d399;word-break:break-all;">Mã bản quyền: ${escHtml(it.license_key)}</div>` : ''}
       ${dlUrl ? `<div style="margin-top:10px;">
         <a href="${escHtml(dlUrl)}" style="display:inline-block;padding:9px 16px;border-radius:9px;background:#10b981;color:#052e16;font-weight:700;font-size:13px;text-decoration:none;">
           Tải bộ Skill trên Google Drive →
         </a>
         <div style="margin-top:5px;font-size:11px;color:#94a3b8;word-break:break-all;">Link Drive: <a href="${escHtml(dlUrl)}" style="color:#67e8f9;text-decoration:underline;">${escHtml(dlUrl)}</a></div>
-      </div>` : ''}
-      ${isMcp ? `<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:#091326;border:1px solid #164e63;font-size:12px;color:#cbd5e1;">
-        <div style="font-weight:700;color:#22d3ee;margin-bottom:4px;">Kết nối MCP trực tiếp (Claude / Codex / Antigravity):</div>
-        <div style="font-family:monospace;font-size:11px;color:#a5f3fc;word-break:break-all;">Endpoint: ${escHtml(mcpEndpoint)}</div>
-        ${claudeCmd ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;">Lệnh nhanh Claude Code CLI:</div>
-        <div style="margin-top:3px;padding:6px 8px;border-radius:6px;background:#050816;font-family:monospace;font-size:11px;color:#e2e8f0;word-break:break-all;">${escHtml(claudeCmd)}</div>` : ''}
       </div>` : ''}
     </li>`
   }).join('')
@@ -281,32 +270,28 @@ export function buildOrderPaidEmail(opts: {
     '',
     ...opts.items.flatMap(it => {
       const arr = [`- ${it.product_name}`]
-      if (it.license_key) arr.push(`  License Key: ${it.license_key}`)
+      if (it.license_key) arr.push(`  Ma ban quyen: ${it.license_key}`)
       if (it.download_url) arr.push(`  Link Google Drive tai Skill: ${it.download_url}`)
-      if (it.product_type === 'mcp_skill') {
-        const ep = (it.mcp_endpoint || '').trim() || (it.slug ? `${cleanOrigin}/api/mcp/${it.slug}` : `${cleanOrigin}/api/mcp`)
-        arr.push(`  MCP Server Endpoint: ${ep}`)
-      }
       return arr
     }),
     '',
-    `Xem day du cau hinh Claude / Codex / Antigravity va tai lai bat cu luc nao tai: ${opts.accountUrl}`
+    ...(hasMcp ? [`Ket noi AI 1 lan (Claude, ChatGPT, Claude Code, Codex, Antigravity) voi dia chi: ${cleanOrigin}/api/mcp`] : []),
+    `Mo muc San pham cua toi tai: ${opts.accountUrl}`
   ]
 
   return {
     to: opts.to,
-    subject: `[${site}] Giao hàng đơn ${opts.orderCode} — Link Google Drive & License Key`,
+    subject: `[${site}] Giao hàng đơn ${opts.orderCode} — Link Google Drive & Hướng dẫn kết nối AI`,
     html: renderEmailShell({
       siteName: site,
       origin: opts.origin,
       heading: `Thanh toán thành công — ${opts.orderCode}`,
       bodyHtml: `<p>Xin chào <b>${escHtml(opts.fullName)}</b>,</p>
-        <p>Đơn hàng <b>${escHtml(opts.orderCode)}</b> trị giá <b>${escHtml(opts.totalFormatted)}</b> đã được xác nhận và kích hoạt bản quyền trọn đời. Dưới đây là <b>link Google Drive tải bộ Skill</b> và <b>License Key</b> của bạn:</p>
+        <p>Đơn hàng <b>${escHtml(opts.orderCode)}</b> trị giá <b>${escHtml(opts.totalFormatted)}</b> đã được xác nhận và kích hoạt trọn đời. Dưới đây là <b>link Google Drive tải bộ Skill</b> của bạn:</p>
         <ul style="list-style:none;padding:0;margin:14px 0;">${itemsHtml}</ul>
-        ${hasMcp ? `<div style="margin:14px 0;padding:12px 14px;border-radius:10px;background:#111030;border:1px solid #2a2559;font-size:13px;color:#cbd5e1;">
-          <b style="color:#ffffff;">Cách dùng nhanh Skill AI Agent trong 2 phút:</b><br>
-          1. Bấm link Google Drive ở trên, tải file <code>*-Core-Kit.zip</code> và giải nén vào thư mục skills của AI Agent (<code>.claude/skills/</code>, <code>.codex/skills/</code> hoặc <code>.agents/skills/</code>).<br>
-          2. Mở mục <b>Sản phẩm của tôi</b> để copy sẵn cấu hình <b>MCP</b> cho Claude, Codex hoặc Antigravity — AI Agent sẽ tự nạp quy trình chuẩn &amp; chạy dựng video ngay trên máy bạn.
+        ${hasMcp ? `<div style="margin:14px 0;padding:12px 14px;border-radius:10px;background:#111030;border:1px solid #2a2559;font-size:13px;color:#cbd5e1;line-height:1.6;">
+          <b style="color:#ffffff;">Kết nối AI của bạn chỉ trong 30 giây:</b><br>
+          Vào mục <b>Sản phẩm của tôi</b> để nối Claude, ChatGPT, Claude Code, Codex hoặc Antigravity với 1 địa chỉ duy nhất <code style="color:#67e8f9;">${escHtml(cleanOrigin)}/api/mcp</code> — AI sẽ tự dùng mọi Skill bạn đã mua (kể cả Skill mua sau này).
         </div>` : ''}
         <p>Bạn luôn có thể xem lại link tải, License Key, cấu hình MCP đầy đủ và nhận cập nhật miễn phí trọn đời trong trang <b>Sản phẩm của tôi</b>.</p>`,
       ctaLabel: 'Mở Sản phẩm của tôi & Cấu hình MCP',
