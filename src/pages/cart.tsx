@@ -193,18 +193,15 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
             </div>
 
             <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
-              <label for="coupon-input" class="block font-bold text-white mb-4"><i class="fas fa-ticket mr-2 text-indigo-400" aria-hidden="true"></i>Mã giảm giá</label>
+              <label for="coupon-input" class="block font-bold text-white mb-2"><i class="fas fa-ticket mr-2 text-indigo-400" aria-hidden="true"></i>Mã giảm giá</label>
+              <p class="text-xs text-[#9492b8] mb-3.5">Nhập mã khuyến mãi (nếu bạn có). Mã sẽ được giữ tạm trong <b class="text-white">10 phút</b> khi chờ thanh toán.</p>
               <div class="flex gap-2">
                 <input type="text" id="coupon-input" placeholder="Nhập mã giảm giá" style="text-transform:uppercase"
                   class="flex-1 h-11 px-3.5 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm font-mono" />
                 <button type="button" id="apply-coupon" class="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer">Áp dụng</button>
+                <button type="button" id="clear-coupon" class="hidden h-11 px-3.5 rounded-xl border border-[#2e2968] hover:border-rose-400 text-[#c2c0e0] hover:text-rose-300 font-semibold text-xs transition cursor-pointer">Bỏ mã</button>
               </div>
               <div id="coupon-msg" class="mt-2.5 text-sm hidden" role="status"></div>
-              <div class="mt-3 flex flex-wrap gap-1.5">
-                {['WELCOME10', 'SALE20', 'GIAM100K'].map(c => (
-                  <button type="button" class="coupon-quick px-2.5 py-1.5 rounded-md bg-[#161436] border border-[#2a2559] hover:border-indigo-400 text-[#c2c0e0] hover:text-white text-xs font-mono font-semibold transition cursor-pointer" data-code={c}>{c}</button>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -269,20 +266,32 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
     if (dr) dr.style.display = discount>0?'flex':'none';
     if (st) st.textContent = fmt(Math.max(0, subtotal-discount));
   }
-  document.querySelectorAll('.coupon-quick').forEach(function(b){
-    b.onclick=function(){ document.getElementById('coupon-input').value=b.dataset.code; document.getElementById('apply-coupon').click(); };
-  });
+  var clearBtn = document.getElementById('clear-coupon');
+  if (clearBtn) {
+    clearBtn.onclick = async function(){
+      coupon=null; discount=0; render();
+      document.getElementById('coupon-input').value='';
+      clearBtn.classList.add('hidden');
+      var msg=document.getElementById('coupon-msg');
+      if (msg) { msg.classList.add('hidden'); msg.textContent=''; }
+      try { await axios.post('/api/coupons/release'); } catch(e){}
+    };
+  }
   document.getElementById('apply-coupon').onclick=async function(){
     var code=(document.getElementById('coupon-input').value||'').trim().toUpperCase();
     var msg=document.getElementById('coupon-msg');
     if(!code){ return; }
     try{
       var r=await axios.post('/api/coupons/check',{code:code, subtotal:subtotal});
-      coupon=code; discount=r.data.discount; render();
-      msg.className='mt-2.5 text-sm text-emerald-400'; msg.innerHTML='<i class="fas fa-circle-check mr-1"></i>Áp dụng thành công! Giảm '+fmt(discount);
+      coupon=r.data.code||code; discount=r.data.discount; render();
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      var holdMin = r.data.hold_minutes || 10;
+      msg.className='mt-2.5 text-sm text-emerald-400';
+      msg.innerHTML='<i class="fas fa-circle-check mr-1"></i>Áp dụng thành công! Giảm <b>'+fmt(discount)+'</b> · Đang giữ tạm mã cho bạn trong <b>'+holdMin+' phút</b>.';
       msg.classList.remove('hidden');
     }catch(e){
       coupon=null; discount=0; render();
+      if (clearBtn) clearBtn.classList.add('hidden');
       msg.className='mt-2.5 text-sm text-rose-400';
       msg.innerHTML='<i class="fas fa-circle-xmark mr-1"></i>'+((e.response&&e.response.data&&e.response.data.error)||'Mã không hợp lệ');
       msg.classList.remove('hidden');
@@ -310,9 +319,9 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
 
 /* ================= ORDER DETAIL / PAYMENT ================= */
 export const OrderPage: FC<LayoutProps & {
-  order: Order; items: any[]; bank: Record<string, string>; isNew?: boolean
+  order: Order; items: any[]; bank: Record<string, string>; isNew?: boolean; holdExpiresAt?: string | null
 }> = (props) => {
-  const { order, items, bank } = props
+  const { order, items, bank, holdExpiresAt } = props
   const content = order.order_code
   const qr = vietQrUrl(bank.bank_code, bank.bank_account, order.total, content, bank.bank_owner)
 
@@ -321,6 +330,21 @@ export const OrderPage: FC<LayoutProps & {
       <div class="max-w-5xl mx-auto px-4 py-8">
         <Breadcrumb items={[{ label: 'Đơn hàng', href: '/tai-khoan/don-hang' }, { label: order.order_code }]} />
         {order.status === 'pending' && <CheckoutSteps step={3} />}
+
+        {order.status === 'cancelled' && (
+          <div class="rounded-2xl bg-rose-500/15 border border-rose-500/35 p-6 mb-6 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/25 border border-rose-500/40 text-rose-300 grid place-items-center text-2xl mx-auto mb-3">
+              <i class="fas fa-ban" aria-hidden="true"></i>
+            </div>
+            <h2 class="text-xl font-extrabold text-white mb-1.5">Đơn hàng đã huỷ</h2>
+            <p class="text-sm text-rose-200 mb-4">
+              {order.note || 'Đơn hàng này đã bị huỷ hoặc đã quá 10 phút giữ mã giảm giá.'}
+            </p>
+            <a href="/san-pham" class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition">
+              <i class="fas fa-rotate-left" aria-hidden="true"></i>Quay lại chọn sản phẩm
+            </a>
+          </div>
+        )}
 
         {order.status === 'paid' && (
           <div class="rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center">
@@ -339,9 +363,22 @@ export const OrderPage: FC<LayoutProps & {
           <div class="space-y-4">
             {order.status === 'pending' && (
               <div class="bg-[#0f0e24] rounded-2xl border-2 border-amber-500/45 overflow-hidden">
-                <div class="bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30">
+                <div class="bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30 flex flex-wrap items-center justify-between gap-2">
                   <h3 class="font-bold text-amber-300"><i class="fas fa-qrcode mr-2" aria-hidden="true"></i>Quét mã QR để thanh toán</h3>
+                  {holdExpiresAt && order.coupon_code && (
+                    <span id="coupon-hold-badge" data-expires={holdExpiresAt}
+                      class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/45 text-rose-200 text-xs font-bold tabular-nums">
+                      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                      Giữ mã {order.coupon_code}: <span id="coupon-hold-countdown">10:00</span>
+                    </span>
+                  )}
                 </div>
+                {holdExpiresAt && order.coupon_code && (
+                  <div class="mx-5 mt-4 p-3 rounded-xl bg-amber-500/15 border border-amber-400/35 text-xs text-amber-100 leading-relaxed">
+                    <i class="fas fa-clock mr-1.5 text-amber-300" aria-hidden="true"></i>
+                    Mã giảm giá <b class="font-mono text-white">{order.coupon_code}</b> đang được <b>giữ tạm 10 phút</b> cho đơn hàng này. Nếu quá thời gian chưa thanh toán, đơn sẽ tự huỷ và mã tự động mở lại cho khách hàng khác.
+                  </div>
+                )}
                 {(!bank.bank_account || bank.bank_account === '0987654321') && (
                   <div class="mx-5 mt-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200">
                     <i class="fas fa-triangle-exclamation mr-1.5 text-rose-400" aria-hidden="true"></i>
@@ -390,11 +427,16 @@ export const OrderPage: FC<LayoutProps & {
                       </div>
                     </div>
                   </div>
-                  <button type="button" id="confirm-paid-btn" class="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-95 shadow-lg shadow-emerald-500/25 transition cursor-pointer">
-                    <i class="fas fa-check-circle mr-1.5" aria-hidden="true"></i>Tôi đã chuyển khoản
-                  </button>
+                  <div class="flex flex-col sm:flex-row gap-2.5">
+                    <button type="button" id="confirm-paid-btn" class="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-95 shadow-lg shadow-emerald-500/25 transition cursor-pointer">
+                      <i class="fas fa-check-circle mr-1.5" aria-hidden="true"></i>Tôi đã chuyển khoản
+                    </button>
+                    <button type="button" id="cancel-order-btn" class="h-12 px-4 rounded-xl border border-[#2e2968] bg-[#161436] hover:border-rose-400 hover:text-rose-300 text-[#c2c0e0] font-semibold text-sm transition cursor-pointer">
+                      Huỷ đơn{order.coupon_code ? ' & trả mã' : ''}
+                    </button>
+                  </div>
                   <p class="text-[11px] text-[#9492b8] text-center mt-2.5">
-                    Bấm nút này sau khi chuyển khoản để hệ thống kiểm tra ngay lập tức.
+                    Bấm nút "Tôi đã chuyển khoản" sau khi thanh toán để hệ thống kiểm tra ngay lập tức.
                   </p>
                 </div>
               </div>
@@ -489,11 +531,55 @@ export const OrderPage: FC<LayoutProps & {
       +'<div class="text-xs text-[#9f9dbb] mt-0.5">Tải lại trang để kiểm tra tiếp, hoặc liên hệ Zalo nếu bạn đã chuyển khoản.</div></div>';
   }
 
+  function onCancelled(){
+    if(timer) clearInterval(timer);
+    if(cdTimer) clearInterval(cdTimer);
+    if(window.toast) toast('Đơn hàng đã huỷ (hết thời gian giữ mã giảm giá).','warning');
+    setTimeout(function(){ location.reload(); }, 900);
+  }
+
+  // Đếm ngược 10 phút giữ mã giảm giá (nếu đơn có mã)
+  var cdTimer = null;
+  var holdBadge = document.getElementById('coupon-hold-badge');
+  var holdCd = document.getElementById('coupon-hold-countdown');
+  if (holdBadge && holdCd) {
+    var expMs = new Date(holdBadge.dataset.expires).getTime();
+    function tickHold(){
+      var left = Math.max(0, Math.floor((expMs - Date.now()) / 1000));
+      var mm = String(Math.floor(left / 60)).padStart(2, '0');
+      var ss = String(left % 60).padStart(2, '0');
+      holdCd.textContent = mm + ':' + ss;
+      if (left <= 0) {
+        clearInterval(cdTimer);
+        check(true);
+      }
+    }
+    tickHold();
+    cdTimer = setInterval(tickHold, 1000);
+  }
+
+  var cancelBtn = document.getElementById('cancel-order-btn');
+  if (cancelBtn) {
+    cancelBtn.onclick = async function(){
+      if (!confirm('Bạn chắc chắn muốn huỷ đơn hàng này? Mã giảm giá (nếu có) sẽ được trả lại ngay.')) return;
+      cancelBtn.disabled = true;
+      try {
+        await axios.post('/api/orders/' + CODE + '/cancel');
+        if (window.toast) toast('Đã huỷ đơn và trả lại mã giảm giá!', 'info');
+        setTimeout(function(){ location.reload(); }, 600);
+      } catch(e) {
+        cancelBtn.disabled = false;
+        if (window.toast) toast((e.response && e.response.data && e.response.data.error) || 'Không thể huỷ đơn', 'error');
+      }
+    };
+  }
+
   async function check(silent){
     try{
       var r=await axios.get('/api/orders/'+CODE+'/status');
       if(r.data && r.data.status==='paid'){ onPaid(); return true; }
-      if(r.data && (r.data.status==='cancelled'||r.data.status==='refunded')){ stopWaiting(); return true; }
+      if(r.data && r.data.status==='cancelled'){ onCancelled(); return true; }
+      if(r.data && r.data.status==='refunded'){ stopWaiting(); return true; }
     }catch(e){ /* bỏ qua lỗi mạng tạm thời */ }
     if(!silent && msg){
       msg.textContent='Chưa thấy giao dịch. Nếu bạn vừa chuyển khoản, vui lòng đợi 10–60 giây.';

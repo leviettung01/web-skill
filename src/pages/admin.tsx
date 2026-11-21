@@ -1042,47 +1042,495 @@ export const AdminCategories: FC<AdminProps & { categories: any[]; editing?: any
   )
 }
 
-export const AdminCoupons: FC<AdminProps & { coupons: any[] }> = (props) => (
-  <AdminShell {...props} activeKey="coupons" heading="Mã giảm giá">
-    <div class="grid lg:grid-cols-[1fr_340px] gap-5">
-      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full admin-table text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200">
-              <tr><th class="text-left">Mã</th><th class="text-left">Giảm</th><th class="text-right">Đơn tối thiểu</th><th class="text-center">Đã dùng</th><th class="text-left">Hết hạn</th><th class="text-right"></th></tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              {props.coupons.map(c => (
-                <tr>
-                  <td><code class="px-2 py-1 rounded bg-brand-50 text-brand-700 font-bold text-xs">{c.code}</code></td>
-                  <td class="font-semibold">{c.type === 'percent' ? c.value + '%' : formatVND(c.value)}</td>
-                  <td class="text-right text-slate-600">{formatVND(c.min_order)}</td>
-                  <td class="text-center">{c.used_count}{c.max_uses > 0 ? ` / ${c.max_uses}` : ''}</td>
-                  <td class="text-slate-500 text-xs">{formatDate(c.expires_at)}</td>
-                  <td class="text-right">
-                    <button class="btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500"
-                      data-url={`/api/admin/coupons/${c.id}`} data-name={c.code}><i class="fas fa-trash-can text-xs"></i></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+export const AdminCoupons: FC<AdminProps & {
+  coupons: any[]
+  allCoupons?: any[]
+  activeHolds?: any[]
+  batches?: string[]
+  stats?: { total: number; active: number; heldSlots: number; paidUses: number; inactiveOrDone: number }
+  filter?: string
+  selectedBatch?: string
+}> = (props) => {
+  const stats = props.stats || { total: props.coupons.length, active: 0, heldSlots: 0, paidUses: 0, inactiveOrDone: 0 }
+  const activeHolds = props.activeHolds || []
+  const batches = props.batches || []
+  const filter = props.filter || 'all'
+  const selectedBatch = props.selectedBatch || ''
+  const activeCopyList = props.coupons
+    .filter(c => {
+      const max = Number(c.max_uses || 0)
+      const used = Number(c.used_count || 0)
+      const held = Number(c.held_count || 0)
+      return c.status === 'active' && (max === 0 || used + held < max)
+    })
+    .map(c => c.code)
+    .join('\n')
+
+  const buildFilterHref = (nextFilter: string, nextBatch = selectedBatch) => {
+    const qs = new URLSearchParams()
+    if (nextFilter && nextFilter !== 'all') qs.set('filter', nextFilter)
+    if (nextBatch) qs.set('batch', nextBatch)
+    const s = qs.toString()
+    return '/admin/ma-giam-gia' + (s ? '?' + s : '')
+  }
+
+  return (
+    <AdminShell {...props} activeKey="coupons" heading="Quản lý mã giảm giá">
+      {/* KPI Summary */}
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="text-xs font-semibold text-slate-500">Mã đang bật</div>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-1 tabular-nums">{stats.active}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Khách có thể nhập ngay</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="text-xs font-semibold text-slate-500">Đang giữ tạm (10 phút)</div>
+          <div class="text-2xl font-extrabold text-amber-600 mt-1 tabular-nums">{stats.heldSlots}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Tự nhả lại sau 10p nếu chưa TT</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="text-xs font-semibold text-slate-500">Đã thanh toán thành công</div>
+          <div class="text-2xl font-extrabold text-brand-600 mt-1 tabular-nums">{stats.paidUses}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Lượt đã tiêu thụ thật</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="text-xs font-semibold text-slate-500">Đang tắt / Hết lượt</div>
+          <div class="text-2xl font-extrabold text-slate-700 mt-1 tabular-nums">{stats.inactiveOrDone}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Tổng {stats.total} mã trong kho</div>
         </div>
       </div>
-      <form action="/api/admin/coupons" method="post" data-ajax data-reload="true" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start">
-        <h3 class="font-bold text-slate-900">Tạo mã mới</h3>
-        <div><label class={labelCls}>Mã *</label><input type="text" name="code" required style="text-transform:uppercase" class={fieldCls} /></div>
-        <div><label class={labelCls}>Loại giảm</label><select name="type" class={fieldCls}><option value="percent">Phần trăm (%)</option><option value="fixed">Số tiền cố định</option></select></div>
-        <div><label class={labelCls}>Giá trị *</label><input type="number" name="value" required min="1" class={fieldCls} /></div>
-        <div><label class={labelCls}>Đơn tối thiểu</label><input type="number" name="min_order" value="0" min="0" step="10000" class={fieldCls} /></div>
-        <div><label class={labelCls}>Số lần dùng tối đa (0 = ∞)</label><input type="number" name="max_uses" value="0" min="0" class={fieldCls} /></div>
-        <div><label class={labelCls}>Ngày hết hạn</label><input type="date" name="expires_at" class={fieldCls} /></div>
-        <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
-        <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition">Tạo mã giảm giá</button>
-      </form>
-    </div>
-  </AdminShell>
-)
+
+      {/* Live 10-min Holds Monitor */}
+      {activeHolds.length > 0 && (
+        <div class="mb-5 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="font-bold text-amber-900 text-sm flex items-center gap-2">
+              <i class="fas fa-hourglass-half text-amber-600"></i>
+              Đang có {activeHolds.length} lượt giữ tạm mã (tự động hoàn lại sau 10 phút nếu không thanh toán)
+            </div>
+            <a href="/admin/ma-giam-gia" class="text-xs font-semibold text-amber-800 hover:underline">
+              <i class="fas fa-rotate-right mr-1"></i>Làm mới
+            </a>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {activeHolds.map(h => {
+              const leftSec = Math.max(0, Math.floor((new Date(h.expires_at).getTime() - Date.now()) / 1000))
+              const mm = Math.floor(leftSec / 60)
+              const ss = String(leftSec % 60).padStart(2, '0')
+              return (
+                <div class="bg-white rounded-xl border border-amber-200 p-3 flex items-center justify-between gap-2">
+                  <div class="min-w-0 text-xs">
+                    <div class="flex items-center gap-1.5">
+                      <code class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">{h.coupon_code}</code>
+                      <span class="font-mono text-rose-600 font-bold tabular-nums">còn {mm}:{ss}</span>
+                    </div>
+                    <div class="text-slate-600 truncate mt-1">{h.user_email}</div>
+                    <div class="text-[11px] text-slate-400">{h.order_code ? `Đơn ${h.order_code} (chờ TT)` : 'Đang ở trang thanh toán'}</div>
+                  </div>
+                  <button type="button" data-hold-id={h.id}
+                    class="btn-release-hold shrink-0 h-8 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold text-[11px] cursor-pointer">
+                    Nhả mã
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div class="grid lg:grid-cols-[1fr_370px] gap-5 items-start">
+        {/* LEFT: Coupon List + Filters + Batch Actions */}
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-1.5">
+              {[
+                ['all', 'Tất cả'],
+                ['active', 'Đang bật'],
+                ['held', 'Đang giữ tạm'],
+                ['inactive', 'Đang tắt'],
+                ['exhausted', 'Hết lượt']
+              ].map(([k, lb]) => (
+                <a href={buildFilterHref(k)}
+                  class={`h-8 px-3 inline-flex items-center rounded-lg text-xs font-semibold transition ${filter === k ? 'bg-brand-600 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                  {lb}
+                </a>
+              ))}
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              {batches.length > 0 && (
+                <select id="coupon-batch-filter" class="h-8 px-2.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-700">
+                  <option value="">Tất cả đợt mã ({batches.length})</option>
+                  {batches.map(bn => (
+                    <option value={bn} selected={selectedBatch === bn}>{bn}</option>
+                  ))}
+                </select>
+              )}
+              {activeCopyList && (
+                <button type="button" id="btn-copy-active-codes" data-codes={activeCopyList}
+                  class="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer">
+                  <i class="far fa-copy mr-1"></i>Chép mã khả dụng
+                </button>
+              )}
+              {selectedBatch && (
+                <>
+                  <button type="button" data-batch={selectedBatch} data-status="active"
+                    class="btn-batch-status h-8 px-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold cursor-pointer">
+                    Bật cả đợt
+                  </button>
+                  <button type="button" data-batch={selectedBatch} data-status="inactive"
+                    class="btn-batch-status h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold cursor-pointer">
+                    Tắt cả đợt
+                  </button>
+                </>
+              )}
+              {stats.active > 0 && (
+                <button type="button" id="btn-disable-all-coupons"
+                  class="h-8 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition cursor-pointer">
+                  <i class="fas fa-power-off mr-1"></i>Tắt tất cả
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full admin-table text-sm">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th class="text-left">Mã</th>
+                    <th class="text-left">Giảm</th>
+                    <th class="text-center">Đã TT</th>
+                    <th class="text-center">Giữ tạm 10p</th>
+                    <th class="text-center">Còn lại</th>
+                    <th class="text-center">Trạng thái</th>
+                    <th class="text-left">Hạn</th>
+                    <th class="text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  {props.coupons.length === 0 ? (
+                    <tr>
+                      <td colspan={8} class="py-12 text-center text-slate-500">
+                        <i class="fas fa-ticket text-2xl block mb-2 text-slate-300"></i>
+                        Không có mã giảm giá nào trong bộ lọc này.
+                      </td>
+                    </tr>
+                  ) : props.coupons.map(c => {
+                    const max = Number(c.max_uses || 0)
+                    const used = Number(c.used_count || 0)
+                    const held = Number(c.held_count || 0)
+                    const avail = max > 0 ? Math.max(0, max - used - held) : null
+                    const isExhausted = max > 0 && used >= max
+                    const isActive = c.status === 'active'
+                    return (
+                      <tr class={!isActive ? 'bg-slate-50/70' : ''}>
+                        <td>
+                          <div class="flex items-center gap-1.5">
+                            <code class={`px-2 py-1 rounded font-bold text-xs ${isActive && !isExhausted ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>{c.code}</code>
+                            <button type="button" data-copy={c.code} title="Chép mã"
+                              class="w-6 h-6 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 grid place-items-center text-[11px] cursor-pointer">
+                              <i class="far fa-copy"></i>
+                            </button>
+                          </div>
+                          {c.batch_name && <div class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]" title={c.batch_name}>{c.batch_name}</div>}
+                        </td>
+                        <td>
+                          <div class="font-bold text-slate-900">{c.type === 'percent' ? c.value + '%' : formatVND(c.value)}</div>
+                          {Number(c.min_order || 0) > 0 && <div class="text-[11px] text-slate-400">Đơn ≥ {formatVND(c.min_order)}</div>}
+                        </td>
+                        <td class="text-center font-semibold tabular-nums text-slate-800">
+                          {used}{max > 0 ? ` / ${max}` : ''}
+                        </td>
+                        <td class="text-center tabular-nums">
+                          {held > 0 ? (
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                              <i class="fas fa-clock text-[10px]"></i>{held}
+                            </span>
+                          ) : <span class="text-slate-400 text-xs">0</span>}
+                        </td>
+                        <td class="text-center tabular-nums">
+                          {isExhausted ? (
+                            <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">Hết lượt</span>
+                          ) : avail === null ? (
+                            <span class="text-emerald-700 font-bold text-xs">∞</span>
+                          ) : avail === 0 ? (
+                            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Đang giữ hết</span>
+                          ) : (
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Còn {avail}</span>
+                          )}
+                        </td>
+                        <td class="text-center">
+                          <button type="button" data-id={c.id}
+                            class={`btn-toggle-coupon h-7 px-2.5 rounded-full text-[11px] font-bold transition cursor-pointer ${isActive
+                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                              : 'bg-slate-200 text-slate-600 hover:bg-slate-300 border border-slate-300'}`}>
+                            {isActive ? '● Đang bật' : '○ Đang tắt'}
+                          </button>
+                        </td>
+                        <td class="text-slate-500 text-xs whitespace-nowrap">{c.expires_at ? formatDate(c.expires_at) : 'Không hạn'}</td>
+                        <td class="text-right whitespace-nowrap">
+                          {held > 0 && (
+                            <button type="button" data-id={c.id} data-code={c.code} title="Nhả các lượt đang giữ tạm"
+                              class="btn-release-coupon-holds inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-amber-50 text-amber-600 cursor-pointer">
+                              <i class="fas fa-unlock text-xs"></i>
+                            </button>
+                          )}
+                          <button type="button" class="btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500 cursor-pointer"
+                            data-url={`/api/admin/coupons/${c.id}`} data-name={c.code} title="Xoá mã">
+                            <i class="fas fa-trash-can text-xs"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: 2-Tab Creator (Bulk 10 Codes OR Single Shared Code) */}
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+          <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100">
+            <button type="button" id="tab-bulk-btn" class="h-9 rounded-lg bg-white text-slate-900 font-bold text-xs shadow-xs cursor-pointer">
+              Tạo loạt nhiều mã
+            </button>
+            <button type="button" id="tab-single-btn" class="h-9 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs cursor-pointer">
+              Tạo 1 mã lẻ
+            </button>
+          </div>
+
+          {/* BULK FORM (e.g. 10 codes, 10% off, 1 use each) */}
+          <form id="bulk-coupon-form" class="space-y-3.5">
+            <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-xs text-indigo-800 leading-relaxed">
+              <b>Tạo nhanh loạt mã (vd 10 mã giảm 10%):</b> mỗi mã mặc định dùng 1 lần — ai thanh toán trước thì được, giữ tạm <b>10 phút</b> khi chờ thanh toán.
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class={labelCls}>Số lượng mã *</label>
+                <input type="number" name="quantity" value="10" min="1" max="100" required class={fieldCls} />
+              </div>
+              <div>
+                <label class={labelCls}>Tiền tố mã *</label>
+                <input type="text" name="prefix" value="KS10" required style="text-transform:uppercase" class={fieldCls} />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class={labelCls}>Loại giảm</label>
+                <select name="type" class={fieldCls}>
+                  <option value="percent">Phần trăm (%)</option>
+                  <option value="fixed">Số tiền (VNĐ)</option>
+                </select>
+              </div>
+              <div>
+                <label class={labelCls}>Giá trị *</label>
+                <input type="number" name="value" value="10" required min="1" class={fieldCls} />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class={labelCls}>Lượt dùng / mỗi mã</label>
+                <input type="number" name="max_uses" value="1" min="1" class={fieldCls} />
+              </div>
+              <div>
+                <label class={labelCls}>Đơn tối thiểu (đ)</label>
+                <input type="number" name="min_order" value="0" min="0" step="10000" class={fieldCls} />
+              </div>
+            </div>
+            <div>
+              <label class={labelCls}>Tên đợt khuyến mãi (tuỳ chọn)</label>
+              <input type="text" name="batch_name" placeholder="VD: Flash Sale 10 mã -10% tháng 11" class={fieldCls} />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class={labelCls}>Ngày hết hạn</label>
+                <input type="date" name="expires_at" class={fieldCls} />
+              </div>
+              <div>
+                <label class={labelCls}>Trạng thái tạo</label>
+                <select name="status" class={fieldCls}>
+                  <option value="active">Bật ngay</option>
+                  <option value="inactive">Tạo sẵn (chưa bật)</option>
+                </select>
+              </div>
+            </div>
+            <div id="bulk-err" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700"></div>
+            <button type="submit" id="bulk-submit-btn" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer">
+              <i class="fas fa-wand-magic-sparkles mr-1.5"></i>Tạo loạt mã ngay
+            </button>
+          </form>
+
+          {/* Generated Batch Output Box */}
+          <div id="bulk-result-box" class="hidden p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2.5">
+            <div class="font-bold text-emerald-900 text-xs flex items-center justify-between">
+              <span id="bulk-result-title">Đã tạo mã thành công!</span>
+              <button type="button" id="bulk-copy-btn" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer">
+                <i class="far fa-copy mr-1"></i>Chép tất cả
+              </button>
+            </div>
+            <textarea id="bulk-result-codes" readonly rows={5} class="w-full p-2.5 rounded-lg bg-white border border-emerald-200 font-mono text-xs text-slate-800 outline-none"></textarea>
+            <button type="button" onclick="location.reload()" class="w-full h-9 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer">
+              Cập nhật bảng danh sách
+            </button>
+          </div>
+
+          {/* SINGLE CODE FORM */}
+          <form id="single-coupon-form" action="/api/admin/coupons" method="post" data-ajax data-reload="true" class="hidden space-y-3.5">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed">
+              <b>Tạo 1 mã dùng chung:</b> ví dụ mã <code class="font-mono font-bold text-slate-900">FLASH10</code> giới hạn <b>10 lượt</b> — ai thanh toán sớm 10 người đầu tiên sẽ được!
+            </div>
+            <div><label class={labelCls}>Mã *</label><input type="text" name="code" required placeholder="VD: FLASH10" style="text-transform:uppercase" class={fieldCls} /></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class={labelCls}>Loại giảm</label><select name="type" class={fieldCls}><option value="percent">Phần trăm (%)</option><option value="fixed">Số tiền (VNĐ)</option></select></div>
+              <div><label class={labelCls}>Giá trị *</label><input type="number" name="value" value="10" required min="1" class={fieldCls} /></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class={labelCls}>Số lượt tối đa (0 = ∞)</label><input type="number" name="max_uses" value="10" min="0" class={fieldCls} /></div>
+              <div><label class={labelCls}>Đơn tối thiểu (đ)</label><input type="number" name="min_order" value="0" min="0" step="10000" class={fieldCls} /></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class={labelCls}>Ngày hết hạn</label><input type="date" name="expires_at" class={fieldCls} /></div>
+              <div>
+                <label class={labelCls}>Trạng thái tạo</label>
+                <select name="status" class={fieldCls}>
+                  <option value="active">Bật ngay</option>
+                  <option value="inactive">Tạo sẵn (chưa bật)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"></div>
+            <button type="submit" class="w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer">Tạo mã giảm giá</button>
+          </form>
+        </div>
+      </div>
+
+      <script dangerouslySetInnerHTML={{
+        __html: `
+(function(){
+  var tb = document.getElementById('tab-bulk-btn');
+  var ts = document.getElementById('tab-single-btn');
+  var fb = document.getElementById('bulk-coupon-form');
+  var fs = document.getElementById('single-coupon-form');
+  var resBox = document.getElementById('bulk-result-box');
+
+  if (tb && ts && fb && fs) {
+    tb.onclick = function(){
+      tb.className = 'h-9 rounded-lg bg-white text-slate-900 font-bold text-xs shadow-xs cursor-pointer';
+      ts.className = 'h-9 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs cursor-pointer';
+      fb.classList.remove('hidden'); fs.classList.add('hidden');
+    };
+    ts.onclick = function(){
+      ts.className = 'h-9 rounded-lg bg-white text-slate-900 font-bold text-xs shadow-xs cursor-pointer';
+      tb.className = 'h-9 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs cursor-pointer';
+      fs.classList.remove('hidden'); fb.classList.add('hidden');
+      if (resBox) resBox.classList.add('hidden');
+    };
+  }
+
+  var bf = document.getElementById('coupon-batch-filter');
+  if (bf) {
+    bf.onchange = function(){
+      var u = new URL(location.href);
+      if (bf.value) u.searchParams.set('batch', bf.value);
+      else u.searchParams.delete('batch');
+      location.href = u.pathname + u.search;
+    };
+  }
+
+  if (fb) {
+    fb.onsubmit = async function(e){
+      e.preventDefault();
+      var btn = document.getElementById('bulk-submit-btn');
+      var err = document.getElementById('bulk-err');
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+      var orig = btn.innerHTML;
+      btn.disabled = true; btn.innerHTML = 'Đang tạo...';
+      try {
+        var data = Object.fromEntries(new FormData(fb).entries());
+        var r = await axios.post('/api/admin/coupons/batch', data);
+        var codes = (r.data && r.data.codes) || [];
+        document.getElementById('bulk-result-title').textContent = 'Đã tạo ' + codes.length + ' mã (' + (r.data.batch_name || '') + ')';
+        document.getElementById('bulk-result-codes').value = codes.join('\\n');
+        resBox.classList.remove('hidden');
+        if (window.toast) toast(r.data.message || 'Đã tạo loạt mã!', 'success');
+      } catch(ex) {
+        var m = (ex.response && ex.response.data && ex.response.data.error) || 'Có lỗi xảy ra';
+        if (err) { err.textContent = m; err.classList.remove('hidden'); }
+      } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+      }
+    };
+  }
+
+  var copyBulk = document.getElementById('bulk-copy-btn');
+  if (copyBulk) {
+    copyBulk.onclick = function(){
+      var ta = document.getElementById('bulk-result-codes');
+      if (!ta || !ta.value) return;
+      navigator.clipboard.writeText(ta.value).then(function(){
+        if (window.toast) toast('Đã chép toàn bộ danh sách mã!', 'success');
+      });
+    };
+  }
+
+  var copyAct = document.getElementById('btn-copy-active-codes');
+  if (copyAct) {
+    copyAct.onclick = function(){
+      navigator.clipboard.writeText(copyAct.dataset.codes || '').then(function(){
+        if (window.toast) toast('Đã chép danh sách mã đang bật!', 'success');
+      });
+    };
+  }
+
+  var disAll = document.getElementById('btn-disable-all-coupons');
+  if (disAll) {
+    disAll.onclick = async function(){
+      if (!confirm('Tắt toàn bộ mã giảm giá đang bật?')) return;
+      await axios.post('/api/admin/coupons/disable-all');
+      location.reload();
+    };
+  }
+
+  document.querySelectorAll('.btn-batch-status').forEach(function(b){
+    b.onclick = async function(){
+      await axios.post('/api/admin/coupons/batch-status', { batch_name: b.dataset.batch, status: b.dataset.status });
+      location.reload();
+    };
+  });
+
+  document.querySelectorAll('.btn-toggle-coupon').forEach(function(b){
+    b.onclick = async function(){
+      b.disabled = true;
+      try {
+        var r = await axios.post('/api/admin/coupons/' + b.dataset.id + '/toggle');
+        if (window.toast) toast(r.data.message || 'Đã cập nhật!', 'success');
+        setTimeout(function(){ location.reload(); }, 250);
+      } catch(e) { b.disabled = false; }
+    };
+  });
+
+  document.querySelectorAll('.btn-release-coupon-holds').forEach(function(b){
+    b.onclick = async function(){
+      if (!confirm('Nhả toàn bộ lượt giữ tạm của mã ' + b.dataset.code + ' (các đơn chưa thanh toán dùng mã này sẽ bị huỷ)?')) return;
+      await axios.post('/api/admin/coupons/' + b.dataset.id + '/release-holds');
+      location.reload();
+    };
+  });
+
+  document.querySelectorAll('.btn-release-hold').forEach(function(b){
+    b.onclick = async function(){
+      if (!confirm('Nhả lượt giữ mã này ngay lập tức?')) return;
+      await axios.post('/api/admin/coupon-holds/' + b.dataset.holdId + '/release');
+      location.reload();
+    };
+  });
+})();`
+      }}></script>
+    </AdminShell>
+  )
+}
 
 export const AdminPosts: FC<AdminProps & { posts: any[]; editing?: any }> = (props) => {
   const ed = props.editing

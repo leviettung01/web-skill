@@ -42,6 +42,17 @@ import {
   extractVerifiedDomain, inferClientNameFromDomain
 } from './lib/mcp'
 import { ensureMcpMigration } from './lib/mcp-bootstrap'
+import {
+  COUPON_HOLD_MINUTES,
+  releaseExpiredCouponHolds,
+  releaseUserDraftHolds,
+  validateAndHoldCoupon,
+  attachHoldToOrder,
+  consumeOrderCoupon,
+  releaseOrderCoupon,
+  getOrderActiveHold,
+  generateUniqueCouponCodes
+} from './lib/coupons'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -799,16 +810,30 @@ app.get('/thanh-toan', requireAuth, async (c) => {
   return c.html(<CheckoutPage {...base(c)} items={items} subtotal={items.reduce((s, i) => s + i.price, 0)} balance={me?.balance || 0} isDemoFree={isDemoFreeUser(c.env, u.email)} />)
 })
 
-app.post('/api/coupons/check', async (c) => {
+app.post('/api/coupons/check', requireAuth, async (c) => {
+  const u = c.get('user')!
   const { code, subtotal } = await c.req.json<any>()
-  const cp = await c.env.DB.prepare(`SELECT * FROM coupons WHERE code=? AND status='active'`)
-    .bind(String(code).toUpperCase()).first<any>()
-  if (!cp) return c.json({ error: 'Mã giảm giá không tồn tại' }, 400)
-  if (cp.expires_at && new Date(cp.expires_at) < new Date()) return c.json({ error: 'Mã giảm giá đã hết hạn' }, 400)
-  if (cp.max_uses > 0 && cp.used_count >= cp.max_uses) return c.json({ error: 'Mã giảm giá đã hết lượt sử dụng' }, 400)
-  if (subtotal < cp.min_order) return c.json({ error: `Đơn hàng tối thiểu ${formatVND(cp.min_order)}` }, 400)
-  const discount = cp.type === 'percent' ? Math.floor(subtotal * cp.value / 100) : Math.min(cp.value, subtotal)
-  return c.json({ ok: true, discount, code: cp.code })
+  const res = await validateAndHoldCoupon({
+    db: c.env.DB,
+    code: String(code || ''),
+    userId: u.id,
+    subtotal: Number(subtotal) || 0
+  })
+  if (!res.ok) return c.json({ error: res.error }, (res.status || 400) as any)
+  return c.json({
+    ok: true,
+    discount: res.discount,
+    code: res.coupon.code,
+    hold_expires_at: res.expiresAt,
+    hold_minutes: COUPON_HOLD_MINUTES,
+    remaining_after_hold: res.remainingAfterHold
+  })
+})
+
+app.post('/api/coupons/release', requireAuth, async (c) => {
+  const u = c.get('user')!
+  await releaseUserDraftHolds(c.env.DB, u.id)
+  return c.json({ ok: true })
 })
 
 async function grantLicenses(db: D1Database, userId: number, orderId: number) {
@@ -846,17 +871,26 @@ app.post('/api/orders/create', requireAuth, async (c) => {
 
   const demoFree = isDemoFreeUser(c.env, u.email)
   const subtotal = items.reduce((s, i) => s + i.price, 0)
-  let discount = 0, couponCode: string | null = null
+  let discount = 0, couponCode: string | null = null, heldCouponId: number | null = null
   if (demoFree) {
     discount = subtotal
     couponCode = 'DEMO_FREE'
   } else if (b.coupon_code) {
-    const cp = await db.prepare(`SELECT * FROM coupons WHERE code=? AND status='active'`).bind(String(b.coupon_code).toUpperCase()).first<any>()
-    if (cp && subtotal >= cp.min_order && (cp.max_uses === 0 || cp.used_count < cp.max_uses)) {
-      discount = cp.type === 'percent' ? Math.floor(subtotal * cp.value / 100) : Math.min(cp.value, subtotal)
-      couponCode = cp.code
-      await db.prepare('UPDATE coupons SET used_count=used_count+1 WHERE id=?').bind(cp.id).run()
+    const holdRes = await validateAndHoldCoupon({
+      db,
+      code: String(b.coupon_code),
+      userId: u.id,
+      subtotal
+    })
+    if (!holdRes.ok) {
+      return c.json({ error: holdRes.error }, (holdRes.status || 400) as any)
     }
+    discount = holdRes.discount
+    couponCode = holdRes.coupon.code
+    heldCouponId = holdRes.holdId
+  } else {
+    // User placed order without coupon -> release any draft hold they held during checkout
+    await releaseUserDraftHolds(db, u.id)
   }
   const total = demoFree ? 0 : Math.max(0, subtotal - discount)
   const pm = demoFree ? 'demo_free' : (['bank', 'momo', 'balance'].includes(b.payment_method) ? b.payment_method : 'bank')
@@ -880,6 +914,10 @@ app.post('/api/orders/create', requireAuth, async (c) => {
     demoFree ? 'demo_free' : (status === 'paid' ? 'balance' : null)).run()
   const orderId = ord.meta.last_row_id as number
 
+  if (heldCouponId) {
+    await attachHoldToOrder(db, heldCouponId, orderId)
+  }
+
   for (const it of items) {
     await db.prepare('INSERT INTO order_items (order_id, product_id, product_name, price) VALUES (?,?,?,?)')
       .bind(orderId, it.id, it.name, it.price).run()
@@ -887,6 +925,9 @@ app.post('/api/orders/create', requireAuth, async (c) => {
   await db.prepare('DELETE FROM cart_items WHERE user_id=?').bind(u.id).run()
 
   if (status === 'paid') {
+    if (!demoFree && couponCode) {
+      await consumeOrderCoupon(db, orderId, couponCode, u.id)
+    }
     await grantLicenses(db, u.id, orderId)
     if (!demoFree) await creditAffiliate(db, u.id, total)
     await notifyOrderPaid(c.env, db, { id: orderId, order_code: code, user_id: u.id, total }, getRequestOrigin(c))
@@ -971,6 +1012,9 @@ async function settleOrder(
     `UPDATE orders SET status='paid', paid_at=?, paid_amount=?, paid_via=?, bank_tx_id=? WHERE id=?`
   ).bind(new Date().toISOString(), opts.paidAmount, opts.paidVia, opts.bankTxId ?? null, order.id).run()
 
+  if (order.coupon_code && order.coupon_code !== 'DEMO_FREE') {
+    await consumeOrderCoupon(db, order.id, order.coupon_code, order.user_id)
+  }
   await grantLicenses(db, order.user_id, order.id)
   await creditAffiliate(db, order.user_id, order.total)
   await notifyOrderPaid(opts.env, db, order, opts.origin)
@@ -1022,7 +1066,8 @@ async function processTransaction(
     }
   }
 
-  // --- Tìm đơn hàng khớp ---
+  // --- Tìm đơn hàng khớp (dọn các mã giữ tạm hết hạn 10 phút trước khi đối soát) ---
+  await releaseExpiredCouponHolds(db)
   let order: any = null
   let matchedCode = ''
   for (const code of codes) {
@@ -1164,12 +1209,13 @@ app.post('/api/webhook/bank', async (c) => {
 /* --- Khách bấm "Tôi đã chuyển khoản": KHÔNG tự cấp hàng nữa --- */
 app.post('/api/orders/confirm', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
+  await releaseExpiredCouponHolds(db)
   const { order_code } = await c.req.json<any>()
   const o = await db.prepare('SELECT * FROM orders WHERE order_code=? AND user_id=?')
     .bind(order_code, u.id).first<any>()
   if (!o) return c.json({ error: 'Không tìm thấy đơn hàng' }, 404)
   if (o.status === 'paid') return c.json({ ok: true, status: 'paid', message: 'Đơn đã được thanh toán' })
-  if (o.status !== 'pending') return c.json({ error: 'Đơn hàng đã được xử lý' }, 400)
+  if (o.status !== 'pending') return c.json({ error: 'Đơn hàng đã huỷ hoặc hết thời gian giữ mã giảm giá' }, 400)
 
   const st = await db.prepare(`SELECT value FROM settings WHERE key='auto_confirm_manual'`).first<any>()
   const autoConfirm = st?.value === '1'
@@ -1187,27 +1233,46 @@ app.post('/api/orders/confirm', requireAuth, async (c) => {
   })
 })
 
+/* --- Khách tự huỷ đơn chờ thanh toán (trả lại mã giảm giá ngay lập tức) --- */
+app.post('/api/orders/:code/cancel', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  await releaseExpiredCouponHolds(db)
+  const o = await db.prepare('SELECT * FROM orders WHERE order_code=? AND user_id=?')
+    .bind(c.req.param('code'), u.id).first<any>()
+  if (!o) return c.json({ error: 'Không tìm thấy đơn hàng' }, 404)
+  if (o.status !== 'pending') return c.json({ error: 'Chỉ có thể huỷ đơn hàng đang chờ thanh toán' }, 400)
+
+  await db.prepare(`UPDATE orders SET status='cancelled' WHERE id=? AND status='pending'`).bind(o.id).run()
+  await releaseOrderCoupon(db, o.id)
+  return c.json({ ok: true, message: 'Đã huỷ đơn hàng và trả lại mã giảm giá!' })
+})
+
 /* --- Frontend polling trạng thái đơn --- */
 app.get('/api/orders/:code/status', requireAuth, async (c) => {
-  const u = c.get('user')!
-  const o = await c.env.DB.prepare(
-    'SELECT order_code, status, total, paid_amount, paid_at, paid_via FROM orders WHERE order_code=? AND user_id=?'
+  const db = c.env.DB, u = c.get('user')!
+  await releaseExpiredCouponHolds(db)
+  const o = await db.prepare(
+    'SELECT id, order_code, status, total, paid_amount, paid_at, paid_via, coupon_code FROM orders WHERE order_code=? AND user_id=?'
   ).bind(c.req.param('code'), u.id).first<any>()
   if (!o) return c.json({ error: 'Không tìm thấy đơn hàng' }, 404)
-  return c.json({ ok: true, ...o })
+  const hold = o.status === 'pending' ? await getOrderActiveHold(db, o.id) : null
+  return c.json({ ok: true, ...o, hold_expires_at: hold?.expires_at || null })
 })
 
 app.get('/don-hang/:code', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
+  await releaseExpiredCouponHolds(db)
   const o = await db.prepare('SELECT * FROM orders WHERE order_code=? AND user_id=?').bind(c.req.param('code'), u.id).first<any>()
   if (!o) return c.html(<NotFoundPage {...base(c)} />, 404)
-  const [items, s] = await Promise.all([
+  const [items, s, activeHold] = await Promise.all([
     db.prepare(
       `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
     ).bind(o.id).all(),
-    fetchSettings(db).catch(() => c.get('settings'))
+    fetchSettings(db).catch(() => c.get('settings')),
+    o.status === 'pending' ? getOrderActiveHold(db, o.id) : Promise.resolve(null)
   ])
   return c.html(<OrderPage {...base(c)} order={o} items={items.results as any}
+    holdExpiresAt={activeHold?.expires_at || null}
     bank={{ bank_name: s.bank_name, bank_code: s.bank_code, bank_account: s.bank_account, bank_owner: s.bank_owner }} />)
 })
 
@@ -2327,6 +2392,10 @@ app.post('/api/admin/orders/:id/status', requireAdmin, async (c) => {
   await db.prepare('UPDATE orders SET status=?, paid_at=? WHERE id=?')
     .bind(status, status === 'paid' ? new Date().toISOString() : o.paid_at, o.id).run()
 
+  if (status === 'cancelled' || status === 'refunded') {
+    await releaseOrderCoupon(db, o.id)
+  }
+
   if (status === 'refunded' && o.status === 'paid') {
     await db.prepare('DELETE FROM licenses WHERE order_id=?').bind(o.id).run()
     await db.prepare('UPDATE users SET balance=balance+? WHERE id=?').bind(o.total, o.user_id).run()
@@ -2551,23 +2620,183 @@ app.delete('/api/admin/categories/:id', requireAdmin, async (c) => {
 })
 
 app.get('/admin/ma-giam-gia', requireAdmin, async (c) => {
-  const rows = await c.env.DB.prepare('SELECT * FROM coupons ORDER BY id DESC').all()
-  return c.html(<AdminCoupons user={c.get('user')!} activeKey="coupons" heading="Mã giảm giá" coupons={rows.results as any} />)
+  const db = c.env.DB
+  await releaseExpiredCouponHolds(db)
+  const nowIso = new Date().toISOString()
+  const filter = (c.req.query('filter') || 'all').trim()
+  const selectedBatch = (c.req.query('batch') || '').trim()
+
+  const [allCouponsRes, activeHoldsRes] = await Promise.all([
+    db.prepare(
+      `SELECT c.*,
+        (SELECT COUNT(*) FROM coupon_holds h WHERE h.coupon_id=c.id AND h.status='held' AND h.expires_at > ?) AS held_count
+       FROM coupons c ORDER BY c.id DESC`
+    ).bind(nowIso).all().catch(() =>
+      db.prepare('SELECT *, 0 AS held_count FROM coupons ORDER BY id DESC').all()
+    ),
+    db.prepare(
+      `SELECT h.*, u.email AS user_email, u.full_name AS user_name, o.order_code
+       FROM coupon_holds h
+       JOIN users u ON u.id = h.user_id
+       LEFT JOIN orders o ON o.id = h.order_id
+       WHERE h.status = 'held' AND h.expires_at > ?
+       ORDER BY h.expires_at ASC`
+    ).bind(nowIso).all().catch(() => ({ results: [] }))
+  ])
+
+  const allCoupons = (allCouponsRes.results || []) as any[]
+  const activeHolds = (activeHoldsRes.results || []) as any[]
+
+  const batches = Array.from(
+    new Set(allCoupons.map(x => String(x.batch_name || '').trim()).filter(Boolean))
+  )
+
+  const stats = {
+    total: allCoupons.length,
+    active: allCoupons.filter(x => x.status === 'active' && (Number(x.max_uses || 0) === 0 || Number(x.used_count || 0) < Number(x.max_uses))).length,
+    heldSlots: activeHolds.length,
+    paidUses: allCoupons.reduce((s, x) => s + Number(x.used_count || 0), 0),
+    inactiveOrDone: allCoupons.filter(x => x.status !== 'active' || (Number(x.max_uses || 0) > 0 && Number(x.used_count || 0) >= Number(x.max_uses))).length
+  }
+
+  let coupons = allCoupons
+  if (selectedBatch) {
+    coupons = coupons.filter(x => String(x.batch_name || '').trim() === selectedBatch)
+  }
+  if (filter === 'active') {
+    coupons = coupons.filter(x => x.status === 'active' && (Number(x.max_uses || 0) === 0 || Number(x.used_count || 0) < Number(x.max_uses)))
+  } else if (filter === 'held') {
+    coupons = coupons.filter(x => Number(x.held_count || 0) > 0)
+  } else if (filter === 'inactive') {
+    coupons = coupons.filter(x => x.status !== 'active')
+  } else if (filter === 'exhausted') {
+    coupons = coupons.filter(x => Number(x.max_uses || 0) > 0 && Number(x.used_count || 0) >= Number(x.max_uses))
+  }
+
+  return c.html(
+    <AdminCoupons
+      user={c.get('user')!}
+      activeKey="coupons"
+      heading="Quản lý mã giảm giá"
+      coupons={coupons}
+      allCoupons={allCoupons}
+      activeHolds={activeHolds}
+      batches={batches}
+      stats={stats}
+      filter={filter}
+      selectedBatch={selectedBatch}
+    />
+  )
 })
 
 app.post('/api/admin/coupons', requireAdmin, async (c) => {
   const b = await c.req.json<any>()
-  const code = (b.code || '').trim().toUpperCase()
-  if (!code || !b.value) return c.json({ error: 'Thiếu mã hoặc giá trị' }, 400)
+  const code = (b.code || '').trim().toUpperCase().replace(/\s+/g, '')
+  const val = Number(b.value)
+  if (!code || !val || val <= 0) return c.json({ error: 'Thiếu mã hoặc giá trị giảm hợp lệ' }, 400)
+  const type = b.type === 'fixed' ? 'fixed' : 'percent'
+  if (type === 'percent' && val > 100) return c.json({ error: 'Giảm theo % tối đa 100%' }, 400)
   const dup = await c.env.DB.prepare('SELECT 1 x FROM coupons WHERE code=?').bind(code).first<any>()
   if (dup) return c.json({ error: 'Mã này đã tồn tại' }, 400)
-  await c.env.DB.prepare('INSERT INTO coupons (code,type,value,min_order,max_uses,expires_at) VALUES (?,?,?,?,?,?)')
-    .bind(code, b.type || 'percent', +b.value, +b.min_order || 0, +b.max_uses || 0, b.expires_at || null).run()
-  return c.json({ ok: true, message: 'Đã tạo mã giảm giá!' })
+  const status = b.status === 'inactive' ? 'inactive' : 'active'
+  const batchName = String(b.batch_name || '').trim() || null
+  await c.env.DB.prepare(
+    'INSERT INTO coupons (code,type,value,min_order,max_uses,expires_at,status,batch_name) VALUES (?,?,?,?,?,?,?,?)'
+  ).bind(code, type, val, Math.max(0, Number(b.min_order) || 0), Math.max(0, Number(b.max_uses) || 0), b.expires_at || null, status, batchName).run()
+  return c.json({ ok: true, code, message: `Đã tạo mã ${code} (${status === 'active' ? 'đang bật' : 'chưa bật'})!` })
+})
+
+app.post('/api/admin/coupons/batch', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const b = await c.req.json<any>()
+  const quantity = Math.min(100, Math.max(1, Math.floor(Number(b.quantity) || 10)))
+  const val = Number(b.value)
+  if (!val || val <= 0) return c.json({ error: 'Vui lòng nhập giá trị giảm hợp lệ' }, 400)
+  const type = b.type === 'fixed' ? 'fixed' : 'percent'
+  if (type === 'percent' && val > 100) return c.json({ error: 'Giảm theo % tối đa 100%' }, 400)
+
+  const prefix = String(b.prefix || (type === 'percent' ? `KS${val}` : 'KSG')).trim().toUpperCase()
+  const maxUses = Math.max(1, Math.floor(Number(b.max_uses) || 1))
+  const minOrder = Math.max(0, Number(b.min_order) || 0)
+  const expiresAt = String(b.expires_at || '').trim() || null
+  const status = b.status === 'inactive' ? 'inactive' : 'active'
+  const batchName = String(b.batch_name || '').trim() || `${prefix} (${quantity} mã -${type === 'percent' ? val + '%' : formatVND(val)})`
+
+  const codes = await generateUniqueCouponCodes(db, prefix, quantity)
+  for (const code of codes) {
+    await db.prepare(
+      'INSERT INTO coupons (code,type,value,min_order,max_uses,expires_at,status,batch_name) VALUES (?,?,?,?,?,?,?,?)'
+    ).bind(code, type, val, minOrder, maxUses, expiresAt, status, batchName).run()
+  }
+
+  return c.json({
+    ok: true,
+    count: codes.length,
+    codes,
+    batch_name: batchName,
+    message: `Đã tạo thành công ${codes.length} mã giảm giá (${status === 'active' ? 'đang bật ngay' : 'tạo sẵn chưa bật'})!`
+  })
+})
+
+app.post('/api/admin/coupons/:id/toggle', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = Number(c.req.param('id'))
+  const row = await db.prepare('SELECT id, code, status FROM coupons WHERE id=?').bind(id).first<any>()
+  if (!row) return c.json({ error: 'Không tìm thấy mã giảm giá' }, 404)
+  const nextStatus = row.status === 'active' ? 'inactive' : 'active'
+  await db.prepare('UPDATE coupons SET status=? WHERE id=?').bind(nextStatus, id).run()
+  return c.json({
+    ok: true,
+    status: nextStatus,
+    message: nextStatus === 'active' ? `Đã BẬT mã ${row.code}` : `Đã TẮT mã ${row.code}`
+  })
+})
+
+app.post('/api/admin/coupons/disable-all', requireAdmin, async (c) => {
+  const res = await c.env.DB.prepare(`UPDATE coupons SET status='inactive' WHERE status='active'`).run()
+  return c.json({ ok: true, changed: res.meta?.changes || 0, message: 'Đã tắt toàn bộ mã giảm giá đang bật!' })
+})
+
+app.post('/api/admin/coupons/batch-status', requireAdmin, async (c) => {
+  const b = await c.req.json<any>()
+  const batchName = String(b.batch_name || '').trim()
+  const status = b.status === 'active' ? 'active' : 'inactive'
+  if (!batchName) return c.json({ error: 'Thiếu tên đợt mã' }, 400)
+  await c.env.DB.prepare('UPDATE coupons SET status=? WHERE batch_name=?').bind(status, batchName).run()
+  return c.json({ ok: true, message: status === 'active' ? `Đã BẬT cả đợt "${batchName}"` : `Đã TẮT cả đợt "${batchName}"` })
+})
+
+app.post('/api/admin/coupons/:id/release-holds', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = Number(c.req.param('id'))
+  const nowIso = new Date().toISOString()
+  const holds = await db.prepare(`SELECT id, order_id FROM coupon_holds WHERE coupon_id=? AND status='held'`).bind(id).all()
+  for (const h of (holds.results || []) as any[]) {
+    await db.prepare(`UPDATE coupon_holds SET status='released', updated_at=? WHERE id=?`).bind(nowIso, h.id).run()
+    if (h.order_id) {
+      await db.prepare(`UPDATE orders SET status='cancelled' WHERE id=? AND status='pending'`).bind(h.order_id).run()
+    }
+  }
+  return c.json({ ok: true, released: (holds.results || []).length, message: 'Đã giải phóng lượt giữ tạm của mã này!' })
+})
+
+app.post('/api/admin/coupon-holds/:id/release', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = Number(c.req.param('id'))
+  const nowIso = new Date().toISOString()
+  const h = await db.prepare(`SELECT id, order_id, coupon_code FROM coupon_holds WHERE id=? AND status='held'`).bind(id).first<any>()
+  if (!h) return c.json({ error: 'Lượt giữ tạm không còn tồn tại' }, 404)
+  await db.prepare(`UPDATE coupon_holds SET status='released', updated_at=? WHERE id=?`).bind(nowIso, h.id).run()
+  if (h.order_id) {
+    await db.prepare(`UPDATE orders SET status='cancelled' WHERE id=? AND status='pending'`).bind(h.order_id).run()
+  }
+  return c.json({ ok: true, message: `Đã nhả mã ${h.coupon_code} ngay lập tức!` })
 })
 
 app.delete('/api/admin/coupons/:id', requireAdmin, async (c) => {
-  await c.env.DB.prepare('DELETE FROM coupons WHERE id=?').bind(c.req.param('id')).run()
+  const id = Number(c.req.param('id'))
+  await c.env.DB.prepare('DELETE FROM coupon_holds WHERE coupon_id=?').bind(id).run().catch(() => null)
+  await c.env.DB.prepare('DELETE FROM coupons WHERE id=?').bind(id).run()
   return c.json({ ok: true })
 })
 

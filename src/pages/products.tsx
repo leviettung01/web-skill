@@ -131,12 +131,13 @@ export const ProductListPage: FC<ListProps> = (props) => {
             </form>
 
             <div class="bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-5 text-white shadow-xl shadow-indigo-600/15">
-              <i class="fas fa-gift text-2xl mb-2.5 opacity-90" aria-hidden="true"></i>
-              <h3 class="font-bold mb-1.5">Nhận mã giảm 10%</h3>
-              <p class="text-xs text-white/90 mb-3.5 leading-relaxed">Dùng mã <b class="bg-white/20 px-1.5 py-0.5 rounded font-mono">WELCOME10</b> cho đơn đầu tiên từ 100k.</p>
-              <button type="button" data-copy="WELCOME10" class="cta-white w-full h-10 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md cursor-pointer">
-                <i class="far fa-copy mr-1" aria-hidden="true"></i>Sao chép mã
-              </button>
+              <i class="fas fa-headset text-2xl mb-2.5 opacity-90" aria-hidden="true"></i>
+              <h3 class="font-bold mb-1.5">Hỗ trợ cài đặt 1-1</h3>
+              <p class="text-xs text-white/90 mb-3.5 leading-relaxed">Cần tư vấn chọn Skill phù hợp hoặc hỗ trợ kết nối AI Agent? Nhắn Zalo để được hỗ trợ ngay.</p>
+              <a href={`https://zalo.me/${props.settings?.zalo || ''}`} target="_blank" rel="noopener"
+                class="cta-white w-full h-10 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md inline-flex items-center justify-center gap-1.5">
+                <i class="fas fa-comments" aria-hidden="true"></i>Chat Zalo tư vấn
+              </a>
             </div>
           </aside>
 

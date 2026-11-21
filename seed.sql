@@ -1035,9 +1035,9 @@ INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
 
 -- ---------- COUPONS ----------
 INSERT INTO coupons (code, type, value, min_order, max_uses, expires_at, status) VALUES
-  ('WELCOME10', 'percent', 10, 100000, 1000, '2027-12-31', 'active'),
-  ('SALE20',    'percent', 20, 500000, 500,  '2027-12-31', 'active'),
-  ('GIAM100K',  'fixed',   100000, 1000000, 200, '2027-12-31', 'active'),
+  ('WELCOME10', 'percent', 10, 100000, 1000, '2027-12-31', 'inactive'),
+  ('SALE20',    'percent', 20, 500000, 500,  '2027-12-31', 'inactive'),
+  ('GIAM100K',  'fixed',   100000, 1000000, 200, '2027-12-31', 'inactive'),
   ('COMBO30',   'percent', 30, 2000000, 100, '2027-12-31', 'active');
 
 -- ---------- BLOG ----------

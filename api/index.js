@@ -9388,12 +9388,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261127", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261128", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261127", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261128", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -11233,17 +11233,22 @@ var ProductListPage = (props) => {
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "bg-gradient-to-br from-indigo-600 to-fuchsia-600 rounded-2xl p-5 text-white shadow-xl shadow-indigo-600/15", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gift text-2xl mb-2.5 opacity-90", "aria-hidden": "true" }),
-              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5", children: "Nh\u1EADn m\xE3 gi\u1EA3m 10%" }),
-              /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/90 mb-3.5 leading-relaxed", children: [
-                "D\xF9ng m\xE3 ",
-                /* @__PURE__ */ jsxDEV("b", { class: "bg-white/20 px-1.5 py-0.5 rounded font-mono", children: "WELCOME10" }),
-                " cho \u0111\u01A1n \u0111\u1EA7u ti\xEAn t\u1EEB 100k."
-              ] }),
-              /* @__PURE__ */ jsxDEV("button", { type: "button", "data-copy": "WELCOME10", class: "cta-white w-full h-10 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md cursor-pointer", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1", "aria-hidden": "true" }),
-                "Sao ch\xE9p m\xE3"
-              ] })
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-headset text-2xl mb-2.5 opacity-90", "aria-hidden": "true" }),
+              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold mb-1.5", children: "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t 1-1" }),
+              /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-white/90 mb-3.5 leading-relaxed", children: "C\u1EA7n t\u01B0 v\u1EA5n ch\u1ECDn Skill ph\xF9 h\u1EE3p ho\u1EB7c h\u1ED7 tr\u1EE3 k\u1EBFt n\u1ED1i AI Agent? Nh\u1EAFn Zalo \u0111\u1EC3 \u0111\u01B0\u1EE3c h\u1ED7 tr\u1EE3 ngay." }),
+              /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: `https://zalo.me/${props.settings?.zalo || ""}`,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "cta-white w-full h-10 rounded-lg bg-white text-indigo-700 font-bold text-xs hover:bg-slate-100 transition shadow-md inline-flex items-center justify-center gap-1.5",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-comments", "aria-hidden": "true" }),
+                    "Chat Zalo t\u01B0 v\u1EA5n"
+                  ]
+                }
+              )
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
@@ -14122,9 +14127,14 @@ var CheckoutPage = (props) => {
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
-            /* @__PURE__ */ jsxDEV("label", { for: "coupon-input", class: "block font-bold text-white mb-4", children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "coupon-input", class: "block font-bold text-white mb-2", children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ticket mr-2 text-indigo-400", "aria-hidden": "true" }),
               "M\xE3 gi\u1EA3m gi\xE1"
+            ] }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mb-3.5", children: [
+              "Nh\u1EADp m\xE3 khuy\u1EBFn m\xE3i (n\u1EBFu b\u1EA1n c\xF3). M\xE3 s\u1EBD \u0111\u01B0\u1EE3c gi\u1EEF t\u1EA1m trong ",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "10 ph\xFAt" }),
+              " khi ch\u1EDD thanh to\xE1n."
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
               /* @__PURE__ */ jsxDEV(
@@ -14137,10 +14147,10 @@ var CheckoutPage = (props) => {
                   class: "flex-1 h-11 px-3.5 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm font-mono"
                 }
               ),
-              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "apply-coupon", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer", children: "\xC1p d\u1EE5ng" })
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "apply-coupon", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer", children: "\xC1p d\u1EE5ng" }),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "clear-coupon", class: "hidden h-11 px-3.5 rounded-xl border border-[#2e2968] hover:border-rose-400 text-[#c2c0e0] hover:text-rose-300 font-semibold text-xs transition cursor-pointer", children: "B\u1ECF m\xE3" })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { id: "coupon-msg", class: "mt-2.5 text-sm hidden", role: "status" }),
-            /* @__PURE__ */ jsxDEV("div", { class: "mt-3 flex flex-wrap gap-1.5", children: ["WELCOME10", "SALE20", "GIAM100K"].map((c) => /* @__PURE__ */ jsxDEV("button", { type: "button", class: "coupon-quick px-2.5 py-1.5 rounded-md bg-[#161436] border border-[#2a2559] hover:border-indigo-400 text-[#c2c0e0] hover:text-white text-xs font-mono font-semibold transition cursor-pointer", "data-code": c, children: c })) })
+            /* @__PURE__ */ jsxDEV("div", { id: "coupon-msg", class: "mt-2.5 text-sm hidden", role: "status" })
           ] })
         ] }),
         /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
@@ -14219,20 +14229,32 @@ var CheckoutPage = (props) => {
     if (dr) dr.style.display = discount>0?'flex':'none';
     if (st) st.textContent = fmt(Math.max(0, subtotal-discount));
   }
-  document.querySelectorAll('.coupon-quick').forEach(function(b){
-    b.onclick=function(){ document.getElementById('coupon-input').value=b.dataset.code; document.getElementById('apply-coupon').click(); };
-  });
+  var clearBtn = document.getElementById('clear-coupon');
+  if (clearBtn) {
+    clearBtn.onclick = async function(){
+      coupon=null; discount=0; render();
+      document.getElementById('coupon-input').value='';
+      clearBtn.classList.add('hidden');
+      var msg=document.getElementById('coupon-msg');
+      if (msg) { msg.classList.add('hidden'); msg.textContent=''; }
+      try { await axios.post('/api/coupons/release'); } catch(e){}
+    };
+  }
   document.getElementById('apply-coupon').onclick=async function(){
     var code=(document.getElementById('coupon-input').value||'').trim().toUpperCase();
     var msg=document.getElementById('coupon-msg');
     if(!code){ return; }
     try{
       var r=await axios.post('/api/coupons/check',{code:code, subtotal:subtotal});
-      coupon=code; discount=r.data.discount; render();
-      msg.className='mt-2.5 text-sm text-emerald-400'; msg.innerHTML='<i class="fas fa-circle-check mr-1"></i>\xC1p d\u1EE5ng th\xE0nh c\xF4ng! Gi\u1EA3m '+fmt(discount);
+      coupon=r.data.code||code; discount=r.data.discount; render();
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      var holdMin = r.data.hold_minutes || 10;
+      msg.className='mt-2.5 text-sm text-emerald-400';
+      msg.innerHTML='<i class="fas fa-circle-check mr-1"></i>\xC1p d\u1EE5ng th\xE0nh c\xF4ng! Gi\u1EA3m <b>'+fmt(discount)+'</b> \xB7 \u0110ang gi\u1EEF t\u1EA1m m\xE3 cho b\u1EA1n trong <b>'+holdMin+' ph\xFAt</b>.';
       msg.classList.remove('hidden');
     }catch(e){
       coupon=null; discount=0; render();
+      if (clearBtn) clearBtn.classList.add('hidden');
       msg.className='mt-2.5 text-sm text-rose-400';
       msg.innerHTML='<i class="fas fa-circle-xmark mr-1"></i>'+((e.response&&e.response.data&&e.response.data.error)||'M\xE3 kh\xF4ng h\u1EE3p l\u1EC7');
       msg.classList.remove('hidden');
@@ -14258,13 +14280,22 @@ var CheckoutPage = (props) => {
   ] });
 };
 var OrderPage = (props) => {
-  const { order, items, bank } = props;
+  const { order, items, bank, holdExpiresAt } = props;
   const content = order.order_code;
   const qr = vietQrUrl(bank.bank_code, bank.bank_account, order.total, content, bank.bank_owner);
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: `\u0110\u01A1n h\xE0ng ${order.order_code}`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "\u0110\u01A1n h\xE0ng", href: "/tai-khoan/don-hang" }, { label: order.order_code }] }),
       order.status === "pending" && /* @__PURE__ */ jsxDEV(CheckoutSteps, { step: 3 }),
+      order.status === "cancelled" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-rose-500/15 border border-rose-500/35 p-6 mb-6 text-center", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-rose-500/25 border border-rose-500/40 text-rose-300 grid place-items-center text-2xl mx-auto mb-3", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ban", "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: "\u0110\u01A1n h\xE0ng \u0111\xE3 hu\u1EF7" }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-rose-200 mb-4", children: order.note || "\u0110\u01A1n h\xE0ng n\xE0y \u0111\xE3 b\u1ECB hu\u1EF7 ho\u1EB7c \u0111\xE3 qu\xE1 10 ph\xFAt gi\u1EEF m\xE3 gi\u1EA3m gi\xE1." }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rotate-left", "aria-hidden": "true" }),
+          "Quay l\u1EA1i ch\u1ECDn s\u1EA3n ph\u1EA9m"
+        ] })
+      ] }),
       order.status === "paid" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check", "aria-hidden": "true" }) }),
         /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
@@ -14277,10 +14308,35 @@ var OrderPage = (props) => {
       /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-6", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
           order.status === "pending" && /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border-2 border-amber-500/45 overflow-hidden", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-amber-300", children: [
-              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode mr-2", "aria-hidden": "true" }),
-              "Qu\xE9t m\xE3 QR \u0111\u1EC3 thanh to\xE1n"
-            ] }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-amber-500/15 px-5 py-3.5 border-b border-amber-500/30 flex flex-wrap items-center justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-amber-300", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode mr-2", "aria-hidden": "true" }),
+                "Qu\xE9t m\xE3 QR \u0111\u1EC3 thanh to\xE1n"
+              ] }),
+              holdExpiresAt && order.coupon_code && /* @__PURE__ */ jsxDEV(
+                "span",
+                {
+                  id: "coupon-hold-badge",
+                  "data-expires": holdExpiresAt,
+                  class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/45 text-rose-200 text-xs font-bold tabular-nums",
+                  children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hourglass-half", "aria-hidden": "true" }),
+                    "Gi\u1EEF m\xE3 ",
+                    order.coupon_code,
+                    ": ",
+                    /* @__PURE__ */ jsxDEV("span", { id: "coupon-hold-countdown", children: "10:00" })
+                  ]
+                }
+              )
+            ] }),
+            holdExpiresAt && order.coupon_code && /* @__PURE__ */ jsxDEV("div", { class: "mx-5 mt-4 p-3 rounded-xl bg-amber-500/15 border border-amber-400/35 text-xs text-amber-100 leading-relaxed", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1.5 text-amber-300", "aria-hidden": "true" }),
+              "M\xE3 gi\u1EA3m gi\xE1 ",
+              /* @__PURE__ */ jsxDEV("b", { class: "font-mono text-white", children: order.coupon_code }),
+              " \u0111ang \u0111\u01B0\u1EE3c ",
+              /* @__PURE__ */ jsxDEV("b", { children: "gi\u1EEF t\u1EA1m 10 ph\xFAt" }),
+              " cho \u0111\u01A1n h\xE0ng n\xE0y. N\u1EBFu qu\xE1 th\u1EDDi gian ch\u01B0a thanh to\xE1n, \u0111\u01A1n s\u1EBD t\u1EF1 hu\u1EF7 v\xE0 m\xE3 t\u1EF1 \u0111\u1ED9ng m\u1EDF l\u1EA1i cho kh\xE1ch h\xE0ng kh\xE1c."
+            ] }),
             (!bank.bank_account || bank.bank_account === "0987654321") && /* @__PURE__ */ jsxDEV("div", { class: "mx-5 mt-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200", children: [
               /* @__PURE__ */ jsxDEV("i", { class: "fas fa-triangle-exclamation mr-1.5 text-rose-400", "aria-hidden": "true" }),
               /* @__PURE__ */ jsxDEV("b", { children: "Th\xF4ng b\xE1o:" }),
@@ -14334,11 +14390,17 @@ var OrderPage = (props) => {
                   /* @__PURE__ */ jsxDEV("div", { id: "pay-status-msg", class: "text-xs text-indigo-200 mt-0.5", children: "H\u1EC7 th\u1ED1ng t\u1EF1 \u0111\u1ED9ng ki\u1EC3m tra ng\xE2n h\xE0ng m\u1ED7i 5 gi\xE2y. Trang s\u1EBD t\u1EF1 chuy\u1EC3n khi nh\u1EADn \u0111\u01B0\u1EE3c ti\u1EC1n." })
                 ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "confirm-paid-btn", class: "w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-95 shadow-lg shadow-emerald-500/25 transition cursor-pointer", children: [
-                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle mr-1.5", "aria-hidden": "true" }),
-                "T\xF4i \u0111\xE3 chuy\u1EC3n kho\u1EA3n"
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col sm:flex-row gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("button", { type: "button", id: "confirm-paid-btn", class: "flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:opacity-95 shadow-lg shadow-emerald-500/25 transition cursor-pointer", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check-circle mr-1.5", "aria-hidden": "true" }),
+                  "T\xF4i \u0111\xE3 chuy\u1EC3n kho\u1EA3n"
+                ] }),
+                /* @__PURE__ */ jsxDEV("button", { type: "button", id: "cancel-order-btn", class: "h-12 px-4 rounded-xl border border-[#2e2968] bg-[#161436] hover:border-rose-400 hover:text-rose-300 text-[#c2c0e0] font-semibold text-sm transition cursor-pointer", children: [
+                  "Hu\u1EF7 \u0111\u01A1n",
+                  order.coupon_code ? " & tr\u1EA3 m\xE3" : ""
+                ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-[#9492b8] text-center mt-2.5", children: "B\u1EA5m n\xFAt n\xE0y sau khi chuy\u1EC3n kho\u1EA3n \u0111\u1EC3 h\u1EC7 th\u1ED1ng ki\u1EC3m tra ngay l\u1EADp t\u1EE9c." })
+              /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-[#9492b8] text-center mt-2.5", children: 'B\u1EA5m n\xFAt "T\xF4i \u0111\xE3 chuy\u1EC3n kho\u1EA3n" sau khi thanh to\xE1n \u0111\u1EC3 h\u1EC7 th\u1ED1ng ki\u1EC3m tra ngay l\u1EADp t\u1EE9c.' })
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
@@ -14457,11 +14519,55 @@ var OrderPage = (props) => {
       +'<div class="text-xs text-[#9f9dbb] mt-0.5">T\u1EA3i l\u1EA1i trang \u0111\u1EC3 ki\u1EC3m tra ti\u1EBFp, ho\u1EB7c li\xEAn h\u1EC7 Zalo n\u1EBFu b\u1EA1n \u0111\xE3 chuy\u1EC3n kho\u1EA3n.</div></div>';
   }
 
+  function onCancelled(){
+    if(timer) clearInterval(timer);
+    if(cdTimer) clearInterval(cdTimer);
+    if(window.toast) toast('\u0110\u01A1n h\xE0ng \u0111\xE3 hu\u1EF7 (h\u1EBFt th\u1EDDi gian gi\u1EEF m\xE3 gi\u1EA3m gi\xE1).','warning');
+    setTimeout(function(){ location.reload(); }, 900);
+  }
+
+  // \u0110\u1EBFm ng\u01B0\u1EE3c 10 ph\xFAt gi\u1EEF m\xE3 gi\u1EA3m gi\xE1 (n\u1EBFu \u0111\u01A1n c\xF3 m\xE3)
+  var cdTimer = null;
+  var holdBadge = document.getElementById('coupon-hold-badge');
+  var holdCd = document.getElementById('coupon-hold-countdown');
+  if (holdBadge && holdCd) {
+    var expMs = new Date(holdBadge.dataset.expires).getTime();
+    function tickHold(){
+      var left = Math.max(0, Math.floor((expMs - Date.now()) / 1000));
+      var mm = String(Math.floor(left / 60)).padStart(2, '0');
+      var ss = String(left % 60).padStart(2, '0');
+      holdCd.textContent = mm + ':' + ss;
+      if (left <= 0) {
+        clearInterval(cdTimer);
+        check(true);
+      }
+    }
+    tickHold();
+    cdTimer = setInterval(tickHold, 1000);
+  }
+
+  var cancelBtn = document.getElementById('cancel-order-btn');
+  if (cancelBtn) {
+    cancelBtn.onclick = async function(){
+      if (!confirm('B\u1EA1n ch\u1EAFc ch\u1EAFn mu\u1ED1n hu\u1EF7 \u0111\u01A1n h\xE0ng n\xE0y? M\xE3 gi\u1EA3m gi\xE1 (n\u1EBFu c\xF3) s\u1EBD \u0111\u01B0\u1EE3c tr\u1EA3 l\u1EA1i ngay.')) return;
+      cancelBtn.disabled = true;
+      try {
+        await axios.post('/api/orders/' + CODE + '/cancel');
+        if (window.toast) toast('\u0110\xE3 hu\u1EF7 \u0111\u01A1n v\xE0 tr\u1EA3 l\u1EA1i m\xE3 gi\u1EA3m gi\xE1!', 'info');
+        setTimeout(function(){ location.reload(); }, 600);
+      } catch(e) {
+        cancelBtn.disabled = false;
+        if (window.toast) toast((e.response && e.response.data && e.response.data.error) || 'Kh\xF4ng th\u1EC3 hu\u1EF7 \u0111\u01A1n', 'error');
+      }
+    };
+  }
+
   async function check(silent){
     try{
       var r=await axios.get('/api/orders/'+CODE+'/status');
       if(r.data && r.data.status==='paid'){ onPaid(); return true; }
-      if(r.data && (r.data.status==='cancelled'||r.data.status==='refunded')){ stopWaiting(); return true; }
+      if(r.data && r.data.status==='cancelled'){ onCancelled(); return true; }
+      if(r.data && r.data.status==='refunded'){ stopWaiting(); return true; }
     }catch(e){ /* b\u1ECF qua l\u1ED7i m\u1EA1ng t\u1EA1m th\u1EDDi */ }
     if(!silent && msg){
       msg.textContent='Ch\u01B0a th\u1EA5y giao d\u1ECBch. N\u1EBFu b\u1EA1n v\u1EEBa chuy\u1EC3n kho\u1EA3n, vui l\xF2ng \u0111\u1EE3i 10\u201360 gi\xE2y.';
@@ -17505,69 +17611,522 @@ var AdminCategories = (props) => {
     ] })
   ] }) });
 };
-var AdminCoupons = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "coupons", heading: "M\xE3 gi\u1EA3m gi\xE1", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
-    /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "M\xE3" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Gi\u1EA3m" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "\u0110\u01A1n t\u1ED1i thi\u1EC3u" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "\u0110\xE3 d\xF9ng" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "H\u1EBFt h\u1EA1n" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right" })
-    ] }) }),
-    /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.coupons.map((c) => /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("td", { children: /* @__PURE__ */ jsxDEV("code", { class: "px-2 py-1 rounded bg-brand-50 text-brand-700 font-bold text-xs", children: c.code }) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "font-semibold", children: c.type === "percent" ? c.value + "%" : formatVND(c.value) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-right text-slate-600", children: formatVND(c.min_order) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: [
-        c.used_count,
-        c.max_uses > 0 ? ` / ${c.max_uses}` : ""
+var AdminCoupons = (props) => {
+  const stats = props.stats || { total: props.coupons.length, active: 0, heldSlots: 0, paidUses: 0, inactiveOrDone: 0 };
+  const activeHolds = props.activeHolds || [];
+  const batches = props.batches || [];
+  const filter = props.filter || "all";
+  const selectedBatch = props.selectedBatch || "";
+  const activeCopyList = props.coupons.filter((c) => {
+    const max = Number(c.max_uses || 0);
+    const used = Number(c.used_count || 0);
+    const held = Number(c.held_count || 0);
+    return c.status === "active" && (max === 0 || used + held < max);
+  }).map((c) => c.code).join("\n");
+  const buildFilterHref = (nextFilter, nextBatch = selectedBatch) => {
+    const qs = new URLSearchParams();
+    if (nextFilter && nextFilter !== "all") qs.set("filter", nextFilter);
+    if (nextBatch) qs.set("batch", nextBatch);
+    const s = qs.toString();
+    return "/admin/ma-giam-gia" + (s ? "?" + s : "");
+  };
+  return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "coupons", heading: "Qu\u1EA3n l\xFD m\xE3 gi\u1EA3m gi\xE1", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500", children: "M\xE3 \u0111ang b\u1EADt" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-emerald-600 mt-1 tabular-nums", children: stats.active }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5", children: "Kh\xE1ch c\xF3 th\u1EC3 nh\u1EADp ngay" })
       ] }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 text-xs", children: formatDate(c.expires_at) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-right", children: /* @__PURE__ */ jsxDEV(
-        "button",
-        {
-          class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
-          "data-url": `/api/admin/coupons/${c.id}`,
-          "data-name": c.code,
-          children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
-        }
-      ) })
-    ] })) })
-  ] }) }) }),
-  /* @__PURE__ */ jsxDEV("form", { action: "/api/admin/coupons", method: "post", "data-ajax": true, "data-reload": "true", class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4 self-start", children: [
-    /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "T\u1EA1o m\xE3 m\u1EDBi" }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "M\xE3 *" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "text", name: "code", required: true, style: "text-transform:uppercase", class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Lo\u1EA1i gi\u1EA3m" }),
-      /* @__PURE__ */ jsxDEV("select", { name: "type", class: fieldCls, children: [
-        /* @__PURE__ */ jsxDEV("option", { value: "percent", children: "Ph\u1EA7n tr\u0103m (%)" }),
-        /* @__PURE__ */ jsxDEV("option", { value: "fixed", children: "S\u1ED1 ti\u1EC1n c\u1ED1 \u0111\u1ECBnh" })
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500", children: "\u0110ang gi\u1EEF t\u1EA1m (10 ph\xFAt)" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-amber-600 mt-1 tabular-nums", children: stats.heldSlots }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5", children: "T\u1EF1 nh\u1EA3 l\u1EA1i sau 10p n\u1EBFu ch\u01B0a TT" })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500", children: "\u0110\xE3 thanh to\xE1n th\xE0nh c\xF4ng" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-brand-600 mt-1 tabular-nums", children: stats.paidUses }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5", children: "L\u01B0\u1EE3t \u0111\xE3 ti\xEAu th\u1EE5 th\u1EADt" })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500", children: "\u0110ang t\u1EAFt / H\u1EBFt l\u01B0\u1EE3t" }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-slate-700 mt-1 tabular-nums", children: stats.inactiveOrDone }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5", children: [
+          "T\u1ED5ng ",
+          stats.total,
+          " m\xE3 trong kho"
+        ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Gi\xE1 tr\u1ECB *" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "number", name: "value", required: true, min: "1", class: fieldCls })
+    activeHolds.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 bg-amber-50 border border-amber-200 rounded-2xl p-4", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2 mb-3", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-amber-900 text-sm flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-hourglass-half text-amber-600" }),
+          "\u0110ang c\xF3 ",
+          activeHolds.length,
+          " l\u01B0\u1EE3t gi\u1EEF t\u1EA1m m\xE3 (t\u1EF1 \u0111\u1ED9ng ho\xE0n l\u1EA1i sau 10 ph\xFAt n\u1EBFu kh\xF4ng thanh to\xE1n)"
+        ] }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/admin/ma-giam-gia", class: "text-xs font-semibold text-amber-800 hover:underline", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-rotate-right mr-1" }),
+          "L\xE0m m\u1EDBi"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5", children: activeHolds.map((h) => {
+        const leftSec = Math.max(0, Math.floor((new Date(h.expires_at).getTime() - Date.now()) / 1e3));
+        const mm = Math.floor(leftSec / 60);
+        const ss = String(leftSec % 60).padStart(2, "0");
+        return /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-xl border border-amber-200 p-3 flex items-center justify-between gap-2", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "min-w-0 text-xs", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: [
+              /* @__PURE__ */ jsxDEV("code", { class: "px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold", children: h.coupon_code }),
+              /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-rose-600 font-bold tabular-nums", children: [
+                "c\xF2n ",
+                mm,
+                ":",
+                ss
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-slate-600 truncate mt-1", children: h.user_email }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400", children: h.order_code ? `\u0110\u01A1n ${h.order_code} (ch\u1EDD TT)` : "\u0110ang \u1EDF trang thanh to\xE1n" })
+          ] }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              "data-hold-id": h.id,
+              class: "btn-release-hold shrink-0 h-8 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold text-[11px] cursor-pointer",
+              children: "Nh\u1EA3 m\xE3"
+            }
+          )
+        ] });
+      }) })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "\u0110\u01A1n t\u1ED1i thi\u1EC3u" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "number", name: "min_order", value: "0", min: "0", step: "10000", class: fieldCls })
+    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_370px] gap-5 items-start", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
+            ["all", "T\u1EA5t c\u1EA3"],
+            ["active", "\u0110ang b\u1EADt"],
+            ["held", "\u0110ang gi\u1EEF t\u1EA1m"],
+            ["inactive", "\u0110ang t\u1EAFt"],
+            ["exhausted", "H\u1EBFt l\u01B0\u1EE3t"]
+          ].map(([k, lb]) => /* @__PURE__ */ jsxDEV(
+            "a",
+            {
+              href: buildFilterHref(k),
+              class: `h-8 px-3 inline-flex items-center rounded-lg text-xs font-semibold transition ${filter === k ? "bg-brand-600 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`,
+              children: lb
+            }
+          )) }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2", children: [
+            batches.length > 0 && /* @__PURE__ */ jsxDEV("select", { id: "coupon-batch-filter", class: "h-8 px-2.5 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-700", children: [
+              /* @__PURE__ */ jsxDEV("option", { value: "", children: [
+                "T\u1EA5t c\u1EA3 \u0111\u1EE3t m\xE3 (",
+                batches.length,
+                ")"
+              ] }),
+              batches.map((bn) => /* @__PURE__ */ jsxDEV("option", { value: bn, selected: selectedBatch === bn, children: bn }))
+            ] }),
+            activeCopyList && /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                id: "btn-copy-active-codes",
+                "data-codes": activeCopyList,
+                class: "h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer",
+                children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1" }),
+                  "Ch\xE9p m\xE3 kh\u1EA3 d\u1EE5ng"
+                ]
+              }
+            ),
+            selectedBatch && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  "data-batch": selectedBatch,
+                  "data-status": "active",
+                  class: "btn-batch-status h-8 px-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold cursor-pointer",
+                  children: "B\u1EADt c\u1EA3 \u0111\u1EE3t"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  "data-batch": selectedBatch,
+                  "data-status": "inactive",
+                  class: "btn-batch-status h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold cursor-pointer",
+                  children: "T\u1EAFt c\u1EA3 \u0111\u1EE3t"
+                }
+              )
+            ] }),
+            stats.active > 0 && /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                id: "btn-disable-all-coupons",
+                class: "h-8 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition cursor-pointer",
+                children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-power-off mr-1" }),
+                  "T\u1EAFt t\u1EA5t c\u1EA3"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
+          /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+            /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "M\xE3" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Gi\u1EA3m" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "\u0110\xE3 TT" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Gi\u1EEF t\u1EA1m 10p" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "C\xF2n l\u1EA1i" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Tr\u1EA1ng th\xE1i" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "H\u1EA1n" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Thao t\xE1c" })
+          ] }) }),
+          /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.coupons.length === 0 ? /* @__PURE__ */ jsxDEV("tr", { children: /* @__PURE__ */ jsxDEV("td", { colspan: 8, class: "py-12 text-center text-slate-500", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ticket text-2xl block mb-2 text-slate-300" }),
+            "Kh\xF4ng c\xF3 m\xE3 gi\u1EA3m gi\xE1 n\xE0o trong b\u1ED9 l\u1ECDc n\xE0y."
+          ] }) }) : props.coupons.map((c) => {
+            const max = Number(c.max_uses || 0);
+            const used = Number(c.used_count || 0);
+            const held = Number(c.held_count || 0);
+            const avail = max > 0 ? Math.max(0, max - used - held) : null;
+            const isExhausted = max > 0 && used >= max;
+            const isActive = c.status === "active";
+            return /* @__PURE__ */ jsxDEV("tr", { class: !isActive ? "bg-slate-50/70" : "", children: [
+              /* @__PURE__ */ jsxDEV("td", { children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV("code", { class: `px-2 py-1 rounded font-bold text-xs ${isActive && !isExhausted ? "bg-indigo-50 text-indigo-700" : "bg-slate-200 text-slate-600"}`, children: c.code }),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      "data-copy": c.code,
+                      title: "Ch\xE9p m\xE3",
+                      class: "w-6 h-6 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 grid place-items-center text-[11px] cursor-pointer",
+                      children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" })
+                    }
+                  )
+                ] }),
+                c.batch_name && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]", title: c.batch_name, children: c.batch_name })
+              ] }),
+              /* @__PURE__ */ jsxDEV("td", { children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900", children: c.type === "percent" ? c.value + "%" : formatVND(c.value) }),
+                Number(c.min_order || 0) > 0 && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400", children: [
+                  "\u0110\u01A1n \u2265 ",
+                  formatVND(c.min_order)
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold tabular-nums text-slate-800", children: [
+                used,
+                max > 0 ? ` / ${max}` : ""
+              ] }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center tabular-nums", children: held > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]" }),
+                held
+              ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 text-xs", children: "0" }) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center tabular-nums", children: isExhausted ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold", children: "H\u1EBFt l\u01B0\u1EE3t" }) : avail === null ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-700 font-bold text-xs", children: "\u221E" }) : avail === 0 ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold", children: "\u0110ang gi\u1EEF h\u1EBFt" }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold", children: [
+                "C\xF2n ",
+                avail
+              ] }) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  type: "button",
+                  "data-id": c.id,
+                  class: `btn-toggle-coupon h-7 px-2.5 rounded-full text-[11px] font-bold transition cursor-pointer ${isActive ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300" : "bg-slate-200 text-slate-600 hover:bg-slate-300 border border-slate-300"}`,
+                  children: isActive ? "\u25CF \u0110ang b\u1EADt" : "\u25CB \u0110ang t\u1EAFt"
+                }
+              ) }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 text-xs whitespace-nowrap", children: c.expires_at ? formatDate(c.expires_at) : "Kh\xF4ng h\u1EA1n" }),
+              /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
+                held > 0 && /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    "data-id": c.id,
+                    "data-code": c.code,
+                    title: "Nh\u1EA3 c\xE1c l\u01B0\u1EE3t \u0111ang gi\u1EEF t\u1EA1m",
+                    class: "btn-release-coupon-holds inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-amber-50 text-amber-600 cursor-pointer",
+                    children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-unlock text-xs" })
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500 cursor-pointer",
+                    "data-url": `/api/admin/coupons/${c.id}`,
+                    "data-name": c.code,
+                    title: "Xo\xE1 m\xE3",
+                    children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
+                  }
+                )
+              ] })
+            ] });
+          }) })
+        ] }) }) })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100", children: [
+          /* @__PURE__ */ jsxDEV("button", { type: "button", id: "tab-bulk-btn", class: "h-9 rounded-lg bg-white text-slate-900 font-bold text-xs shadow-xs cursor-pointer", children: "T\u1EA1o lo\u1EA1t nhi\u1EC1u m\xE3" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", id: "tab-single-btn", class: "h-9 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs cursor-pointer", children: "T\u1EA1o 1 m\xE3 l\u1EBB" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("form", { id: "bulk-coupon-form", class: "space-y-3.5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-xs text-indigo-800 leading-relaxed", children: [
+            /* @__PURE__ */ jsxDEV("b", { children: "T\u1EA1o nhanh lo\u1EA1t m\xE3 (vd 10 m\xE3 gi\u1EA3m 10%):" }),
+            " m\u1ED7i m\xE3 m\u1EB7c \u0111\u1ECBnh d\xF9ng 1 l\u1EA7n \u2014 ai thanh to\xE1n tr\u01B0\u1EDBc th\xEC \u0111\u01B0\u1EE3c, gi\u1EEF t\u1EA1m ",
+            /* @__PURE__ */ jsxDEV("b", { children: "10 ph\xFAt" }),
+            " khi ch\u1EDD thanh to\xE1n."
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "S\u1ED1 l\u01B0\u1EE3ng m\xE3 *" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "quantity", value: "10", min: "1", max: "100", required: true, class: fieldCls })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ti\u1EC1n t\u1ED1 m\xE3 *" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "text", name: "prefix", value: "KS10", required: true, style: "text-transform:uppercase", class: fieldCls })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Lo\u1EA1i gi\u1EA3m" }),
+              /* @__PURE__ */ jsxDEV("select", { name: "type", class: fieldCls, children: [
+                /* @__PURE__ */ jsxDEV("option", { value: "percent", children: "Ph\u1EA7n tr\u0103m (%)" }),
+                /* @__PURE__ */ jsxDEV("option", { value: "fixed", children: "S\u1ED1 ti\u1EC1n (VN\u0110)" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Gi\xE1 tr\u1ECB *" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "value", value: "10", required: true, min: "1", class: fieldCls })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "L\u01B0\u1EE3t d\xF9ng / m\u1ED7i m\xE3" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "max_uses", value: "1", min: "1", class: fieldCls })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "\u0110\u01A1n t\u1ED1i thi\u1EC3u (\u0111)" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "min_order", value: "0", min: "0", step: "10000", class: fieldCls })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "T\xEAn \u0111\u1EE3t khuy\u1EBFn m\xE3i (tu\u1EF3 ch\u1ECDn)" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "text", name: "batch_name", placeholder: "VD: Flash Sale 10 m\xE3 -10% th\xE1ng 11", class: fieldCls })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ng\xE0y h\u1EBFt h\u1EA1n" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "date", name: "expires_at", class: fieldCls })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Tr\u1EA1ng th\xE1i t\u1EA1o" }),
+              /* @__PURE__ */ jsxDEV("select", { name: "status", class: fieldCls, children: [
+                /* @__PURE__ */ jsxDEV("option", { value: "active", children: "B\u1EADt ngay" }),
+                /* @__PURE__ */ jsxDEV("option", { value: "inactive", children: "T\u1EA1o s\u1EB5n (ch\u01B0a b\u1EADt)" })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { id: "bulk-err", class: "hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", id: "bulk-submit-btn", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles mr-1.5" }),
+            "T\u1EA1o lo\u1EA1t m\xE3 ngay"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { id: "bulk-result-box", class: "hidden p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2.5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-emerald-900 text-xs flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxDEV("span", { id: "bulk-result-title", children: "\u0110\xE3 t\u1EA1o m\xE3 th\xE0nh c\xF4ng!" }),
+            /* @__PURE__ */ jsxDEV("button", { type: "button", id: "bulk-copy-btn", class: "px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy mr-1" }),
+              "Ch\xE9p t\u1EA5t c\u1EA3"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("textarea", { id: "bulk-result-codes", readonly: true, rows: 5, class: "w-full p-2.5 rounded-lg bg-white border border-emerald-200 font-mono text-xs text-slate-800 outline-none" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", onclick: "location.reload()", class: "w-full h-9 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer", children: "C\u1EADp nh\u1EADt b\u1EA3ng danh s\xE1ch" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("form", { id: "single-coupon-form", action: "/api/admin/coupons", method: "post", "data-ajax": true, "data-reload": "true", class: "hidden space-y-3.5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed", children: [
+            /* @__PURE__ */ jsxDEV("b", { children: "T\u1EA1o 1 m\xE3 d\xF9ng chung:" }),
+            " v\xED d\u1EE5 m\xE3 ",
+            /* @__PURE__ */ jsxDEV("code", { class: "font-mono font-bold text-slate-900", children: "FLASH10" }),
+            " gi\u1EDBi h\u1EA1n ",
+            /* @__PURE__ */ jsxDEV("b", { children: "10 l\u01B0\u1EE3t" }),
+            " \u2014 ai thanh to\xE1n s\u1EDBm 10 ng\u01B0\u1EDDi \u0111\u1EA7u ti\xEAn s\u1EBD \u0111\u01B0\u1EE3c!"
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "M\xE3 *" }),
+            /* @__PURE__ */ jsxDEV("input", { type: "text", name: "code", required: true, placeholder: "VD: FLASH10", style: "text-transform:uppercase", class: fieldCls })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Lo\u1EA1i gi\u1EA3m" }),
+              /* @__PURE__ */ jsxDEV("select", { name: "type", class: fieldCls, children: [
+                /* @__PURE__ */ jsxDEV("option", { value: "percent", children: "Ph\u1EA7n tr\u0103m (%)" }),
+                /* @__PURE__ */ jsxDEV("option", { value: "fixed", children: "S\u1ED1 ti\u1EC1n (VN\u0110)" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Gi\xE1 tr\u1ECB *" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "value", value: "10", required: true, min: "1", class: fieldCls })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "S\u1ED1 l\u01B0\u1EE3t t\u1ED1i \u0111a (0 = \u221E)" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "max_uses", value: "10", min: "0", class: fieldCls })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "\u0110\u01A1n t\u1ED1i thi\u1EC3u (\u0111)" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "number", name: "min_order", value: "0", min: "0", step: "10000", class: fieldCls })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ng\xE0y h\u1EBFt h\u1EA1n" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "date", name: "expires_at", class: fieldCls })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Tr\u1EA1ng th\xE1i t\u1EA1o" }),
+              /* @__PURE__ */ jsxDEV("select", { name: "status", class: fieldCls, children: [
+                /* @__PURE__ */ jsxDEV("option", { value: "active", children: "B\u1EADt ngay" }),
+                /* @__PURE__ */ jsxDEV("option", { value: "inactive", children: "T\u1EA1o s\u1EB5n (ch\u01B0a b\u1EADt)" })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
+          /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer", children: "T\u1EA1o m\xE3 gi\u1EA3m gi\xE1" })
+        ] })
+      ] })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "S\u1ED1 l\u1EA7n d\xF9ng t\u1ED1i \u0111a (0 = \u221E)" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "number", name: "max_uses", value: "0", min: "0", class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { children: [
-      /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ng\xE0y h\u1EBFt h\u1EA1n" }),
-      /* @__PURE__ */ jsxDEV("input", { type: "date", name: "expires_at", class: fieldCls })
-    ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "form-error hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700" }),
-    /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition", children: "T\u1EA1o m\xE3 gi\u1EA3m gi\xE1" })
-  ] })
-] }) });
+    /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+      __html: `
+(function(){
+  var tb = document.getElementById('tab-bulk-btn');
+  var ts = document.getElementById('tab-single-btn');
+  var fb = document.getElementById('bulk-coupon-form');
+  var fs = document.getElementById('single-coupon-form');
+  var resBox = document.getElementById('bulk-result-box');
+
+  if (tb && ts && fb && fs) {
+    tb.onclick = function(){
+      tb.className = 'h-9 rounded-lg bg-white text-slate-900 font-bold text-xs shadow-xs cursor-pointer';
+      ts.className = 'h-9 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs cursor-pointer';
+      fb.classList.remove('hidden'); fs.classList.add('hidden');
+    };
+    ts.onclick = function(){
+      ts.className = 'h-9 rounded-lg bg-white text-slate-900 font-bold text-xs shadow-xs cursor-pointer';
+      tb.className = 'h-9 rounded-lg text-slate-600 hover:text-slate-900 font-semibold text-xs cursor-pointer';
+      fs.classList.remove('hidden'); fb.classList.add('hidden');
+      if (resBox) resBox.classList.add('hidden');
+    };
+  }
+
+  var bf = document.getElementById('coupon-batch-filter');
+  if (bf) {
+    bf.onchange = function(){
+      var u = new URL(location.href);
+      if (bf.value) u.searchParams.set('batch', bf.value);
+      else u.searchParams.delete('batch');
+      location.href = u.pathname + u.search;
+    };
+  }
+
+  if (fb) {
+    fb.onsubmit = async function(e){
+      e.preventDefault();
+      var btn = document.getElementById('bulk-submit-btn');
+      var err = document.getElementById('bulk-err');
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+      var orig = btn.innerHTML;
+      btn.disabled = true; btn.innerHTML = '\u0110ang t\u1EA1o...';
+      try {
+        var data = Object.fromEntries(new FormData(fb).entries());
+        var r = await axios.post('/api/admin/coupons/batch', data);
+        var codes = (r.data && r.data.codes) || [];
+        document.getElementById('bulk-result-title').textContent = '\u0110\xE3 t\u1EA1o ' + codes.length + ' m\xE3 (' + (r.data.batch_name || '') + ')';
+        document.getElementById('bulk-result-codes').value = codes.join('\\n');
+        resBox.classList.remove('hidden');
+        if (window.toast) toast(r.data.message || '\u0110\xE3 t\u1EA1o lo\u1EA1t m\xE3!', 'success');
+      } catch(ex) {
+        var m = (ex.response && ex.response.data && ex.response.data.error) || 'C\xF3 l\u1ED7i x\u1EA3y ra';
+        if (err) { err.textContent = m; err.classList.remove('hidden'); }
+      } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+      }
+    };
+  }
+
+  var copyBulk = document.getElementById('bulk-copy-btn');
+  if (copyBulk) {
+    copyBulk.onclick = function(){
+      var ta = document.getElementById('bulk-result-codes');
+      if (!ta || !ta.value) return;
+      navigator.clipboard.writeText(ta.value).then(function(){
+        if (window.toast) toast('\u0110\xE3 ch\xE9p to\xE0n b\u1ED9 danh s\xE1ch m\xE3!', 'success');
+      });
+    };
+  }
+
+  var copyAct = document.getElementById('btn-copy-active-codes');
+  if (copyAct) {
+    copyAct.onclick = function(){
+      navigator.clipboard.writeText(copyAct.dataset.codes || '').then(function(){
+        if (window.toast) toast('\u0110\xE3 ch\xE9p danh s\xE1ch m\xE3 \u0111ang b\u1EADt!', 'success');
+      });
+    };
+  }
+
+  var disAll = document.getElementById('btn-disable-all-coupons');
+  if (disAll) {
+    disAll.onclick = async function(){
+      if (!confirm('T\u1EAFt to\xE0n b\u1ED9 m\xE3 gi\u1EA3m gi\xE1 \u0111ang b\u1EADt?')) return;
+      await axios.post('/api/admin/coupons/disable-all');
+      location.reload();
+    };
+  }
+
+  document.querySelectorAll('.btn-batch-status').forEach(function(b){
+    b.onclick = async function(){
+      await axios.post('/api/admin/coupons/batch-status', { batch_name: b.dataset.batch, status: b.dataset.status });
+      location.reload();
+    };
+  });
+
+  document.querySelectorAll('.btn-toggle-coupon').forEach(function(b){
+    b.onclick = async function(){
+      b.disabled = true;
+      try {
+        var r = await axios.post('/api/admin/coupons/' + b.dataset.id + '/toggle');
+        if (window.toast) toast(r.data.message || '\u0110\xE3 c\u1EADp nh\u1EADt!', 'success');
+        setTimeout(function(){ location.reload(); }, 250);
+      } catch(e) { b.disabled = false; }
+    };
+  });
+
+  document.querySelectorAll('.btn-release-coupon-holds').forEach(function(b){
+    b.onclick = async function(){
+      if (!confirm('Nh\u1EA3 to\xE0n b\u1ED9 l\u01B0\u1EE3t gi\u1EEF t\u1EA1m c\u1EE7a m\xE3 ' + b.dataset.code + ' (c\xE1c \u0111\u01A1n ch\u01B0a thanh to\xE1n d\xF9ng m\xE3 n\xE0y s\u1EBD b\u1ECB hu\u1EF7)?')) return;
+      await axios.post('/api/admin/coupons/' + b.dataset.id + '/release-holds');
+      location.reload();
+    };
+  });
+
+  document.querySelectorAll('.btn-release-hold').forEach(function(b){
+    b.onclick = async function(){
+      if (!confirm('Nh\u1EA3 l\u01B0\u1EE3t gi\u1EEF m\xE3 n\xE0y ngay l\u1EADp t\u1EE9c?')) return;
+      await axios.post('/api/admin/coupon-holds/' + b.dataset.holdId + '/release');
+      location.reload();
+    };
+  });
+})();`
+    } })
+  ] });
+};
 var AdminPosts = (props) => {
   const ed = props.editing;
   return /* @__PURE__ */ jsxDEV(AdminShell, { ...props, activeKey: "posts", heading: "Qu\u1EA3n l\xFD b\xE0i vi\u1EBFt", children: /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_400px] gap-5", children: [
@@ -18632,16 +19191,17 @@ async function runOnce(db, env) {
   try {
     await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
     await runOptionalDemoUserBootstrap(db, env).catch((err) => console.error("[DEMO_USER_BOOTSTRAP]", err));
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0007_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0008_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0009_done'`).first().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first().catch(() => null)
     ]);
-    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1") {
+    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1") {
       _done = true;
       return;
     }
@@ -19008,6 +19568,55 @@ async function runOnce(db, env) {
         mutated = true;
       }
     }
+    if (flag11?.value !== "1") {
+      await db.prepare("ALTER TABLE coupons ADD COLUMN batch_name TEXT").run().catch(() => null);
+      await db.prepare(`UPDATE coupons SET status = 'inactive' WHERE status = 'active'`).run().catch(() => null);
+      const pgHoldsSql = `CREATE TABLE IF NOT EXISTS coupon_holds (
+        id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+        coupon_id INTEGER NOT NULL REFERENCES coupons(id) ON DELETE CASCADE,
+        coupon_code TEXT NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+        status TEXT NOT NULL DEFAULT 'held',
+        expires_at TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )`;
+      const sqliteHoldsSql = `CREATE TABLE IF NOT EXISTS coupon_holds (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        coupon_id INTEGER NOT NULL REFERENCES coupons(id) ON DELETE CASCADE,
+        coupon_code TEXT NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+        status TEXT NOT NULL DEFAULT 'held',
+        expires_at TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`;
+      await db.prepare(pgHoldsSql).run().catch(async () => {
+        await db.prepare(sqliteHoldsSql).run();
+      });
+      await db.prepare(
+        "CREATE INDEX IF NOT EXISTS idx_coupon_holds_coupon_status ON coupon_holds(coupon_id, status, expires_at)"
+      ).run().catch(() => null);
+      await db.prepare(
+        "CREATE INDEX IF NOT EXISTS idx_coupon_holds_order ON coupon_holds(order_id)"
+      ).run().catch(() => null);
+      await db.prepare(
+        "CREATE INDEX IF NOT EXISTS idx_coupon_holds_user ON coupon_holds(user_id, coupon_id, status)"
+      ).run().catch(() => null);
+      const holdsOk = await db.prepare("SELECT COUNT(*) c FROM coupon_holds").first().catch(() => null);
+      if (holdsOk !== null) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0011_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0011_done', '1')`
+          ).run().catch(() => null);
+        });
+        mutated = true;
+      }
+    }
     if (mutated) invalidateCache();
     _done = true;
   } catch (err) {
@@ -19022,6 +19631,235 @@ async function ensureMcpMigration(db, env) {
     });
   }
   await _inflight;
+}
+
+// src/lib/coupons.ts
+var COUPON_HOLD_MINUTES = 10;
+var COUPON_HOLD_MS = COUPON_HOLD_MINUTES * 60 * 1e3;
+function calcCouponDiscount(cp, subtotal) {
+  if (!cp || subtotal <= 0) return 0;
+  if (cp.type === "percent") {
+    const pct = Math.min(100, Math.max(0, Number(cp.value) || 0));
+    return Math.floor(subtotal * pct / 100);
+  }
+  return Math.min(Math.max(0, Number(cp.value) || 0), subtotal);
+}
+function isCouponExpiredDate(expiresAt) {
+  if (!expiresAt) return false;
+  const raw2 = String(expiresAt).trim();
+  if (!raw2) return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw2)) {
+    const endOfDay = /* @__PURE__ */ new Date(`${raw2}T23:59:59+07:00`);
+    return !Number.isNaN(endOfDay.getTime()) && endOfDay.getTime() < Date.now();
+  }
+  const d = new Date(raw2);
+  return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
+}
+async function releaseExpiredCouponHolds(db) {
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  try {
+    const expiredRes = await db.prepare(
+      `SELECT id, order_id FROM coupon_holds WHERE status = 'held' AND expires_at <= ?`
+    ).bind(nowIso).all();
+    const rows = expiredRes.results || [];
+    if (rows.length === 0) return 0;
+    for (const row of rows) {
+      await db.prepare(
+        `UPDATE coupon_holds SET status = 'expired', updated_at = ? WHERE id = ? AND status = 'held'`
+      ).bind(nowIso, row.id).run().catch(() => null);
+      if (row.order_id) {
+        await db.prepare(
+          `UPDATE orders
+           SET status = 'cancelled',
+               note = CASE
+                 WHEN note IS NULL OR note = '' THEN 'T\u1EF1 \u0111\u1ED9ng hu\u1EF7 do qu\xE1 10 ph\xFAt gi\u1EEF m\xE3 gi\u1EA3m gi\xE1 ch\u01B0a thanh to\xE1n'
+                 ELSE note || ' | T\u1EF1 \u0111\u1ED9ng hu\u1EF7 do qu\xE1 10 ph\xFAt gi\u1EEF m\xE3 gi\u1EA3m gi\xE1'
+               END
+           WHERE id = ? AND status = 'pending'`
+        ).bind(row.order_id).run().catch(() => null);
+      }
+    }
+    return rows.length;
+  } catch {
+    return 0;
+  }
+}
+async function releaseUserDraftHolds(db, userId, exceptCouponId) {
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  if (exceptCouponId) {
+    await db.prepare(
+      `UPDATE coupon_holds SET status = 'released', updated_at = ?
+       WHERE user_id = ? AND order_id IS NULL AND status = 'held' AND coupon_id != ?`
+    ).bind(nowIso, userId, exceptCouponId).run().catch(() => null);
+  } else {
+    await db.prepare(
+      `UPDATE coupon_holds SET status = 'released', updated_at = ?
+       WHERE user_id = ? AND order_id IS NULL AND status = 'held'`
+    ).bind(nowIso, userId).run().catch(() => null);
+  }
+}
+async function getActiveHoldCount(db, couponId, excludeHoldId) {
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const row = excludeHoldId ? await db.prepare(
+    `SELECT COUNT(*) AS n FROM coupon_holds
+         WHERE coupon_id = ? AND status = 'held' AND expires_at > ? AND id != ?`
+  ).bind(couponId, nowIso, excludeHoldId).first().catch(() => ({ n: 0 })) : await db.prepare(
+    `SELECT COUNT(*) AS n FROM coupon_holds
+         WHERE coupon_id = ? AND status = 'held' AND expires_at > ?`
+  ).bind(couponId, nowIso).first().catch(() => ({ n: 0 }));
+  return Number(row?.n || 0);
+}
+async function validateAndHoldCoupon(opts) {
+  const { db, userId, subtotal, orderId = null } = opts;
+  const cleanCode = String(opts.code || "").trim().toUpperCase();
+  if (!cleanCode) return { ok: false, error: "Vui l\xF2ng nh\u1EADp m\xE3 gi\u1EA3m gi\xE1", status: 400 };
+  await releaseExpiredCouponHolds(db);
+  const cp = await db.prepare(`SELECT * FROM coupons WHERE code = ?`).bind(cleanCode).first();
+  if (!cp) return { ok: false, error: "M\xE3 gi\u1EA3m gi\xE1 kh\xF4ng t\u1ED3n t\u1EA1i", status: 400 };
+  if (cp.status !== "active") {
+    return { ok: false, error: "M\xE3 gi\u1EA3m gi\xE1 hi\u1EC7n \u0111ang t\u1EA1m t\u1EAFt ho\u1EB7c ch\u01B0a m\u1EDF \u0111\u1EE3t khuy\u1EBFn m\xE3i", status: 400 };
+  }
+  if (isCouponExpiredDate(cp.expires_at)) {
+    return { ok: false, error: "M\xE3 gi\u1EA3m gi\xE1 \u0111\xE3 h\u1EBFt h\u1EA1n s\u1EED d\u1EE5ng", status: 400 };
+  }
+  if (subtotal < Number(cp.min_order || 0)) {
+    return { ok: false, error: `\u0110\u01A1n h\xE0ng t\u1ED1i thi\u1EC3u ${formatVND(cp.min_order)} m\u1EDBi d\xF9ng \u0111\u01B0\u1EE3c m\xE3 n\xE0y`, status: 400 };
+  }
+  const maxUses = Number(cp.max_uses || 0);
+  const usedCount = Number(cp.used_count || 0);
+  if (maxUses > 0 && usedCount >= maxUses) {
+    return { ok: false, error: "M\xE3 gi\u1EA3m gi\xE1 \u0111\xE3 h\u1EBFt l\u01B0\u1EE3t thanh to\xE1n", status: 400 };
+  }
+  await releaseUserDraftHolds(db, userId, cp.id);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const newExpiresAt = new Date(Date.now() + COUPON_HOLD_MS).toISOString();
+  const myHold = await db.prepare(
+    `SELECT id FROM coupon_holds
+     WHERE coupon_id = ? AND user_id = ? AND order_id IS NULL AND status = 'held' AND expires_at > ?
+     ORDER BY id DESC LIMIT 1`
+  ).bind(cp.id, userId, nowIso).first().catch(() => null);
+  let holdId;
+  if (myHold?.id) {
+    holdId = Number(myHold.id);
+    const otherHeld = await getActiveHoldCount(db, cp.id, holdId);
+    if (maxUses > 0 && usedCount + otherHeld >= maxUses) {
+      await db.prepare(`UPDATE coupon_holds SET status = 'released', updated_at = ? WHERE id = ?`).bind(nowIso, holdId).run().catch(() => null);
+      return {
+        ok: false,
+        error: "M\xE3 gi\u1EA3m gi\xE1 \u0111\xE3 \u0111\u01B0\u1EE3c kh\xE1ch kh\xE1c s\u1EED d\u1EE5ng h\u1EBFt l\u01B0\u1EE3t. Vui l\xF2ng th\u1EED m\xE3 kh\xE1c!",
+        status: 400
+      };
+    }
+    await db.prepare(
+      `UPDATE coupon_holds SET expires_at = ?, order_id = COALESCE(?, order_id), updated_at = ? WHERE id = ?`
+    ).bind(newExpiresAt, orderId, nowIso, holdId).run();
+  } else {
+    const activeHeld = await getActiveHoldCount(db, cp.id);
+    if (maxUses > 0 && usedCount + activeHeld >= maxUses) {
+      const msg = activeHeld > 0 ? `M\xE3 ${cp.code} hi\u1EC7n \u0111ang c\xF3 ng\u01B0\u1EDDi gi\u1EEF t\u1EA1m ch\u1EDD thanh to\xE1n. N\u1EBFu h\u1ECD kh\xF4ng thanh to\xE1n sau t\u1ED1i \u0111a ${COUPON_HOLD_MINUTES} ph\xFAt, m\xE3 s\u1EBD t\u1EF1 m\u1EDF l\u1EA1i!` : `M\xE3 ${cp.code} \u0111\xE3 h\u1EBFt l\u01B0\u1EE3t s\u1EED d\u1EE5ng.`;
+      return { ok: false, error: msg, status: 400 };
+    }
+    const ins = await db.prepare(
+      `INSERT INTO coupon_holds (coupon_id, coupon_code, user_id, order_id, status, expires_at, updated_at)
+       VALUES (?, ?, ?, ?, 'held', ?, ?)`
+    ).bind(cp.id, cp.code, userId, orderId, newExpiresAt, nowIso).run();
+    holdId = Number(ins.meta.last_row_id);
+    if (maxUses > 0) {
+      const rankRow = await db.prepare(
+        `SELECT COUNT(*) AS rank FROM coupon_holds
+         WHERE coupon_id = ? AND status = 'held' AND expires_at > ? AND id <= ?`
+      ).bind(cp.id, nowIso, holdId).first().catch(() => ({ rank: 1 }));
+      const rank = Number(rankRow?.rank || 1);
+      if (usedCount + rank > maxUses) {
+        await db.prepare(`UPDATE coupon_holds SET status = 'released', updated_at = ? WHERE id = ?`).bind(nowIso, holdId).run().catch(() => null);
+        return {
+          ok: false,
+          error: `M\xE3 ${cp.code} v\u1EEBa c\xF3 kh\xE1ch kh\xE1c gi\u1EEF l\u01B0\u1EE3t cu\u1ED1i c\xF9ng! N\u1EBFu h\u1ECD kh\xF4ng thanh to\xE1n sau ${COUPON_HOLD_MINUTES} ph\xFAt, m\xE3 s\u1EBD t\u1EF1 m\u1EDF l\u1EA1i.`,
+          status: 400
+        };
+      }
+    }
+  }
+  const totalHeldNow = await getActiveHoldCount(db, cp.id);
+  const remainingAfterHold = maxUses > 0 ? Math.max(0, maxUses - usedCount - totalHeldNow) : null;
+  const discount = calcCouponDiscount(cp, subtotal);
+  return {
+    ok: true,
+    coupon: cp,
+    holdId,
+    discount,
+    expiresAt: newExpiresAt,
+    remainingAfterHold
+  };
+}
+async function attachHoldToOrder(db, holdId, orderId) {
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const expiresAt = new Date(Date.now() + COUPON_HOLD_MS).toISOString();
+  await db.prepare(
+    `UPDATE coupon_holds SET order_id = ?, expires_at = ?, updated_at = ? WHERE id = ? AND status = 'held'`
+  ).bind(orderId, expiresAt, nowIso, holdId).run();
+  return expiresAt;
+}
+async function consumeOrderCoupon(db, orderId, couponCode, userId) {
+  if (!couponCode || couponCode === "DEMO_FREE") return;
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const already = await db.prepare(
+    `SELECT id FROM coupon_holds WHERE order_id = ? AND status = 'consumed' LIMIT 1`
+  ).bind(orderId).first().catch(() => null);
+  if (already?.id) return;
+  const held = await db.prepare(
+    `SELECT id, coupon_id FROM coupon_holds WHERE order_id = ? AND status = 'held' ORDER BY id DESC LIMIT 1`
+  ).bind(orderId).first().catch(() => null);
+  if (held?.id) {
+    const upd = await db.prepare(
+      `UPDATE coupon_holds SET status = 'consumed', updated_at = ? WHERE id = ? AND status = 'held'`
+    ).bind(nowIso, held.id).run();
+    if (upd.meta && upd.meta.changes > 0) {
+      await db.prepare(`UPDATE coupons SET used_count = used_count + 1 WHERE id = ?`).bind(held.coupon_id).run();
+    }
+    return;
+  }
+  const cp = await db.prepare(`SELECT id, code FROM coupons WHERE code = ?`).bind(String(couponCode).toUpperCase()).first().catch(() => null);
+  if (cp?.id && userId) {
+    await db.prepare(
+      `INSERT INTO coupon_holds (coupon_id, coupon_code, user_id, order_id, status, expires_at, updated_at)
+       VALUES (?, ?, ?, ?, 'consumed', ?, ?)`
+    ).bind(cp.id, cp.code, userId, orderId, nowIso, nowIso).run().catch(() => null);
+    await db.prepare(`UPDATE coupons SET used_count = used_count + 1 WHERE id = ?`).bind(cp.id).run().catch(() => null);
+  }
+}
+async function releaseOrderCoupon(db, orderId) {
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  await db.prepare(
+    `UPDATE coupon_holds SET status = 'released', updated_at = ? WHERE order_id = ? AND status = 'held'`
+  ).bind(nowIso, orderId).run().catch(() => null);
+}
+async function getOrderActiveHold(db, orderId) {
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const row = await db.prepare(
+    `SELECT id, coupon_code, expires_at FROM coupon_holds
+     WHERE order_id = ? AND status = 'held' AND expires_at > ?
+     ORDER BY id DESC LIMIT 1`
+  ).bind(orderId, nowIso).first().catch(() => null);
+  return row ? { id: Number(row.id), coupon_code: String(row.coupon_code), expires_at: String(row.expires_at) } : null;
+}
+async function generateUniqueCouponCodes(db, prefix, quantity) {
+  const cleanPrefix = String(prefix || "KS").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 12);
+  const sep = cleanPrefix && !cleanPrefix.endsWith("-") && !cleanPrefix.endsWith("_") ? "-" : "";
+  const targetCount = Math.min(100, Math.max(1, Math.floor(quantity)));
+  const existingRes = await db.prepare("SELECT code FROM coupons").all();
+  const taken = new Set((existingRes.results || []).map((r) => String(r.code || "").toUpperCase()));
+  const codes = [];
+  let guard = 0;
+  while (codes.length < targetCount && guard < targetCount * 20) {
+    guard++;
+    const candidate = `${cleanPrefix}${sep}${genCode("", 5)}`;
+    if (!taken.has(candidate)) {
+      taken.add(candidate);
+      codes.push(candidate);
+    }
+  }
+  return codes;
 }
 
 // src/index.tsx
@@ -19759,15 +20597,29 @@ app.get("/thanh-toan", requireAuth, async (c) => {
   const me = await db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first();
   return c.html(/* @__PURE__ */ jsxDEV(CheckoutPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0), balance: me?.balance || 0, isDemoFree: isDemoFreeUser(c.env, u.email) }));
 });
-app.post("/api/coupons/check", async (c) => {
+app.post("/api/coupons/check", requireAuth, async (c) => {
+  const u = c.get("user");
   const { code, subtotal } = await c.req.json();
-  const cp = await c.env.DB.prepare(`SELECT * FROM coupons WHERE code=? AND status='active'`).bind(String(code).toUpperCase()).first();
-  if (!cp) return c.json({ error: "M\xE3 gi\u1EA3m gi\xE1 kh\xF4ng t\u1ED3n t\u1EA1i" }, 400);
-  if (cp.expires_at && new Date(cp.expires_at) < /* @__PURE__ */ new Date()) return c.json({ error: "M\xE3 gi\u1EA3m gi\xE1 \u0111\xE3 h\u1EBFt h\u1EA1n" }, 400);
-  if (cp.max_uses > 0 && cp.used_count >= cp.max_uses) return c.json({ error: "M\xE3 gi\u1EA3m gi\xE1 \u0111\xE3 h\u1EBFt l\u01B0\u1EE3t s\u1EED d\u1EE5ng" }, 400);
-  if (subtotal < cp.min_order) return c.json({ error: `\u0110\u01A1n h\xE0ng t\u1ED1i thi\u1EC3u ${formatVND(cp.min_order)}` }, 400);
-  const discount = cp.type === "percent" ? Math.floor(subtotal * cp.value / 100) : Math.min(cp.value, subtotal);
-  return c.json({ ok: true, discount, code: cp.code });
+  const res = await validateAndHoldCoupon({
+    db: c.env.DB,
+    code: String(code || ""),
+    userId: u.id,
+    subtotal: Number(subtotal) || 0
+  });
+  if (!res.ok) return c.json({ error: res.error }, res.status || 400);
+  return c.json({
+    ok: true,
+    discount: res.discount,
+    code: res.coupon.code,
+    hold_expires_at: res.expiresAt,
+    hold_minutes: COUPON_HOLD_MINUTES,
+    remaining_after_hold: res.remainingAfterHold
+  });
+});
+app.post("/api/coupons/release", requireAuth, async (c) => {
+  const u = c.get("user");
+  await releaseUserDraftHolds(c.env.DB, u.id);
+  return c.json({ ok: true });
 });
 async function grantLicenses(db, userId, orderId) {
   const items = await db.prepare("SELECT product_id FROM order_items WHERE order_id=?").bind(orderId).all();
@@ -19800,17 +20652,25 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   }
   const demoFree = isDemoFreeUser(c.env, u.email);
   const subtotal = items.reduce((s, i) => s + i.price, 0);
-  let discount = 0, couponCode = null;
+  let discount = 0, couponCode = null, heldCouponId = null;
   if (demoFree) {
     discount = subtotal;
     couponCode = "DEMO_FREE";
   } else if (b.coupon_code) {
-    const cp = await db.prepare(`SELECT * FROM coupons WHERE code=? AND status='active'`).bind(String(b.coupon_code).toUpperCase()).first();
-    if (cp && subtotal >= cp.min_order && (cp.max_uses === 0 || cp.used_count < cp.max_uses)) {
-      discount = cp.type === "percent" ? Math.floor(subtotal * cp.value / 100) : Math.min(cp.value, subtotal);
-      couponCode = cp.code;
-      await db.prepare("UPDATE coupons SET used_count=used_count+1 WHERE id=?").bind(cp.id).run();
+    const holdRes = await validateAndHoldCoupon({
+      db,
+      code: String(b.coupon_code),
+      userId: u.id,
+      subtotal
+    });
+    if (!holdRes.ok) {
+      return c.json({ error: holdRes.error }, holdRes.status || 400);
     }
+    discount = holdRes.discount;
+    couponCode = holdRes.coupon.code;
+    heldCouponId = holdRes.holdId;
+  } else {
+    await releaseUserDraftHolds(db, u.id);
   }
   const total = demoFree ? 0 : Math.max(0, subtotal - discount);
   const pm = demoFree ? "demo_free" : ["bank", "momo", "balance"].includes(b.payment_method) ? b.payment_method : "bank";
@@ -19840,11 +20700,17 @@ app.post("/api/orders/create", requireAuth, async (c) => {
     demoFree ? "demo_free" : status === "paid" ? "balance" : null
   ).run();
   const orderId = ord.meta.last_row_id;
+  if (heldCouponId) {
+    await attachHoldToOrder(db, heldCouponId, orderId);
+  }
   for (const it of items) {
     await db.prepare("INSERT INTO order_items (order_id, product_id, product_name, price) VALUES (?,?,?,?)").bind(orderId, it.id, it.name, it.price).run();
   }
   await db.prepare("DELETE FROM cart_items WHERE user_id=?").bind(u.id).run();
   if (status === "paid") {
+    if (!demoFree && couponCode) {
+      await consumeOrderCoupon(db, orderId, couponCode, u.id);
+    }
     await grantLicenses(db, u.id, orderId);
     if (!demoFree) await creditAffiliate(db, u.id, total);
     await notifyOrderPaid(c.env, db, { id: orderId, order_code: code, user_id: u.id, total }, getRequestOrigin(c));
@@ -19913,6 +20779,9 @@ async function settleOrder(db, order, opts) {
   await db.prepare(
     `UPDATE orders SET status='paid', paid_at=?, paid_amount=?, paid_via=?, bank_tx_id=? WHERE id=?`
   ).bind((/* @__PURE__ */ new Date()).toISOString(), opts.paidAmount, opts.paidVia, opts.bankTxId ?? null, order.id).run();
+  if (order.coupon_code && order.coupon_code !== "DEMO_FREE") {
+    await consumeOrderCoupon(db, order.id, order.coupon_code, order.user_id);
+  }
   await grantLicenses(db, order.user_id, order.id);
   await creditAffiliate(db, order.user_id, order.total);
   await notifyOrderPaid(opts.env, db, order, opts.origin);
@@ -19948,6 +20817,7 @@ async function processTransaction(db, tx, rawPayload, tolerance, env, origin) {
       message: `Kh\xF4ng t\xECm th\u1EA5y m\xE3 \u0111\u01A1n (bank_tx #${id}) \u2014 c\u1EA7n \u0111\u1ED1i so\xE1t th\u1EE7 c\xF4ng`
     };
   }
+  await releaseExpiredCouponHolds(db);
   let order = null;
   let matchedCode = "";
   for (const code of codes) {
@@ -20091,11 +20961,12 @@ app.post("/api/webhook/bank", async (c) => {
 });
 app.post("/api/orders/confirm", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
+  await releaseExpiredCouponHolds(db);
   const { order_code } = await c.req.json();
   const o = await db.prepare("SELECT * FROM orders WHERE order_code=? AND user_id=?").bind(order_code, u.id).first();
   if (!o) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y \u0111\u01A1n h\xE0ng" }, 404);
   if (o.status === "paid") return c.json({ ok: true, status: "paid", message: "\u0110\u01A1n \u0111\xE3 \u0111\u01B0\u1EE3c thanh to\xE1n" });
-  if (o.status !== "pending") return c.json({ error: "\u0110\u01A1n h\xE0ng \u0111\xE3 \u0111\u01B0\u1EE3c x\u1EED l\xFD" }, 400);
+  if (o.status !== "pending") return c.json({ error: "\u0110\u01A1n h\xE0ng \u0111\xE3 hu\u1EF7 ho\u1EB7c h\u1EBFt th\u1EDDi gian gi\u1EEF m\xE3 gi\u1EA3m gi\xE1" }, 400);
   const st = await db.prepare(`SELECT value FROM settings WHERE key='auto_confirm_manual'`).first();
   const autoConfirm = st?.value === "1";
   if (autoConfirm) {
@@ -20108,23 +20979,37 @@ app.post("/api/orders/confirm", requireAuth, async (c) => {
     message: "\u0110\xE3 ghi nh\u1EADn. H\u1EC7 th\u1ED1ng \u0111ang ki\u1EC3m tra giao d\u1ECBch, th\u01B0\u1EDDng m\u1EA5t 10\u201360 gi\xE2y. Trang s\u1EBD t\u1EF1 c\u1EADp nh\u1EADt."
   });
 });
+app.post("/api/orders/:code/cancel", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  await releaseExpiredCouponHolds(db);
+  const o = await db.prepare("SELECT * FROM orders WHERE order_code=? AND user_id=?").bind(c.req.param("code"), u.id).first();
+  if (!o) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y \u0111\u01A1n h\xE0ng" }, 404);
+  if (o.status !== "pending") return c.json({ error: "Ch\u1EC9 c\xF3 th\u1EC3 hu\u1EF7 \u0111\u01A1n h\xE0ng \u0111ang ch\u1EDD thanh to\xE1n" }, 400);
+  await db.prepare(`UPDATE orders SET status='cancelled' WHERE id=? AND status='pending'`).bind(o.id).run();
+  await releaseOrderCoupon(db, o.id);
+  return c.json({ ok: true, message: "\u0110\xE3 hu\u1EF7 \u0111\u01A1n h\xE0ng v\xE0 tr\u1EA3 l\u1EA1i m\xE3 gi\u1EA3m gi\xE1!" });
+});
 app.get("/api/orders/:code/status", requireAuth, async (c) => {
-  const u = c.get("user");
-  const o = await c.env.DB.prepare(
-    "SELECT order_code, status, total, paid_amount, paid_at, paid_via FROM orders WHERE order_code=? AND user_id=?"
+  const db = c.env.DB, u = c.get("user");
+  await releaseExpiredCouponHolds(db);
+  const o = await db.prepare(
+    "SELECT id, order_code, status, total, paid_amount, paid_at, paid_via, coupon_code FROM orders WHERE order_code=? AND user_id=?"
   ).bind(c.req.param("code"), u.id).first();
   if (!o) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y \u0111\u01A1n h\xE0ng" }, 404);
-  return c.json({ ok: true, ...o });
+  const hold = o.status === "pending" ? await getOrderActiveHold(db, o.id) : null;
+  return c.json({ ok: true, ...o, hold_expires_at: hold?.expires_at || null });
 });
 app.get("/don-hang/:code", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
+  await releaseExpiredCouponHolds(db);
   const o = await db.prepare("SELECT * FROM orders WHERE order_code=? AND user_id=?").bind(c.req.param("code"), u.id).first();
   if (!o) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
-  const [items, s] = await Promise.all([
+  const [items, s, activeHold] = await Promise.all([
     db.prepare(
       `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
     ).bind(o.id).all(),
-    fetchSettings(db).catch(() => c.get("settings"))
+    fetchSettings(db).catch(() => c.get("settings")),
+    o.status === "pending" ? getOrderActiveHold(db, o.id) : Promise.resolve(null)
   ]);
   return c.html(/* @__PURE__ */ jsxDEV(
     OrderPage,
@@ -20132,6 +21017,7 @@ app.get("/don-hang/:code", requireAuth, async (c) => {
       ...base(c),
       order: o,
       items: items.results,
+      holdExpiresAt: activeHold?.expires_at || null,
       bank: { bank_name: s.bank_name, bank_code: s.bank_code, bank_account: s.bank_account, bank_owner: s.bank_owner }
     }
   ));
@@ -21238,6 +22124,9 @@ app.post("/api/admin/orders/:id/status", requireAdmin, async (c) => {
     return c.json({ ok: true });
   }
   await db.prepare("UPDATE orders SET status=?, paid_at=? WHERE id=?").bind(status, status === "paid" ? (/* @__PURE__ */ new Date()).toISOString() : o.paid_at, o.id).run();
+  if (status === "cancelled" || status === "refunded") {
+    await releaseOrderCoupon(db, o.id);
+  }
   if (status === "refunded" && o.status === "paid") {
     await db.prepare("DELETE FROM licenses WHERE order_id=?").bind(o.id).run();
     await db.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(o.total, o.user_id).run();
@@ -21466,20 +22355,169 @@ app.delete("/api/admin/categories/:id", requireAdmin, async (c) => {
   return c.json({ ok: true });
 });
 app.get("/admin/ma-giam-gia", requireAdmin, async (c) => {
-  const rows = await c.env.DB.prepare("SELECT * FROM coupons ORDER BY id DESC").all();
-  return c.html(/* @__PURE__ */ jsxDEV(AdminCoupons, { user: c.get("user"), activeKey: "coupons", heading: "M\xE3 gi\u1EA3m gi\xE1", coupons: rows.results }));
+  const db = c.env.DB;
+  await releaseExpiredCouponHolds(db);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const filter = (c.req.query("filter") || "all").trim();
+  const selectedBatch = (c.req.query("batch") || "").trim();
+  const [allCouponsRes, activeHoldsRes] = await Promise.all([
+    db.prepare(
+      `SELECT c.*,
+        (SELECT COUNT(*) FROM coupon_holds h WHERE h.coupon_id=c.id AND h.status='held' AND h.expires_at > ?) AS held_count
+       FROM coupons c ORDER BY c.id DESC`
+    ).bind(nowIso).all().catch(
+      () => db.prepare("SELECT *, 0 AS held_count FROM coupons ORDER BY id DESC").all()
+    ),
+    db.prepare(
+      `SELECT h.*, u.email AS user_email, u.full_name AS user_name, o.order_code
+       FROM coupon_holds h
+       JOIN users u ON u.id = h.user_id
+       LEFT JOIN orders o ON o.id = h.order_id
+       WHERE h.status = 'held' AND h.expires_at > ?
+       ORDER BY h.expires_at ASC`
+    ).bind(nowIso).all().catch(() => ({ results: [] }))
+  ]);
+  const allCoupons = allCouponsRes.results || [];
+  const activeHolds = activeHoldsRes.results || [];
+  const batches = Array.from(
+    new Set(allCoupons.map((x) => String(x.batch_name || "").trim()).filter(Boolean))
+  );
+  const stats = {
+    total: allCoupons.length,
+    active: allCoupons.filter((x) => x.status === "active" && (Number(x.max_uses || 0) === 0 || Number(x.used_count || 0) < Number(x.max_uses))).length,
+    heldSlots: activeHolds.length,
+    paidUses: allCoupons.reduce((s, x) => s + Number(x.used_count || 0), 0),
+    inactiveOrDone: allCoupons.filter((x) => x.status !== "active" || Number(x.max_uses || 0) > 0 && Number(x.used_count || 0) >= Number(x.max_uses)).length
+  };
+  let coupons = allCoupons;
+  if (selectedBatch) {
+    coupons = coupons.filter((x) => String(x.batch_name || "").trim() === selectedBatch);
+  }
+  if (filter === "active") {
+    coupons = coupons.filter((x) => x.status === "active" && (Number(x.max_uses || 0) === 0 || Number(x.used_count || 0) < Number(x.max_uses)));
+  } else if (filter === "held") {
+    coupons = coupons.filter((x) => Number(x.held_count || 0) > 0);
+  } else if (filter === "inactive") {
+    coupons = coupons.filter((x) => x.status !== "active");
+  } else if (filter === "exhausted") {
+    coupons = coupons.filter((x) => Number(x.max_uses || 0) > 0 && Number(x.used_count || 0) >= Number(x.max_uses));
+  }
+  return c.html(
+    /* @__PURE__ */ jsxDEV(
+      AdminCoupons,
+      {
+        user: c.get("user"),
+        activeKey: "coupons",
+        heading: "Qu\u1EA3n l\xFD m\xE3 gi\u1EA3m gi\xE1",
+        coupons,
+        allCoupons,
+        activeHolds,
+        batches,
+        stats,
+        filter,
+        selectedBatch
+      }
+    )
+  );
 });
 app.post("/api/admin/coupons", requireAdmin, async (c) => {
   const b = await c.req.json();
-  const code = (b.code || "").trim().toUpperCase();
-  if (!code || !b.value) return c.json({ error: "Thi\u1EBFu m\xE3 ho\u1EB7c gi\xE1 tr\u1ECB" }, 400);
+  const code = (b.code || "").trim().toUpperCase().replace(/\s+/g, "");
+  const val = Number(b.value);
+  if (!code || !val || val <= 0) return c.json({ error: "Thi\u1EBFu m\xE3 ho\u1EB7c gi\xE1 tr\u1ECB gi\u1EA3m h\u1EE3p l\u1EC7" }, 400);
+  const type = b.type === "fixed" ? "fixed" : "percent";
+  if (type === "percent" && val > 100) return c.json({ error: "Gi\u1EA3m theo % t\u1ED1i \u0111a 100%" }, 400);
   const dup = await c.env.DB.prepare("SELECT 1 x FROM coupons WHERE code=?").bind(code).first();
   if (dup) return c.json({ error: "M\xE3 n\xE0y \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
-  await c.env.DB.prepare("INSERT INTO coupons (code,type,value,min_order,max_uses,expires_at) VALUES (?,?,?,?,?,?)").bind(code, b.type || "percent", +b.value, +b.min_order || 0, +b.max_uses || 0, b.expires_at || null).run();
-  return c.json({ ok: true, message: "\u0110\xE3 t\u1EA1o m\xE3 gi\u1EA3m gi\xE1!" });
+  const status = b.status === "inactive" ? "inactive" : "active";
+  const batchName = String(b.batch_name || "").trim() || null;
+  await c.env.DB.prepare(
+    "INSERT INTO coupons (code,type,value,min_order,max_uses,expires_at,status,batch_name) VALUES (?,?,?,?,?,?,?,?)"
+  ).bind(code, type, val, Math.max(0, Number(b.min_order) || 0), Math.max(0, Number(b.max_uses) || 0), b.expires_at || null, status, batchName).run();
+  return c.json({ ok: true, code, message: `\u0110\xE3 t\u1EA1o m\xE3 ${code} (${status === "active" ? "\u0111ang b\u1EADt" : "ch\u01B0a b\u1EADt"})!` });
+});
+app.post("/api/admin/coupons/batch", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const b = await c.req.json();
+  const quantity = Math.min(100, Math.max(1, Math.floor(Number(b.quantity) || 10)));
+  const val = Number(b.value);
+  if (!val || val <= 0) return c.json({ error: "Vui l\xF2ng nh\u1EADp gi\xE1 tr\u1ECB gi\u1EA3m h\u1EE3p l\u1EC7" }, 400);
+  const type = b.type === "fixed" ? "fixed" : "percent";
+  if (type === "percent" && val > 100) return c.json({ error: "Gi\u1EA3m theo % t\u1ED1i \u0111a 100%" }, 400);
+  const prefix = String(b.prefix || (type === "percent" ? `KS${val}` : "KSG")).trim().toUpperCase();
+  const maxUses = Math.max(1, Math.floor(Number(b.max_uses) || 1));
+  const minOrder = Math.max(0, Number(b.min_order) || 0);
+  const expiresAt = String(b.expires_at || "").trim() || null;
+  const status = b.status === "inactive" ? "inactive" : "active";
+  const batchName = String(b.batch_name || "").trim() || `${prefix} (${quantity} m\xE3 -${type === "percent" ? val + "%" : formatVND(val)})`;
+  const codes = await generateUniqueCouponCodes(db, prefix, quantity);
+  for (const code of codes) {
+    await db.prepare(
+      "INSERT INTO coupons (code,type,value,min_order,max_uses,expires_at,status,batch_name) VALUES (?,?,?,?,?,?,?,?)"
+    ).bind(code, type, val, minOrder, maxUses, expiresAt, status, batchName).run();
+  }
+  return c.json({
+    ok: true,
+    count: codes.length,
+    codes,
+    batch_name: batchName,
+    message: `\u0110\xE3 t\u1EA1o th\xE0nh c\xF4ng ${codes.length} m\xE3 gi\u1EA3m gi\xE1 (${status === "active" ? "\u0111ang b\u1EADt ngay" : "t\u1EA1o s\u1EB5n ch\u01B0a b\u1EADt"})!`
+  });
+});
+app.post("/api/admin/coupons/:id/toggle", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = Number(c.req.param("id"));
+  const row = await db.prepare("SELECT id, code, status FROM coupons WHERE id=?").bind(id).first();
+  if (!row) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y m\xE3 gi\u1EA3m gi\xE1" }, 404);
+  const nextStatus = row.status === "active" ? "inactive" : "active";
+  await db.prepare("UPDATE coupons SET status=? WHERE id=?").bind(nextStatus, id).run();
+  return c.json({
+    ok: true,
+    status: nextStatus,
+    message: nextStatus === "active" ? `\u0110\xE3 B\u1EACT m\xE3 ${row.code}` : `\u0110\xE3 T\u1EAET m\xE3 ${row.code}`
+  });
+});
+app.post("/api/admin/coupons/disable-all", requireAdmin, async (c) => {
+  const res = await c.env.DB.prepare(`UPDATE coupons SET status='inactive' WHERE status='active'`).run();
+  return c.json({ ok: true, changed: res.meta?.changes || 0, message: "\u0110\xE3 t\u1EAFt to\xE0n b\u1ED9 m\xE3 gi\u1EA3m gi\xE1 \u0111ang b\u1EADt!" });
+});
+app.post("/api/admin/coupons/batch-status", requireAdmin, async (c) => {
+  const b = await c.req.json();
+  const batchName = String(b.batch_name || "").trim();
+  const status = b.status === "active" ? "active" : "inactive";
+  if (!batchName) return c.json({ error: "Thi\u1EBFu t\xEAn \u0111\u1EE3t m\xE3" }, 400);
+  await c.env.DB.prepare("UPDATE coupons SET status=? WHERE batch_name=?").bind(status, batchName).run();
+  return c.json({ ok: true, message: status === "active" ? `\u0110\xE3 B\u1EACT c\u1EA3 \u0111\u1EE3t "${batchName}"` : `\u0110\xE3 T\u1EAET c\u1EA3 \u0111\u1EE3t "${batchName}"` });
+});
+app.post("/api/admin/coupons/:id/release-holds", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = Number(c.req.param("id"));
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const holds = await db.prepare(`SELECT id, order_id FROM coupon_holds WHERE coupon_id=? AND status='held'`).bind(id).all();
+  for (const h of holds.results || []) {
+    await db.prepare(`UPDATE coupon_holds SET status='released', updated_at=? WHERE id=?`).bind(nowIso, h.id).run();
+    if (h.order_id) {
+      await db.prepare(`UPDATE orders SET status='cancelled' WHERE id=? AND status='pending'`).bind(h.order_id).run();
+    }
+  }
+  return c.json({ ok: true, released: (holds.results || []).length, message: "\u0110\xE3 gi\u1EA3i ph\xF3ng l\u01B0\u1EE3t gi\u1EEF t\u1EA1m c\u1EE7a m\xE3 n\xE0y!" });
+});
+app.post("/api/admin/coupon-holds/:id/release", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = Number(c.req.param("id"));
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const h = await db.prepare(`SELECT id, order_id, coupon_code FROM coupon_holds WHERE id=? AND status='held'`).bind(id).first();
+  if (!h) return c.json({ error: "L\u01B0\u1EE3t gi\u1EEF t\u1EA1m kh\xF4ng c\xF2n t\u1ED3n t\u1EA1i" }, 404);
+  await db.prepare(`UPDATE coupon_holds SET status='released', updated_at=? WHERE id=?`).bind(nowIso, h.id).run();
+  if (h.order_id) {
+    await db.prepare(`UPDATE orders SET status='cancelled' WHERE id=? AND status='pending'`).bind(h.order_id).run();
+  }
+  return c.json({ ok: true, message: `\u0110\xE3 nh\u1EA3 m\xE3 ${h.coupon_code} ngay l\u1EADp t\u1EE9c!` });
 });
 app.delete("/api/admin/coupons/:id", requireAdmin, async (c) => {
-  await c.env.DB.prepare("DELETE FROM coupons WHERE id=?").bind(c.req.param("id")).run();
+  const id = Number(c.req.param("id"));
+  await c.env.DB.prepare("DELETE FROM coupon_holds WHERE coupon_id=?").bind(id).run().catch(() => null);
+  await c.env.DB.prepare("DELETE FROM coupons WHERE id=?").bind(id).run();
   return c.json({ ok: true });
 });
 app.get("/admin/bai-viet", requireAdmin, async (c) => {
