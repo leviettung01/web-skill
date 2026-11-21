@@ -17700,7 +17700,7 @@ var AdminCoupons = (props) => {
         ] });
       }) })
     ] }),
-    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_370px] gap-5 items-start", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "grid xl:grid-cols-[1fr_345px] gap-5 items-start", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "space-y-4", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
@@ -17777,16 +17777,15 @@ var AdminCoupons = (props) => {
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
           /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
-            /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "M\xE3" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Gi\u1EA3m" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "\u0110\xE3 TT" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Gi\u1EEF t\u1EA1m 10p" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "C\xF2n l\u1EA1i" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Tr\u1EA1ng th\xE1i" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "H\u1EA1n" }),
-            /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Thao t\xE1c" })
+            /* @__PURE__ */ jsxDEV("th", { class: "text-left whitespace-nowrap", children: "M\xE3" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-left whitespace-nowrap", children: "Gi\u1EA3m / H\u1EA1n" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "\u0110\xE3 TT" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "Gi\u1EEF 10p" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "C\xF2n l\u1EA1i" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "Tr\u1EA1ng th\xE1i" }),
+            /* @__PURE__ */ jsxDEV("th", { class: "text-right whitespace-nowrap", children: "Thao t\xE1c" })
           ] }) }),
-          /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.coupons.length === 0 ? /* @__PURE__ */ jsxDEV("tr", { children: /* @__PURE__ */ jsxDEV("td", { colspan: 8, class: "py-12 text-center text-slate-500", children: [
+          /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.coupons.length === 0 ? /* @__PURE__ */ jsxDEV("tr", { children: /* @__PURE__ */ jsxDEV("td", { colspan: 7, class: "py-12 text-center text-slate-500", children: [
             /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ticket text-2xl block mb-2 text-slate-300" }),
             "Kh\xF4ng c\xF3 m\xE3 gi\u1EA3m gi\xE1 n\xE0o trong b\u1ED9 l\u1ECDc n\xE0y."
           ] }) }) : props.coupons.map((c) => {
@@ -17799,49 +17798,51 @@ var AdminCoupons = (props) => {
             return /* @__PURE__ */ jsxDEV("tr", { class: !isActive ? "bg-slate-50/70" : "", children: [
               /* @__PURE__ */ jsxDEV("td", { children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ jsxDEV("code", { class: `px-2 py-1 rounded font-bold text-xs ${isActive && !isExhausted ? "bg-indigo-50 text-indigo-700" : "bg-slate-200 text-slate-600"}`, children: c.code }),
+                  /* @__PURE__ */ jsxDEV("code", { class: `px-2 py-1 rounded font-bold text-xs whitespace-nowrap ${isActive && !isExhausted ? "bg-indigo-50 text-indigo-700" : "bg-slate-200 text-slate-600"}`, children: c.code }),
                   /* @__PURE__ */ jsxDEV(
                     "button",
                     {
                       type: "button",
                       "data-copy": c.code,
                       title: "Ch\xE9p m\xE3",
-                      class: "w-6 h-6 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 grid place-items-center text-[11px] cursor-pointer",
+                      class: "w-6 h-6 shrink-0 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 grid place-items-center text-[11px] cursor-pointer",
                       children: /* @__PURE__ */ jsxDEV("i", { class: "far fa-copy" })
                     }
                   )
                 ] }),
-                c.batch_name && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]", title: c.batch_name, children: c.batch_name })
+                c.batch_name && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5 truncate max-w-[175px]", title: c.batch_name, children: c.batch_name })
               ] }),
-              /* @__PURE__ */ jsxDEV("td", { children: [
+              /* @__PURE__ */ jsxDEV("td", { class: "whitespace-nowrap", children: [
                 /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900", children: c.type === "percent" ? c.value + "%" : formatVND(c.value) }),
-                Number(c.min_order || 0) > 0 && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400", children: [
-                  "\u0110\u01A1n \u2265 ",
-                  formatVND(c.min_order)
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400", children: [
+                  Number(c.min_order || 0) > 0 ? `\u0110\u01A1n \u2265 ${formatVND(c.min_order)} \xB7 ` : "",
+                  c.expires_at ? `HSD ${formatDate(c.expires_at)}` : "Kh\xF4ng h\u1EA1n"
                 ] })
               ] }),
-              /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold tabular-nums text-slate-800", children: [
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold tabular-nums text-slate-800 whitespace-nowrap", children: [
                 used,
                 max > 0 ? ` / ${max}` : ""
               ] }),
-              /* @__PURE__ */ jsxDEV("td", { class: "text-center tabular-nums", children: held > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold", children: [
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center tabular-nums whitespace-nowrap", children: held > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold whitespace-nowrap", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[10px]" }),
                 held
               ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 text-xs", children: "0" }) }),
-              /* @__PURE__ */ jsxDEV("td", { class: "text-center tabular-nums", children: isExhausted ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold", children: "H\u1EBFt l\u01B0\u1EE3t" }) : avail === null ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-700 font-bold text-xs", children: "\u221E" }) : avail === 0 ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold", children: "\u0110ang gi\u1EEF h\u1EBFt" }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold", children: [
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center tabular-nums whitespace-nowrap", children: isExhausted ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold whitespace-nowrap", children: "H\u1EBFt l\u01B0\u1EE3t" }) : avail === null ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-700 font-bold text-xs", children: "\u221E" }) : avail === 0 ? /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold whitespace-nowrap", children: "\u0110ang gi\u1EEF h\u1EBFt" }) : /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold whitespace-nowrap", children: [
                 "C\xF2n ",
                 avail
               ] }) }),
-              /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(
+              /* @__PURE__ */ jsxDEV("td", { class: "text-center whitespace-nowrap", children: /* @__PURE__ */ jsxDEV(
                 "button",
                 {
                   type: "button",
                   "data-id": c.id,
-                  class: `btn-toggle-coupon h-7 px-2.5 rounded-full text-[11px] font-bold transition cursor-pointer ${isActive ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300" : "bg-slate-200 text-slate-600 hover:bg-slate-300 border border-slate-300"}`,
-                  children: isActive ? "\u25CF \u0110ang b\u1EADt" : "\u25CB \u0110ang t\u1EAFt"
+                  class: `btn-toggle-coupon inline-flex items-center justify-center gap-1 whitespace-nowrap h-7 px-2.5 rounded-full text-[11px] font-bold transition cursor-pointer ${isActive ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300" : "bg-slate-200 text-slate-600 hover:bg-slate-300 border border-slate-300"}`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("span", { children: isActive ? "\u25CF" : "\u25CB" }),
+                    /* @__PURE__ */ jsxDEV("span", { children: isActive ? "\u0110ang b\u1EADt" : "\u0110ang t\u1EAFt" })
+                  ]
                 }
               ) }),
-              /* @__PURE__ */ jsxDEV("td", { class: "text-slate-500 text-xs whitespace-nowrap", children: c.expires_at ? formatDate(c.expires_at) : "Kh\xF4ng h\u1EA1n" }),
               /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
                 held > 0 && /* @__PURE__ */ jsxDEV(
                   "button",

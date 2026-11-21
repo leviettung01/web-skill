@@ -1138,7 +1138,7 @@ export const AdminCoupons: FC<AdminProps & {
         </div>
       )}
 
-      <div class="grid lg:grid-cols-[1fr_370px] gap-5 items-start">
+      <div class="grid xl:grid-cols-[1fr_345px] gap-5 items-start">
         {/* LEFT: Coupon List + Filters + Batch Actions */}
         <div class="space-y-4">
           <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3">
@@ -1198,20 +1198,19 @@ export const AdminCoupons: FC<AdminProps & {
               <table class="w-full admin-table text-sm">
                 <thead class="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th class="text-left">Mã</th>
-                    <th class="text-left">Giảm</th>
-                    <th class="text-center">Đã TT</th>
-                    <th class="text-center">Giữ tạm 10p</th>
-                    <th class="text-center">Còn lại</th>
-                    <th class="text-center">Trạng thái</th>
-                    <th class="text-left">Hạn</th>
-                    <th class="text-right">Thao tác</th>
+                    <th class="text-left whitespace-nowrap">Mã</th>
+                    <th class="text-left whitespace-nowrap">Giảm / Hạn</th>
+                    <th class="text-center whitespace-nowrap">Đã TT</th>
+                    <th class="text-center whitespace-nowrap">Giữ 10p</th>
+                    <th class="text-center whitespace-nowrap">Còn lại</th>
+                    <th class="text-center whitespace-nowrap">Trạng thái</th>
+                    <th class="text-right whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   {props.coupons.length === 0 ? (
                     <tr>
-                      <td colspan={8} class="py-12 text-center text-slate-500">
+                      <td colspan={7} class="py-12 text-center text-slate-500">
                         <i class="fas fa-ticket text-2xl block mb-2 text-slate-300"></i>
                         Không có mã giảm giá nào trong bộ lọc này.
                       </td>
@@ -1227,48 +1226,51 @@ export const AdminCoupons: FC<AdminProps & {
                       <tr class={!isActive ? 'bg-slate-50/70' : ''}>
                         <td>
                           <div class="flex items-center gap-1.5">
-                            <code class={`px-2 py-1 rounded font-bold text-xs ${isActive && !isExhausted ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>{c.code}</code>
+                            <code class={`px-2 py-1 rounded font-bold text-xs whitespace-nowrap ${isActive && !isExhausted ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>{c.code}</code>
                             <button type="button" data-copy={c.code} title="Chép mã"
-                              class="w-6 h-6 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 grid place-items-center text-[11px] cursor-pointer">
+                              class="w-6 h-6 shrink-0 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 grid place-items-center text-[11px] cursor-pointer">
                               <i class="far fa-copy"></i>
                             </button>
                           </div>
-                          {c.batch_name && <div class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]" title={c.batch_name}>{c.batch_name}</div>}
+                          {c.batch_name && <div class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[175px]" title={c.batch_name}>{c.batch_name}</div>}
                         </td>
-                        <td>
+                        <td class="whitespace-nowrap">
                           <div class="font-bold text-slate-900">{c.type === 'percent' ? c.value + '%' : formatVND(c.value)}</div>
-                          {Number(c.min_order || 0) > 0 && <div class="text-[11px] text-slate-400">Đơn ≥ {formatVND(c.min_order)}</div>}
+                          <div class="text-[11px] text-slate-400">
+                            {Number(c.min_order || 0) > 0 ? `Đơn ≥ ${formatVND(c.min_order)} · ` : ''}
+                            {c.expires_at ? `HSD ${formatDate(c.expires_at)}` : 'Không hạn'}
+                          </div>
                         </td>
-                        <td class="text-center font-semibold tabular-nums text-slate-800">
+                        <td class="text-center font-semibold tabular-nums text-slate-800 whitespace-nowrap">
                           {used}{max > 0 ? ` / ${max}` : ''}
                         </td>
-                        <td class="text-center tabular-nums">
+                        <td class="text-center tabular-nums whitespace-nowrap">
                           {held > 0 ? (
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold whitespace-nowrap">
                               <i class="fas fa-clock text-[10px]"></i>{held}
                             </span>
                           ) : <span class="text-slate-400 text-xs">0</span>}
                         </td>
-                        <td class="text-center tabular-nums">
+                        <td class="text-center tabular-nums whitespace-nowrap">
                           {isExhausted ? (
-                            <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">Hết lượt</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold whitespace-nowrap">Hết lượt</span>
                           ) : avail === null ? (
                             <span class="text-emerald-700 font-bold text-xs">∞</span>
                           ) : avail === 0 ? (
-                            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Đang giữ hết</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold whitespace-nowrap">Đang giữ hết</span>
                           ) : (
-                            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Còn {avail}</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold whitespace-nowrap">Còn {avail}</span>
                           )}
                         </td>
-                        <td class="text-center">
+                        <td class="text-center whitespace-nowrap">
                           <button type="button" data-id={c.id}
-                            class={`btn-toggle-coupon h-7 px-2.5 rounded-full text-[11px] font-bold transition cursor-pointer ${isActive
+                            class={`btn-toggle-coupon inline-flex items-center justify-center gap-1 whitespace-nowrap h-7 px-2.5 rounded-full text-[11px] font-bold transition cursor-pointer ${isActive
                               ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
                               : 'bg-slate-200 text-slate-600 hover:bg-slate-300 border border-slate-300'}`}>
-                            {isActive ? '● Đang bật' : '○ Đang tắt'}
+                            <span>{isActive ? '●' : '○'}</span>
+                            <span>{isActive ? 'Đang bật' : 'Đang tắt'}</span>
                           </button>
                         </td>
-                        <td class="text-slate-500 text-xs whitespace-nowrap">{c.expires_at ? formatDate(c.expires_at) : 'Không hạn'}</td>
                         <td class="text-right whitespace-nowrap">
                           {held > 0 && (
                             <button type="button" data-id={c.id} data-code={c.code} title="Nhả các lượt đang giữ tạm"
