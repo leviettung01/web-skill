@@ -15,7 +15,7 @@ await client.connect()
 const onlyArg = process.argv.find(a => a.startsWith('--only='))
 const files = onlyArg
   ? [onlyArg.slice('--only='.length)]
-  : ['0001_initial_schema.sql', '0002_bank_webhook.sql', '0003_auth_notifications.sql', '0004_mcp_agent_skills.sql', '0005_real_mcp_video_skills.sql', '0006_before_after_raw_video.sql', '0008_mcp_oauth_and_unified_connect.sql', '0009_license_mcp_enabled.sql', '0011_coupon_holds.sql', 'seed.sql']
+  : ['0001_initial_schema.sql', '0002_bank_webhook.sql', '0003_auth_notifications.sql', '0004_mcp_agent_skills.sql', '0005_real_mcp_video_skills.sql', '0006_before_after_raw_video.sql', '0008_mcp_oauth_and_unified_connect.sql', '0009_license_mcp_enabled.sql', '0011_coupon_holds.sql', '0012_tiers_memberships.sql', 'seed.sql']
 
 for (const f of files) {
   const sql = readFileSync(join(dir, f), 'utf8')

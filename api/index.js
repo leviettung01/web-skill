@@ -7894,6 +7894,444 @@ function genLicenseKey() {
   return `${seg()}-${seg()}-${seg()}-${seg()}`;
 }
 
+// src/lib/tiers.ts
+var DEFAULT_USD_VND_RATE = 27e3;
+var SKILL_TIER_ORDER = ["vip1", "vip2", "vip3", "vip4", "pro"];
+var SKILL_TIERS = {
+  vip1: {
+    key: "vip1",
+    code: "VIP I",
+    shortLabel: "VIP I",
+    subtitle: "Skill Ph\u1ED5 th\xF4ng",
+    priceRangeVnd: "135.000\u0111",
+    priceRangeUsd: "~$5",
+    suggestedPriceVnd: 135e3,
+    isRetailOnly: false,
+    icon: "fa-book-open",
+    bannerGrad: "from-blue-600 to-sky-500",
+    badgeCls: "bg-blue-500/20 border-blue-400/45 text-blue-200",
+    adminBadgeCls: "bg-blue-100 text-blue-800 border-blue-200",
+    accentText: "text-blue-400"
+  },
+  vip2: {
+    key: "vip2",
+    code: "VIP II",
+    shortLabel: "VIP II",
+    subtitle: "Skill N\xE2ng cao",
+    priceRangeVnd: "270.000\u0111",
+    priceRangeUsd: "~$10",
+    suggestedPriceVnd: 27e4,
+    isRetailOnly: false,
+    icon: "fa-layer-group",
+    bannerGrad: "from-emerald-600 to-teal-500",
+    badgeCls: "bg-emerald-500/20 border-emerald-400/45 text-emerald-200",
+    adminBadgeCls: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    accentText: "text-emerald-400"
+  },
+  vip3: {
+    key: "vip3",
+    code: "VIP III",
+    shortLabel: "VIP III",
+    subtitle: "Skill Cao c\u1EA5p",
+    priceRangeVnd: "399K \u2013 599K",
+    priceRangeUsd: "~$15 \u2013 $22",
+    suggestedPriceVnd: 499e3,
+    isRetailOnly: false,
+    icon: "fa-crown",
+    bannerGrad: "from-amber-500 to-orange-500",
+    badgeCls: "bg-amber-500/20 border-amber-400/45 text-amber-200",
+    adminBadgeCls: "bg-amber-100 text-amber-800 border-amber-200",
+    accentText: "text-amber-400"
+  },
+  vip4: {
+    key: "vip4",
+    code: "VIP IV",
+    shortLabel: "VIP IV",
+    subtitle: "Skill Chuy\xEAn s\xE2u",
+    priceRangeVnd: "999.000\u0111",
+    priceRangeUsd: "~$37",
+    suggestedPriceVnd: 999e3,
+    isRetailOnly: false,
+    icon: "fa-gem",
+    bannerGrad: "from-violet-600 to-purple-600",
+    badgeCls: "bg-violet-500/20 border-violet-400/45 text-violet-200",
+    adminBadgeCls: "bg-violet-100 text-violet-800 border-violet-200",
+    accentText: "text-violet-400"
+  },
+  pro: {
+    key: "pro",
+    code: "SKILL PRO",
+    shortLabel: "PRO",
+    subtitle: "Ch\u1EC9 b\xE1n l\u1EBB ri\xEAng",
+    priceRangeVnd: "Tu\u1EF3 \u0111\u1ECBnh gi\xE1",
+    priceRangeUsd: "Retail Only",
+    suggestedPriceVnd: 15e5,
+    isRetailOnly: true,
+    icon: "fa-star",
+    bannerGrad: "from-rose-600 via-fuchsia-600 to-amber-500",
+    badgeCls: "bg-gradient-to-r from-rose-500/25 to-amber-500/25 border-rose-400/50 text-amber-200",
+    adminBadgeCls: "bg-rose-100 text-rose-800 border-rose-200",
+    accentText: "text-rose-400"
+  }
+};
+function normalizeSkillTier(tier, fallbackPrice) {
+  const t = String(tier || "").trim().toLowerCase();
+  if (t === "vip1" || t === "vip2" || t === "vip3" || t === "vip4" || t === "pro") return t;
+  if (typeof fallbackPrice === "number" && Number.isFinite(fallbackPrice)) {
+    return inferSkillTierFromPrice(fallbackPrice);
+  }
+  return "vip3";
+}
+function inferSkillTierFromPrice(price) {
+  const p = Number(price) || 0;
+  if (p <= 199e3) return "vip1";
+  if (p <= 349e3) return "vip2";
+  if (p <= 799e3) return "vip3";
+  if (p <= 1099e3) return "vip4";
+  return "pro";
+}
+function getSkillTierMeta(tier, fallbackPrice) {
+  return SKILL_TIERS[normalizeSkillTier(tier, fallbackPrice)];
+}
+function getUsdRate(settings) {
+  const raw2 = Number(settings?.usd_vnd_rate || DEFAULT_USD_VND_RATE);
+  return Number.isFinite(raw2) && raw2 >= 1e3 ? raw2 : DEFAULT_USD_VND_RATE;
+}
+function formatUSD(vnd, rate = DEFAULT_USD_VND_RATE, withTilde = true) {
+  const amt = Number(vnd || 0);
+  const r = Number.isFinite(rate) && rate >= 1e3 ? rate : DEFAULT_USD_VND_RATE;
+  if (amt <= 0) return "$0";
+  const usd = amt / r;
+  const prefix = withTilde ? "~$" : "$";
+  if (usd < 1) return `${prefix}${usd.toFixed(2)}`;
+  if (usd < 10 && Math.abs(usd - Math.round(usd)) >= 0.25) {
+    return `${prefix}${usd.toFixed(1)}`;
+  }
+  return `${prefix}${Math.round(usd).toLocaleString("en-US")}`;
+}
+var DEFAULT_MEMBERSHIP_PLANS = [
+  // ---- GÓI CAO CẤP (PREMIUM PLANS) ----
+  {
+    slug: "premium",
+    name: "PREMIUM",
+    group_type: "premium",
+    badge: null,
+    theme_color: "violet",
+    price_vnd: 699e3,
+    duration_days: 90,
+    vip1_quota: -1,
+    vip2_quota: -1,
+    vip3_quota: 10,
+    vip4_quota: 0,
+    auto_update_note: "Full VIP I & VIP II (update li\xEAn t\u1EE5c)",
+    ideal_for: "D\xF9ng th\u1EED 3 th\xE1ng \xB7 Full VIP I & II",
+    est_value_vnd: 25e6,
+    is_popular: 0,
+    status: "active",
+    sort_order: 1
+  },
+  {
+    slug: "gold",
+    name: "GOLD",
+    group_type: "premium",
+    badge: "PH\u1ED4 BI\u1EBEN NH\u1EA4T",
+    theme_color: "orange",
+    price_vnd: 999e3,
+    duration_days: 365,
+    vip1_quota: -1,
+    vip2_quota: -1,
+    vip3_quota: 20,
+    vip4_quota: 1,
+    auto_update_note: "Full VIP I & VIP II (update li\xEAn t\u1EE5c)",
+    ideal_for: "D\xF9ng c\u1EA3 n\u0103m, t\u1ED1i \u01B0u chi ph\xED nh\u1EA5t",
+    est_value_vnd: 35e6,
+    is_popular: 1,
+    status: "active",
+    sort_order: 2
+  },
+  {
+    slug: "black-diamond",
+    name: "BLACK DIAMOND",
+    group_type: "premium",
+    badge: "CAO C\u1EA4P NH\u1EA4T",
+    theme_color: "obsidian",
+    price_vnd: 19e5,
+    duration_days: 365,
+    vip1_quota: -1,
+    vip2_quota: -1,
+    vip3_quota: 20,
+    vip4_quota: 5,
+    auto_update_note: "Full VIP I & VIP II (update li\xEAn t\u1EE5c)",
+    ideal_for: "Agency / Team c\u1EA7n nhi\u1EC1u Skill VIP IV",
+    est_value_vnd: 5e7,
+    is_popular: 0,
+    status: "active",
+    sort_order: 3
+  },
+  // ---- GÓI CƠ BẢN (STARTER PLANS) ----
+  {
+    slug: "basic",
+    name: "BASIC",
+    group_type: "starter",
+    badge: null,
+    theme_color: "blue",
+    price_vnd: 199e3,
+    duration_days: 10,
+    vip1_quota: 10,
+    vip2_quota: 0,
+    vip3_quota: 0,
+    vip4_quota: 0,
+    auto_update_note: null,
+    ideal_for: "Tr\u1EA3i nghi\u1EC7m ng\u1EAFn h\u1EA1n",
+    est_value_vnd: 135e4,
+    is_popular: 0,
+    status: "active",
+    sort_order: 4
+  },
+  {
+    slug: "standard",
+    name: "STANDARD",
+    group_type: "starter",
+    badge: null,
+    theme_color: "emerald",
+    price_vnd: 299e3,
+    duration_days: 30,
+    vip1_quota: 30,
+    vip2_quota: 10,
+    vip3_quota: 0,
+    vip4_quota: 0,
+    auto_update_note: null,
+    ideal_for: "D\xF9ng \u0111\u1EC1u 1 th\xE1ng",
+    est_value_vnd: 675e4,
+    is_popular: 0,
+    status: "active",
+    sort_order: 5
+  },
+  {
+    slug: "silver",
+    name: "SILVER",
+    group_type: "starter",
+    badge: null,
+    theme_color: "purple",
+    price_vnd: 499e3,
+    duration_days: 90,
+    vip1_quota: 50,
+    vip2_quota: 20,
+    vip3_quota: 10,
+    vip4_quota: 0,
+    auto_update_note: null,
+    ideal_for: "L\xE0m nhi\u1EC1u d\u1EF1 \xE1n 3 th\xE1ng",
+    est_value_vnd: 1714e4,
+    is_popular: 0,
+    status: "active",
+    sort_order: 6
+  }
+];
+function formatDurationLabel(days) {
+  const d = Math.max(1, Number(days) || 30);
+  if (d === 365) return "365 ng\xE0y (1 n\u0103m)";
+  if (d === 90) return "90 ng\xE0y (3 th\xE1ng)";
+  if (d === 180) return "180 ng\xE0y (6 th\xE1ng)";
+  if (d === 30) return "30 ng\xE0y (1 th\xE1ng)";
+  return `${d} ng\xE0y`;
+}
+function calcAvgCostPerSkill(plan) {
+  const hasFull = plan.vip1_quota < 0 || plan.vip2_quota < 0 || plan.vip3_quota < 0 || plan.vip4_quota < 0;
+  if (hasFull) {
+    const estCount = (plan.vip1_quota < 0 ? 100 : Math.max(0, plan.vip1_quota)) + (plan.vip2_quota < 0 ? 60 : Math.max(0, plan.vip2_quota)) + (plan.vip3_quota < 0 ? 30 : Math.max(0, plan.vip3_quota)) + (plan.vip4_quota < 0 ? 10 : Math.max(0, plan.vip4_quota));
+    const per2 = Math.max(1e3, Math.round(plan.price_vnd / Math.max(1, estCount) / 100) * 100);
+    return `~${new Intl.NumberFormat("vi-VN").format(per2)}\u0111/Skill`;
+  }
+  const total = Math.max(1, plan.vip1_quota + plan.vip2_quota + plan.vip3_quota + plan.vip4_quota);
+  const per = Math.round(plan.price_vnd / total / 100) * 100;
+  return `${new Intl.NumberFormat("vi-VN").format(per)}\u0111/Skill`;
+}
+async function getMembershipPlans(db, includeInactive = false) {
+  try {
+    const sql = includeInactive ? "SELECT * FROM membership_plans ORDER BY sort_order ASC, id ASC" : `SELECT * FROM membership_plans WHERE status='active' ORDER BY sort_order ASC, id ASC`;
+    const res = await db.prepare(sql).all();
+    return res.results || [];
+  } catch {
+    return DEFAULT_MEMBERSHIP_PLANS.map((p, i) => ({ ...p, id: i + 1 }));
+  }
+}
+async function getMembershipPlanBySlug(db, slug) {
+  try {
+    const row = await db.prepare("SELECT * FROM membership_plans WHERE slug=?").bind(slug).first();
+    return row || null;
+  } catch {
+    return null;
+  }
+}
+async function getActiveUserMembership(db, userId) {
+  try {
+    const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+    await db.prepare(
+      `UPDATE user_memberships SET status='expired' WHERE user_id=? AND status='active' AND expires_at <= ?`
+    ).bind(userId, nowIso).run().catch(() => null);
+    const row = await db.prepare(
+      `SELECT * FROM user_memberships
+       WHERE user_id=? AND status='active' AND expires_at > ?
+       ORDER BY id DESC LIMIT 1`
+    ).bind(userId, nowIso).first();
+    return row || null;
+  } catch {
+    return null;
+  }
+}
+function getTierQuotaInfo(m, tier) {
+  if (!m || tier === "pro") {
+    return { eligible: false, isFull: false, quota: 0, used: 0, remaining: 0 };
+  }
+  const quota = tier === "vip1" ? Number(m.vip1_quota) : tier === "vip2" ? Number(m.vip2_quota) : tier === "vip3" ? Number(m.vip3_quota) : Number(m.vip4_quota);
+  const used = tier === "vip1" ? Number(m.vip1_used || 0) : tier === "vip2" ? Number(m.vip2_used || 0) : tier === "vip3" ? Number(m.vip3_used || 0) : Number(m.vip4_used || 0);
+  if (quota < 0) {
+    return { eligible: true, isFull: true, quota: -1, used, remaining: 999999 };
+  }
+  const remaining = Math.max(0, quota - used);
+  return { eligible: remaining > 0, isFull: false, quota, used, remaining };
+}
+async function syncUnlimitedMembershipSkills(db, userId) {
+  const m = await getActiveUserMembership(db, userId);
+  if (!m) return 0;
+  const fullTiers = [];
+  if (Number(m.vip1_quota) < 0) fullTiers.push("vip1");
+  if (Number(m.vip2_quota) < 0) fullTiers.push("vip2");
+  if (Number(m.vip3_quota) < 0) fullTiers.push("vip3");
+  if (Number(m.vip4_quota) < 0) fullTiers.push("vip4");
+  if (fullTiers.length === 0) return 0;
+  let granted = 0;
+  try {
+    const placeholders = fullTiers.map(() => "?").join(",");
+    const missing = await db.prepare(
+      `SELECT p.id, p.skill_tier
+       FROM products p
+       WHERE p.status='published' AND p.skill_tier IN (${placeholders})
+         AND NOT EXISTS (SELECT 1 FROM licenses l WHERE l.user_id=? AND l.product_id=p.id)`
+    ).bind(...fullTiers, userId).all();
+    for (const prod of missing.results || []) {
+      const key = `${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}`;
+      await db.prepare(
+        `INSERT INTO licenses (user_id, product_id, order_id, license_key, source, membership_id)
+         VALUES (?,?,?,?,?,?)`
+      ).bind(userId, prod.id, m.order_id ?? null, key, "membership", m.id).run().catch(() => null);
+      await db.prepare(
+        `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
+         VALUES (?,?,?,?)`
+      ).bind(m.id, userId, prod.id, prod.skill_tier).run().catch(() => null);
+      granted++;
+    }
+  } catch {
+    return granted;
+  }
+  return granted;
+}
+async function grantUserMembership(db, opts) {
+  const { userId, plan, orderId = null } = opts;
+  const now = /* @__PURE__ */ new Date();
+  const startsAt = now.toISOString();
+  const expiresAt = new Date(now.getTime() + Math.max(1, Number(plan.duration_days || 30)) * 864e5).toISOString();
+  await db.prepare(
+    `UPDATE user_memberships SET status='upgraded' WHERE user_id=? AND status='active'`
+  ).bind(userId).run().catch(() => null);
+  const ins = await db.prepare(
+    `INSERT INTO user_memberships
+     (user_id, plan_id, order_id, plan_name, plan_slug,
+      vip1_quota, vip2_quota, vip3_quota, vip4_quota,
+      vip1_used, vip2_used, vip3_used, vip4_used,
+      starts_at, expires_at, status)
+     VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?)`
+  ).bind(
+    userId,
+    plan.id,
+    orderId,
+    plan.name,
+    plan.slug,
+    Number(plan.vip1_quota || 0),
+    Number(plan.vip2_quota || 0),
+    Number(plan.vip3_quota || 0),
+    Number(plan.vip4_quota || 0),
+    startsAt,
+    expiresAt,
+    "active"
+  ).run();
+  const newId = Number(ins.meta?.last_row_id || 0);
+  await syncUnlimitedMembershipSkills(db, userId);
+  if (newId) {
+    const row = await db.prepare("SELECT * FROM user_memberships WHERE id=?").bind(newId).first();
+    return row || null;
+  }
+  return getActiveUserMembership(db, userId);
+}
+async function activateMembershipFromOrder(db, order) {
+  if (!order?.membership_plan_id) return null;
+  const exists = await db.prepare(
+    `SELECT * FROM user_memberships WHERE order_id=? LIMIT 1`
+  ).bind(order.id).first().catch(() => null);
+  if (exists) {
+    await syncUnlimitedMembershipSkills(db, order.user_id);
+    return exists;
+  }
+  const plan = await db.prepare("SELECT * FROM membership_plans WHERE id=?").bind(order.membership_plan_id).first();
+  if (!plan) return null;
+  return grantUserMembership(db, { userId: order.user_id, plan, orderId: order.id });
+}
+async function claimSkillWithMembership(db, userId, productId) {
+  const m = await getActiveUserMembership(db, userId);
+  if (!m) {
+    return { ok: false, error: "B\u1EA1n ch\u01B0a c\xF3 g\xF3i H\u1ED9i vi\xEAn \u0111ang ho\u1EA1t \u0111\u1ED9ng. H\xE3y \u0111\u0103ng k\xFD t\u1EA1i B\u1EA3ng gi\xE1.", status: 400 };
+  }
+  const product = await db.prepare(
+    `SELECT id, name, slug, price, status, skill_tier, product_type FROM products WHERE id=?`
+  ).bind(productId).first();
+  if (!product || product.status !== "published") {
+    return { ok: false, error: "S\u1EA3n ph\u1EA9m kh\xF4ng t\u1ED3n t\u1EA1i ho\u1EB7c ch\u01B0a m\u1EDF b\xE1n.", status: 404 };
+  }
+  const tier = normalizeSkillTier(product.skill_tier, product.price);
+  if (tier === "pro") {
+    return { ok: false, error: "SKILL PRO ch\u1EC9 \xE1p d\u1EE5ng b\xE1n l\u1EBB tr\u1EF1c ti\u1EBFp \u2014 kh\xF4ng n\u1EB1m trong h\u1EA1n m\u1EE9c g\xF3i H\u1ED9i vi\xEAn.", status: 400 };
+  }
+  const owned = await db.prepare(
+    `SELECT id, license_key FROM licenses WHERE user_id=? AND product_id=?`
+  ).bind(userId, productId).first();
+  if (owned) {
+    return { ok: false, error: 'B\u1EA1n \u0111\xE3 s\u1EDF h\u1EEFu Skill n\xE0y r\u1ED3i \u2014 m\u1EDF m\u1EE5c "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" \u0111\u1EC3 s\u1EED d\u1EE5ng ngay.', status: 400 };
+  }
+  const info = getTierQuotaInfo(m, tier);
+  const tierMeta = SKILL_TIERS[tier];
+  if (!info.eligible) {
+    const msg = info.quota === 0 ? `G\xF3i ${m.plan_name} kh\xF4ng bao g\u1ED3m l\u01B0\u1EE3t nh\u1EADn ${tierMeta.code}. B\u1EA1n c\xF3 th\u1EC3 mua l\u1EBB ho\u1EB7c n\xE2ng c\u1EA5p g\xF3i cao h\u01A1n.` : `B\u1EA1n \u0111\xE3 d\xF9ng h\u1EBFt ${info.quota}/${info.quota} l\u01B0\u1EE3t ${tierMeta.code} c\u1EE7a g\xF3i ${m.plan_name}.`;
+    return { ok: false, error: msg, status: 400 };
+  }
+  if (!info.isFull) {
+    const colUsed = tier === "vip1" ? "vip1_used" : tier === "vip2" ? "vip2_used" : tier === "vip3" ? "vip3_used" : "vip4_used";
+    const colQuota = tier === "vip1" ? "vip1_quota" : tier === "vip2" ? "vip2_quota" : tier === "vip3" ? "vip3_quota" : "vip4_quota";
+    const upd = await db.prepare(
+      `UPDATE user_memberships
+       SET ${colUsed} = ${colUsed} + 1
+       WHERE id = ? AND status = 'active' AND ${colUsed} < ${colQuota}`
+    ).bind(m.id).run();
+    if (!upd.meta || upd.meta.changes === 0) {
+      return { ok: false, error: `L\u01B0\u1EE3t ${tierMeta.code} c\u1EE7a g\xF3i ${m.plan_name} v\u1EEBa h\u1EBFt.`, status: 409 };
+    }
+  }
+  const licenseKey = `${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}`;
+  await db.prepare(
+    `INSERT INTO licenses (user_id, product_id, order_id, license_key, source, membership_id)
+     VALUES (?,?,?,?,?,?)`
+  ).bind(userId, productId, m.order_id ?? null, licenseKey, "membership", m.id).run();
+  await db.prepare(
+    `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
+     VALUES (?,?,?,?)`
+  ).bind(m.id, userId, productId, tier).run().catch(() => null);
+  await db.prepare("UPDATE products SET sold_count = sold_count + 1 WHERE id = ?").bind(productId).run().catch(() => null);
+  return {
+    ok: true,
+    licenseKey,
+    message: info.isFull ? `\u0110\xE3 m\u1EDF kho\xE1 "${product.name}" (Mi\u1EC5n ph\xED \xB7 Full ${tierMeta.code} g\xF3i ${m.plan_name})!` : `\u0110\xE3 m\u1EDF kho\xE1 "${product.name}" b\u1EB1ng 1 l\u01B0\u1EE3t ${tierMeta.code} (c\xF2n ${Math.max(0, info.remaining - 1)}/${info.quota} l\u01B0\u1EE3t)!`
+  };
+}
+
 // src/lib/utils.ts
 function formatVND(n) {
   if (n === null || n === void 0) return "0\u0111";
@@ -9388,12 +9826,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261128", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261129", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261128", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261129", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -9891,12 +10329,29 @@ var Layout = (props) => {
 };
 
 // src/components/ui.tsx
+var SkillTierBadge = ({ tier, price, showRetail = false, size = "xs" }) => {
+  const meta2 = getSkillTierMeta(tier, price);
+  const cls = size === "sm" ? "px-2.5 py-1 text-xs" : "px-2 py-0.5 text-[10px]";
+  return /* @__PURE__ */ jsxDEV(
+    "span",
+    {
+      class: `inline-flex items-center gap-1 rounded border font-extrabold uppercase tracking-wide whitespace-nowrap ${cls} ${meta2.badgeCls}`,
+      title: meta2.isRetailOnly ? "SKILL PRO \u2014 Ch\u1EC9 b\xE1n l\u1EBB ri\xEAng, kh\xF4ng \xE1p d\u1EE5ng g\xF3i H\u1ED9i vi\xEAn" : `H\u1EA1ng ${meta2.code} (${meta2.priceRangeVnd} \xB7 ${meta2.priceRangeUsd})`,
+      children: [
+        /* @__PURE__ */ jsxDEV("i", { class: `fas ${meta2.icon} text-[9px]`, "aria-hidden": "true" }),
+        /* @__PURE__ */ jsxDEV("span", { children: meta2.code }),
+        showRetail && meta2.isRetailOnly && /* @__PURE__ */ jsxDEV("span", { class: "opacity-85 font-semibold normal-case", children: "\xB7 Ch\u1EC9 b\xE1n l\u1EBB" })
+      ]
+    }
+  );
+};
 var Stars = ({ rating, size = "text-xs" }) => /* @__PURE__ */ jsxDEV("span", { class: `text-amber-400 ${size}`, "aria-label": `\u0110\xE1nh gi\xE1 ${rating.toFixed(1)} tr\xEAn 5 sao`, children: [1, 2, 3, 4, 5].map((i) => /* @__PURE__ */ jsxDEV("i", { class: `fa-star ${rating >= i ? "fas" : rating >= i - 0.5 ? "fas fa-star-half-stroke" : "far"}`, "aria-hidden": "true" })) });
-var ProductCard = ({ p, compact }) => {
+var ProductCard = ({ p, compact, usdRate = DEFAULT_USD_VND_RATE }) => {
   const off = discountPercent(p.price, p.original_price);
   const comingSoon = p.status === "coming_soon";
   const mcp = isMcpSkill(p.product_type);
   const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : [];
+  const tierMeta = getSkillTierMeta(p.skill_tier, p.price);
   return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e24] rounded-2xl border overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${mcp ? "border-cyan-500/35 hover:border-cyan-400/65 hover:shadow-cyan-500/15" : "border-[#221e54] hover:border-indigo-500/40 hover:shadow-indigo-500/15"} ${comingSoon ? "opacity-90" : ""}`, children: [
     /* @__PURE__ */ jsxDEV("div", { class: "product-card-media relative aspect-video overflow-hidden bg-[#070614]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
       p.thumbnail ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
@@ -9969,11 +10424,8 @@ var ProductCard = ({ p, compact }) => {
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[9px]", "aria-hidden": "true" }),
           PRODUCT_TYPE_LABEL[p.product_type]
         ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase", children: PRODUCT_TYPE_LABEL[p.product_type] }),
-        /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-[10px]", children: p.version }),
-        p.product_type === "skill" && /* @__PURE__ */ jsxDEV("span", { class: "ml-auto text-[10px] text-[#9492b8]", title: "T\u1EA3i v\u1EC1 m\xE1y & l\xE0m theo h\u01B0\u1EDBng d\u1EABn", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download mr-0.5 text-[9px]", "aria-hidden": "true" }),
-          "T\u1EF1 t\u1EA3i v\u1EC1"
-        ] })
+        /* @__PURE__ */ jsxDEV(SkillTierBadge, { tier: p.skill_tier, price: p.price }),
+        /* @__PURE__ */ jsxDEV("span", { class: "font-mono text-[10px] ml-auto", children: p.version })
       ] }),
       /* @__PURE__ */ jsxDEV("h3", { class: `font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 transition ${mcp ? "group-hover:text-cyan-300" : "group-hover:text-indigo-300"}`, children: /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, children: p.name }) }),
       !compact && /* @__PURE__ */ jsxDEV("p", { class: "text-[12px] text-[#b8b6d9] line-clamp-2 mb-3 leading-relaxed", children: p.short_desc }),
@@ -9995,10 +10447,20 @@ var ProductCard = ({ p, compact }) => {
       /* @__PURE__ */ jsxDEV("div", { class: "mt-auto pt-3 border-t border-[#221e54] flex items-end justify-between gap-2", children: [
         /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: comingSoon ? /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-amber-300 tabular-nums whitespace-nowrap", children: [
           "D\u1EF1 ki\u1EBFn: ",
-          formatVND(p.price)
+          formatVND(p.price),
+          " ",
+          /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: [
+            "(",
+            formatUSD(p.price, usdRate),
+            ")"
+          ] })
         ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
           p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] line-through leading-none mb-0.5 tabular-nums", children: formatVND(p.original_price) }),
-          /* @__PURE__ */ jsxDEV("div", { class: "text-base font-extrabold text-rose-400 leading-none tabular-nums", children: formatVND(p.price) })
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-baseline gap-1.5 flex-wrap", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-base font-extrabold text-rose-400 leading-none tabular-nums", children: formatVND(p.price) }),
+            /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-semibold text-[#9492b8] leading-none tabular-nums", children: formatUSD(p.price, usdRate) })
+          ] }),
+          tierMeta.isRetailOnly && /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-amber-300/90 font-semibold mt-1 leading-none", children: "Ch\u1EC9 b\xE1n l\u1EBB" })
         ] }) }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5 shrink-0", children: comingSoon ? /* @__PURE__ */ jsxDEV(
           "a",
@@ -10458,6 +10920,7 @@ var DEMO_VIDEOS = [
 var HomePage = (props) => {
   const { categories, featured, mcpSkills = [], manualSkills = [], hot, newest, comingSoon, posts, reviews, stats } = props;
   const siteName = props.settings?.site_name || "KhoSkill AI";
+  const usdRate = getUsdRate(props.settings);
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "home", children: [
     /* @__PURE__ */ jsxDEV("script", { id: "demo-videos-json", type: "application/json", dangerouslySetInnerHTML: { __html: JSON.stringify(DEMO_VIDEOS).replace(/</g, "\\u003c") } }),
     /* @__PURE__ */ jsxDEV("section", { id: "hero-section", class: "relative bg-[#070614] text-white overflow-hidden", children: [
@@ -10923,8 +11386,52 @@ var HomePage = (props) => {
             ] })
           ] })
         ] }),
-        mcpSkills.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5", children: mcpSkills.slice(0, 6).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) })
+        mcpSkills.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 gap-5", children: mcpSkills.slice(0, 6).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) })
       ] })
+    ] }) }),
+    /* @__PURE__ */ jsxDEV("section", { class: "max-w-7xl mx-auto px-4 py-4 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-r from-[#16113a] via-[#1b1240] to-[#261233] border border-amber-400/35 p-6 md:p-8 shadow-xl", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-4 mb-5", children: [
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[11px] font-black uppercase tracking-wider mb-2", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-amber-400", "aria-hidden": "true" }),
+            "Ph\xE2n h\u1EA1ng Skill VIP & G\xF3i H\u1ED9i Vi\xEAn"
+          ] }),
+          /* @__PURE__ */ jsxDEV("h2", { class: "text-xl md:text-2xl font-extrabold text-white tracking-tight", children: "Ch\u1ECDn mua l\u1EBB theo h\u1EA1ng ho\u1EB7c \u0111\u0103ng k\xFD H\u1ED9i vi\xEAn t\u1EEB 199K (~$7)" }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-xs sm:text-sm text-[#c2c0e0] mt-1", children: [
+            "T\u1EEB g\xF3i ",
+            /* @__PURE__ */ jsxDEV("b", { children: "PREMIUM / GOLD / BLACK DIAMOND" }),
+            ": m\u1EDF kho\xE1 ",
+            /* @__PURE__ */ jsxDEV("b", { children: "Full Skill VIP I & VIP II (update li\xEAn t\u1EE5c)" }),
+            " + h\u1EA1n m\u1EE9c VIP III & VIP IV tu\u1EF3 ch\u1ECDn."
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "h-11 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-sm inline-flex items-center gap-2 shadow-lg shadow-amber-500/25 transition shrink-0", children: [
+          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }),
+          "Xem B\u1EA3ng gi\xE1 H\u1ED9i vi\xEAn \u2192"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5", children: SKILL_TIER_ORDER.map((tk) => {
+        const m = SKILL_TIERS[tk];
+        return /* @__PURE__ */ jsxDEV(
+          "a",
+          {
+            href: `/san-pham?tier=${tk}`,
+            class: `rounded-xl p-3 bg-gradient-to-r ${m.bannerGrad} text-white hover:-translate-y-0.5 transition flex items-center justify-between gap-2`,
+            children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-black tracking-wide", children: m.code }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white/95 mt-0.5 tabular-nums", children: m.priceRangeVnd }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-white/85 truncate", children: [
+                  m.priceRangeUsd,
+                  " \xB7 ",
+                  m.subtitle
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon} text-white/80 text-sm shrink-0`, "aria-hidden": "true" })
+            ]
+          }
+        );
+      }) })
     ] }) }),
     /* @__PURE__ */ jsxDEV("section", { id: "catalog-section", class: "max-w-7xl mx-auto px-4 py-8 reveal", children: [
       /* @__PURE__ */ jsxDEV(
@@ -10963,11 +11470,11 @@ var HomePage = (props) => {
           "M\u1EDBi ra m\u1EAFt"
         ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel", "data-tab": "featured", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 12).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
-      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "mcp", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: mcpSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
-      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "manual", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: manualSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
-      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "hot", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: hot.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) }),
-      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "new", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: newest.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }) })
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel", "data-tab": "featured", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: featured.slice(0, 12).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "mcp", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: mcpSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "manual", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: manualSkills.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "hot", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: hot.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) }) }),
+      /* @__PURE__ */ jsxDEV("div", { role: "tabpanel", class: "tab-panel hidden", "data-tab": "new", "data-group": "hp", children: /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5", children: newest.slice(0, 8).map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) }) })
     ] }),
     comingSoon.length > 0 && /* @__PURE__ */ jsxDEV("section", { id: "coming-soon-section", class: "max-w-7xl mx-auto px-4 py-10 reveal", children: /* @__PURE__ */ jsxDEV("div", { class: "rounded-3xl bg-gradient-to-br from-[#0f0e24] via-[#17153d]/80 to-[#070614] p-7 md:p-10 text-white relative overflow-hidden border border-[#221e54]", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh opacity-30" }),
@@ -11101,11 +11608,23 @@ var ProductListPage = (props) => {
     minPrice,
     maxPrice,
     type,
+    tier = "",
     heading,
     headingDesc,
     baseUrl,
     currentCategory
   } = props;
+  const usdRate = getUsdRate(props.settings);
+  const buildTierHref = (tKey) => {
+    const p = new URLSearchParams();
+    if (q) p.set("q", q);
+    if (cat) p.set("cat", cat);
+    if (type) p.set("type", type);
+    if (sort && sort !== "newest") p.set("sort", sort);
+    if (tKey) p.set("tier", tKey);
+    const qs = p.toString();
+    return baseUrl + (qs ? "?" + qs : "");
+  };
   const isMcpView = type === "mcp_skill" || cat === "skill-ai-agent-mcp" || currentCategory?.slug === "skill-ai-agent-mcp";
   const isComingSoonView = baseUrl === "/combo" || ["course", "chatbot", "app", "combo"].includes(type) || !!currentCategory && currentCategory.slug !== "skill-video-ai" && currentCategory.slug !== "skill-ai-agent-mcp";
   return /* @__PURE__ */ jsxDEV(
@@ -11176,6 +11695,22 @@ var ProductListPage = (props) => {
                       ]
                     }
                   ))
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+                /* @__PURE__ */ jsxDEV("label", { for: "filter-tier", class: "block font-bold text-white mb-3.5 text-xs uppercase tracking-wider", children: "H\u1EA1ng Skill (VIP Level)" }),
+                /* @__PURE__ */ jsxDEV("select", { id: "filter-tier", name: "tier", class: "w-full h-11 px-3 rounded-lg bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white outline-none text-sm", children: [
+                  /* @__PURE__ */ jsxDEV("option", { class: "bg-[#0f0e24] text-white", value: "", selected: !tier, children: "T\u1EA5t c\u1EA3 h\u1EA1ng" }),
+                  SKILL_TIER_ORDER.map((tk) => {
+                    const m = SKILL_TIERS[tk];
+                    return /* @__PURE__ */ jsxDEV("option", { class: "bg-[#0f0e24] text-white", value: tk, selected: tier === tk, children: [
+                      m.code,
+                      " (",
+                      m.priceRangeVnd,
+                      m.isRetailOnly ? " \xB7 B\xE1n l\u1EBB" : ` / ${m.priceRangeUsd}`,
+                      ")"
+                    ] });
+                  })
                 ] })
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
@@ -11252,41 +11787,85 @@ var ProductListPage = (props) => {
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { children: [
-            baseUrl === "/san-pham" && /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2 mb-5", children: [
-              /* @__PURE__ */ jsxDEV(
-                "a",
-                {
-                  href: "/san-pham",
-                  class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${!type && !cat ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
-                  children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes text-[11px]", "aria-hidden": "true" }),
-                    "T\u1EA5t c\u1EA3 \u0111ang b\xE1n"
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxDEV(
-                "a",
-                {
-                  href: "/san-pham?type=skill",
-                  class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${type === "skill" || cat === "skill-video-ai" ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
-                  children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download text-[11px]", "aria-hidden": "true" }),
-                    "Skill AI t\u1EF1 t\u1EA3i"
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxDEV(
-                "a",
-                {
-                  href: "/san-pham?type=mcp_skill",
-                  class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${isMcpView ? "bg-gradient-to-r from-cyan-600 to-indigo-600 text-white border-cyan-400 shadow-md shadow-cyan-600/25" : "bg-cyan-500/10 border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/20 hover:text-white"}`,
-                  children: [
-                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[11px]", "aria-hidden": "true" }),
-                    "Skill AI Agent (MCP)",
-                    /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded bg-cyan-400 text-slate-950 text-[9px] font-black leading-none", children: "M\u1EDAI" })
-                  ]
-                }
-              )
+            baseUrl === "/san-pham" && /* @__PURE__ */ jsxDEV("div", { class: "space-y-2.5 mb-5", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-2", children: [
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/san-pham",
+                    class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${!type && !cat && !tier ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cubes text-[11px]", "aria-hidden": "true" }),
+                      "T\u1EA5t c\u1EA3 \u0111ang b\xE1n"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/san-pham?type=skill",
+                    class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${type === "skill" || cat === "skill-video-ai" ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white hover:border-indigo-500/40"}`,
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-download text-[11px]", "aria-hidden": "true" }),
+                      "Skill AI t\u1EF1 t\u1EA3i"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/san-pham?type=mcp_skill",
+                    class: `h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 border transition ${isMcpView ? "bg-gradient-to-r from-cyan-600 to-indigo-600 text-white border-cyan-400 shadow-md shadow-cyan-600/25" : "bg-cyan-500/10 border-cyan-400/40 text-cyan-200 hover:bg-cyan-500/20 hover:text-white"}`,
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[11px]", "aria-hidden": "true" }),
+                      "Skill AI Agent (MCP)",
+                      /* @__PURE__ */ jsxDEV("span", { class: "px-1.5 py-0.5 rounded bg-cyan-400 text-slate-950 text-[9px] font-black leading-none", children: "M\u1EDAI" })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/bang-gia",
+                    class: "ml-auto h-9 px-3.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-400/40 text-amber-200 hover:bg-amber-500/25 transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-[11px] text-amber-400", "aria-hidden": "true" }),
+                      "G\xF3i H\u1ED9i Vi\xEAn VIP \u2192"
+                    ]
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-1.5", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] font-semibold mr-1", children: "H\u1EA1ng Skill:" }),
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: buildTierHref(""),
+                    class: `h-7 px-2.5 rounded-full text-[11px] font-bold inline-flex items-center border transition ${!tier ? "bg-white text-slate-950 border-white" : "bg-[#0f0e24] border-[#221e54] text-[#c2c0e0] hover:text-white"}`,
+                    children: "T\u1EA5t c\u1EA3"
+                  }
+                ),
+                SKILL_TIER_ORDER.map((tk) => {
+                  const m = SKILL_TIERS[tk];
+                  const active = tier === tk;
+                  return /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: buildTierHref(tk),
+                      class: `h-7 px-2.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 border transition ${active ? `bg-gradient-to-r ${m.bannerGrad} text-white border-transparent shadow-sm` : `${m.badgeCls} hover:opacity-100 opacity-90`}`,
+                      children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon} text-[9px]`, "aria-hidden": "true" }),
+                        /* @__PURE__ */ jsxDEV("span", { children: m.code }),
+                        /* @__PURE__ */ jsxDEV("span", { class: "opacity-80 font-normal hidden sm:inline", children: [
+                          "(",
+                          m.isRetailOnly ? "B\xE1n l\u1EBB" : m.priceRangeUsd,
+                          ")"
+                        ] })
+                      ]
+                    }
+                  );
+                })
+              ] })
             ] }),
             isMcpView && /* @__PURE__ */ jsxDEV("div", { class: "mb-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-[#121134] to-indigo-950/60 border border-cyan-400/40 flex flex-wrap items-center justify-between gap-4", children: [
               /* @__PURE__ */ jsxDEV("div", { class: "min-w-0 flex-1", children: [
@@ -11324,6 +11903,10 @@ var ProductListPage = (props) => {
                 ] }),
                 cat && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold", children: categories.find((c) => c.slug === cat)?.name }),
                 type && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold", children: TYPES.find((t) => t[0] === type)?.[1] }),
+                tier && SKILL_TIERS[tier] && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-amber-500/15 text-amber-200 text-xs font-semibold", children: [
+                  "H\u1EA1ng: ",
+                  SKILL_TIERS[tier].code
+                ] }),
                 (minPrice || maxPrice) && /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-semibold tabular-nums", children: [
                   minPrice ? formatVND(+minPrice) : "0\u0111",
                   " \u2013 ",
@@ -11334,6 +11917,7 @@ var ProductListPage = (props) => {
                 q && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "q", value: q }),
                 cat && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "cat", value: cat }),
                 type && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "type", value: type }),
+                tier && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "tier", value: tier }),
                 minPrice && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "min", value: minPrice }),
                 maxPrice && /* @__PURE__ */ jsxDEV("input", { type: "hidden", name: "max", value: maxPrice }),
                 /* @__PURE__ */ jsxDEV("label", { for: "sort-select", class: "text-xs text-[#9492b8] whitespace-nowrap", children: "S\u1EAFp x\u1EBFp:" }),
@@ -11349,9 +11933,9 @@ var ProductListPage = (props) => {
                 action: { href: baseUrl, label: "Xo\xE1 b\u1ED9 l\u1ECDc" }
               }
             ) }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 xl:grid-cols-3 gap-5", children: products.map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p })) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 xl:grid-cols-3 gap-5", children: products.map((p) => /* @__PURE__ */ jsxDEV(ProductCard, { p, usdRate })) }),
               /* @__PURE__ */ jsxDEV(Pagination, { page, totalPages, baseUrl: baseUrl + "?" + new URLSearchParams(
-                Object.entries({ q, cat, sort, type, min: minPrice, max: maxPrice }).filter(([, v]) => v)
+                Object.entries({ q, cat, sort, type, tier, min: minPrice, max: maxPrice }).filter(([, v]) => v)
               ).toString() })
             ] })
           ] })
@@ -12465,7 +13049,11 @@ Skill Slug: ${targetSkill.slug} | Version: ${targetSkill.version} | Licensed to:
 
 // src/pages/product-detail.tsx
 var ProductDetailPage = (props) => {
-  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings, origin = "https://khoskill.site" } = props;
+  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings, activeMembership = null, origin = "https://khoskill.site" } = props;
+  const usdRate = getUsdRate(settings);
+  const tierKey = normalizeSkillTier(p.skill_tier, p.price);
+  const tierMeta = getSkillTierMeta(p.skill_tier, p.price);
+  const memQuota = activeMembership ? getTierQuotaInfo(activeMembership, tierKey) : null;
   const off = discountPercent(p.price, p.original_price);
   const features = parseJSON(p.features, []);
   const tech = parseJSON(p.tech_stack, []);
@@ -12898,6 +13486,7 @@ var ProductDetailPage = (props) => {
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[11px]", "aria-hidden": "true" }),
                   PRODUCT_TYPE_LABEL[p.product_type]
                 ] }) : /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold", children: PRODUCT_TYPE_LABEL[p.product_type] }),
+                /* @__PURE__ */ jsxDEV(SkillTierBadge, { tier: p.skill_tier, price: p.price, showRetail: true, size: "sm" }),
                 p.category_name && /* @__PURE__ */ jsxDEV("a", { href: `/danh-muc/${p.category_slug}`, class: "px-2.5 py-1 rounded bg-[#161436] border border-[#221e54] text-[#c2c0e0] text-xs font-medium hover:text-white hover:border-indigo-500/40 transition", children: p.category_name }),
                 comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold", children: [
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock mr-1", "aria-hidden": "true" }),
@@ -12936,8 +13525,12 @@ var ProductDetailPage = (props) => {
               ] }),
               /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] text-sm leading-relaxed mb-5", children: p.short_desc }),
               /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl border border-indigo-500/35 bg-gradient-to-br from-[#0f0e24] via-[#1a184c]/55 to-[#070614] p-5 mb-4 glow-brand relative overflow-hidden", children: [
-                /* @__PURE__ */ jsxDEV("div", { class: "flex items-end flex-wrap gap-3 mb-1.5 tabular-nums", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-end flex-wrap gap-2.5 mb-1.5 tabular-nums", children: [
                   /* @__PURE__ */ jsxDEV("span", { class: "text-3xl md:text-4xl font-extrabold text-rose-400 leading-none", children: formatVND(p.price) }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-lg bg-white/5 border border-white/15 text-cyan-200 text-xs font-bold leading-none", children: [
+                    formatUSD(p.price, usdRate),
+                    " USD"
+                  ] }),
                   p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV(Fragment, { children: [
                     /* @__PURE__ */ jsxDEV("span", { class: "text-base text-[#9492b8] line-through leading-none", children: formatVND(p.original_price) }),
                     /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold", children: [
@@ -12950,9 +13543,29 @@ var ProductDetailPage = (props) => {
                 save > 0 && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-emerald-400 font-bold flex items-center gap-1 tabular-nums", children: [
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank text-sm", "aria-hidden": "true" }),
                   "Ti\u1EBFt ki\u1EC7m ",
-                  formatVND(save)
+                  formatVND(save),
+                  " (",
+                  formatUSD(save, usdRate),
+                  ")"
                 ] }),
-                /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-3 border-t border-indigo-500/25 text-xs text-[#b8b6d9] flex flex-wrap gap-x-4 gap-y-1.5", children: [
+                tierMeta.isRetailOnly ? /* @__PURE__ */ jsxDEV("div", { class: "mt-3 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/30 text-[11px] text-rose-200 flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-amber-300 shrink-0", "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    /* @__PURE__ */ jsxDEV("b", { children: "SKILL PRO (Ch\u1EC9 b\xE1n l\u1EBB ri\xEAng)" }),
+                    " \u2014 s\u1EA3n ph\u1EA9m cao c\u1EA5p b\xE1n r\u1EDDi, kh\xF4ng \xE1p d\u1EE5ng \u0111\u1ED5i l\u01B0\u1EE3t t\u1EEB g\xF3i H\u1ED9i vi\xEAn."
+                  ] })
+                ] }) : /* @__PURE__ */ jsxDEV("div", { class: "mt-3 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-400/25 text-[11px] text-indigo-200 flex items-center justify-between gap-2 flex-wrap", children: /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: `fas ${tierMeta.icon} ${tierMeta.accentText}`, "aria-hidden": "true" }),
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    "H\u1EA1ng ",
+                    /* @__PURE__ */ jsxDEV("b", { children: tierMeta.code }),
+                    " (",
+                    tierMeta.subtitle,
+                    ") \xB7 \xC1p d\u1EE5ng trong ",
+                    /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "text-amber-300 font-bold hover:underline", children: "G\xF3i H\u1ED9i Vi\xEAn VIP" })
+                  ] })
+                ] }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "mt-3.5 pt-3 border-t border-indigo-500/25 text-xs text-[#b8b6d9] flex flex-wrap gap-x-4 gap-y-1.5", children: [
                   /* @__PURE__ */ jsxDEV("span", { children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-infinity text-indigo-400 mr-1", "aria-hidden": "true" }),
                     "S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi"
@@ -13034,10 +13647,30 @@ var ProductDetailPage = (props) => {
                   )
                 ] })
               ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex flex-col gap-2.5 mb-4", children: [
+                !tierMeta.isRetailOnly && activeMembership && memQuota && (memQuota.eligible ? /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    id: "btn-claim-membership",
+                    "data-product-id": p.id,
+                    class: "w-full h-12 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }),
+                      /* @__PURE__ */ jsxDEV("span", { children: memQuota.isFull ? `M\u1EDF kho\xE1 ngay b\u1EB1ng g\xF3i ${activeMembership.plan_name} (Mi\u1EC5n ph\xED \xB7 Full ${tierMeta.code})` : `\u0110\u1ED5i 1 l\u01B0\u1EE3t ${tierMeta.code} t\u1EEB g\xF3i ${activeMembership.plan_name} (C\xF2n ${memQuota.remaining}/${memQuota.quota})` })
+                    ]
+                  }
+                ) : /* @__PURE__ */ jsxDEV("div", { class: "p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-xs text-amber-200 flex items-center justify-between gap-2 flex-wrap", children: [
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-amber-400 mr-1.5", "aria-hidden": "true" }),
+                    memQuota.quota === 0 ? `G\xF3i ${activeMembership.plan_name} ch\u01B0a bao g\u1ED3m l\u01B0\u1EE3t ${tierMeta.code}.` : `G\xF3i ${activeMembership.plan_name} \u0111\xE3 d\xF9ng h\u1EBFt ${memQuota.quota}/${memQuota.quota} l\u01B0\u1EE3t ${tierMeta.code}.`
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "font-bold text-amber-300 hover:underline whitespace-nowrap", children: "N\xE2ng c\u1EA5p g\xF3i \u2192" })
+                ] })),
+                /* @__PURE__ */ jsxDEV("div", { id: "membership-claim-msg", class: "hidden text-xs rounded-xl px-3 py-2" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-2.5", children: [
                   /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-buy-now flex-1 min-w-[150px] h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 transition shadow-lg shadow-rose-500/15 cursor-pointer", "data-id": p.id, children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-bolt mr-1.5", "aria-hidden": "true" }),
-                    "Mua ngay"
+                    "Mua l\u1EBB ngay"
                   ] }),
                   /* @__PURE__ */ jsxDEV("button", { type: "button", class: "btn-add-cart flex-1 min-w-[150px] h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer", "data-id": p.id, "data-name": p.name, children: [
                     /* @__PURE__ */ jsxDEV("i", { class: "fas fa-cart-plus mr-1.5", "aria-hidden": "true" }),
@@ -13055,6 +13688,24 @@ var ProductDetailPage = (props) => {
                     }
                   )
                 ] }),
+                !tierMeta.isRetailOnly && !activeMembership && /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/bang-gia",
+                    class: "flex items-center justify-between gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-fuchsia-500/15 border border-amber-400/35 hover:border-amber-300/70 text-amber-100 text-xs font-bold transition",
+                    children: [
+                      /* @__PURE__ */ jsxDEV("span", { class: "flex items-center gap-2", children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-amber-400", "aria-hidden": "true" }),
+                        /* @__PURE__ */ jsxDEV("span", { children: [
+                          "Mu\u1ED1n nh\u1EADn nhi\u1EC1u Skill ",
+                          tierMeta.code,
+                          " v\u1EDBi chi ph\xED ch\u1EC9 t\u1EEB v\xE0i ngh\xECn \u0111\u1ED3ng?"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300 shrink-0 whitespace-nowrap", children: "Xem g\xF3i H\u1ED9i vi\xEAn \u2192" })
+                    ]
+                  }
+                ),
                 /* @__PURE__ */ jsxDEV(
                   "a",
                   {
@@ -13380,14 +14031,14 @@ var ProductDetailPage = (props) => {
         ] }) }),
         related.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "max-w-7xl mx-auto px-4 py-10", children: [
           /* @__PURE__ */ jsxDEV(SectionTitle, { title: "S\u1EA3n ph\u1EA9m li\xEAn quan", subtitle: "C\xF3 th\u1EC3 b\u1EA1n c\u0169ng quan t\xE2m" }),
-          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: related.map((r) => /* @__PURE__ */ jsxDEV(ProductCard, { p: r })) })
+          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-5", children: related.map((r) => /* @__PURE__ */ jsxDEV(ProductCard, { p: r, usdRate })) })
         ] }),
         !owned && !comingSoon && /* @__PURE__ */ jsxDEV("div", { class: "lg:hidden fixed inset-x-0 bottom-0 z-40 bg-[#0f0e24]/95 backdrop-blur-md border-t border-indigo-500/30 px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xl", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
             /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] truncate", children: p.name }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex items-baseline gap-2 tabular-nums", children: [
               /* @__PURE__ */ jsxDEV("span", { class: "text-base font-extrabold text-rose-400", children: formatVND(p.price) }),
-              p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] line-through", children: formatVND(p.original_price) })
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-cyan-200 font-semibold", children: formatUSD(p.price, usdRate) })
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 shrink-0", children: [
@@ -13407,7 +14058,40 @@ var ProductDetailPage = (props) => {
               "Mua ngay"
             ] })
           ] })
-        ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+          __html: `
+(function(){
+  var btn = document.getElementById('btn-claim-membership');
+  if (!btn) return;
+  btn.addEventListener('click', async function(){
+    var pid = Number(btn.getAttribute('data-product-id'));
+    if (!pid) return;
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> \u0110ang k\xEDch ho\u1EA1t b\u1EB1ng g\xF3i H\u1ED9i vi\xEAn...';
+    var msg = document.getElementById('membership-claim-msg');
+    try {
+      var res = await axios.post('/api/account/membership/claim', { product_id: pid });
+      if (msg) {
+        msg.className = 'text-xs rounded-xl px-3.5 py-2.5 bg-emerald-500/15 border border-emerald-400/35 text-emerald-200 font-semibold';
+        msg.textContent = (res.data && res.data.message) || '\u0110\xE3 m\u1EDF kho\xE1 Skill th\xE0nh c\xF4ng!';
+        msg.classList.remove('hidden');
+      }
+      setTimeout(function(){ location.href = '/tai-khoan/san-pham'; }, 900);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      var txt = (err.response && err.response.data && err.response.data.error) || 'Kh\xF4ng th\u1EC3 \u0111\u1ED5i l\u01B0\u1EE3t H\u1ED9i vi\xEAn';
+      if (msg) {
+        msg.className = 'text-xs rounded-xl px-3.5 py-2.5 bg-rose-500/15 border border-rose-400/35 text-rose-200 font-semibold';
+        msg.textContent = txt;
+        msg.classList.remove('hidden');
+      }
+    }
+  });
+})();`
+        } })
       ]
     }
   );
@@ -13932,6 +14616,7 @@ var CheckoutSteps = ({ step }) => {
 };
 var CartPage = (props) => {
   const { items, subtotal } = props;
+  const usdRate = getUsdRate(props.settings);
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1ECF h\xE0ng", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng" }] }),
     /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-5", children: "Gi\u1ECF h\xE0ng c\u1EE7a b\u1EA1n" }),
@@ -13964,9 +14649,10 @@ var CartPage = (props) => {
               " \xB7 S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi"
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "flex items-end justify-between gap-3", children: [
-              /* @__PURE__ */ jsxDEV("div", { class: "tabular-nums", children: [
-                p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-[#9492b8] line-through mr-2", children: formatVND(p.original_price) }),
-                /* @__PURE__ */ jsxDEV("span", { class: "text-lg font-extrabold text-rose-400", children: formatVND(p.price) })
+              /* @__PURE__ */ jsxDEV("div", { class: "tabular-nums flex items-baseline gap-1.5 flex-wrap", children: [
+                p.original_price && p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-[#9492b8] line-through", children: formatVND(p.original_price) }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-lg font-extrabold text-rose-400", children: formatVND(p.price) }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-[#9492b8] font-semibold", children: formatUSD(p.price, usdRate) })
               ] }),
               /* @__PURE__ */ jsxDEV(
                 "button",
@@ -14005,7 +14691,13 @@ var CartPage = (props) => {
         ] }),
         /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
           /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng c\u1ED9ng" }),
-          /* @__PURE__ */ jsxDEV("span", { class: "text-2xl font-extrabold text-rose-400", children: formatVND(subtotal) })
+          /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-rose-400 leading-none", children: formatVND(subtotal) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-1", children: [
+              formatUSD(subtotal, usdRate),
+              " USD"
+            ] })
+          ] })
         ] }),
         /* @__PURE__ */ jsxDEV("a", { href: "/thanh-toan", class: "flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition", children: [
           /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lock", "aria-hidden": "true" }),
@@ -14280,7 +14972,9 @@ var CheckoutPage = (props) => {
   ] });
 };
 var OrderPage = (props) => {
-  const { order, items, bank, holdExpiresAt } = props;
+  const { order, items, bank, holdExpiresAt, membershipPlan } = props;
+  const usdRate = getUsdRate(props.settings);
+  const isMembershipOrder = order.order_type === "membership";
   const content = order.order_code;
   const qr = vietQrUrl(bank.bank_code, bank.bank_account, order.total, content, bank.bank_owner);
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: `\u0110\u01A1n h\xE0ng ${order.order_code}`, children: [
@@ -14297,12 +14991,15 @@ var OrderPage = (props) => {
         ] })
       ] }),
       order.status === "paid" && /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-check", "aria-hidden": "true" }) }),
-        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
-        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-200 mb-4", children: "B\u1ED9 Skill AI / c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
-        /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-box-open", "aria-hidden": "true" }),
-          "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i ngay"
+        /* @__PURE__ */ jsxDEV("div", { class: "w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${isMembershipOrder ? "fa-crown" : "fa-check"}`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1.5", children: isMembershipOrder ? `G\xF3i H\u1ED9i vi\xEAn ${membershipPlan?.name || ""} \u0111\xE3 k\xEDch ho\u1EA1t!` : "Thanh to\xE1n th\xE0nh c\xF4ng!" }),
+        /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-emerald-200 mb-4", children: isMembershipOrder ? "H\u1EA1n m\u1EE9c ch\u1ECDn Skill VIP I \u2013 IV (v\xE0 quy\u1EC1n Full VIP I/II n\u1EBFu c\xF3) \u0111\xE3 \u0111\u01B0\u1EE3c m\u1EDF kho\xE1 trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." : "B\u1ED9 Skill AI / c\u1EA5u h\xECnh k\u1EBFt n\u1ED1i MCP \u0111\xE3 \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t trong t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n." }),
+        /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap justify-center gap-2.5", children: [
+          /* @__PURE__ */ jsxDEV("a", { href: isMembershipOrder ? "/tai-khoan/hoi-vien" : "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: `fas ${isMembershipOrder ? "fa-crown" : "fa-box-open"}`, "aria-hidden": "true" }),
+            isMembershipOrder ? "M\u1EDF H\u1ED9i vi\xEAn & ch\u1ECDn Skill ngay" : "M\u1EDF S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i ngay"
+          ] }),
+          isMembershipOrder && /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#161436] border border-[#2a2559] text-white font-semibold text-sm hover:border-indigo-400 transition", children: "Xem S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i" })
         ] })
       ] }),
       /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-6", children: [
@@ -14408,7 +15105,32 @@ var OrderPage = (props) => {
               /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white", children: "Chi ti\u1EBFt \u0111\u01A1n h\xE0ng" }),
               /* @__PURE__ */ jsxDEV(StatusBadge, { status: order.status })
             ] }),
-            /* @__PURE__ */ jsxDEV("div", { class: "p-5 space-y-3", children: items.map((it) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5 items-center pb-3 border-b border-[#221e54] last:border-0 last:pb-0", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "p-5 space-y-3", children: isMembershipOrder && membershipPlan ? /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5 items-center", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "w-16 h-12 rounded-xl shrink-0 grid place-items-center text-white bg-gradient-to-br from-amber-500 to-orange-600 shadow-md", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-lg", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm", children: [
+                  "G\xF3i H\u1ED9i vi\xEAn ",
+                  membershipPlan.name,
+                  " (",
+                  formatDurationLabel(membershipPlan.duration_days),
+                  ")"
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-0.5", children: [
+                  "VIP I: ",
+                  membershipPlan.vip1_quota < 0 ? "Full" : membershipPlan.vip1_quota,
+                  " \xB7 VIP II: ",
+                  membershipPlan.vip2_quota < 0 ? "Full" : membershipPlan.vip2_quota,
+                  " \xB7 VIP III: ",
+                  membershipPlan.vip3_quota < 0 ? "Full" : membershipPlan.vip3_quota,
+                  " \xB7 VIP IV: ",
+                  membershipPlan.vip4_quota < 0 ? "Full" : membershipPlan.vip4_quota
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0 tabular-nums", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm", children: formatVND(order.subtotal) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: formatUSD(order.subtotal, usdRate) })
+              ] })
+            ] }) : items.map((it) => /* @__PURE__ */ jsxDEV("div", { class: "flex gap-3.5 items-center pb-3 border-b border-[#221e54] last:border-0 last:pb-0", children: [
               /* @__PURE__ */ jsxDEV(
                 "div",
                 {
@@ -14421,7 +15143,10 @@ var OrderPage = (props) => {
                 /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm line-clamp-2 leading-snug", children: it.product_name }),
                 it.slug && /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${it.slug}`, class: "text-xs text-indigo-400 hover:underline", children: "Xem s\u1EA3n ph\u1EA9m" })
               ] }),
-              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm shrink-0 tabular-nums", children: formatVND(it.price) })
+              /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0 tabular-nums", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm", children: formatVND(it.price) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: formatUSD(it.price, usdRate) })
+              ] })
             ] })) })
           ] })
         ] }),
@@ -14463,7 +15188,13 @@ var OrderPage = (props) => {
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end pt-2.5 border-t border-[#221e54]", children: [
                 /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng c\u1ED9ng" }),
-                /* @__PURE__ */ jsxDEV("span", { class: "text-xl font-extrabold text-rose-400", children: formatVND(order.total) })
+                /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xl font-extrabold text-rose-400 leading-none", children: formatVND(order.total) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-1", children: [
+                    formatUSD(order.total, usdRate),
+                    " USD"
+                  ] })
+                ] })
               ] })
             ] }),
             order.note && /* @__PURE__ */ jsxDEV("div", { class: "mt-4 pt-4 border-t border-[#221e54]", children: [
@@ -14606,10 +15337,284 @@ var OrderPage = (props) => {
     } })
   ] });
 };
+var MembershipCheckoutPage = (props) => {
+  const { plan, balance, isDemoFree = false } = props;
+  const usdRate = getUsdRate(props.settings);
+  const subtotal = plan.price_vnd;
+  const fmtQuota = (q, label) => q < 0 ? `Full ${label} (Update li\xEAn t\u1EE5c)` : q > 0 ? `${q} Skill ${label}` : "Kh\xF4ng";
+  return /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: `\u0110\u0103ng k\xFD g\xF3i H\u1ED9i vi\xEAn ${plan.name}`, children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "max-w-5xl mx-auto px-4 py-8", children: [
+      /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "B\u1EA3ng gi\xE1 H\u1ED9i vi\xEAn", href: "/bang-gia" }, { label: `\u0110\u0103ng k\xFD ${plan.name}` }] }),
+      /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-6", children: [
+        "\u0110\u0103ng k\xFD g\xF3i H\u1ED9i vi\xEAn ",
+        /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300", children: plan.name })
+      ] }),
+      /* @__PURE__ */ jsxDEV("form", { id: "mem-checkout-form", class: "grid lg:grid-cols-[1fr_360px] gap-6", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "space-y-5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-4 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-user text-indigo-400", "aria-hidden": "true" }),
+              "T\xE0i kho\u1EA3n k\xEDch ho\u1EA1t"
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-4", children: [
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("label", { class: "block text-xs font-semibold text-[#b8b6d9] mb-1.5", children: "H\u1ECD t\xEAn" }),
+                /* @__PURE__ */ jsxDEV("input", { type: "text", value: props.user?.full_name, disabled: true, class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-sm text-[#c2c0e0]" })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("label", { class: "block text-xs font-semibold text-[#b8b6d9] mb-1.5", children: "Email k\xEDch ho\u1EA1t" }),
+                /* @__PURE__ */ jsxDEV("input", { type: "text", value: props.user?.email, disabled: true, class: "w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-sm text-[#c2c0e0]" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "mt-4", children: [
+              /* @__PURE__ */ jsxDEV("label", { for: "mem-checkout-note", class: "block text-xs font-semibold text-[#b8b6d9] mb-1.5", children: [
+                "Ghi ch\xFA ",
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "(tu\u1EF3 ch\u1ECDn)" })
+              ] }),
+              /* @__PURE__ */ jsxDEV(
+                "textarea",
+                {
+                  id: "mem-checkout-note",
+                  rows: 2,
+                  placeholder: "Ghi ch\xFA th\xEAm cho \u0111\u01A1n \u0111\u0103ng k\xFD h\u1ED9i vi\xEAn...",
+                  class: "w-full p-3 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm resize-none"
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("h2", { class: "font-bold text-white mb-4 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-credit-card text-indigo-400", "aria-hidden": "true" }),
+              "Ph\u01B0\u01A1ng th\u1EE9c thanh to\xE1n"
+            ] }),
+            isDemoFree && /* @__PURE__ */ jsxDEV("div", { class: "mb-4 p-4 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-xs text-emerald-200 leading-relaxed", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-emerald-300 text-sm mb-1 flex items-center gap-1.5", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-flask", "aria-hidden": "true" }),
+                "T\xE0i kho\u1EA3n Kh\xE1ch Demo \u2014 K\xEDch ho\u1EA1t H\u1ED9i vi\xEAn 0\u0111 ngay"
+              ] }),
+              "B\u1EA5m n\xFAt k\xEDch ho\u1EA1t b\xEAn ph\u1EA3i \u0111\u1EC3 m\u1EDF kho\xE1 ngay g\xF3i ",
+              /* @__PURE__ */ jsxDEV("b", { children: plan.name }),
+              " m\xE0 kh\xF4ng c\u1EA7n chuy\u1EC3n kho\u1EA3n."
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "space-y-3", children: [
+              /* @__PURE__ */ jsxDEV("label", { class: "flex items-start gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer", children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "bank", checked: true, class: "mt-1 accent-indigo-500" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-indigo-600/25 border border-indigo-500/35 text-indigo-300 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-qrcode", "aria-hidden": "true" }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm flex items-center justify-between gap-2 flex-wrap", children: [
+                    /* @__PURE__ */ jsxDEV("span", { children: "Chuy\u1EC3n kho\u1EA3n VietQR (Ng\xE2n h\xE0ng / MoMo)" }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold", children: "T\u1EF0 \u0110\u1ED8NG 24/7" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#b8b6d9] mt-0.5", children: "Qu\xE9t m\xE3 QR \u2014 k\xEDch ho\u1EA1t g\xF3i H\u1ED9i vi\xEAn ngay khi nh\u1EADn giao d\u1ECBch." })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("label", { class: `flex items-start gap-3.5 p-4 rounded-xl border border-[#221e54] bg-[#161436]/50 ${balance < subtotal ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-indigo-500/50"}`, children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "balance", disabled: balance < subtotal, class: "mt-1 accent-indigo-500" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 grid place-items-center shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wallet", "aria-hidden": "true" }) }),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-sm", children: [
+                    "S\u1ED1 d\u01B0 v\xED (",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400 tabular-nums", children: formatVND(balance) }),
+                    ")"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mt-0.5", children: balance < subtotal ? "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho g\xF3i n\xE0y" : "Thanh to\xE1n t\u1EE9c th\xEC b\u1EB1ng s\u1ED1 d\u01B0 v\xED" })
+                ] })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("label", { for: "mem-coupon-input", class: "font-bold text-white mb-2 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-ticket text-indigo-400", "aria-hidden": "true" }),
+              "M\xE3 gi\u1EA3m gi\xE1"
+            ] }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mb-3", children: [
+              "Nh\u1EADp m\xE3 khuy\u1EBFn m\xE3i (n\u1EBFu c\xF3). M\xE3 \u0111\u01B0\u1EE3c gi\u1EEF t\u1EA1m trong ",
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: "10 ph\xFAt" }),
+              " khi ch\u1EDD thanh to\xE1n."
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  id: "mem-coupon-input",
+                  type: "text",
+                  placeholder: "Nh\u1EADp m\xE3 gi\u1EA3m gi\xE1...",
+                  style: "text-transform:uppercase",
+                  class: "flex-1 h-11 px-3.5 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm font-mono"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "mem-apply-coupon", class: "h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer", children: "\xC1p d\u1EE5ng" }),
+              /* @__PURE__ */ jsxDEV("button", { type: "button", id: "mem-clear-coupon", class: "hidden h-11 px-3.5 rounded-xl border border-[#2e2968] hover:border-rose-400 text-[#c2c0e0] hover:text-rose-300 font-semibold text-xs transition cursor-pointer", children: "B\u1ECF m\xE3" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { id: "mem-coupon-msg", class: "mt-2.5 text-sm hidden", role: "status" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("aside", { class: "lg:sticky-side", children: /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-amber-400/35 p-5", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 pb-4 border-b border-[#221e54]", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white grid place-items-center text-lg shrink-0 shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-black text-white text-base", children: [
+                "G\xF3i ",
+                plan.name
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-amber-300 font-semibold", children: formatDurationLabel(plan.duration_days) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2 py-4 border-b border-[#221e54] text-xs text-[#d6d4ee]", children: [
+            /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Skill VIP I" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white text-right", children: fmtQuota(plan.vip1_quota, "VIP I") })
+            ] }),
+            /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Skill VIP II" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white text-right", children: fmtQuota(plan.vip2_quota, "VIP II") })
+            ] }),
+            /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Skill VIP III" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white text-right", children: fmtQuota(plan.vip3_quota, "VIP III") })
+            ] }),
+            /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Skill VIP IV" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white text-right", children: fmtQuota(plan.vip4_quota, "VIP IV") })
+            ] }),
+            /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "SKILL PRO" }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-rose-300 font-semibold", children: "Ch\u1EC9 b\xE1n l\u1EBB ri\xEAng" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "space-y-2 text-sm py-4 border-b border-[#221e54] tabular-nums", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Gi\xE1 g\xF3i" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+                /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: formatVND(subtotal) }),
+                /* @__PURE__ */ jsxDEV("span", { class: "text-xs text-[#9492b8] ml-1", children: [
+                  "(",
+                  formatUSD(subtotal, usdRate),
+                  ")"
+                ] })
+              ] })
+            ] }),
+            isDemoFree ? /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "\u01AFu \u0111\xE3i Demo Test" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: [
+                "-",
+                formatVND(subtotal)
+              ] })
+            ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", id: "mem-discount-row", style: "display:none", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Gi\u1EA3m gi\xE1" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", id: "mem-sum-discount", children: "-0\u0111" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng thanh to\xE1n" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: `text-2xl font-extrabold leading-none ${isDemoFree ? "text-emerald-400" : "text-rose-400"}`, id: "mem-sum-total", children: isDemoFree ? "0\u0111" : formatVND(subtotal) }),
+              !isDemoFree && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-1", id: "mem-sum-usd", children: [
+                formatUSD(subtotal, usdRate),
+                " USD"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "submit",
+              id: "mem-place-order-btn",
+              class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl text-white font-extrabold hover:opacity-95 shadow-lg transition cursor-pointer ${isDemoFree ? "bg-gradient-to-r from-emerald-500 to-cyan-600 shadow-emerald-500/25" : "bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 shadow-amber-500/25"}`,
+              children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }),
+                isDemoFree ? `K\xEDch ho\u1EA1t ${plan.name} Demo (0\u0111)` : `Thanh to\xE1n g\xF3i ${plan.name}`
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "block text-center text-xs text-[#9492b8] hover:text-white mt-3", children: "\u2190 Ch\u1ECDn l\u1EA1i g\xF3i H\u1ED9i vi\xEAn kh\xE1c" })
+        ] }) })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+      __html: `
+(function(){
+  var subtotal = ${subtotal};
+  var usdRate = ${usdRate};
+  var isDemoFree = ${isDemoFree ? "true" : "false"};
+  var planSlug = ${JSON.stringify(plan.slug)};
+  var coupon = null, discount = 0;
+  function fmt(n){ return new Intl.NumberFormat('vi-VN').format(n)+'\u0111'; }
+  function fmtUsd(n){
+    if(n<=0) return '$0 USD';
+    var u = n / usdRate;
+    return '~$' + (u < 10 ? u.toFixed(1) : Math.round(u)) + ' USD';
+  }
+  function render(){
+    if (isDemoFree) return;
+    var sd = document.getElementById('mem-sum-discount');
+    var dr = document.getElementById('mem-discount-row');
+    var st = document.getElementById('mem-sum-total');
+    var su = document.getElementById('mem-sum-usd');
+    var finalAmt = Math.max(0, subtotal - discount);
+    if (sd) sd.textContent = '-' + fmt(discount);
+    if (dr) dr.style.display = discount > 0 ? 'flex' : 'none';
+    if (st) st.textContent = fmt(finalAmt);
+    if (su) su.textContent = fmtUsd(finalAmt);
+  }
+  var clearBtn = document.getElementById('mem-clear-coupon');
+  if (clearBtn) {
+    clearBtn.onclick = async function(){
+      coupon = null; discount = 0; render();
+      document.getElementById('mem-coupon-input').value = '';
+      clearBtn.classList.add('hidden');
+      var msg = document.getElementById('mem-coupon-msg');
+      if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
+      try { await axios.post('/api/coupons/release'); } catch(e){}
+    };
+  }
+  document.getElementById('mem-apply-coupon').onclick = async function(){
+    var code = (document.getElementById('mem-coupon-input').value || '').trim().toUpperCase();
+    var msg = document.getElementById('mem-coupon-msg');
+    if (!code) return;
+    try {
+      var r = await axios.post('/api/coupons/check', { code: code, subtotal: subtotal });
+      coupon = r.data.code || code; discount = r.data.discount; render();
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      var holdMin = r.data.hold_minutes || 10;
+      msg.className = 'mt-2.5 text-sm text-emerald-400';
+      msg.innerHTML = '<i class="fas fa-circle-check mr-1"></i>\xC1p d\u1EE5ng th\xE0nh c\xF4ng! Gi\u1EA3m <b>' + fmt(discount) + '</b> \xB7 Gi\u1EEF t\u1EA1m m\xE3 trong <b>' + holdMin + ' ph\xFAt</b>.';
+      msg.classList.remove('hidden');
+    } catch (e) {
+      coupon = null; discount = 0; render();
+      if (clearBtn) clearBtn.classList.add('hidden');
+      msg.className = 'mt-2.5 text-sm text-rose-400';
+      msg.innerHTML = '<i class="fas fa-circle-xmark mr-1"></i>' + ((e.response && e.response.data && e.response.data.error) || 'M\xE3 kh\xF4ng h\u1EE3p l\u1EC7');
+      msg.classList.remove('hidden');
+    }
+  };
+  document.getElementById('mem-checkout-form').onsubmit = async function(e){
+    e.preventDefault();
+    var btn = document.getElementById('mem-place-order-btn'); var o = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> \u0110ang t\u1EA1o \u0111\u01A1n...';
+    try {
+      var pm = document.querySelector('input[name=payment_method]:checked').value;
+      var r = await axios.post('/api/membership/orders/create', {
+        plan_slug: planSlug,
+        payment_method: pm,
+        coupon_code: coupon,
+        note: document.getElementById('mem-checkout-note').value
+      });
+      location.href = '/don-hang/' + r.data.order_code;
+    } catch (err) {
+      btn.disabled = false; btn.innerHTML = o;
+      if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Kh\xF4ng th\u1EC3 t\u1EA1o \u0111\u01A1n h\u1ED9i vi\xEAn', 'error');
+    }
+  };
+})();`
+    } })
+  ] });
+};
 
 // src/pages/account.tsx
 var MENU = [
   { href: "/tai-khoan", icon: "fa-gauge", label: "T\u1ED5ng quan", key: "dash" },
+  { href: "/tai-khoan/hoi-vien", icon: "fa-crown", label: "H\u1ED9i vi\xEAn VIP", key: "membership" },
   { href: "/tai-khoan/thong-bao", icon: "fa-bell", label: "Th\xF4ng b\xE1o", key: "notifications" },
   { href: "/tai-khoan/san-pham", icon: "fa-box-archive", label: "S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i", key: "products" },
   { href: "/tai-khoan/don-hang", icon: "fa-receipt", label: "\u0110\u01A1n h\xE0ng", key: "orders" },
@@ -15975,6 +16980,219 @@ var ProfilePage = (props) => {
     ] })
   ] });
 };
+var AccountMembershipPage = (props) => {
+  const { membership, history, catalog, ownedIds, selectedTier = "" } = props;
+  const usdRate = getUsdRate(props.settings);
+  const ownedSet = new Set(ownedIds);
+  const daysLeft = membership ? Math.max(0, Math.ceil((new Date(membership.expires_at).getTime() - Date.now()) / 864e5)) : 0;
+  const filteredCatalog = selectedTier ? catalog.filter((p) => normalizeSkillTier(p.skill_tier, p.price) === selectedTier) : catalog;
+  return /* @__PURE__ */ jsxDEV(
+    AccountShell,
+    {
+      ...props,
+      activeKey: "membership",
+      title: "H\u1ED9i vi\xEAn VIP",
+      heading: "H\u1ED9i vi\xEAn VIP & Ch\u1ECDn Skill",
+      sub: "Qu\u1EA3n l\xFD g\xF3i H\u1ED9i vi\xEAn, h\u1EA1n m\u1EE9c VIP I \u2013 VIP IV c\xF2n l\u1EA1i v\xE0 nh\u1EADn Skill t\u1EF1 \u0111\u1ED9ng v\xE0o t\xE0i kho\u1EA3n.",
+      children: [
+        !membership ? /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-amber-400/35 p-8 text-center mb-6", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white grid place-items-center text-2xl mx-auto mb-4 shadow-lg shadow-amber-500/25", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }) }),
+          /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-2", children: "B\u1EA1n ch\u01B0a k\xEDch ho\u1EA1t g\xF3i H\u1ED9i vi\xEAn VIP" }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-sm text-[#b8b6d9] max-w-lg mx-auto mb-5 leading-relaxed", children: [
+            "\u0110\u0103ng k\xFD g\xF3i H\u1ED9i vi\xEAn (t\u1EEB ",
+            /* @__PURE__ */ jsxDEV("b", { children: "BASIC 199K" }),
+            " \u0111\u1EBFn ",
+            /* @__PURE__ */ jsxDEV("b", { children: "GOLD / BLACK DIAMOND" }),
+            ") \u0111\u1EC3 m\u1EDF kho\xE1 h\xE0ng ch\u1EE5c \u0111\u1EBFn ",
+            /* @__PURE__ */ jsxDEV("b", { children: "Full kho Skill VIP I & VIP II (update li\xEAn t\u1EE5c)" }),
+            " c\xF9ng h\xE0ng lo\u1EA1t Skill VIP III & VIP IV tu\u1EF3 ch\u1ECDn."
+          ] }),
+          /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-amber-500/25 transition", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }),
+            "Xem b\u1EA3ng gi\xE1 6 g\xF3i H\u1ED9i vi\xEAn \u2192"
+          ] })
+        ] }) : /* @__PURE__ */ jsxDEV("div", { class: "space-y-6", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "rounded-2xl bg-gradient-to-br from-[#16123a] via-[#12102f] to-[#1a1030] border border-amber-400/45 p-6 shadow-xl", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-white/10", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white grid place-items-center text-xl shadow-lg", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }) }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 flex-wrap", children: [
+                    /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-black text-white uppercase", children: [
+                      "G\xF3i ",
+                      membership.plan_name
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold", children: "\u0110ang ho\u1EA1t \u0111\u1ED9ng" })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#c2c0e0] mt-1 tabular-nums", children: [
+                    "Hi\u1EC7u l\u1EF1c \u0111\u1EBFn ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: formatDate(membership.expires_at) }),
+                    " \xB7 C\xF2n ",
+                    /* @__PURE__ */ jsxDEV("b", { class: "text-amber-300", children: [
+                      daysLeft,
+                      " ng\xE0y"
+                    ] })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "h-10 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 font-bold text-xs inline-flex items-center gap-1.5 transition", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up-right-dots", "aria-hidden": "true" }),
+                "N\xE2ng c\u1EA5p / Gia h\u1EA1n g\xF3i"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5", children: ["vip1", "vip2", "vip3", "vip4"].map((tk) => {
+              const meta2 = SKILL_TIERS[tk];
+              const q = getTierQuotaInfo(membership, tk);
+              return /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#09081b]/80 border border-white/10 p-4", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-2", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: `px-2 py-0.5 rounded border text-[10px] font-extrabold ${meta2.badgeCls}`, children: meta2.code }),
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8]", children: meta2.priceRangeVnd })
+                ] }),
+                q.isFull ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-lg font-black text-emerald-400 leading-tight", children: "FULL" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-cyan-300 font-semibold mt-0.5", children: "T\u1EF1 \u0111\u1ED9ng m\u1EDF kho\xE1 & update li\xEAn t\u1EE5c" })
+                ] }) : q.quota === 0 ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-lg font-black text-slate-500 leading-tight", children: "0 l\u01B0\u1EE3t" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mt-0.5", children: "Ch\u01B0a c\xF3 trong g\xF3i n\xE0y" })
+                ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-lg font-black text-white leading-tight tabular-nums", children: [
+                    "C\xF2n ",
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300", children: q.remaining }),
+                    " / ",
+                    q.quota
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mt-0.5 tabular-nums", children: [
+                    "\u0110\xE3 ch\u1ECDn ",
+                    q.used,
+                    " Skill"
+                  ] })
+                ] })
+              ] });
+            }) })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-3 mb-4", children: [
+              /* @__PURE__ */ jsxDEV("div", { children: [
+                /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-white text-base", children: "Ch\u1ECDn nh\u1EADn Skill theo h\u1EA1n m\u1EE9c H\u1ED9i vi\xEAn" }),
+                /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] mt-0.5", children: 'B\u1EA5m "Nh\u1EADn ngay" \u0111\u1EC3 m\u1EDF kho\xE1 Skill l\u1EADp t\u1EE9c v\xE0o m\u1EE5c S\u1EA3n ph\u1EA9m c\u1EE7a t\xF4i (kh\xF4ng \xE1p d\u1EE5ng cho SKILL PRO b\xE1n l\u1EBB).' })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: [
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: "/tai-khoan/hoi-vien",
+                    class: `h-8 px-3 rounded-full text-xs font-bold inline-flex items-center border transition ${!selectedTier ? "bg-indigo-600 text-white border-indigo-500" : "bg-[#161436] border-[#221e54] text-[#c2c0e0]"}`,
+                    children: [
+                      "T\u1EA5t c\u1EA3 (",
+                      catalog.length,
+                      ")"
+                    ]
+                  }
+                ),
+                SKILL_TIER_ORDER.map((tk) => {
+                  const m = SKILL_TIERS[tk];
+                  const active = selectedTier === tk;
+                  return /* @__PURE__ */ jsxDEV(
+                    "a",
+                    {
+                      href: `/tai-khoan/hoi-vien?tier=${tk}`,
+                      class: `h-8 px-3 rounded-full text-xs font-bold inline-flex items-center gap-1 border transition ${active ? `bg-gradient-to-r ${m.bannerGrad} text-white border-transparent` : `${m.badgeCls}`}`,
+                      children: m.code
+                    }
+                  );
+                })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-3.5", children: filteredCatalog.map((p) => {
+              const tk = normalizeSkillTier(p.skill_tier, p.price);
+              const meta2 = SKILL_TIERS[tk];
+              const owned = ownedSet.has(p.id);
+              const q = getTierQuotaInfo(membership, tk);
+              return /* @__PURE__ */ jsxDEV("div", { class: "p-4 rounded-xl bg-[#161436]/75 border border-[#242054] flex items-start gap-3.5", children: [
+                /* @__PURE__ */ jsxDEV(
+                  "a",
+                  {
+                    href: `/san-pham/${p.slug}`,
+                    class: "w-24 aspect-video rounded-lg overflow-hidden shrink-0 bg-[#070614] grid place-items-center text-white",
+                    style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`,
+                    children: p.thumbnail ? /* @__PURE__ */ jsxDEV("img", { src: p.thumbnail, alt: p.name, class: "w-full h-full object-cover" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" })
+                  }
+                ),
+                /* @__PURE__ */ jsxDEV("div", { class: "flex-1 min-w-0", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-1.5 flex-wrap mb-1", children: [
+                    /* @__PURE__ */ jsxDEV(SkillTierBadge, { tier: p.skill_tier, price: p.price }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-[#9492b8] tabular-nums", children: [
+                      formatVND(p.price),
+                      " (",
+                      formatUSD(p.price, usdRate),
+                      ")"
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "font-bold text-white text-sm line-clamp-1 hover:text-indigo-300 transition", children: p.name }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "mt-2.5 flex items-center gap-2 flex-wrap", children: owned ? /* @__PURE__ */ jsxDEV("a", { href: "/tai-khoan/san-pham", class: "h-8 px-3 rounded-lg bg-emerald-500/20 border border-emerald-400/35 text-emerald-300 text-xs font-bold inline-flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check", "aria-hidden": "true" }),
+                    "\u0110\xE3 s\u1EDF h\u1EEFu \xB7 D\xF9ng ngay"
+                  ] }) : meta2.isRetailOnly ? /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "h-8 px-3 rounded-lg bg-rose-500/15 border border-rose-400/35 text-rose-200 text-xs font-bold inline-flex items-center gap-1.5 hover:bg-rose-500/25", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-[10px]", "aria-hidden": "true" }),
+                    "SKILL PRO \xB7 Mua l\u1EBB"
+                  ] }) : q.eligible ? /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      "data-claim-pid": p.id,
+                      class: "btn-mem-claim h-8 px-3.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-sm",
+                      children: [
+                        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-[10px]", "aria-hidden": "true" }),
+                        q.isFull ? `Nh\u1EADn mi\u1EC5n ph\xED (Full ${meta2.code})` : `\u0110\u1ED5i 1 l\u01B0\u1EE3t ${meta2.code}`
+                      ]
+                    }
+                  ) : /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "h-8 px-3 rounded-lg bg-white/5 border border-white/10 text-[#9492b8] hover:text-white text-xs font-semibold inline-flex items-center gap-1.5", children: q.quota === 0 ? `G\xF3i ch\u01B0a g\u1ED3m ${meta2.code} \xB7 Xem chi ti\u1EBFt` : `H\u1EBFt l\u01B0\u1EE3t ${meta2.code} \xB7 Mua l\u1EBB` }) })
+                ] })
+              ] });
+            }) })
+          ] })
+        ] }),
+        history.length > 0 && /* @__PURE__ */ jsxDEV("div", { class: "mt-6 bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-3.5 border-b border-[#221e54] font-bold text-white text-sm", children: "L\u1ECBch s\u1EED g\xF3i H\u1ED9i vi\xEAn" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-[#221e54] text-xs", children: history.map((h) => /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-3 flex flex-wrap items-center justify-between gap-2", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: h.plan_name }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] ml-2 tabular-nums", children: [
+                formatDate(h.starts_at),
+                " \u2192 ",
+                formatDate(h.expires_at)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("span", { class: `px-2 py-0.5 rounded-full font-bold ${h.status === "active" ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-[#9492b8]"}`, children: h.status === "active" ? "\u0110ang ho\u1EA1t \u0111\u1ED9ng" : h.status === "upgraded" ? "\u0110\xE3 n\xE2ng c\u1EA5p" : h.status === "expired" ? "H\u1EBFt h\u1EA1n" : "\u0110\xE3 hu\u1EF7" })
+          ] })) })
+        ] }),
+        /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+          __html: `
+(function(){
+  document.querySelectorAll('.btn-mem-claim').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      var pid = Number(btn.getAttribute('data-claim-pid'));
+      if (!pid) return;
+      var orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> \u0110ang m\u1EDF kho\xE1...';
+      try {
+        var r = await axios.post('/api/account/membership/claim', { product_id: pid });
+        if (window.toast) toast((r.data && r.data.message) || '\u0110\xE3 m\u1EDF kho\xE1 Skill!', 'success');
+        setTimeout(function(){ location.reload(); }, 600);
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Kh\xF4ng th\u1EC3 nh\u1EADn Skill', 'error');
+      }
+    });
+  });
+})();`
+        } })
+      ]
+    }
+  );
+};
 
 // src/pages/static.tsx
 var BlogListPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "blog", title: "Blog", description: "Ki\u1EBFn th\u1EE9c, h\u01B0\u1EDBng d\u1EABn v\xE0 case study v\u1EC1 l\xE0m video AI", children: [
@@ -16047,115 +17265,380 @@ var BlogDetailPage = (props) => {
     ] })
   ] }) });
 };
-var PLANS = [
-  {
-    name: "Skill AI (T\u1EF1 t\u1EA3i)",
-    price: 399e3,
-    tag: "\u0110ang m\u1EDF b\xE1n \xB7 T\u1EF1 l\xE0m theo",
-    icon: "fa-download",
-    highlight: false,
-    available: true,
-    isMcp: false,
-    desc: "Ch\u1ECDn Skill theo ng\xE1ch (Thu\u1EF7 Sinh, L\xE0m V\u01B0\u1EDDn, Fitness) ho\u1EB7c Muse AI / Seedance 2.5 \u0111\u1EC3 t\u1EF1 t\u1EA3i v\u1EC1 & thao t\xE1c t\u1EEBng b\u01B0\u1EDBc.",
-    features: ["Tr\u1ECDn b\u1ED9 prompt, quy tr\xECnh 30s & file m\u1EABu", "T\u1EF1 t\u1EA3i v\u1EC1 m\xE1y, l\xE0m ch\u1EE7 th\u1EE7 c\xF4ng t\u1EEBng c\u1EA3nh", "Video demo th\u1EADt xem tr\u01B0\u1EDBc khi mua", "Truy c\u1EADp tr\u1ECDn \u0111\u1EDDi + update free", "H\u1ED7 tr\u1EE3 k\u1EF9 thu\u1EADt 1-1 qua Zalo"],
-    cta: "Xem Skill t\u1EF1 t\u1EA3i",
-    href: "/san-pham?type=skill"
-  },
-  {
-    name: "Skill AI Agent (MCP)",
-    price: 499e3,
-    tag: "M\u1EDAI \xB7 K\u1EBFt n\u1ED1i MCP + Drive Kit",
-    icon: "fa-plug-circle-bolt",
-    highlight: true,
-    available: true,
-    isMcp: true,
-    desc: "7 b\u1ED9 Skill AI Agent d\u1EF1ng video th\u1EF1c chi\u1EBFn (Roblox 3D Animation, Du l\u1ECBch, Talking Head, B\u0110S GeoLayers 3D, L\u1ECBch s\u1EED, Fitness Manga) cho Claude, ChatGPT, Codex, Antigravity \u2014 t\u1EEB 499K \u0111\u1EBFn 1.500K.",
-    features: ["K\u1EBFt n\u1ED1i 1 ch\u1EA1m v\u1EDBi Claude, ChatGPT, Claude Code, Codex, Antigravity", "T\u1EB7ng k\xE8m link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 Skill Kit + Demo 1080p g\u1EEDi th\u1EB3ng qua Gmail", "AI Agent t\u1EF1 d\u1EF1ng video 1080p chu\u1EA9n -14 LUFS ngay tr\xEAn m\xE1y b\u1EA1n", "T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n SKILL.md m\u1EDBi nh\u1EA5t t\u1EEB server", "Ch\u1ECDn b\u1EADt/t\u1EAFt ho\u1EB7c m\u1EDF d\xF9ng ngay t\u1EEBng Skill c\u1EE5 th\u1EC3", "H\u1ED7 tr\u1EE3 c\xE0i \u0111\u1EB7t m\xF4i tr\u01B0\u1EDDng & AI Agent 1-1 qua Zalo / Ultraview"],
-    cta: "Xem 7 Skill AI Agent (MCP)",
-    href: "/san-pham?type=mcp_skill"
-  },
-  {
-    name: "Combo & Chatbot / App",
-    price: 1999e3,
-    tag: "Ch\u01B0a m\u1EDF b\xE1n",
-    icon: "fa-clock",
-    highlight: false,
-    available: false,
-    isMcp: false,
-    desc: "Kh\xF3a h\u1ECDc chuy\xEAn s\xE2u, Chatbot k\u1ECBch b\u1EA3n, App render t\u1EF1 \u0111\u1ED9ng v\xE0 g\xF3i Combo All-In-One.",
-    features: ["Kh\xF3a h\u1ECDc Video AI (s\u1EAFp m\u1EDF)", "Chatbot vi\u1EBFt k\u1ECBch b\u1EA3n + App render (s\u1EAFp m\u1EDF)", "Combo ti\u1EBFt ki\u1EC7m tr\u1ECDn b\u1ED9 (s\u1EAFp m\u1EDF)", "T\u1EA1m th\u1EDDi \u0111\xF3ng gi\u1ECF \u2014 t\u1EADp trung 2 d\xF2ng Skill ch\xEDnh"],
-    cta: "Ch\u01B0a m\u1EDF b\xE1n",
-    href: "/combo"
+function planHeaderStyle(theme) {
+  switch (theme) {
+    case "orange":
+      return {
+        header: "bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 text-white",
+        border: "border-amber-400/70 ring-2 ring-amber-400/25 shadow-2xl shadow-amber-500/15",
+        btn: "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/25",
+        icon: "fa-star"
+      };
+    case "obsidian":
+      return {
+        header: "bg-gradient-to-r from-[#070b1a] via-[#131b35] to-[#1e1b4b] text-white border-b border-amber-400/30",
+        border: "border-amber-300/45 shadow-2xl shadow-indigo-950/50",
+        btn: "bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#312e81] hover:opacity-95 text-amber-200 border border-amber-400/45 shadow-lg",
+        icon: "fa-gem"
+      };
+    case "violet":
+      return {
+        header: "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white",
+        border: "border-violet-400/45 shadow-xl shadow-violet-950/30",
+        btn: "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-violet-600/25",
+        icon: "fa-rocket"
+      };
+    case "blue":
+      return {
+        header: "bg-gradient-to-r from-blue-600 to-sky-500 text-white",
+        border: "border-blue-500/35",
+        btn: "bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white shadow-md shadow-blue-600/20",
+        icon: "fa-seedling"
+      };
+    case "emerald":
+      return {
+        header: "bg-gradient-to-r from-emerald-600 to-teal-500 text-white",
+        border: "border-emerald-500/35",
+        btn: "bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-md shadow-emerald-600/20",
+        icon: "fa-chart-simple"
+      };
+    case "purple":
+    default:
+      return {
+        header: "bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white",
+        border: "border-purple-500/35",
+        btn: "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white shadow-md shadow-purple-600/20",
+        icon: "fa-diamond"
+      };
   }
-];
-var PricingPage = (props) => /* @__PURE__ */ jsxDEV(Layout, { ...props, active: "pricing", title: "B\u1EA3ng gi\xE1", description: "B\u1EA3ng gi\xE1 d\xF2ng Skill AI t\u1EF1 t\u1EA3i v\xE0 Skill AI Agent (MCP) k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity", children: [
-  /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
-    /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 py-16 text-center", children: [
-      /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-3", children: "B\u1EA3ng gi\xE1 minh b\u1EA1ch" }),
-      /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] max-w-2xl mx-auto", children: [
-        "Ch\u1ECDn gi\u1EEFa ",
-        /* @__PURE__ */ jsxDEV("b", { children: "Skill AI (t\u1EF1 t\u1EA3i v\u1EC1 l\xE0m theo)" }),
-        " ho\u1EB7c ",
-        /* @__PURE__ */ jsxDEV("b", { children: "Skill AI Agent (MCP)" }),
-        " k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity. Mua m\u1ED9t l\u1EA7n, s\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi."
+}
+var QuotaCell = ({ quota, tierLabel, isOptionalPick }) => {
+  if (quota < 0) {
+    return /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-cyan-300 text-sm leading-tight", children: [
+        "Full ",
+        tierLabel
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-emerald-400 font-semibold mt-0.5", children: "Update li\xEAn t\u1EE5c" })
+    ] });
+  }
+  if (quota === 0) {
+    return /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-rose-400 text-sm", children: "Kh\xF4ng" });
+  }
+  return /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+    /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-sky-300 text-sm leading-tight tabular-nums", children: [
+      quota,
+      " Skill"
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8] mt-0.5", children: isOptionalPick ? "Tu\u1EF3 ch\u1ECDn" : "Ch\u1ECDn theo \xFD mu\u1ED1n" })
+  ] });
+};
+var MembershipCard = ({ plan, usdRate, isCurrent }) => {
+  const st = planHeaderStyle(plan.theme_color);
+  const hasFull = plan.vip1_quota < 0 || plan.vip2_quota < 0;
+  return /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl bg-[#0f0e24] border flex flex-col relative transition hover:-translate-y-1 duration-200 ${st.border}`, children: [
+    plan.badge && /* @__PURE__ */ jsxDEV("div", { class: `absolute -top-3 left-1/2 -translate-x-1/2 z-10 px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-lg ${plan.is_popular ? "bg-rose-500 text-white" : "bg-amber-400 text-slate-950"}`, children: plan.badge }),
+    /* @__PURE__ */ jsxDEV("div", { class: `${st.header} rounded-t-2xl px-5 pt-6 pb-5 flex items-start justify-between gap-3`, children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+        /* @__PURE__ */ jsxDEV("span", { class: "w-9 h-9 rounded-xl bg-white/15 backdrop-blur grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${st.icon}`, "aria-hidden": "true" }) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+          /* @__PURE__ */ jsxDEV("h3", { class: "text-base sm:text-lg font-black tracking-tight uppercase leading-tight truncate", children: plan.name }),
+          isCurrent && /* @__PURE__ */ jsxDEV("span", { class: "inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-300", "aria-hidden": "true" }),
+            "G\xF3i \u0111ang d\xF9ng"
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0 tabular-nums", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xl sm:text-2xl font-black leading-none", children: formatVND(plan.price_vnd) }),
+        /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white/90 mt-1", children: [
+          formatUSD(plan.price_vnd, usdRate),
+          " USD \xB7 ",
+          formatDurationLabel(plan.duration_days)
+        ] })
       ] })
-    ] })
-  ] }),
-  /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 -mt-8 pb-14 relative", children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-5", children: PLANS.map((pl) => /* @__PURE__ */ jsxDEV("div", { class: `rounded-2xl p-7 relative ${pl.highlight ? "bg-gradient-to-br from-cyan-600 via-indigo-600 to-fuchsia-600 text-white shadow-2xl shadow-cyan-500/25 lg:-mt-4 lg:mb-4" : "bg-[#0f0e24] border border-[#221e54]"}`, children: [
-      pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: "absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-cyan-300 text-slate-950 text-xs font-extrabold whitespace-nowrap inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[10px]", "aria-hidden": "true" }),
-        pl.tag
+    ] }),
+    /* @__PURE__ */ jsxDEV("div", { class: "p-5 flex-1 flex flex-col", children: [
+      /* @__PURE__ */ jsxDEV("div", { class: "divide-y divide-[#221e54] text-sm", children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-blue-500/15 text-blue-400 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-book-open", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs sm:text-sm", children: "Skill VIP I" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: [
+                "L\u1EBB ~135K (",
+                formatUSD(135e3, usdRate),
+                ")"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV(QuotaCell, { quota: plan.vip1_quota, tierLabel: "VIP I" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-layer-group", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs sm:text-sm", children: "Skill VIP II" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: [
+                "L\u1EBB ~270K (",
+                formatUSD(27e4, usdRate),
+                ")"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV(QuotaCell, { quota: plan.vip2_quota, tierLabel: "VIP II" })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-amber-500/15 text-amber-400 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs sm:text-sm", children: "Skill VIP III" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: "L\u1EBB 399K \u2013 599K" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV(QuotaCell, { quota: plan.vip3_quota, tierLabel: "VIP III", isOptionalPick: true })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-violet-500/15 text-violet-400 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gem", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-white text-xs sm:text-sm", children: "Skill VIP IV" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: [
+                "L\u1EBB 999K (",
+                formatUSD(999e3, usdRate),
+                ")"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV(QuotaCell, { quota: plan.vip4_quota, tierLabel: "VIP IV", isOptionalPick: true })
+        ] }),
+        plan.est_value_vnd > 0 && /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs sm:text-sm text-[#c2c0e0]", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-amber-500/10 text-amber-300 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-coins", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("span", { children: "Gi\xE1 tr\u1ECB nh\u1EADn \u0111\u01B0\u1EE3c" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-right tabular-nums", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-emerald-400 text-sm", children: [
+              formatVND(plan.est_value_vnd),
+              hasFull ? "+" : ""
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: [
+              formatUSD(plan.est_value_vnd, usdRate),
+              hasFull ? "+" : ""
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs sm:text-sm text-[#c2c0e0]", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-300 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-chart-line", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("span", { children: "Chi ph\xED trung b\xECnh" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-sky-300 text-sm tabular-nums", children: calcAvgCostPerSkill(plan) })
+        ] }),
+        plan.ideal_for && /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs sm:text-sm text-[#c2c0e0] shrink-0", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-yellow-500/10 text-yellow-300 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-lightbulb", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("span", { children: "Ph\xF9 h\u1EE3p cho" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { class: "text-xs font-semibold text-white text-right", children: plan.ideal_for })
+        ] })
       ] }),
-      /* @__PURE__ */ jsxDEV("div", { class: `w-12 h-12 rounded-xl grid place-items-center text-lg mb-4 ${pl.highlight ? "bg-white/20 text-white" : pl.available ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30" : "bg-amber-500/15 text-amber-300 border border-amber-500/30"}`, children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.icon}`, "aria-hidden": "true" }) }),
-      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-1", children: pl.name }),
-      !pl.highlight && /* @__PURE__ */ jsxDEV("div", { class: `text-xs font-bold mb-3 ${pl.available ? "text-emerald-400" : "text-amber-300"}`, children: pl.tag }),
-      /* @__PURE__ */ jsxDEV("p", { class: `text-sm mb-5 leading-relaxed ${pl.highlight ? "text-white/90" : "text-[#b8b6d9]"}`, children: pl.desc }),
-      /* @__PURE__ */ jsxDEV("div", { class: "mb-6", children: [
-        /* @__PURE__ */ jsxDEV("span", { class: "text-3xl font-extrabold text-white tabular-nums", children: formatVND(pl.price) }),
-        /* @__PURE__ */ jsxDEV("span", { class: `text-sm ml-1.5 ${pl.highlight ? "text-white/80" : "text-[#9492b8]"}`, children: pl.available ? "/ tr\u1ECDn \u0111\u1EDDi" : "/ d\u1EF1 ki\u1EBFn" })
-      ] }),
-      /* @__PURE__ */ jsxDEV("ul", { class: "space-y-2.5 mb-7", children: pl.features.map((f) => /* @__PURE__ */ jsxDEV("li", { class: `flex gap-2.5 text-sm ${pl.highlight ? "text-white/95" : "text-[#c2c0e0]"}`, children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas ${pl.available ? "fa-circle-check" : "fa-clock"} mt-0.5 shrink-0 ${pl.highlight ? "text-cyan-200" : pl.available ? "text-emerald-400" : "text-amber-400"}`, "aria-hidden": "true" }),
-        f
-      ] })) }),
       /* @__PURE__ */ jsxDEV(
         "a",
         {
-          href: pl.href,
-          class: `flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm transition ${pl.highlight ? "cta-white bg-white text-indigo-700 hover:bg-slate-100" : pl.available ? "bg-indigo-600 hover:bg-indigo-500 text-white" : "bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25"}`,
+          href: `/hoi-vien/thanh-toan/${plan.slug}`,
+          class: `mt-5 flex items-center justify-center gap-2 w-full h-12 rounded-xl font-extrabold text-sm transition ${st.btn}`,
           children: [
-            pl.cta,
+            /* @__PURE__ */ jsxDEV("span", { children: isCurrent ? `Gia h\u1EA1n / Mua l\u1EA1i ${plan.name}` : `\u0110\u0103ng k\xFD ${plan.name}` }),
             /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-right text-xs", "aria-hidden": "true" })
           ]
         }
       )
-    ] })) }),
-    /* @__PURE__ */ jsxDEV("div", { class: "mt-12 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", children: [
-      /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-6 text-center", children: "So s\xE1nh Skill t\u1EF1 t\u1EA3i vs Skill AI Agent (MCP)" }),
-      /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-sm min-w-[600px]", children: [
-        /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { class: "border-b-2 border-[#221e54]", children: [
-          /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3 font-bold text-[#c2c0e0]", children: "T\xEDnh n\u0103ng" }),
-          PLANS.map((p) => /* @__PURE__ */ jsxDEV("th", { class: "py-3 px-3 font-bold text-white text-center", children: p.name }))
-        ] }) }),
-        /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-[#221e54]", children: [
-          ["Tr\u1EA1ng th\xE1i", "\u0110ang m\u1EDF b\xE1n", "\u0110ang m\u1EDF b\xE1n", "Ch\u01B0a m\u1EDF b\xE1n"],
-          ["H\xECnh th\u1EE9c s\u1EED d\u1EE5ng", "T\u1EF1 t\u1EA3i file & l\xE0m theo", "AI Agent g\u1ECDi MCP tr\u1EF1c ti\u1EBFp", "Tr\u1ECDn g\xF3i"],
-          ["T\u01B0\u01A1ng th\xEDch Claude / Codex / Antigravity", false, true, "Tu\u1EF3 g\xF3i"],
-          ["T\u1EF1 \u0111\u1ED9ng \u0111\u1ED3ng b\u1ED9 b\u1EA3n Skill t\u1EEB server", false, true, true],
-          ["S\u1EDF h\u1EEFu tr\u1ECDn \u0111\u1EDDi", true, true, true],
-          ["C\u1EADp nh\u1EADt mi\u1EC5n ph\xED", true, true, true],
-          ["H\u1ED7 tr\u1EE3 1-1 qua Zalo", true, true, true],
-          ["Kh\xF3a h\u1ECDc + Chatbot + App", false, false, "S\u1EAFp m\u1EDF"]
-        ].map(([label, ...vals]) => /* @__PURE__ */ jsxDEV("tr", { children: [
-          /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 text-[#c2c0e0] font-medium", children: label }),
-          vals.map((v) => /* @__PURE__ */ jsxDEV("td", { class: "py-3.5 px-3 text-center", children: typeof v === "boolean" ? v ? /* @__PURE__ */ jsxDEV("i", { class: "fas fa-circle-check text-emerald-400", "aria-label": "C\xF3" }) : /* @__PURE__ */ jsxDEV("i", { class: "fas fa-minus text-[#9492b8]", "aria-label": "Kh\xF4ng" }) : /* @__PURE__ */ jsxDEV("span", { class: "font-semibold text-white", children: v }) }))
-        ] })) })
-      ] }) })
     ] })
-  ] })
-] });
+  ] });
+};
+var PricingPage = (props) => {
+  const usdRate = getUsdRate(props.settings);
+  const plans = props.plans || [];
+  const premiumPlans = plans.filter((p) => p.group_type === "premium");
+  const starterPlans = plans.filter((p) => p.group_type !== "premium");
+  const activeMem = props.activeMembership || null;
+  const tierCounts = props.tierCounts || {};
+  return /* @__PURE__ */ jsxDEV(
+    Layout,
+    {
+      ...props,
+      active: "pricing",
+      title: "B\u1EA3ng gi\xE1 H\u1ED9i vi\xEAn VIP & Ph\xE2n h\u1EA1ng Skill",
+      description: "Ph\xE2n c\u1EA5p Skill VIP I \u2013 VIP IV, SKILL PRO b\xE1n l\u1EBB v\xE0 6 g\xF3i H\u1ED9i vi\xEAn (Basic, Standard, Silver, Premium, Gold, Black Diamond) ni\xEAm y\u1EBFt song song VN\u0110 & USD.",
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "bg-[#070614] text-white relative overflow-hidden border-b border-[#221e54]", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "absolute inset-0 hero-mesh" }),
+          /* @__PURE__ */ jsxDEV("div", { class: "relative max-w-7xl mx-auto px-4 pt-12 pb-10 text-center", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-400/35 text-amber-200 text-xs font-bold mb-4", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown text-amber-400", "aria-hidden": "true" }),
+              /* @__PURE__ */ jsxDEV("span", { children: "H\u1EC7 th\u1ED1ng ph\xE2n h\u1EA1ng Skill VIP I \u2013 IV \xB7 Ni\xEAm y\u1EBFt song song VN\u0110 & USD" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("h1", { class: "text-3xl md:text-4xl font-extrabold tracking-tight mb-3", children: "B\u1EA3ng gi\xE1 H\u1ED9i vi\xEAn VIP & H\u1EA1ng Skill" }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-[#c2c0e0] max-w-2xl mx-auto text-sm md:text-base", children: [
+              "Mua l\u1EBB t\u1EEBng Skill theo h\u1EA1ng ho\u1EB7c \u0111\u0103ng k\xFD ",
+              /* @__PURE__ */ jsxDEV("b", { children: "G\xF3i H\u1ED9i Vi\xEAn" }),
+              " \u0111\u1EC3 nh\u1EADn h\xE0ng ch\u1EE5c \u0111\u1EBFn ",
+              /* @__PURE__ */ jsxDEV("b", { children: "Full kho Skill VIP I & VIP II (update li\xEAn t\u1EE5c)" }),
+              " v\u1EDBi chi ph\xED si\xEAu ti\u1EBFt ki\u1EC7m."
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8 space-y-8", children: [
+          /* @__PURE__ */ jsxDEV("section", { "aria-label": "Ph\xE2n h\u1EA1ng Skill VIP", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-5 gap-3", children: SKILL_TIER_ORDER.map((tk) => {
+              const m = SKILL_TIERS[tk];
+              const cnt = tierCounts[tk] || 0;
+              return /* @__PURE__ */ jsxDEV(
+                "a",
+                {
+                  href: `/san-pham?tier=${tk}`,
+                  class: `group rounded-2xl p-4 bg-gradient-to-r ${m.bannerGrad} text-white shadow-lg hover:-translate-y-0.5 transition flex items-center justify-between gap-3`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+                      /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 mb-1", children: [
+                        /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-lg bg-black/25 font-black text-xs tracking-wide whitespace-nowrap", children: m.code }),
+                        cnt > 0 && /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-bold text-white/90 tabular-nums", children: [
+                          cnt,
+                          " Skill"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-sm sm:text-base leading-tight tabular-nums", children: m.priceRangeVnd }),
+                      /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-white/90 font-medium mt-0.5", children: [
+                        m.priceRangeUsd,
+                        " \xB7 ",
+                        m.subtitle
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "w-10 h-10 rounded-xl bg-white/15 grid place-items-center text-lg shrink-0 group-hover:scale-110 transition", children: /* @__PURE__ */ jsxDEV("i", { class: `fas ${m.icon}`, "aria-hidden": "true" }) })
+                  ]
+                }
+              );
+            }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "mt-3.5 px-4 py-3 rounded-xl bg-sky-500/10 border border-sky-400/35 text-xs sm:text-sm text-sky-100 flex items-start sm:items-center gap-2.5", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "w-6 h-6 rounded-full bg-sky-500 text-white grid place-items-center text-xs shrink-0 mt-0.5 sm:mt-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-info", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("p", { class: "leading-relaxed", children: [
+                "G\xF3i H\u1ED9i vi\xEAn ch\u1EC9 \xE1p d\u1EE5ng nh\u1EADn c\xE1c Skill l\u1EBB thu\u1ED9c h\u1EA1ng ",
+                /* @__PURE__ */ jsxDEV("b", { children: "VIP I \u2013 VIP IV" }),
+                " theo h\u1EA1n m\u1EE9c c\u1EE7a t\u1EEBng g\xF3i, ",
+                /* @__PURE__ */ jsxDEV("b", { class: "text-amber-300", children: "kh\xF4ng \xE1p d\u1EE5ng cho SKILL PRO (ch\u1EC9 b\xE1n l\u1EBB ri\xEAng)" }),
+                " \u1EDF b\u1EA5t k\u1EF3 m\u1EE9c gi\xE1 n\xE0o. T\u1EF7 gi\xE1 tham kh\u1EA3o: ",
+                /* @__PURE__ */ jsxDEV("b", { class: "tabular-nums", children: [
+                  "1 USD \u2248 ",
+                  formatVND(usdRate)
+                ] }),
+                "."
+              ] })
+            ] })
+          ] }),
+          activeMem && /* @__PURE__ */ jsxDEV("div", { class: "p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-[#121134] to-indigo-950/70 border border-emerald-400/40 flex flex-wrap items-center justify-between gap-4", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-3 min-w-0", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-300 grid place-items-center text-lg shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-sm font-extrabold text-white", children: [
+                  "B\u1EA1n \u0111ang l\xE0 H\u1ED9i vi\xEAn ",
+                  /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300", children: activeMem.plan_name })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#c2c0e0] mt-0.5", children: [
+                  "Hi\u1EC7u l\u1EF1c \u0111\u1EBFn ",
+                  /* @__PURE__ */ jsxDEV("b", { children: formatDate(activeMem.expires_at) }),
+                  " \xB7 V\xE0o trang H\u1ED9i vi\xEAn \u0111\u1EC3 xem h\u1EA1n m\u1EE9c VIP I \u2013 IV c\xF2n l\u1EA1i v\xE0 nh\u1EADn Skill ngay."
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV(
+              "a",
+              {
+                href: "/tai-khoan/hoi-vien",
+                class: "h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs inline-flex items-center gap-1.5 transition shrink-0",
+                children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-wand-magic-sparkles", "aria-hidden": "true" }),
+                  "M\u1EDF kho H\u1ED9i vi\xEAn c\u1EE7a t\xF4i \u2192"
+                ]
+              }
+            )
+          ] }),
+          premiumPlans.length > 0 && /* @__PURE__ */ jsxDEV("section", { "aria-labelledby": "heading-premium-plans", class: "pt-2", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2 mb-6", children: /* @__PURE__ */ jsxDEV("h2", { id: "heading-premium-plans", class: "text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5 tracking-tight", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 grid place-items-center text-sm", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("span", { children: "G\xD3I CAO C\u1EA4P" }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-xs font-semibold text-cyan-300 bg-cyan-500/15 border border-cyan-400/30 px-2.5 py-0.5 rounded-full", children: "Full VIP I + VIP II update li\xEAn t\u1EE5c" })
+            ] }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-6 items-stretch", children: premiumPlans.map((plan) => /* @__PURE__ */ jsxDEV(MembershipCard, { plan, usdRate, isCurrent: activeMem?.plan_slug === plan.slug })) })
+          ] }),
+          starterPlans.length > 0 && /* @__PURE__ */ jsxDEV("section", { "aria-labelledby": "heading-starter-plans", class: "pt-4", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2 mb-6", children: /* @__PURE__ */ jsxDEV("h2", { id: "heading-starter-plans", class: "text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5 tracking-tight", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 grid place-items-center text-sm", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-graduation-cap", "aria-hidden": "true" }) }),
+              /* @__PURE__ */ jsxDEV("span", { children: "G\xD3I C\u01A0 B\u1EA2N" }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-xs font-semibold text-[#c2c0e0] bg-[#161436] border border-[#2a2559] px-2.5 py-0.5 rounded-full", children: "Ch\u1ECDn l\u1EBB theo h\u1EA1n m\u1EE9c VIP I \u2013 III" })
+            ] }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-3 gap-6 items-stretch", children: starterPlans.map((plan) => /* @__PURE__ */ jsxDEV(MembershipCard, { plan, usdRate, isCurrent: activeMem?.plan_slug === plan.slug })) })
+          ] }),
+          plans.length > 0 && /* @__PURE__ */ jsxDEV("section", { class: "mt-8 bg-[#0f0e24] rounded-2xl border border-[#221e54] p-6 md:p-8", children: [
+            /* @__PURE__ */ jsxDEV("h2", { class: "text-xl font-extrabold text-white mb-2 text-center", children: "So s\xE1nh chi ti\u1EBFt t\u1EA5t c\u1EA3 g\xF3i H\u1ED9i vi\xEAn" }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-[#9492b8] text-center mb-6", children: "M\u1ECDi g\xF3i \u0111\u1EC1u k\xEDch ho\u1EA1t t\u1EF1 \u0111\u1ED9ng 24/7 qua VietQR, h\u1ED7 tr\u1EE3 d\xF9ng song song c\u1EA3 Skill t\u1EF1 t\u1EA3i & Skill AI Agent (MCP)." }),
+            /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full text-xs sm:text-sm min-w-[760px]", children: [
+              /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { class: "border-b-2 border-[#221e54]", children: [
+                /* @__PURE__ */ jsxDEV("th", { class: "text-left py-3 pr-3 font-bold text-[#c2c0e0]", children: "Quy\u1EC1n l\u1EE3i" }),
+                [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("th", { class: `py-3 px-2.5 font-extrabold text-center whitespace-nowrap ${pl.is_popular ? "text-amber-300" : "text-white"}`, children: pl.name }))
+              ] }) }),
+              /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-[#221e54] tabular-nums", children: [
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Gi\xE1 g\xF3i (VN\u0110 / USD)" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "font-extrabold text-rose-400", children: formatVND(pl.price_vnd) }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: formatUSD(pl.price_vnd, usdRate) })
+                  ] }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Th\u1EDDi h\u1EA1n" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center text-white font-semibold", children: formatDurationLabel(pl.duration_days) }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Skill VIP I (~135K / $5)" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center font-bold", children: pl.vip1_quota < 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: "Full (Update)" }) : pl.vip1_quota > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-sky-300", children: [
+                    pl.vip1_quota,
+                    " Skill"
+                  ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-rose-400", children: "Kh\xF4ng" }) }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Skill VIP II (~270K / $10)" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center font-bold", children: pl.vip2_quota < 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: "Full (Update)" }) : pl.vip2_quota > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-sky-300", children: [
+                    pl.vip2_quota,
+                    " Skill"
+                  ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-rose-400", children: "Kh\xF4ng" }) }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Skill VIP III (399K \u2013 599K)" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center font-bold", children: pl.vip3_quota < 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: "Full" }) : pl.vip3_quota > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300", children: [
+                    pl.vip3_quota,
+                    " Skill"
+                  ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-rose-400", children: "Kh\xF4ng" }) }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Skill VIP IV (999K)" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center font-bold", children: pl.vip4_quota < 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-400", children: "Full" }) : pl.vip4_quota > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-violet-300", children: [
+                    pl.vip4_quota,
+                    " Skill"
+                  ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-rose-400", children: "Kh\xF4ng" }) }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "SKILL PRO (Si\xEAu c\u1EA5p b\xE1n l\u1EBB)" }),
+                  [...starterPlans, ...premiumPlans].map(() => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center text-xs text-rose-300 font-semibold", children: "Ch\u1EC9 b\xE1n l\u1EBB" }))
+                ] })
+              ] })
+            ] }) })
+          ] })
+        ] })
+      ]
+    }
+  );
+};
 var AboutPage = (props) => {
   const siteName = props.settings?.site_name || "KhoSkill AI";
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1EDBi thi\u1EC7u", description: `V\u1EC1 ${siteName} \u2014 kho Skill AI & Skill AI Agent (MCP) l\xE0m video th\u1EF1c chi\u1EBFn h\xE0ng \u0111\u1EA7u Vi\u1EC7t Nam`, children: [
@@ -16444,6 +17927,7 @@ var MENU2 = [
   { href: "/admin/don-hang", icon: "fa-receipt", label: "\u0110\u01A1n h\xE0ng", key: "orders" },
   { href: "/admin/giao-dich", icon: "fa-building-columns", label: "Giao d\u1ECBch NH", key: "banktx" },
   { href: "/admin/thanh-vien", icon: "fa-users", label: "Th\xE0nh vi\xEAn", key: "users" },
+  { href: "/admin/hoi-vien", icon: "fa-crown", label: "H\u1ED9i vi\xEAn & B\u1EA3ng gi\xE1", key: "memberships" },
   { href: "/admin/ma-giam-gia", icon: "fa-ticket", label: "M\xE3 gi\u1EA3m gi\xE1", key: "coupons" },
   { href: "/admin/bai-viet", icon: "fa-newspaper", label: "B\xE0i vi\u1EBFt", key: "posts" },
   { href: "/admin/danh-gia", icon: "fa-star", label: "\u0110\xE1nh gi\xE1", key: "reviews" },
@@ -16636,47 +18120,59 @@ var AdminProducts = (props) => /* @__PURE__ */ jsxDEV(AdminShell, { ...props, ac
   /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
     /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
       /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "S\u1EA3n ph\u1EA9m" }),
+      /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "H\u1EA1ng Skill" }),
       /* @__PURE__ */ jsxDEV("th", { class: "text-left", children: "Danh m\u1EE5c" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Gi\xE1" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "\u0110\xE3 b\xE1n" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-center", children: "Tr\u1EA1ng th\xE1i" }),
-      /* @__PURE__ */ jsxDEV("th", { class: "text-right", children: "Thao t\xE1c" })
+      /* @__PURE__ */ jsxDEV("th", { class: "text-right whitespace-nowrap", children: "Gi\xE1 (VN\u0110 / $)" }),
+      /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "\u0110\xE3 b\xE1n" }),
+      /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "Tr\u1EA1ng th\xE1i" }),
+      /* @__PURE__ */ jsxDEV("th", { class: "text-right whitespace-nowrap", children: "Thao t\xE1c" })
     ] }) }),
-    /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.products.map((p) => /* @__PURE__ */ jsxDEV("tr", { children: [
-      /* @__PURE__ */ jsxDEV("td", { children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 line-clamp-1 max-w-xs", children: p.name }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 flex gap-2 mt-0.5", children: [
-          /* @__PURE__ */ jsxDEV("span", { class: `px-1.5 py-0.5 rounded font-medium ${isMcpSkill(p.product_type) ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-brand-50 text-brand-700"}`, children: [
-            isMcpSkill(p.product_type) && /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1 text-[10px]" }),
-            PRODUCT_TYPE_LABEL[p.product_type]
-          ] }),
-          /* @__PURE__ */ jsxDEV("span", { children: p.version }),
-          p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "text-orange-600 font-semibold", children: "HOT" }),
-          p.is_featured === 1 && /* @__PURE__ */ jsxDEV("span", { class: "text-amber-600 font-semibold", children: "\u2605" })
+    /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: props.products.map((p) => {
+      const tMeta = getSkillTierMeta(p.skill_tier, p.price);
+      return /* @__PURE__ */ jsxDEV("tr", { children: [
+        /* @__PURE__ */ jsxDEV("td", { children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 line-clamp-1 max-w-xs", children: p.name }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-500 flex gap-2 mt-0.5", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: `px-1.5 py-0.5 rounded font-medium ${isMcpSkill(p.product_type) ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-brand-50 text-brand-700"}`, children: [
+              isMcpSkill(p.product_type) && /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt mr-1 text-[10px]" }),
+              PRODUCT_TYPE_LABEL[p.product_type]
+            ] }),
+            /* @__PURE__ */ jsxDEV("span", { children: p.version }),
+            p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "text-orange-600 font-semibold", children: "HOT" }),
+            p.is_featured === 1 && /* @__PURE__ */ jsxDEV("span", { class: "text-amber-600 font-semibold", children: "\u2605" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-center whitespace-nowrap", children: /* @__PURE__ */ jsxDEV("span", { class: `inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-bold ${tMeta.adminBadgeCls}`, children: [
+          /* @__PURE__ */ jsxDEV("i", { class: `fas ${tMeta.icon} text-[9px]` }),
+          tMeta.code
+        ] }) }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-slate-600 text-xs", children: p.category_name || "\u2014" }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900", children: formatVND(p.price) }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-500", children: [
+            formatUSD(p.price),
+            " ",
+            p.original_price > p.price && /* @__PURE__ */ jsxDEV("span", { class: "text-slate-400 line-through ml-1", children: formatVND(p.original_price) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold", children: p.sold_count }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: p.status }) }),
+        /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, target: "_blank", class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500", title: "Xem", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs" }) }),
+          /* @__PURE__ */ jsxDEV("a", { href: `/admin/san-pham/${p.id}`, class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600", title: "S\u1EEDa", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-pen text-xs" }) }),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
+              title: "Xo\xE1",
+              "data-url": `/api/admin/products/${p.id}`,
+              "data-name": p.name,
+              children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
+            }
+          )
         ] })
-      ] }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-slate-600", children: p.category_name || "\u2014" }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-right", children: [
-        /* @__PURE__ */ jsxDEV("div", { class: "font-bold text-slate-900", children: formatVND(p.price) }),
-        p.original_price > p.price && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-slate-400 line-through", children: formatVND(p.original_price) })
-      ] }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-center font-semibold", children: p.sold_count }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-center", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: p.status }) }),
-      /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: [
-        /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, target: "_blank", class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-slate-100 text-slate-500", title: "Xem", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-eye text-xs" }) }),
-        /* @__PURE__ */ jsxDEV("a", { href: `/admin/san-pham/${p.id}`, class: "inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-brand-50 text-brand-600", title: "S\u1EEDa", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-pen text-xs" }) }),
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            class: "btn-delete inline-grid w-8 h-8 place-items-center rounded-lg hover:bg-rose-50 text-rose-500",
-            title: "Xo\xE1",
-            "data-url": `/api/admin/products/${p.id}`,
-            "data-name": p.name,
-            children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-trash-can text-xs" })
-          }
-        )
-      ] })
-    ] })) })
+      ] });
+    }) })
   ] }) }) }),
   /* @__PURE__ */ jsxDEV(Pagination, { page: props.page, totalPages: props.totalPages, baseUrl: "/admin/san-pham" + (props.q ? "?q=" + encodeURIComponent(props.q) : "") })
 ] });
@@ -16865,16 +18361,76 @@ var AdminProductForm = (props) => {
     ] }),
     /* @__PURE__ */ jsxDEV("aside", { class: "space-y-5", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
-        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Gi\xE1 b\xE1n" }),
+        /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "H\u1EA1ng Skill & Gi\xE1 b\xE1n" }),
         /* @__PURE__ */ jsxDEV("div", { children: [
-          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Gi\xE1 b\xE1n (VND) *" }),
-          /* @__PURE__ */ jsxDEV("input", { type: "number", name: "price", value: p.price || 0, required: true, min: "0", step: "1000", class: fieldCls })
+          /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "H\u1EA1ng Skill (VIP Level) *" }),
+          /* @__PURE__ */ jsxDEV("select", { name: "skill_tier", id: "prod-skill-tier", class: fieldCls, children: SKILL_TIER_ORDER.map((tk) => {
+            const m = SKILL_TIERS[tk];
+            const curTier = p.skill_tier ? normalizeSkillTier(p.skill_tier, p.price) : p.price ? normalizeSkillTier(null, p.price) : "vip3";
+            return /* @__PURE__ */ jsxDEV("option", { value: tk, selected: curTier === tk, children: [
+              m.code,
+              " \u2014 ",
+              m.priceRangeVnd,
+              " (",
+              m.isRetailOnly ? "Ch\u1EC9 b\xE1n l\u1EBB" : m.priceRangeUsd,
+              ")"
+            ] });
+          }) }),
+          /* @__PURE__ */ jsxDEV("p", { class: "text-[11px] text-slate-500 mt-1 leading-relaxed", children: [
+            /* @__PURE__ */ jsxDEV("b", { children: "VIP I\u2013IV" }),
+            " d\xF9ng \u0111\u01B0\u1EE3c theo h\u1EA1n m\u1EE9c G\xF3i H\u1ED9i Vi\xEAn. ",
+            /* @__PURE__ */ jsxDEV("b", { children: "SKILL PRO" }),
+            " ch\u1EC9 b\xE1n l\u1EBB ri\xEAng, kh\xF4ng tr\u1EEB l\u01B0\u1EE3t H\u1ED9i vi\xEAn."
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between mb-1.5", children: [
+            /* @__PURE__ */ jsxDEV("label", { class: "text-sm font-medium text-slate-700", children: "Gi\xE1 b\xE1n (VN\u0110) *" }),
+            /* @__PURE__ */ jsxDEV("span", { id: "prod-usd-preview", class: "text-xs font-bold text-indigo-600 tabular-nums", children: [
+              formatUSD(p.price || 0),
+              " USD"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("input", { type: "number", name: "price", id: "prod-price-input", value: p.price || 0, required: true, min: "0", step: "1000", class: fieldCls }),
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5 mt-2", children: [["vip1", "135K ($5)", 135e3], ["vip2", "270K ($10)", 27e4], ["vip3", "499K", 499e3], ["vip4", "999K", 999e3], ["pro", "1.5M PRO", 15e5]].map(([tk, lb, val]) => /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              "data-quick-tier": tk,
+              "data-quick-price": val,
+              class: "btn-quick-tier px-2 py-1 rounded-md bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 text-slate-600 text-[11px] font-semibold cursor-pointer",
+              children: lb
+            }
+          )) })
         ] }),
         /* @__PURE__ */ jsxDEV("div", { children: [
           /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Gi\xE1 g\u1ED1c (g\u1EA1ch ngang)" }),
           /* @__PURE__ */ jsxDEV("input", { type: "number", name: "original_price", value: p.original_price || "", min: "0", step: "1000", class: fieldCls })
         ] })
       ] }),
+      /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+        __html: `
+(function(){
+  var inp = document.getElementById('prod-price-input');
+  var sel = document.getElementById('prod-skill-tier');
+  var out = document.getElementById('prod-usd-preview');
+  function updateUsd(){
+    if(!inp || !out) return;
+    var v = Number(inp.value) || 0;
+    if(v <= 0){ out.textContent = '$0 USD'; return; }
+    var u = v / ${DEFAULT_USD_VND_RATE};
+    out.textContent = '~$' + (u < 10 ? u.toFixed(1) : Math.round(u)) + ' USD';
+  }
+  if(inp) inp.addEventListener('input', updateUsd);
+  document.querySelectorAll('.btn-quick-tier').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(sel) sel.value = b.getAttribute('data-quick-tier');
+      if(inp) inp.value = b.getAttribute('data-quick-price');
+      updateUsd();
+    });
+  });
+})();`
+      } }),
       /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-4", children: [
         /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: "Ph\xE2n lo\u1EA1i" }),
         /* @__PURE__ */ jsxDEV("div", { children: [
@@ -18657,6 +20213,331 @@ var AdminBankTx = (props) => {
     }
   );
 };
+var AdminMemberships = (props) => {
+  const { plans, members, usdRate, tierCounts } = props;
+  const activePlans = plans.filter((p) => p.status === "active").length;
+  const activeMembers = members.filter((m) => m.status === "active" && new Date(m.expires_at).getTime() > Date.now()).length;
+  return /* @__PURE__ */ jsxDEV(
+    AdminShell,
+    {
+      ...props,
+      activeKey: "memberships",
+      heading: "H\u1ED9i vi\xEAn VIP & B\u1EA3ng gi\xE1",
+      sub: "Tu\u1EF3 ch\u1EC9nh gi\xE1 VN\u0110/USD, th\u1EDDi h\u1EA1n & h\u1EA1n m\u1EE9c VIP I \u2013 IV cho t\u1EEBng g\xF3i H\u1ED9i vi\xEAn (hi\u1EC3n th\u1ECB realtime t\u1EA1i /bang-gia).",
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_360px] gap-5 mb-6 items-start", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-4 gap-3.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500", children: "G\xF3i \u0111ang b\u1EADt" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-emerald-600 tabular-nums mt-1", children: [
+                activePlans,
+                " / ",
+                plans.length
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5", children: /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", target: "_blank", class: "text-brand-600 hover:underline", children: "Xem /bang-gia \u2197" }) })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500", children: "H\u1ED9i vi\xEAn \u0111ang active" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-brand-600 tabular-nums mt-1", children: activeMembers }),
+              /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-400 mt-0.5", children: [
+                "T\u1ED5ng ",
+                members.length,
+                " l\u01B0\u1EE3t \u0111\u0103ng k\xFD"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 p-4 sm:col-span-2", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-semibold text-slate-500 mb-2", children: "Ph\xE2n b\u1ED1 Skill theo H\u1EA1ng" }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap gap-1.5", children: SKILL_TIER_ORDER.map((tk) => {
+                const m = SKILL_TIERS[tk];
+                return /* @__PURE__ */ jsxDEV("span", { class: `inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-bold ${m.adminBadgeCls}`, children: [
+                  m.code,
+                  ": ",
+                  /* @__PURE__ */ jsxDEV("b", { children: tierCounts[tk] || 0 })
+                ] });
+              }) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxDEV("form", { id: "usd-rate-form", class: "bg-white rounded-2xl border border-slate-200 p-4", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "flex items-center justify-between gap-2 mb-2", children: [
+              /* @__PURE__ */ jsxDEV("label", { for: "usd-rate-input", class: "text-xs font-bold text-slate-800", children: [
+                /* @__PURE__ */ jsxDEV("i", { class: "fas fa-dollar-sign text-emerald-600 mr-1" }),
+                "T\u1EF7 gi\xE1 song song (1 USD = ? VN\u0110)"
+              ] }),
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] text-slate-400", children: "VD: 27000 (135K = $5)" })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "flex gap-2", children: [
+              /* @__PURE__ */ jsxDEV(
+                "input",
+                {
+                  id: "usd-rate-input",
+                  type: "number",
+                  name: "usd_vnd_rate",
+                  value: usdRate,
+                  min: "10000",
+                  max: "50000",
+                  step: "100",
+                  class: "flex-1 h-10 px-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm font-bold tabular-nums"
+                }
+              ),
+              /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "h-10 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs cursor-pointer", children: "L\u01B0u t\u1EF7 gi\xE1" })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "mb-7", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center justify-between gap-2 mb-3.5", children: /* @__PURE__ */ jsxDEV("h2", { class: "font-extrabold text-slate-900 text-base", children: [
+            "C\u1EA5u h\xECnh c\xE1c g\xF3i H\u1ED9i vi\xEAn ",
+            /* @__PURE__ */ jsxDEV("span", { class: "text-xs font-normal text-slate-500", children: [
+              "(Nh\u1EADp ",
+              /* @__PURE__ */ jsxDEV("code", { children: "-1" }),
+              " \u1EDF \xF4 h\u1EA1n m\u1EE9c = ",
+              /* @__PURE__ */ jsxDEV("b", { children: "Full \xB7 Update li\xEAn t\u1EE5c" }),
+              ", ",
+              /* @__PURE__ */ jsxDEV("code", { children: "0" }),
+              " = Kh\xF4ng)"
+            ] })
+          ] }) }),
+          /* @__PURE__ */ jsxDEV("div", { class: "grid md:grid-cols-2 xl:grid-cols-3 gap-4", children: plans.map((pl) => /* @__PURE__ */ jsxDEV("form", { class: "plan-edit-form bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs flex flex-col", "data-plan-id": pl.id, children: [
+            /* @__PURE__ */ jsxDEV("div", { class: `px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-2 ${pl.group_type === "premium" ? "bg-amber-50" : "bg-slate-50"}`, children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2 min-w-0", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: `px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${pl.group_type === "premium" ? "bg-amber-500 text-white" : "bg-slate-700 text-white"}`, children: pl.group_type === "premium" ? "Cao c\u1EA5p" : "C\u01A1 b\u1EA3n" }),
+                /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-slate-900 text-sm truncate", children: pl.name })
+              ] }),
+              /* @__PURE__ */ jsxDEV("select", { name: "status", class: `h-7 px-2 rounded-full text-[11px] font-bold border outline-none ${pl.status === "active" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-slate-200 text-slate-600 border-slate-300"}`, children: [
+                /* @__PURE__ */ jsxDEV("option", { value: "active", selected: pl.status === "active", children: "\u25CF \u0110ang b\u1EADt" }),
+                /* @__PURE__ */ jsxDEV("option", { value: "inactive", selected: pl.status !== "active", children: "\u25CB \u0110ang t\u1EAFt" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "p-4 space-y-3 text-xs flex-1", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "T\xEAn g\xF3i" }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "text", name: "name", value: pl.name, required: true, class: "w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold text-slate-900" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Nh\xF3m / M\xE0u" }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("select", { name: "group_type", class: "h-9 px-1.5 rounded-lg border border-slate-200 text-[11px]", children: [
+                      /* @__PURE__ */ jsxDEV("option", { value: "premium", selected: pl.group_type === "premium", children: "Cao c\u1EA5p" }),
+                      /* @__PURE__ */ jsxDEV("option", { value: "starter", selected: pl.group_type !== "premium", children: "C\u01A1 b\u1EA3n" })
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("select", { name: "theme_color", class: "h-9 px-1.5 rounded-lg border border-slate-200 text-[11px]", children: [["violet", "T\xEDm"], ["orange", "Cam"], ["obsidian", "\u0110en"], ["blue", "Xanh"], ["emerald", "L\u1EE5c"], ["purple", "T\xEDm h\u1ED3ng"]].map(([c, l]) => /* @__PURE__ */ jsxDEV("option", { value: c, selected: pl.theme_color === c, children: l })) })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: [
+                    "Gi\xE1 VN\u0110 (",
+                    formatUSD(pl.price_vnd, usdRate),
+                    ")"
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "number", name: "price_vnd", value: pl.price_vnd, min: "0", step: "1000", required: true, class: "w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Th\u1EDDi h\u1EA1n (ng\xE0y)" }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "number", name: "duration_days", value: pl.duration_days, min: "1", required: true, class: "w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "p-2.5 rounded-xl bg-slate-50 border border-slate-200", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold text-slate-700 mb-2", children: "H\u1EA1n m\u1EE9c Skill (-1 = Full update li\xEAn t\u1EE5c \xB7 0 = Kh\xF4ng)" }),
+                /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-4 gap-2", children: [
+                  ["vip1_quota", "VIP I", pl.vip1_quota],
+                  ["vip2_quota", "VIP II", pl.vip2_quota],
+                  ["vip3_quota", "VIP III", pl.vip3_quota],
+                  ["vip4_quota", "VIP IV", pl.vip4_quota]
+                ].map(([nm, lb, val]) => /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-[10px] font-bold text-slate-500 mb-1", children: lb }),
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "number",
+                      name: nm,
+                      value: val,
+                      min: "-1",
+                      class: "w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-bold text-center tabular-nums"
+                    }
+                  )
+                ] })) })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Nh\xE3n n\u1ED5i b\u1EADt (Badge)" }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "text", name: "badge", value: pl.badge || "", placeholder: "VD: PH\u1ED4 BI\u1EBEN NH\u1EA4T", class: "w-full h-9 px-2.5 rounded-lg border border-slate-200" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Gi\xE1 tr\u1ECB quy \u0111\u1ED5i (\u0111)" }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "number", name: "est_value_vnd", value: pl.est_value_vnd || 0, min: "0", step: "10000", class: "w-full h-9 px-2.5 rounded-lg border border-slate-200 tabular-nums" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-[1fr_72px] gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Ph\xF9 h\u1EE3p cho" }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "text", name: "ideal_for", value: pl.ideal_for || "", class: "w-full h-9 px-2.5 rounded-lg border border-slate-200" })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Th\u1EE9 t\u1EF1" }),
+                  /* @__PURE__ */ jsxDEV("input", { type: "number", name: "sort_order", value: pl.sort_order, class: "w-full h-9 px-2 rounded-lg border border-slate-200 text-center tabular-nums" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("label", { class: "inline-flex items-center gap-2 text-slate-700 cursor-pointer pt-1", children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "checkbox", name: "is_popular", value: "1", checked: pl.is_popular === 1, class: "accent-brand-600 w-4 h-4" }),
+                /* @__PURE__ */ jsxDEV("span", { children: "\u0110\xE1nh d\u1EA5u g\xF3i n\u1ED5i b\u1EADt (PH\u1ED4 BI\u1EBEN NH\u1EA4T)" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "px-4 py-3 bg-slate-50 border-t border-slate-200", children: /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-9 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition cursor-pointer", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-floppy-disk mr-1.5" }),
+              "L\u01B0u g\xF3i ",
+              pl.name
+            ] }) })
+          ] })) })
+        ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "grid lg:grid-cols-[1fr_340px] gap-5 items-start", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "bg-white rounded-2xl border border-slate-200 overflow-hidden", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "px-5 py-4 border-b border-slate-200 flex items-center justify-between", children: /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900", children: [
+              "Danh s\xE1ch H\u1ED9i vi\xEAn (",
+              members.length,
+              ")"
+            ] }) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "overflow-x-auto", children: /* @__PURE__ */ jsxDEV("table", { class: "w-full admin-table text-sm", children: [
+              /* @__PURE__ */ jsxDEV("thead", { class: "bg-slate-50 border-b border-slate-200", children: /* @__PURE__ */ jsxDEV("tr", { children: [
+                /* @__PURE__ */ jsxDEV("th", { class: "text-left whitespace-nowrap", children: "Kh\xE1ch h\xE0ng" }),
+                /* @__PURE__ */ jsxDEV("th", { class: "text-left whitespace-nowrap", children: "G\xF3i" }),
+                /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "VIP I / II / III / IV" }),
+                /* @__PURE__ */ jsxDEV("th", { class: "text-left whitespace-nowrap", children: "H\u1EBFt h\u1EA1n" }),
+                /* @__PURE__ */ jsxDEV("th", { class: "text-center whitespace-nowrap", children: "Tr\u1EA1ng th\xE1i" }),
+                /* @__PURE__ */ jsxDEV("th", { class: "text-right whitespace-nowrap", children: "Thao t\xE1c" })
+              ] }) }),
+              /* @__PURE__ */ jsxDEV("tbody", { class: "divide-y divide-slate-100", children: members.length === 0 ? /* @__PURE__ */ jsxDEV("tr", { children: /* @__PURE__ */ jsxDEV("td", { colspan: 6, class: "py-10 text-center text-slate-500 text-sm", children: "Ch\u01B0a c\xF3 kh\xE1ch \u0111\u0103ng k\xFD g\xF3i H\u1ED9i vi\xEAn n\xE0o." }) }) : members.map((m) => {
+                const fQ = (u, q) => q < 0 ? "Full" : `${u}/${q}`;
+                const isLive = m.status === "active" && new Date(m.expires_at).getTime() > Date.now();
+                return /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-slate-900 text-xs", children: m.full_name }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-slate-500", children: m.email })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("td", { class: "whitespace-nowrap font-bold text-brand-700 text-xs", children: m.plan_name }),
+                  /* @__PURE__ */ jsxDEV("td", { class: "text-center font-mono text-xs whitespace-nowrap tabular-nums", children: [
+                    fQ(m.vip1_used, m.vip1_quota),
+                    " \xB7 ",
+                    fQ(m.vip2_used, m.vip2_quota),
+                    " \xB7 ",
+                    fQ(m.vip3_used, m.vip3_quota),
+                    " \xB7 ",
+                    fQ(m.vip4_used, m.vip4_quota)
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("td", { class: "text-xs text-slate-600 whitespace-nowrap tabular-nums", children: formatDate(m.expires_at) }),
+                  /* @__PURE__ */ jsxDEV("td", { class: "text-center whitespace-nowrap", children: /* @__PURE__ */ jsxDEV("span", { class: `px-2 py-0.5 rounded-full text-[11px] font-bold ${isLive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`, children: isLive ? "\u0110ang ho\u1EA1t \u0111\u1ED9ng" : m.status === "upgraded" ? "\u0110\xE3 n\xE2ng c\u1EA5p" : m.status === "cancelled" ? "\u0110\xE3 hu\u1EF7" : "H\u1EBFt h\u1EA1n" }) }),
+                  /* @__PURE__ */ jsxDEV("td", { class: "text-right whitespace-nowrap", children: isLive && /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      "data-cancel-mem": m.id,
+                      class: "btn-cancel-mem h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold cursor-pointer",
+                      children: "Thu h\u1ED3i"
+                    }
+                  ) })
+                ] });
+              }) })
+            ] }) })
+          ] }),
+          /* @__PURE__ */ jsxDEV("form", { id: "grant-membership-form", class: "bg-white rounded-2xl border border-slate-200 p-5 space-y-3.5", children: [
+            /* @__PURE__ */ jsxDEV("h3", { class: "font-bold text-slate-900 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gift text-amber-500" }),
+              "C\u1EA5p g\xF3i H\u1ED9i vi\xEAn th\u1EE7 c\xF4ng"
+            ] }),
+            /* @__PURE__ */ jsxDEV("p", { class: "text-xs text-slate-500", children: "K\xEDch ho\u1EA1t nhanh g\xF3i H\u1ED9i vi\xEAn cho 1 t\xE0i kho\u1EA3n kh\xE1ch (t\u1EF1 \u0111\u1ED9ng m\u1EDF kho\xE1 Full VIP I/II n\u1EBFu g\xF3i c\xF3 quy\u1EC1n)." }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Email kh\xE1ch h\xE0ng *" }),
+              /* @__PURE__ */ jsxDEV("input", { type: "email", name: "email", required: true, placeholder: "khach@gmail.com", class: fieldCls })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("label", { class: labelCls, children: "Ch\u1ECDn g\xF3i H\u1ED9i vi\xEAn *" }),
+              /* @__PURE__ */ jsxDEV("select", { name: "plan_slug", required: true, class: fieldCls, children: plans.map((pl) => /* @__PURE__ */ jsxDEV("option", { value: pl.slug, children: [
+                pl.name,
+                " \u2014 ",
+                formatVND(pl.price_vnd),
+                " (",
+                formatDurationLabel(pl.duration_days),
+                ")"
+              ] })) })
+            ] }),
+            /* @__PURE__ */ jsxDEV("button", { type: "submit", class: "w-full h-11 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition cursor-pointer", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-crown mr-1.5" }),
+              "K\xEDch ho\u1EA1t g\xF3i ngay"
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
+          __html: `
+(function(){
+  var rateForm = document.getElementById('usd-rate-form');
+  if (rateForm) {
+    rateForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var val = Number(document.getElementById('usd-rate-input').value) || 27000;
+      try {
+        var r = await axios.post('/api/admin/membership-settings', { usd_vnd_rate: val });
+        if (window.toast) toast((r.data && r.data.message) || '\u0110\xE3 l\u01B0u t\u1EF7 gi\xE1!', 'success');
+        setTimeout(function(){ location.reload(); }, 500);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'L\u1ED7i l\u01B0u t\u1EF7 gi\xE1', 'error');
+      }
+    });
+  }
+
+  document.querySelectorAll('.plan-edit-form').forEach(function(form){
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var id = form.getAttribute('data-plan-id');
+      var fd = new FormData(form);
+      var data = {};
+      fd.forEach(function(v, k){ data[k] = v; });
+      data.is_popular = form.querySelector('input[name="is_popular"]').checked ? 1 : 0;
+      try {
+        var r = await axios.post('/api/admin/membership-plans/' + id, data);
+        if (window.toast) toast((r.data && r.data.message) || '\u0110\xE3 l\u01B0u g\xF3i H\u1ED9i vi\xEAn!', 'success');
+        setTimeout(function(){ location.reload(); }, 500);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Kh\xF4ng th\u1EC3 l\u01B0u g\xF3i', 'error');
+      }
+    });
+  });
+
+  var grantForm = document.getElementById('grant-membership-form');
+  if (grantForm) {
+    grantForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(grantForm);
+      var data = { email: fd.get('email'), plan_slug: fd.get('plan_slug') };
+      try {
+        var r = await axios.post('/api/admin/memberships/grant', data);
+        if (window.toast) toast((r.data && r.data.message) || '\u0110\xE3 c\u1EA5p g\xF3i H\u1ED9i vi\xEAn!', 'success');
+        setTimeout(function(){ location.reload(); }, 600);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Kh\xF4ng th\u1EC3 c\u1EA5p g\xF3i', 'error');
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-cancel-mem').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      if (!confirm('Thu h\u1ED3i g\xF3i H\u1ED9i vi\xEAn \u0111ang ho\u1EA1t \u0111\u1ED9ng n\xE0y?')) return;
+      var id = btn.getAttribute('data-cancel-mem');
+      try {
+        var r = await axios.post('/api/admin/memberships/' + id + '/cancel');
+        if (window.toast) toast((r.data && r.data.message) || '\u0110\xE3 thu h\u1ED3i g\xF3i!', 'success');
+        setTimeout(function(){ location.reload(); }, 500);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'L\u1ED7i thu h\u1ED3i', 'error');
+      }
+    });
+  });
+})();`
+        } })
+      ]
+    }
+  );
+};
 
 // src/lib/docs.ts
 var POLICY_DOCS = {
@@ -19192,7 +21073,7 @@ async function runOnce(db, env) {
   try {
     await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
     await runOptionalDemoUserBootstrap(db, env).catch((err) => console.error("[DEMO_USER_BOOTSTRAP]", err));
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first().catch(() => null),
@@ -19200,9 +21081,10 @@ async function runOnce(db, env) {
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0008_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0009_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first().catch(() => null)
     ]);
-    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1") {
+    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1") {
       _done = true;
       return;
     }
@@ -19618,6 +21500,186 @@ async function runOnce(db, env) {
         mutated = true;
       }
     }
+    if (flag12?.value !== "1") {
+      const alters12 = [
+        `ALTER TABLE products ADD COLUMN skill_tier TEXT NOT NULL DEFAULT 'vip3'`,
+        `ALTER TABLE orders ADD COLUMN order_type TEXT NOT NULL DEFAULT 'product'`,
+        `ALTER TABLE orders ADD COLUMN membership_plan_id INTEGER`,
+        `ALTER TABLE licenses ADD COLUMN source TEXT NOT NULL DEFAULT 'purchase'`,
+        `ALTER TABLE licenses ADD COLUMN membership_id INTEGER`
+      ];
+      for (const sql of alters12) {
+        await db.prepare(sql).run().catch(() => null);
+      }
+      await db.prepare(
+        `UPDATE products SET skill_tier = CASE
+          WHEN price <= 199000 THEN 'vip1'
+          WHEN price <= 349000 THEN 'vip2'
+          WHEN price <= 799000 THEN 'vip3'
+          WHEN price <= 1099000 THEN 'vip4'
+          ELSE 'pro'
+        END`
+      ).run().catch(() => null);
+      const rateRow = await db.prepare(`SELECT value FROM settings WHERE key='usd_vnd_rate'`).first().catch(() => null);
+      if (!rateRow) {
+        await db.prepare(`INSERT INTO settings (key, value) VALUES ('usd_vnd_rate', ?)`).bind(String(DEFAULT_USD_VND_RATE)).run().catch(() => null);
+      }
+      const pgPlansSql = `CREATE TABLE IF NOT EXISTS membership_plans (
+        id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        group_type TEXT NOT NULL DEFAULT 'starter',
+        badge TEXT,
+        theme_color TEXT NOT NULL DEFAULT 'indigo',
+        price_vnd INTEGER NOT NULL,
+        duration_days INTEGER NOT NULL DEFAULT 30,
+        vip1_quota INTEGER NOT NULL DEFAULT 0,
+        vip2_quota INTEGER NOT NULL DEFAULT 0,
+        vip3_quota INTEGER NOT NULL DEFAULT 0,
+        vip4_quota INTEGER NOT NULL DEFAULT 0,
+        auto_update_note TEXT,
+        ideal_for TEXT,
+        est_value_vnd INTEGER NOT NULL DEFAULT 0,
+        is_popular INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )`;
+      const sqlitePlansSql = `CREATE TABLE IF NOT EXISTS membership_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        group_type TEXT NOT NULL DEFAULT 'starter',
+        badge TEXT,
+        theme_color TEXT NOT NULL DEFAULT 'indigo',
+        price_vnd INTEGER NOT NULL,
+        duration_days INTEGER NOT NULL DEFAULT 30,
+        vip1_quota INTEGER NOT NULL DEFAULT 0,
+        vip2_quota INTEGER NOT NULL DEFAULT 0,
+        vip3_quota INTEGER NOT NULL DEFAULT 0,
+        vip4_quota INTEGER NOT NULL DEFAULT 0,
+        auto_update_note TEXT,
+        ideal_for TEXT,
+        est_value_vnd INTEGER NOT NULL DEFAULT 0,
+        is_popular INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`;
+      await db.prepare(pgPlansSql).run().catch(async () => {
+        await db.prepare(sqlitePlansSql).run();
+      });
+      const pgUserMemSql = `CREATE TABLE IF NOT EXISTS user_memberships (
+        id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        plan_id INTEGER NOT NULL REFERENCES membership_plans(id),
+        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+        plan_name TEXT NOT NULL,
+        plan_slug TEXT NOT NULL,
+        vip1_quota INTEGER NOT NULL DEFAULT 0,
+        vip2_quota INTEGER NOT NULL DEFAULT 0,
+        vip3_quota INTEGER NOT NULL DEFAULT 0,
+        vip4_quota INTEGER NOT NULL DEFAULT 0,
+        vip1_used INTEGER NOT NULL DEFAULT 0,
+        vip2_used INTEGER NOT NULL DEFAULT 0,
+        vip3_used INTEGER NOT NULL DEFAULT 0,
+        vip4_used INTEGER NOT NULL DEFAULT 0,
+        starts_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )`;
+      const sqliteUserMemSql = `CREATE TABLE IF NOT EXISTS user_memberships (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        plan_id INTEGER NOT NULL REFERENCES membership_plans(id),
+        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+        plan_name TEXT NOT NULL,
+        plan_slug TEXT NOT NULL,
+        vip1_quota INTEGER NOT NULL DEFAULT 0,
+        vip2_quota INTEGER NOT NULL DEFAULT 0,
+        vip3_quota INTEGER NOT NULL DEFAULT 0,
+        vip4_quota INTEGER NOT NULL DEFAULT 0,
+        vip1_used INTEGER NOT NULL DEFAULT 0,
+        vip2_used INTEGER NOT NULL DEFAULT 0,
+        vip3_used INTEGER NOT NULL DEFAULT 0,
+        vip4_used INTEGER NOT NULL DEFAULT 0,
+        starts_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`;
+      await db.prepare(pgUserMemSql).run().catch(async () => {
+        await db.prepare(sqliteUserMemSql).run();
+      });
+      const pgClaimsSql = `CREATE TABLE IF NOT EXISTS membership_claims (
+        id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+        membership_id INTEGER NOT NULL REFERENCES user_memberships(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        skill_tier TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id)
+      )`;
+      const sqliteClaimsSql = `CREATE TABLE IF NOT EXISTS membership_claims (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        membership_id INTEGER NOT NULL REFERENCES user_memberships(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        skill_tier TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id)
+      )`;
+      await db.prepare(pgClaimsSql).run().catch(async () => {
+        await db.prepare(sqliteClaimsSql).run();
+      });
+      await db.prepare("CREATE INDEX IF NOT EXISTS idx_products_skill_tier ON products(skill_tier)").run().catch(() => null);
+      await db.prepare("CREATE INDEX IF NOT EXISTS idx_user_memberships_user_status ON user_memberships(user_id, status, expires_at)").run().catch(() => null);
+      await db.prepare("CREATE INDEX IF NOT EXISTS idx_membership_claims_membership ON membership_claims(membership_id)").run().catch(() => null);
+      for (const pl of DEFAULT_MEMBERSHIP_PLANS) {
+        const exists = await db.prepare("SELECT id FROM membership_plans WHERE slug=?").bind(pl.slug).first().catch(() => null);
+        if (!exists) {
+          await db.prepare(
+            `INSERT INTO membership_plans
+             (slug, name, group_type, badge, theme_color, price_vnd, duration_days,
+              vip1_quota, vip2_quota, vip3_quota, vip4_quota,
+              auto_update_note, ideal_for, est_value_vnd, is_popular, status, sort_order)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+          ).bind(
+            pl.slug,
+            pl.name,
+            pl.group_type,
+            pl.badge,
+            pl.theme_color,
+            pl.price_vnd,
+            pl.duration_days,
+            pl.vip1_quota,
+            pl.vip2_quota,
+            pl.vip3_quota,
+            pl.vip4_quota,
+            pl.auto_update_note,
+            pl.ideal_for,
+            pl.est_value_vnd,
+            pl.is_popular,
+            pl.status,
+            pl.sort_order
+          ).run().catch(() => null);
+        }
+      }
+      const plansOk = await db.prepare("SELECT COUNT(*) c FROM membership_plans").first().catch(() => null);
+      if (plansOk && Number(plansOk.c || 0) >= 6) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0012_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0012_done', '1')`
+          ).run().catch(() => null);
+        });
+        mutated = true;
+      }
+    }
     if (mutated) invalidateCache();
     _done = true;
   } catch (err) {
@@ -20025,6 +22087,8 @@ async function renderProductList(c, opts) {
   const cat = opts.catSlug || c.req.query("cat") || "";
   const sort = c.req.query("sort") || "newest";
   const type = opts.comboOnly ? "combo" : c.req.query("type") || "";
+  const rawTier = (c.req.query("tier") || "").trim().toLowerCase();
+  const tier = ["vip1", "vip2", "vip3", "vip4", "pro"].includes(rawTier) ? rawTier : "";
   const minPrice = c.req.query("min") || "";
   const maxPrice = c.req.query("max") || "";
   const page = Math.max(1, parseInt(c.req.query("page") || "1"));
@@ -20043,6 +22107,10 @@ async function renderProductList(c, opts) {
   if (type) {
     where.push(`p.product_type = ?`);
     binds.push(type);
+  }
+  if (tier) {
+    where.push(`p.skill_tier = ?`);
+    binds.push(tier);
   }
   if (minPrice) {
     where.push(`p.price >= ?`);
@@ -20071,11 +22139,12 @@ async function renderProductList(c, opts) {
                 FROM categories c ORDER BY c.sort_order`).all()),
     opts.catSlug ? cached(`cat:slug:${opts.catSlug}`, 3e4, () => db.prepare("SELECT * FROM categories WHERE slug=?").bind(opts.catSlug).first()) : Promise.resolve(null)
   ]);
-  const cacheKey = q ? "" : `plist:${opts.comboOnly ? "1" : "0"}:${cat}:${type}:${sort}:${minPrice}:${maxPrice}:${page}`;
+  const cacheKey = q ? "" : `plist:${opts.comboOnly ? "1" : "0"}:${cat}:${type}:${tier}:${sort}:${minPrice}:${maxPrice}:${page}`;
   const [cntRow, rows, cats, currentCat] = cacheKey ? await cached(cacheKey, 2e4, fetchList) : await fetchList();
+  const tierMeta = tier ? SKILL_TIERS[tier] : null;
   const total = cntRow?.n || 0;
-  const heading = opts.comboOnly ? "Combo Tr\u1ECDn B\u1ED9" : currentCat ? currentCat.name : q ? `K\u1EBFt qu\u1EA3 cho "${q}"` : type === "mcp_skill" ? "Skill AI Agent (MCP)" : type === "skill" ? "Skill AI (T\u1EF1 t\u1EA3i & l\xE0m theo)" : "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m";
-  const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m \u2014 Hi\u1EC7n \u0111ang t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" : currentCat ? currentCat.description : type === "mcp_skill" ? "Skill k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp d\u1EA1ng MCP cho Claude, Codex, Antigravity \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill" : type === "skill" ? "B\u1ED9 Skill \u0111\xF3ng g\xF3i theo ng\xE1ch & c\xF4ng c\u1EE5: t\u1EF1 t\u1EA3i t\xE0i li\u1EC7u, prompt chu\u1EA9n v\xE0 l\xE0m theo t\u1EEBng b\u01B0\u1EDBc" : "Kh\xE1m ph\xE1 kho Skill AI t\u1EF1 t\u1EA3i v\xE0 d\xF2ng m\u1EDBi Skill AI Agent (MCP) k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity";
+  const heading = opts.comboOnly ? "Combo Tr\u1ECDn B\u1ED9" : currentCat ? currentCat.name : q ? `K\u1EBFt qu\u1EA3 cho "${q}"` : tierMeta ? `Skill h\u1EA1ng ${tierMeta.code} (${tierMeta.priceRangeVnd})` : type === "mcp_skill" ? "Skill AI Agent (MCP)" : type === "skill" ? "Skill AI (T\u1EF1 t\u1EA3i & l\xE0m theo)" : "T\u1EA5t c\u1EA3 s\u1EA3n ph\u1EA9m";
+  const headingDesc = opts.comboOnly ? "G\xF3i combo ti\u1EBFt ki\u1EC7m t\u1EDBi 60% so v\u1EDBi mua l\u1EBB t\u1EEBng s\u1EA3n ph\u1EA9m \u2014 Hi\u1EC7n \u0111ang t\u1EA1m th\u1EDDi ch\u01B0a m\u1EDF b\xE1n" : currentCat ? currentCat.description : tierMeta ? tierMeta.isRetailOnly ? "D\xF2ng SKILL PRO cao c\u1EA5p nh\u1EA5t \u2014 ch\u1EC9 b\xE1n l\u1EBB tr\u1EF1c ti\u1EBFp, kh\xF4ng \xE1p d\u1EE5ng tr\u1EEB l\u01B0\u1EE3t g\xF3i H\u1ED9i vi\xEAn." : `C\xE1c b\u1ED9 Skill thu\u1ED9c ph\xE2n h\u1EA1ng ${tierMeta.code} (${tierMeta.subtitle} \xB7 ${tierMeta.priceRangeVnd} / ${tierMeta.priceRangeUsd}) \u2014 c\xF3 th\u1EC3 mua l\u1EBB ho\u1EB7c nh\u1EADn b\u1EB1ng G\xF3i H\u1ED9i Vi\xEAn VIP.` : type === "mcp_skill" ? "Skill k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp d\u1EA1ng MCP cho Claude, Codex, Antigravity \u2014 AI Agent t\u1EF1 g\u1ECDi tool v\xE0 t\u1EA1o video theo Skill" : type === "skill" ? "B\u1ED9 Skill \u0111\xF3ng g\xF3i theo ng\xE1ch & c\xF4ng c\u1EE5: t\u1EF1 t\u1EA3i t\xE0i li\u1EC7u, prompt chu\u1EA9n v\xE0 l\xE0m theo t\u1EEBng b\u01B0\u1EDBc" : "Kh\xE1m ph\xE1 kho Skill AI t\u1EF1 t\u1EA3i v\xE0 d\xF2ng m\u1EDBi Skill AI Agent (MCP) k\u1EBFt n\u1ED1i tr\u1EF1c ti\u1EBFp Claude, Codex, Antigravity";
   const baseUrl = opts.comboOnly ? "/combo" : opts.catSlug ? `/danh-muc/${opts.catSlug}` : "/san-pham";
   return c.html(/* @__PURE__ */ jsxDEV(
     ProductListPage,
@@ -20092,6 +22161,7 @@ async function renderProductList(c, opts) {
       minPrice,
       maxPrice,
       type: opts.comboOnly ? "" : type,
+      tier,
       heading,
       headingDesc,
       baseUrl,
@@ -20113,7 +22183,10 @@ app.get("/san-pham/:slug", async (c) => {
       FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status IN ('published','coming_soon')`).bind(slug).first()
   );
   if (!p) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
-  const [bundle, ownedRow, wishRow] = await Promise.all([
+  if (user) {
+    await syncUnlimitedMembershipSkills(db, user.id);
+  }
+  const [bundle, ownedRow, wishRow, activeMembership] = await Promise.all([
     cached(`product:extra:${p.id}`, 2e4, async () => {
       const [related, comboItems, reviews, breakdown] = await Promise.all([
         db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -20127,6 +22200,7 @@ app.get("/san-pham/:slug", async (c) => {
     }),
     user ? db.prepare("SELECT 1 x FROM licenses WHERE user_id=? AND product_id=?").bind(user.id, p.id).first() : Promise.resolve(null),
     user ? db.prepare("SELECT 1 x FROM wishlists WHERE user_id=? AND product_id=?").bind(user.id, p.id).first() : Promise.resolve(null),
+    user ? getActiveUserMembership(db, user.id) : Promise.resolve(null),
     db.prepare("UPDATE products SET view_count=view_count+1 WHERE id=?").bind(p.id).run().catch(() => null)
   ]);
   const rb = {};
@@ -20149,6 +22223,7 @@ app.get("/san-pham/:slug", async (c) => {
       inWishlist: !!wishRow,
       canReview,
       ratingBreakdown: rb,
+      activeMembership,
       origin: getRequestOrigin(c)
     }
   ));
@@ -20195,7 +22270,20 @@ app.get("/blog/:slug", async (c) => {
   ]);
   return c.html(/* @__PURE__ */ jsxDEV(BlogDetailPage, { ...base(c), post, related: related.results }));
 });
-app.get("/bang-gia", (c) => c.html(/* @__PURE__ */ jsxDEV(PricingPage, { ...base(c) })));
+app.get("/bang-gia", async (c) => {
+  const db = c.env.DB;
+  const user = c.get("user");
+  const [plans, activeMembership, tierRows] = await Promise.all([
+    getMembershipPlans(db, false),
+    user ? getActiveUserMembership(db, user.id) : Promise.resolve(null),
+    db.prepare(`SELECT skill_tier, COUNT(*) n FROM products WHERE status='published' GROUP BY skill_tier`).all().catch(() => ({ results: [] }))
+  ]);
+  const tierCounts = {};
+  for (const r of tierRows.results || []) {
+    if (r.skill_tier) tierCounts[String(r.skill_tier)] = Number(r.n || 0);
+  }
+  return c.html(/* @__PURE__ */ jsxDEV(PricingPage, { ...base(c), plans, activeMembership, tierCounts }));
+});
 app.get("/lien-he", (c) => c.html(/* @__PURE__ */ jsxDEV(ContactPage, { ...base(c) })));
 app.get("/affiliate", (c) => c.html(/* @__PURE__ */ jsxDEV(
   AffiliateLandingPage,
@@ -20718,6 +22806,86 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   }
   return c.json({ ok: true, order_code: code });
 });
+app.get("/hoi-vien/thanh-toan/:slug", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  const slug = c.req.param("slug");
+  const plan = await getMembershipPlanBySlug(db, slug);
+  if (!plan || plan.status !== "active") return c.redirect("/bang-gia");
+  const me = await db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first();
+  return c.html(/* @__PURE__ */ jsxDEV(MembershipCheckoutPage, { ...base(c), plan, balance: me?.balance || 0, isDemoFree: isDemoFreeUser(c.env, u.email) }));
+});
+app.post("/api/membership/orders/create", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  const b = await c.req.json();
+  const plan = await getMembershipPlanBySlug(db, String(b.plan_slug || "").trim());
+  if (!plan || plan.status !== "active") {
+    return c.json({ error: "G\xF3i H\u1ED9i vi\xEAn kh\xF4ng t\u1ED3n t\u1EA1i ho\u1EB7c \u0111ang t\u1EA1m t\u1EAFt" }, 400);
+  }
+  const demoFree = isDemoFreeUser(c.env, u.email);
+  const subtotal = Number(plan.price_vnd || 0);
+  let discount = 0, couponCode = null, heldCouponId = null;
+  if (demoFree) {
+    discount = subtotal;
+    couponCode = "DEMO_FREE";
+  } else if (b.coupon_code) {
+    const holdRes = await validateAndHoldCoupon({
+      db,
+      code: String(b.coupon_code),
+      userId: u.id,
+      subtotal
+    });
+    if (!holdRes.ok) return c.json({ error: holdRes.error }, holdRes.status || 400);
+    discount = holdRes.discount;
+    couponCode = holdRes.coupon.code;
+    heldCouponId = holdRes.holdId;
+  } else {
+    await releaseUserDraftHolds(db, u.id);
+  }
+  const total = demoFree ? 0 : Math.max(0, subtotal - discount);
+  const pm = demoFree ? "demo_free" : ["bank", "momo", "balance"].includes(b.payment_method) ? b.payment_method : "bank";
+  let status = demoFree ? "paid" : "pending";
+  if (!demoFree && pm === "balance") {
+    const me = await db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first();
+    if ((me?.balance || 0) < total) return c.json({ error: "S\u1ED1 d\u01B0 v\xED kh\xF4ng \u0111\u1EE7" }, 400);
+    await db.prepare("UPDATE users SET balance=balance-? WHERE id=?").bind(total, u.id).run();
+    status = "paid";
+  }
+  const code = genCode("DH", 8);
+  const note = String(b.note || "").trim() || `\u0110\u0103ng k\xFD g\xF3i H\u1ED9i vi\xEAn ${plan.name}${demoFree ? " (Demo Account)" : ""}`;
+  const ord = await db.prepare(
+    `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, order_type, membership_plan_id, status, note, paid_at, paid_amount, paid_via)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(
+    code,
+    u.id,
+    subtotal,
+    discount,
+    total,
+    couponCode,
+    pm,
+    "membership",
+    plan.id,
+    status,
+    note,
+    status === "paid" ? (/* @__PURE__ */ new Date()).toISOString() : null,
+    status === "paid" ? total : null,
+    demoFree ? "demo_free" : status === "paid" ? "balance" : null
+  ).run();
+  const orderId = ord.meta.last_row_id;
+  if (heldCouponId) {
+    await attachHoldToOrder(db, heldCouponId, orderId);
+  }
+  if (status === "paid") {
+    if (!demoFree && couponCode) {
+      await consumeOrderCoupon(db, orderId, couponCode, u.id);
+    }
+    const fakeOrder = { id: orderId, order_code: code, user_id: u.id, total, order_type: "membership", membership_plan_id: plan.id };
+    await activateMembershipFromOrder(db, fakeOrder);
+    if (!demoFree) await creditAffiliate(db, u.id, total);
+    await notifyOrderPaid(c.env, db, fakeOrder, getRequestOrigin(c));
+  }
+  return c.json({ ok: true, order_code: code });
+});
 async function creditAffiliate(db, userId, total) {
   const me = await db.prepare("SELECT referred_by, full_name FROM users WHERE id=?").bind(userId).first();
   if (!me?.referred_by) return;
@@ -20738,6 +22906,22 @@ async function creditAffiliate(db, userId, total) {
 }
 async function notifyOrderPaid(env, db, order, origin = "https://khoskill.site") {
   try {
+    if (order.order_type === "membership") {
+      const [buyer2, plan] = await Promise.all([
+        db.prepare("SELECT id, email, full_name, status FROM users WHERE id=?").bind(order.user_id).first(),
+        order.membership_plan_id ? db.prepare("SELECT * FROM membership_plans WHERE id=?").bind(order.membership_plan_id).first() : Promise.resolve(null)
+      ]);
+      if (!buyer2) return;
+      const planName = plan?.name || "H\u1ED9i vi\xEAn VIP";
+      await createUserNotification(db, {
+        userId: buyer2.id,
+        type: "order",
+        title: `G\xF3i H\u1ED9i vi\xEAn ${planName} \u0111\xE3 k\xEDch ho\u1EA1t th\xE0nh c\xF4ng`,
+        message: `\u0110\u01A1n h\xE0ng ${order.order_code} \u0111\xE3 ho\xE0n t\u1EA5t! M\u1EDF m\u1EE5c "H\u1ED9i vi\xEAn VIP" \u0111\u1EC3 ch\u1ECDn nh\u1EADn c\xE1c Skill VIP I \u2013 IV theo h\u1EA1n m\u1EE9c g\xF3i.`,
+        linkUrl: "/tai-khoan/hoi-vien"
+      });
+      return;
+    }
     const [buyer, licenses] = await Promise.all([
       db.prepare("SELECT id, email, full_name, status FROM users WHERE id=?").bind(order.user_id).first(),
       db.prepare(
@@ -20783,7 +22967,11 @@ async function settleOrder(db, order, opts) {
   if (order.coupon_code && order.coupon_code !== "DEMO_FREE") {
     await consumeOrderCoupon(db, order.id, order.coupon_code, order.user_id);
   }
-  await grantLicenses(db, order.user_id, order.id);
+  if (order.order_type === "membership" && order.membership_plan_id) {
+    await activateMembershipFromOrder(db, order);
+  } else {
+    await grantLicenses(db, order.user_id, order.id);
+  }
   await creditAffiliate(db, order.user_id, order.total);
   await notifyOrderPaid(opts.env, db, order, opts.origin);
 }
@@ -21005,12 +23193,13 @@ app.get("/don-hang/:code", requireAuth, async (c) => {
   await releaseExpiredCouponHolds(db);
   const o = await db.prepare("SELECT * FROM orders WHERE order_code=? AND user_id=?").bind(c.req.param("code"), u.id).first();
   if (!o) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
-  const [items, s, activeHold] = await Promise.all([
+  const [items, s, activeHold, membershipPlan] = await Promise.all([
     db.prepare(
       `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
     ).bind(o.id).all(),
     fetchSettings(db).catch(() => c.get("settings")),
-    o.status === "pending" ? getOrderActiveHold(db, o.id) : Promise.resolve(null)
+    o.status === "pending" ? getOrderActiveHold(db, o.id) : Promise.resolve(null),
+    o.order_type === "membership" && o.membership_plan_id ? db.prepare("SELECT * FROM membership_plans WHERE id=?").bind(o.membership_plan_id).first().catch(() => null) : Promise.resolve(null)
   ]);
   return c.html(/* @__PURE__ */ jsxDEV(
     OrderPage,
@@ -21019,6 +23208,7 @@ app.get("/don-hang/:code", requireAuth, async (c) => {
       order: o,
       items: items.results,
       holdExpiresAt: activeHold?.expires_at || null,
+      membershipPlan,
       bank: { bank_name: s.bank_name, bank_code: s.bank_code, bank_account: s.bank_account, bank_owner: s.bank_owner }
     }
   ));
@@ -21039,6 +23229,7 @@ app.get("/tai-khoan", requireAuth, async (c) => {
 app.get("/tai-khoan/san-pham", requireAuth, async (c) => {
   const db = c.env.DB;
   const u = c.get("user");
+  await syncUnlimitedMembershipSkills(db, u.id);
   const [rows, mcpToken, connRows] = await Promise.all([
     db.prepare(
       `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
@@ -21583,6 +23774,41 @@ app.post("/api/account/mcp/test", requireAuth, async (c) => {
     tools: toolsResp.body?.result?.tools || []
   });
 });
+app.get("/tai-khoan/hoi-vien", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  await syncUnlimitedMembershipSkills(db, u.id);
+  const rawTier = (c.req.query("tier") || "").trim().toLowerCase();
+  const selectedTier = ["vip1", "vip2", "vip3", "vip4", "pro"].includes(rawTier) ? rawTier : "";
+  const [membership, historyRes, catalogRes, ownedRes] = await Promise.all([
+    getActiveUserMembership(db, u.id),
+    db.prepare("SELECT * FROM user_memberships WHERE user_id=? ORDER BY id DESC LIMIT 10").bind(u.id).all().catch(() => ({ results: [] })),
+    db.prepare(`SELECT id, slug, name, thumbnail, price, skill_tier, product_type FROM products WHERE status='published' ORDER BY price ASC, id DESC`).all(),
+    db.prepare("SELECT product_id FROM licenses WHERE user_id=?").bind(u.id).all()
+  ]);
+  const ownedIds = (ownedRes.results || []).map((x) => Number(x.product_id));
+  return c.html(
+    /* @__PURE__ */ jsxDEV(
+      AccountMembershipPage,
+      {
+        ...base(c),
+        membership,
+        history: historyRes.results || [],
+        catalog: catalogRes.results || [],
+        ownedIds,
+        selectedTier
+      }
+    )
+  );
+});
+app.post("/api/account/membership/claim", requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get("user");
+  const b = await c.req.json().catch(() => ({}));
+  const productId = Number(b.product_id);
+  if (!productId) return c.json({ error: "Thi\u1EBFu product_id" }, 400);
+  const res = await claimSkillWithMembership(db, u.id, productId);
+  if (!res.ok) return c.json({ error: res.error }, res.status || 400);
+  return c.json({ ok: true, message: res.message, license_key: res.licenseKey });
+});
 app.get("/tai-khoan/thong-bao", requireAuth, async (c) => {
   const u = c.get("user");
   const rows = await c.env.DB.prepare(
@@ -21617,9 +23843,22 @@ app.get("/tai-xuong/:licenseId", requireAuth, async (c) => {
 app.get("/tai-khoan/don-hang", requireAuth, async (c) => {
   const u = c.get("user");
   const rows = await c.env.DB.prepare(
-    `SELECT o.*, (SELECT STRING_AGG(product_name, ', ') FROM order_items WHERE order_id=o.id) product_names
+    `SELECT o.*,
+       COALESCE(
+         (SELECT STRING_AGG(product_name, ', ') FROM order_items WHERE order_id=o.id),
+         (SELECT 'G\xF3i H\u1ED9i vi\xEAn ' || mp.name FROM membership_plans mp WHERE mp.id=o.membership_plan_id)
+       ) product_names
      FROM orders o WHERE o.user_id=? ORDER BY o.id DESC`
-  ).bind(u.id).all();
+  ).bind(u.id).all().catch(
+    async () => c.env.DB.prepare(
+      `SELECT o.*,
+         COALESCE(
+           (SELECT GROUP_CONCAT(product_name, ', ') FROM order_items WHERE order_id=o.id),
+           (SELECT 'G\xF3i H\u1ED9i vi\xEAn ' || mp.name FROM membership_plans mp WHERE mp.id=o.membership_plan_id)
+         ) product_names
+       FROM orders o WHERE o.user_id=? ORDER BY o.id DESC`
+    ).bind(u.id).all()
+  );
   return c.html(/* @__PURE__ */ jsxDEV(MyOrdersPage, { ...base(c), orders: rows.results }));
 });
 app.get("/tai-khoan/yeu-thich", requireAuth, async (c) => {
@@ -21873,6 +24112,7 @@ function productFields(b) {
     return tools.length ? JSON.stringify(tools) : null;
   };
   const ptype = ["course", "skill", "mcp_skill", "chatbot", "app", "combo", "source"].includes(b.product_type) ? b.product_type : "skill";
+  const priceNum = +b.price || 0;
   return {
     name: (b.name || "").trim(),
     slug: (b.slug || slugify(b.name || "")).trim(),
@@ -21882,7 +24122,7 @@ function productFields(b) {
     features: toArr(b.features_text),
     tech_stack: toArr(b.tech_text),
     version: b.version || "v1.0",
-    price: +b.price || 0,
+    price: priceNum,
     original_price: b.original_price ? +b.original_price : null,
     thumbnail: b.thumbnail || null,
     demo_video_url: b.demo_video_url || null,
@@ -21892,6 +24132,7 @@ function productFields(b) {
     doc_url: b.doc_url || null,
     file_size: b.file_size || (ptype === "mcp_skill" ? "MCP Live API" : null),
     product_type: ptype,
+    skill_tier: normalizeSkillTier(b.skill_tier, priceNum),
     mcp_endpoint: (b.mcp_endpoint || "").trim() || null,
     mcp_server_name: (b.mcp_server_name || "").trim() || null,
     mcp_clients: ptype === "mcp_skill" ? toClients(b.mcp_clients_text) || JSON.stringify(["Claude", "Codex", "Antigravity"]) : toClients(b.mcp_clients_text),
@@ -21911,10 +24152,10 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
   if (dup) return c.json({ error: "Slug \u0111\xE3 t\u1ED3n t\u1EA1i" }, 400);
   await c.env.DB.prepare(`INSERT INTO products
     (name,slug,category_id,short_desc,description,features,tech_stack,version,price,original_price,thumbnail,
-     demo_video_url,raw_video_url,demo_url,download_url,doc_url,file_size,product_type,
+     demo_video_url,raw_video_url,demo_url,download_url,doc_url,file_size,product_type,skill_tier,
      mcp_endpoint,mcp_server_name,mcp_clients,mcp_tools,mcp_skill_prompt,mcp_render_webhook,
      is_featured,is_hot,is_new,status)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
     f.name,
     f.slug,
     f.category_id,
@@ -21933,6 +24174,7 @@ app.post("/api/admin/products", requireAdmin, async (c) => {
     f.doc_url,
     f.file_size,
     f.product_type,
+    f.skill_tier,
     f.mcp_endpoint,
     f.mcp_server_name,
     f.mcp_clients,
@@ -21957,7 +24199,7 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
   if (dup) return c.json({ error: "Slug \u0111\xE3 \u0111\u01B0\u1EE3c d\xF9ng cho s\u1EA3n ph\u1EA9m kh\xE1c" }, 400);
   await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,raw_video_url=?,demo_url=?,download_url=?,
-    doc_url=?,file_size=?,product_type=?,
+    doc_url=?,file_size=?,product_type=?,skill_tier=?,
     mcp_endpoint=?,mcp_server_name=?,mcp_clients=?,mcp_tools=?,mcp_skill_prompt=?,mcp_render_webhook=?,
     is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(
     f.name,
@@ -21978,6 +24220,7 @@ app.post("/api/admin/products/:id/update", requireAdmin, async (c) => {
     f.doc_url,
     f.file_size,
     f.product_type,
+    f.skill_tier,
     f.mcp_endpoint,
     f.mcp_server_name,
     f.mcp_clients,
@@ -22354,6 +24597,116 @@ app.delete("/api/admin/categories/:id", requireAdmin, async (c) => {
   await c.env.DB.prepare("DELETE FROM categories WHERE id=?").bind(c.req.param("id")).run();
   invalidateCache();
   return c.json({ ok: true });
+});
+app.get("/admin/hoi-vien", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const [plans, membersRes, tierRows] = await Promise.all([
+    getMembershipPlans(db, true),
+    db.prepare(
+      `SELECT um.*, u.full_name, u.email
+       FROM user_memberships um
+       JOIN users u ON u.id = um.user_id
+       ORDER BY um.id DESC LIMIT 100`
+    ).all().catch(() => ({ results: [] })),
+    db.prepare(`SELECT skill_tier, COUNT(*) n FROM products WHERE status='published' GROUP BY skill_tier`).all().catch(() => ({ results: [] }))
+  ]);
+  const tierCounts = {};
+  for (const r of tierRows.results || []) {
+    if (r.skill_tier) tierCounts[String(r.skill_tier)] = Number(r.n || 0);
+  }
+  const usdRate = getUsdRate(c.get("settings"));
+  return c.html(
+    /* @__PURE__ */ jsxDEV(
+      AdminMemberships,
+      {
+        user: c.get("user"),
+        activeKey: "memberships",
+        heading: "H\u1ED9i vi\xEAn VIP & B\u1EA3ng gi\xE1",
+        plans,
+        members: membersRes.results || [],
+        usdRate,
+        tierCounts
+      }
+    )
+  );
+});
+app.post("/api/admin/membership-settings", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const b = await c.req.json();
+  const rate = Math.round(Number(b.usd_vnd_rate) || 27e3);
+  if (rate < 1e4 || rate > 1e5) {
+    return c.json({ error: "T\u1EF7 gi\xE1 VN\u0110/USD kh\xF4ng h\u1EE3p l\u1EC7 (10.000 \u2013 100.000)" }, 400);
+  }
+  await db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('usd_vnd_rate', ?) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`
+  ).bind(String(rate)).run().catch(async () => {
+    await db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES ('usd_vnd_rate', ?)`).bind(String(rate)).run();
+  });
+  invalidateCache();
+  return c.json({ ok: true, message: `\u0110\xE3 c\u1EADp nh\u1EADt t\u1EF7 gi\xE1 1 USD = ${formatVND(rate)}!` });
+});
+app.post("/api/admin/membership-plans/:id", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = Number(c.req.param("id"));
+  const b = await c.req.json();
+  const name = String(b.name || "").trim();
+  if (!name) return c.json({ error: "Thi\u1EBFu t\xEAn g\xF3i H\u1ED9i vi\xEAn" }, 400);
+  const groupType = b.group_type === "premium" ? "premium" : "starter";
+  const themeColor = ["violet", "orange", "obsidian", "blue", "emerald", "purple"].includes(b.theme_color) ? b.theme_color : "indigo";
+  const priceVnd = Math.max(0, Math.round(Number(b.price_vnd) || 0));
+  const durationDays = Math.max(1, Math.round(Number(b.duration_days) || 30));
+  const parseQuota = (v) => {
+    const n = Math.round(Number(v));
+    if (!Number.isFinite(n)) return 0;
+    return n < 0 ? -1 : n;
+  };
+  const v1 = parseQuota(b.vip1_quota);
+  const v2 = parseQuota(b.vip2_quota);
+  const v3 = parseQuota(b.vip3_quota);
+  const v4 = parseQuota(b.vip4_quota);
+  const badge = String(b.badge || "").trim() || null;
+  const idealFor = String(b.ideal_for || "").trim() || null;
+  const estValue = Math.max(0, Math.round(Number(b.est_value_vnd) || 0));
+  const isPopular = Number(b.is_popular) ? 1 : 0;
+  const status = b.status === "inactive" ? "inactive" : "active";
+  const sortOrder = Math.round(Number(b.sort_order) || 0);
+  const autoNote = v1 < 0 && v2 < 0 ? "Full VIP I & VIP II (update li\xEAn t\u1EE5c)" : null;
+  await db.prepare(
+    `UPDATE membership_plans
+     SET name=?, group_type=?, badge=?, theme_color=?, price_vnd=?, duration_days=?,
+         vip1_quota=?, vip2_quota=?, vip3_quota=?, vip4_quota=?,
+         auto_update_note=?, ideal_for=?, est_value_vnd=?, is_popular=?, status=?, sort_order=?,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=?`
+  ).bind(name, groupType, badge, themeColor, priceVnd, durationDays, v1, v2, v3, v4, autoNote, idealFor, estValue, isPopular, status, sortOrder, id).run();
+  invalidateCache();
+  return c.json({ ok: true, message: `\u0110\xE3 l\u01B0u c\u1EA5u h\xECnh g\xF3i ${name}!` });
+});
+app.post("/api/admin/memberships/grant", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const b = await c.req.json();
+  const email = String(b.email || "").trim().toLowerCase();
+  const planSlug = String(b.plan_slug || "").trim();
+  if (!email || !planSlug) return c.json({ error: "Vui l\xF2ng nh\u1EADp email v\xE0 ch\u1ECDn g\xF3i H\u1ED9i vi\xEAn" }, 400);
+  const user = await db.prepare("SELECT id, full_name, email FROM users WHERE LOWER(email)=?").bind(email).first();
+  if (!user) return c.json({ error: `Kh\xF4ng t\xECm th\u1EA5y t\xE0i kho\u1EA3n v\u1EDBi email ${email}` }, 404);
+  const plan = await getMembershipPlanBySlug(db, planSlug);
+  if (!plan) return c.json({ error: "Kh\xF4ng t\xECm th\u1EA5y g\xF3i H\u1ED9i vi\xEAn" }, 404);
+  await grantUserMembership(db, { userId: user.id, plan, orderId: null });
+  await createUserNotification(db, {
+    userId: user.id,
+    type: "admin",
+    title: `B\u1EA1n v\u1EEBa \u0111\u01B0\u1EE3c k\xEDch ho\u1EA1t g\xF3i H\u1ED9i vi\xEAn ${plan.name}`,
+    message: `Qu\u1EA3n tr\u1ECB vi\xEAn \u0111\xE3 k\xEDch ho\u1EA1t g\xF3i ${plan.name} (${plan.duration_days} ng\xE0y) cho t\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n. Truy c\u1EADp "H\u1ED9i vi\xEAn VIP" \u0111\u1EC3 ch\u1ECDn Skill ngay.`,
+    linkUrl: "/tai-khoan/hoi-vien"
+  });
+  return c.json({ ok: true, message: `\u0110\xE3 k\xEDch ho\u1EA1t g\xF3i ${plan.name} cho ${user.email}!` });
+});
+app.post("/api/admin/memberships/:id/cancel", requireAdmin, async (c) => {
+  const db = c.env.DB;
+  const id = Number(c.req.param("id"));
+  await db.prepare(`UPDATE user_memberships SET status='cancelled' WHERE id=?`).bind(id).run();
+  return c.json({ ok: true, message: "\u0110\xE3 thu h\u1ED3i g\xF3i H\u1ED9i vi\xEAn!" });
 });
 app.get("/admin/ma-giam-gia", requireAdmin, async (c) => {
   const db = c.env.DB;

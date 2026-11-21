@@ -21,8 +21,8 @@ import { HomePage } from './pages/home'
 import { ProductListPage } from './pages/products'
 import { ProductDetailPage } from './pages/product-detail'
 import { LoginPage, RegisterPage, ForgotPage, ResetPasswordPage, VerifyEmailResultPage } from './pages/auth'
-import { CartPage, CheckoutPage, OrderPage } from './pages/cart'
-import { AccountDashboard, MyProductsPage, OAuthConsentPage, MyOrdersPage, WishlistPage, AffiliateDashboard, ProfilePage, NotificationsPage } from './pages/account'
+import { CartPage, CheckoutPage, OrderPage, MembershipCheckoutPage } from './pages/cart'
+import { AccountDashboard, MyProductsPage, OAuthConsentPage, MyOrdersPage, WishlistPage, AffiliateDashboard, ProfilePage, NotificationsPage, AccountMembershipPage } from './pages/account'
 import {
   BlogListPage, BlogDetailPage, PricingPage, AboutPage, ContactPage,
   AffiliateLandingPage, DocPage, NotFoundPage
@@ -30,7 +30,7 @@ import {
 import {
   AdminDashboard, AdminProducts, AdminProductForm, AdminOrders, AdminOrderDetail,
   AdminUsers, AdminUserDetail, AdminCategories, AdminCoupons, AdminPosts, AdminReviews, AdminTickets, AdminSettings,
-  AdminBankTx
+  AdminBankTx, AdminMemberships
 } from './pages/admin'
 import { POLICY_DOCS } from './lib/docs'
 import { pgDb, pgConnectionString } from './lib/pg'
@@ -53,6 +53,18 @@ import {
   getOrderActiveHold,
   generateUniqueCouponCodes
 } from './lib/coupons'
+import {
+  SKILL_TIERS,
+  normalizeSkillTier,
+  getUsdRate,
+  getMembershipPlans,
+  getMembershipPlanBySlug,
+  getActiveUserMembership,
+  syncUnlimitedMembershipSkills,
+  activateMembershipFromOrder,
+  grantUserMembership,
+  claimSkillWithMembership
+} from './lib/tiers'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -226,6 +238,8 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   const cat = opts.catSlug || c.req.query('cat') || ''
   const sort = c.req.query('sort') || 'newest'
   const type = opts.comboOnly ? 'combo' : (c.req.query('type') || '')
+  const rawTier = (c.req.query('tier') || '').trim().toLowerCase()
+  const tier = ['vip1', 'vip2', 'vip3', 'vip4', 'pro'].includes(rawTier) ? rawTier : ''
   const minPrice = c.req.query('min') || ''
   const maxPrice = c.req.query('max') || ''
   const page = Math.max(1, parseInt(c.req.query('page') || '1'))
@@ -237,6 +251,7 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   if (q) { where.push(`(p.name LIKE ? OR p.short_desc LIKE ?)`); binds.push(`%${q}%`, `%${q}%`) }
   if (cat) { where.push(`c.slug = ?`); binds.push(cat) }
   if (type) { where.push(`p.product_type = ?`); binds.push(type) }
+  if (tier) { where.push(`p.skill_tier = ?`); binds.push(tier) }
   if (minPrice) { where.push(`p.price >= ?`); binds.push(+minPrice) }
   if (maxPrice) { where.push(`p.price <= ?`); binds.push(+maxPrice) }
 
@@ -256,29 +271,34 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
     opts.catSlug ? cached(`cat:slug:${opts.catSlug}`, 30000, () => db.prepare('SELECT * FROM categories WHERE slug=?').bind(opts.catSlug).first<any>()) : Promise.resolve(null)
   ])
 
-  const cacheKey = q ? '' : `plist:${opts.comboOnly ? '1' : '0'}:${cat}:${type}:${sort}:${minPrice}:${maxPrice}:${page}`
+  const cacheKey = q ? '' : `plist:${opts.comboOnly ? '1' : '0'}:${cat}:${type}:${tier}:${sort}:${minPrice}:${maxPrice}:${page}`
   const [cntRow, rows, cats, currentCat] = cacheKey
     ? await cached(cacheKey, 20000, fetchList)
     : await fetchList()
 
+  const tierMeta = tier ? SKILL_TIERS[tier as keyof typeof SKILL_TIERS] : null
   const total = cntRow?.n || 0
   const heading = opts.comboOnly ? 'Combo Trọn Bộ'
     : currentCat ? currentCat.name
       : q ? `Kết quả cho "${q}"`
-        : type === 'mcp_skill' ? 'Skill AI Agent (MCP)'
-          : type === 'skill' ? 'Skill AI (Tự tải & làm theo)'
-            : 'Tất cả sản phẩm'
+        : tierMeta ? `Skill hạng ${tierMeta.code} (${tierMeta.priceRangeVnd})`
+          : type === 'mcp_skill' ? 'Skill AI Agent (MCP)'
+            : type === 'skill' ? 'Skill AI (Tự tải & làm theo)'
+              : 'Tất cả sản phẩm'
   const headingDesc = opts.comboOnly ? 'Gói combo tiết kiệm tới 60% so với mua lẻ từng sản phẩm — Hiện đang tạm thời chưa mở bán'
     : currentCat ? currentCat.description
-      : type === 'mcp_skill' ? 'Skill kết nối trực tiếp dạng MCP cho Claude, Codex, Antigravity — AI Agent tự gọi tool và tạo video theo Skill'
-        : type === 'skill' ? 'Bộ Skill đóng gói theo ngách & công cụ: tự tải tài liệu, prompt chuẩn và làm theo từng bước'
-          : 'Khám phá kho Skill AI tự tải và dòng mới Skill AI Agent (MCP) kết nối trực tiếp Claude, Codex, Antigravity'
+      : tierMeta ? (tierMeta.isRetailOnly
+          ? 'Dòng SKILL PRO cao cấp nhất — chỉ bán lẻ trực tiếp, không áp dụng trừ lượt gói Hội viên.'
+          : `Các bộ Skill thuộc phân hạng ${tierMeta.code} (${tierMeta.subtitle} · ${tierMeta.priceRangeVnd} / ${tierMeta.priceRangeUsd}) — có thể mua lẻ hoặc nhận bằng Gói Hội Viên VIP.`)
+        : type === 'mcp_skill' ? 'Skill kết nối trực tiếp dạng MCP cho Claude, Codex, Antigravity — AI Agent tự gọi tool và tạo video theo Skill'
+          : type === 'skill' ? 'Bộ Skill đóng gói theo ngách & công cụ: tự tải tài liệu, prompt chuẩn và làm theo từng bước'
+            : 'Khám phá kho Skill AI tự tải và dòng mới Skill AI Agent (MCP) kết nối trực tiếp Claude, Codex, Antigravity'
   const baseUrl = opts.comboOnly ? '/combo' : opts.catSlug ? `/danh-muc/${opts.catSlug}` : '/san-pham'
 
   return c.html(<ProductListPage {...base(c)}
     products={rows.results as any} categories={cats.results as any} total={total} page={page}
     totalPages={Math.ceil(total / perPage)} q={q} cat={opts.catSlug ? '' : cat} sort={sort}
-    minPrice={minPrice} maxPrice={maxPrice} type={opts.comboOnly ? '' : type}
+    minPrice={minPrice} maxPrice={maxPrice} type={opts.comboOnly ? '' : type} tier={tier}
     heading={heading} headingDesc={headingDesc} baseUrl={baseUrl} currentCategory={currentCat} />)
 }
 
@@ -298,7 +318,11 @@ app.get('/san-pham/:slug', async (c) => {
   )
   if (!p) return c.html(<NotFoundPage {...base(c)} />, 404)
 
-  const [bundle, ownedRow, wishRow] = await Promise.all([
+  if (user) {
+    await syncUnlimitedMembershipSkills(db, user.id)
+  }
+
+  const [bundle, ownedRow, wishRow, activeMembership] = await Promise.all([
     cached(`product:extra:${p.id}`, 20000, async () => {
       const [related, comboItems, reviews, breakdown] = await Promise.all([
         db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
@@ -314,6 +338,7 @@ app.get('/san-pham/:slug', async (c) => {
     }),
     user ? db.prepare('SELECT 1 x FROM licenses WHERE user_id=? AND product_id=?').bind(user.id, p.id).first<any>() : Promise.resolve(null),
     user ? db.prepare('SELECT 1 x FROM wishlists WHERE user_id=? AND product_id=?').bind(user.id, p.id).first<any>() : Promise.resolve(null),
+    user ? getActiveUserMembership(db, user.id) : Promise.resolve(null),
     db.prepare('UPDATE products SET view_count=view_count+1 WHERE id=?').bind(p.id).run().catch(() => null)
   ])
 
@@ -330,6 +355,7 @@ app.get('/san-pham/:slug', async (c) => {
   return c.html(<ProductDetailPage {...base(c)} product={p} related={bundle.related.results as any}
     comboItems={bundle.comboItems.results as any} reviews={bundle.reviews.results as any}
     owned={owned} inWishlist={!!wishRow} canReview={canReview} ratingBreakdown={rb}
+    activeMembership={activeMembership}
     origin={getRequestOrigin(c)} />)
 })
 
@@ -368,7 +394,20 @@ app.get('/blog/:slug', async (c) => {
 })
 
 /* -------- Static pages -------- */
-app.get('/bang-gia', (c) => c.html(<PricingPage {...base(c)} />))
+app.get('/bang-gia', async (c) => {
+  const db = c.env.DB
+  const user = c.get('user')
+  const [plans, activeMembership, tierRows] = await Promise.all([
+    getMembershipPlans(db, false),
+    user ? getActiveUserMembership(db, user.id) : Promise.resolve(null),
+    db.prepare(`SELECT skill_tier, COUNT(*) n FROM products WHERE status='published' GROUP BY skill_tier`).all().catch(() => ({ results: [] }))
+  ])
+  const tierCounts: Record<string, number> = {}
+  for (const r of (tierRows.results || []) as any[]) {
+    if (r.skill_tier) tierCounts[String(r.skill_tier)] = Number(r.n || 0)
+  }
+  return c.html(<PricingPage {...base(c)} plans={plans} activeMembership={activeMembership} tierCounts={tierCounts} />)
+})
 app.get('/lien-he', (c) => c.html(<ContactPage {...base(c)} />))
 app.get('/affiliate', (c) => c.html(<AffiliateLandingPage {...base(c)}
   percent={+(c.get('settings').affiliate_percent || 20)} />))
@@ -935,6 +974,86 @@ app.post('/api/orders/create', requireAuth, async (c) => {
   return c.json({ ok: true, order_code: code })
 })
 
+/* ---------------- MEMBERSHIP CHECKOUT & ORDER ---------------- */
+app.get('/hoi-vien/thanh-toan/:slug', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  const slug = c.req.param('slug')
+  const plan = await getMembershipPlanBySlug(db, slug)
+  if (!plan || plan.status !== 'active') return c.redirect('/bang-gia')
+  const me = await db.prepare('SELECT balance FROM users WHERE id=?').bind(u.id).first<any>()
+  return c.html(<MembershipCheckoutPage {...base(c)} plan={plan} balance={me?.balance || 0} isDemoFree={isDemoFreeUser(c.env, u.email)} />)
+})
+
+app.post('/api/membership/orders/create', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  const b = await c.req.json<any>()
+  const plan = await getMembershipPlanBySlug(db, String(b.plan_slug || '').trim())
+  if (!plan || plan.status !== 'active') {
+    return c.json({ error: 'Gói Hội viên không tồn tại hoặc đang tạm tắt' }, 400)
+  }
+
+  const demoFree = isDemoFreeUser(c.env, u.email)
+  const subtotal = Number(plan.price_vnd || 0)
+  let discount = 0, couponCode: string | null = null, heldCouponId: number | null = null
+  if (demoFree) {
+    discount = subtotal
+    couponCode = 'DEMO_FREE'
+  } else if (b.coupon_code) {
+    const holdRes = await validateAndHoldCoupon({
+      db,
+      code: String(b.coupon_code),
+      userId: u.id,
+      subtotal
+    })
+    if (!holdRes.ok) return c.json({ error: holdRes.error }, (holdRes.status || 400) as any)
+    discount = holdRes.discount
+    couponCode = holdRes.coupon.code
+    heldCouponId = holdRes.holdId
+  } else {
+    await releaseUserDraftHolds(db, u.id)
+  }
+
+  const total = demoFree ? 0 : Math.max(0, subtotal - discount)
+  const pm = demoFree ? 'demo_free' : (['bank', 'momo', 'balance'].includes(b.payment_method) ? b.payment_method : 'bank')
+
+  let status = demoFree ? 'paid' : 'pending'
+  if (!demoFree && pm === 'balance') {
+    const me = await db.prepare('SELECT balance FROM users WHERE id=?').bind(u.id).first<any>()
+    if ((me?.balance || 0) < total) return c.json({ error: 'Số dư ví không đủ' }, 400)
+    await db.prepare('UPDATE users SET balance=balance-? WHERE id=?').bind(total, u.id).run()
+    status = 'paid'
+  }
+
+  const code = genCode('DH', 8)
+  const note = String(b.note || '').trim() || `Đăng ký gói Hội viên ${plan.name}${demoFree ? ' (Demo Account)' : ''}`
+  const ord = await db.prepare(
+    `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, order_type, membership_plan_id, status, note, paid_at, paid_amount, paid_via)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(
+    code, u.id, subtotal, discount, total, couponCode, pm, 'membership', plan.id, status, note,
+    status === 'paid' ? new Date().toISOString() : null,
+    status === 'paid' ? total : null,
+    demoFree ? 'demo_free' : (status === 'paid' ? 'balance' : null)
+  ).run()
+  const orderId = ord.meta.last_row_id as number
+
+  if (heldCouponId) {
+    await attachHoldToOrder(db, heldCouponId, orderId)
+  }
+
+  if (status === 'paid') {
+    if (!demoFree && couponCode) {
+      await consumeOrderCoupon(db, orderId, couponCode, u.id)
+    }
+    const fakeOrder = { id: orderId, order_code: code, user_id: u.id, total, order_type: 'membership', membership_plan_id: plan.id }
+    await activateMembershipFromOrder(db, fakeOrder)
+    if (!demoFree) await creditAffiliate(db, u.id, total)
+    await notifyOrderPaid(c.env, db, fakeOrder, getRequestOrigin(c))
+  }
+
+  return c.json({ ok: true, order_code: code })
+})
+
 async function creditAffiliate(db: D1Database, userId: number, total: number) {
   const me = await db.prepare('SELECT referred_by, full_name FROM users WHERE id=?').bind(userId).first<any>()
   if (!me?.referred_by) return
@@ -958,6 +1077,24 @@ async function creditAffiliate(db: D1Database, userId: number, total: number) {
 
 async function notifyOrderPaid(env: any, db: D1Database, order: any, origin = 'https://khoskill.site') {
   try {
+    if (order.order_type === 'membership') {
+      const [buyer, plan] = await Promise.all([
+        db.prepare('SELECT id, email, full_name, status FROM users WHERE id=?').bind(order.user_id).first<any>(),
+        order.membership_plan_id
+          ? db.prepare('SELECT * FROM membership_plans WHERE id=?').bind(order.membership_plan_id).first<any>()
+          : Promise.resolve(null)
+      ])
+      if (!buyer) return
+      const planName = plan?.name || 'Hội viên VIP'
+      await createUserNotification(db, {
+        userId: buyer.id,
+        type: 'order',
+        title: `Gói Hội viên ${planName} đã kích hoạt thành công`,
+        message: `Đơn hàng ${order.order_code} đã hoàn tất! Mở mục "Hội viên VIP" để chọn nhận các Skill VIP I – IV theo hạn mức gói.`,
+        linkUrl: '/tai-khoan/hoi-vien'
+      })
+      return
+    }
     const [buyer, licenses] = await Promise.all([
       db.prepare('SELECT id, email, full_name, status FROM users WHERE id=?').bind(order.user_id).first<any>(),
       db.prepare(
@@ -1015,7 +1152,11 @@ async function settleOrder(
   if (order.coupon_code && order.coupon_code !== 'DEMO_FREE') {
     await consumeOrderCoupon(db, order.id, order.coupon_code, order.user_id)
   }
-  await grantLicenses(db, order.user_id, order.id)
+  if (order.order_type === 'membership' && order.membership_plan_id) {
+    await activateMembershipFromOrder(db, order)
+  } else {
+    await grantLicenses(db, order.user_id, order.id)
+  }
   await creditAffiliate(db, order.user_id, order.total)
   await notifyOrderPaid(opts.env, db, order, opts.origin)
 }
@@ -1264,15 +1405,19 @@ app.get('/don-hang/:code', requireAuth, async (c) => {
   await releaseExpiredCouponHolds(db)
   const o = await db.prepare('SELECT * FROM orders WHERE order_code=? AND user_id=?').bind(c.req.param('code'), u.id).first<any>()
   if (!o) return c.html(<NotFoundPage {...base(c)} />, 404)
-  const [items, s, activeHold] = await Promise.all([
+  const [items, s, activeHold, membershipPlan] = await Promise.all([
     db.prepare(
       `SELECT oi.*, p.slug FROM order_items oi LEFT JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?`
     ).bind(o.id).all(),
     fetchSettings(db).catch(() => c.get('settings')),
-    o.status === 'pending' ? getOrderActiveHold(db, o.id) : Promise.resolve(null)
+    o.status === 'pending' ? getOrderActiveHold(db, o.id) : Promise.resolve(null),
+    o.order_type === 'membership' && o.membership_plan_id
+      ? db.prepare('SELECT * FROM membership_plans WHERE id=?').bind(o.membership_plan_id).first<any>().catch(() => null)
+      : Promise.resolve(null)
   ])
   return c.html(<OrderPage {...base(c)} order={o} items={items.results as any}
     holdExpiresAt={activeHold?.expires_at || null}
+    membershipPlan={membershipPlan}
     bank={{ bank_name: s.bank_name, bank_code: s.bank_code, bank_account: s.bank_account, bank_owner: s.bank_owner }} />)
 })
 
@@ -1296,6 +1441,8 @@ app.get('/tai-khoan', requireAuth, async (c) => {
 app.get('/tai-khoan/san-pham', requireAuth, async (c) => {
   const db = c.env.DB
   const u = c.get('user')!
+  // Auto-sync any new VIP I / VIP II skills for PREMIUM / GOLD / BLACK DIAMOND members
+  await syncUnlimitedMembershipSkills(db, u.id)
   const [rows, mcpToken, connRows] = await Promise.all([
     db.prepare(
       `SELECT l.*, p.name, p.slug, p.thumbnail, p.product_type, p.version, p.download_url, p.doc_url, p.file_size,
@@ -1922,6 +2069,40 @@ app.post('/api/account/mcp/test', requireAuth, async (c) => {
   })
 })
 
+app.get('/tai-khoan/hoi-vien', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  await syncUnlimitedMembershipSkills(db, u.id)
+  const rawTier = (c.req.query('tier') || '').trim().toLowerCase()
+  const selectedTier = ['vip1', 'vip2', 'vip3', 'vip4', 'pro'].includes(rawTier) ? rawTier : ''
+  const [membership, historyRes, catalogRes, ownedRes] = await Promise.all([
+    getActiveUserMembership(db, u.id),
+    db.prepare('SELECT * FROM user_memberships WHERE user_id=? ORDER BY id DESC LIMIT 10').bind(u.id).all().catch(() => ({ results: [] })),
+    db.prepare(`SELECT id, slug, name, thumbnail, price, skill_tier, product_type FROM products WHERE status='published' ORDER BY price ASC, id DESC`).all(),
+    db.prepare('SELECT product_id FROM licenses WHERE user_id=?').bind(u.id).all()
+  ])
+  const ownedIds = ((ownedRes.results || []) as any[]).map(x => Number(x.product_id))
+  return c.html(
+    <AccountMembershipPage
+      {...base(c)}
+      membership={membership}
+      history={(historyRes.results || []) as any}
+      catalog={(catalogRes.results || []) as any}
+      ownedIds={ownedIds}
+      selectedTier={selectedTier}
+    />
+  )
+})
+
+app.post('/api/account/membership/claim', requireAuth, async (c) => {
+  const db = c.env.DB, u = c.get('user')!
+  const b = await c.req.json<any>().catch(() => ({}))
+  const productId = Number(b.product_id)
+  if (!productId) return c.json({ error: 'Thiếu product_id' }, 400)
+  const res = await claimSkillWithMembership(db, u.id, productId)
+  if (!res.ok) return c.json({ error: res.error }, (res.status || 400) as any)
+  return c.json({ ok: true, message: res.message, license_key: res.licenseKey })
+})
+
 app.get('/tai-khoan/thong-bao', requireAuth, async (c) => {
   const u = c.get('user')!
   const rows = await c.env.DB.prepare(
@@ -1965,9 +2146,22 @@ app.get('/tai-xuong/:licenseId', requireAuth, async (c) => {
 app.get('/tai-khoan/don-hang', requireAuth, async (c) => {
   const u = c.get('user')!
   const rows = await c.env.DB.prepare(
-    `SELECT o.*, (SELECT STRING_AGG(product_name, ', ') FROM order_items WHERE order_id=o.id) product_names
+    `SELECT o.*,
+       COALESCE(
+         (SELECT STRING_AGG(product_name, ', ') FROM order_items WHERE order_id=o.id),
+         (SELECT 'Gói Hội viên ' || mp.name FROM membership_plans mp WHERE mp.id=o.membership_plan_id)
+       ) product_names
      FROM orders o WHERE o.user_id=? ORDER BY o.id DESC`
-  ).bind(u.id).all()
+  ).bind(u.id).all().catch(async () =>
+    c.env.DB.prepare(
+      `SELECT o.*,
+         COALESCE(
+           (SELECT GROUP_CONCAT(product_name, ', ') FROM order_items WHERE order_id=o.id),
+           (SELECT 'Gói Hội viên ' || mp.name FROM membership_plans mp WHERE mp.id=o.membership_plan_id)
+         ) product_names
+       FROM orders o WHERE o.user_id=? ORDER BY o.id DESC`
+    ).bind(u.id).all()
+  )
   return c.html(<MyOrdersPage {...base(c)} orders={rows.results as any} />)
 })
 
@@ -2193,6 +2387,7 @@ function productFields(b: any) {
     return tools.length ? JSON.stringify(tools) : null
   }
   const ptype = ['course', 'skill', 'mcp_skill', 'chatbot', 'app', 'combo', 'source'].includes(b.product_type) ? b.product_type : 'skill'
+  const priceNum = +b.price || 0
   return {
     name: (b.name || '').trim(),
     slug: (b.slug || slugify(b.name || '')).trim(),
@@ -2202,7 +2397,7 @@ function productFields(b: any) {
     features: toArr(b.features_text),
     tech_stack: toArr(b.tech_text),
     version: b.version || 'v1.0',
-    price: +b.price || 0,
+    price: priceNum,
     original_price: b.original_price ? +b.original_price : null,
     thumbnail: b.thumbnail || null,
     demo_video_url: b.demo_video_url || null,
@@ -2212,6 +2407,7 @@ function productFields(b: any) {
     doc_url: b.doc_url || null,
     file_size: b.file_size || (ptype === 'mcp_skill' ? 'MCP Live API' : null),
     product_type: ptype,
+    skill_tier: normalizeSkillTier(b.skill_tier, priceNum),
     mcp_endpoint: (b.mcp_endpoint || '').trim() || null,
     mcp_server_name: (b.mcp_server_name || '').trim() || null,
     mcp_clients: ptype === 'mcp_skill' ? (toClients(b.mcp_clients_text) || JSON.stringify(['Claude', 'Codex', 'Antigravity'])) : toClients(b.mcp_clients_text),
@@ -2232,13 +2428,13 @@ app.post('/api/admin/products', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã tồn tại' }, 400)
   await c.env.DB.prepare(`INSERT INTO products
     (name,slug,category_id,short_desc,description,features,tech_stack,version,price,original_price,thumbnail,
-     demo_video_url,raw_video_url,demo_url,download_url,doc_url,file_size,product_type,
+     demo_video_url,raw_video_url,demo_url,download_url,doc_url,file_size,product_type,skill_tier,
      mcp_endpoint,mcp_server_name,mcp_clients,mcp_tools,mcp_skill_prompt,mcp_render_webhook,
      is_featured,is_hot,is_new,status)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.raw_video_url, f.demo_url, f.download_url, f.doc_url,
-      f.file_size, f.product_type,
+      f.file_size, f.product_type, f.skill_tier,
       f.mcp_endpoint, f.mcp_server_name, f.mcp_clients, f.mcp_tools, f.mcp_skill_prompt, f.mcp_render_webhook,
       f.is_featured, f.is_hot, f.is_new, f.status).run()
   invalidateCache()
@@ -2255,12 +2451,12 @@ app.post('/api/admin/products/:id/update', requireAdmin, async (c) => {
   if (dup) return c.json({ error: 'Slug đã được dùng cho sản phẩm khác' }, 400)
   await db.prepare(`UPDATE products SET name=?,slug=?,category_id=?,short_desc=?,description=?,features=?,
     tech_stack=?,version=?,price=?,original_price=?,thumbnail=?,demo_video_url=?,raw_video_url=?,demo_url=?,download_url=?,
-    doc_url=?,file_size=?,product_type=?,
+    doc_url=?,file_size=?,product_type=?,skill_tier=?,
     mcp_endpoint=?,mcp_server_name=?,mcp_clients=?,mcp_tools=?,mcp_skill_prompt=?,mcp_render_webhook=?,
     is_featured=?,is_hot=?,is_new=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(f.name, f.slug, f.category_id, f.short_desc, f.description, f.features, f.tech_stack, f.version,
       f.price, f.original_price, f.thumbnail, f.demo_video_url, f.raw_video_url, f.demo_url, f.download_url, f.doc_url,
-      f.file_size, f.product_type,
+      f.file_size, f.product_type, f.skill_tier,
       f.mcp_endpoint, f.mcp_server_name, f.mcp_clients, f.mcp_tools, f.mcp_skill_prompt, f.mcp_render_webhook,
       f.is_featured, f.is_hot, f.is_new, f.status, id).run()
   invalidateCache()
@@ -2617,6 +2813,122 @@ app.delete('/api/admin/categories/:id', requireAdmin, async (c) => {
   await c.env.DB.prepare('DELETE FROM categories WHERE id=?').bind(c.req.param('id')).run()
   invalidateCache()
   return c.json({ ok: true })
+})
+
+/* ---------------- ADMIN MEMBERSHIPS & PRICING ---------------- */
+app.get('/admin/hoi-vien', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const [plans, membersRes, tierRows] = await Promise.all([
+    getMembershipPlans(db, true),
+    db.prepare(
+      `SELECT um.*, u.full_name, u.email
+       FROM user_memberships um
+       JOIN users u ON u.id = um.user_id
+       ORDER BY um.id DESC LIMIT 100`
+    ).all().catch(() => ({ results: [] })),
+    db.prepare(`SELECT skill_tier, COUNT(*) n FROM products WHERE status='published' GROUP BY skill_tier`).all().catch(() => ({ results: [] }))
+  ])
+  const tierCounts: Record<string, number> = {}
+  for (const r of (tierRows.results || []) as any[]) {
+    if (r.skill_tier) tierCounts[String(r.skill_tier)] = Number(r.n || 0)
+  }
+  const usdRate = getUsdRate(c.get('settings'))
+  return c.html(
+    <AdminMemberships
+      user={c.get('user')!}
+      activeKey="memberships"
+      heading="Hội viên VIP & Bảng giá"
+      plans={plans}
+      members={(membersRes.results || []) as any}
+      usdRate={usdRate}
+      tierCounts={tierCounts}
+    />
+  )
+})
+
+app.post('/api/admin/membership-settings', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const b = await c.req.json<any>()
+  const rate = Math.round(Number(b.usd_vnd_rate) || 27000)
+  if (rate < 10000 || rate > 100000) {
+    return c.json({ error: 'Tỷ giá VNĐ/USD không hợp lệ (10.000 – 100.000)' }, 400)
+  }
+  await db.prepare(
+    `INSERT INTO settings (key, value) VALUES ('usd_vnd_rate', ?) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`
+  ).bind(String(rate)).run().catch(async () => {
+    await db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES ('usd_vnd_rate', ?)`).bind(String(rate)).run()
+  })
+  invalidateCache()
+  return c.json({ ok: true, message: `Đã cập nhật tỷ giá 1 USD = ${formatVND(rate)}!` })
+})
+
+app.post('/api/admin/membership-plans/:id', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = Number(c.req.param('id'))
+  const b = await c.req.json<any>()
+  const name = String(b.name || '').trim()
+  if (!name) return c.json({ error: 'Thiếu tên gói Hội viên' }, 400)
+  const groupType = b.group_type === 'premium' ? 'premium' : 'starter'
+  const themeColor = ['violet', 'orange', 'obsidian', 'blue', 'emerald', 'purple'].includes(b.theme_color) ? b.theme_color : 'indigo'
+  const priceVnd = Math.max(0, Math.round(Number(b.price_vnd) || 0))
+  const durationDays = Math.max(1, Math.round(Number(b.duration_days) || 30))
+  const parseQuota = (v: any) => {
+    const n = Math.round(Number(v))
+    if (!Number.isFinite(n)) return 0
+    return n < 0 ? -1 : n
+  }
+  const v1 = parseQuota(b.vip1_quota)
+  const v2 = parseQuota(b.vip2_quota)
+  const v3 = parseQuota(b.vip3_quota)
+  const v4 = parseQuota(b.vip4_quota)
+  const badge = String(b.badge || '').trim() || null
+  const idealFor = String(b.ideal_for || '').trim() || null
+  const estValue = Math.max(0, Math.round(Number(b.est_value_vnd) || 0))
+  const isPopular = Number(b.is_popular) ? 1 : 0
+  const status = b.status === 'inactive' ? 'inactive' : 'active'
+  const sortOrder = Math.round(Number(b.sort_order) || 0)
+  const autoNote = (v1 < 0 && v2 < 0) ? 'Full VIP I & VIP II (update liên tục)' : null
+
+  await db.prepare(
+    `UPDATE membership_plans
+     SET name=?, group_type=?, badge=?, theme_color=?, price_vnd=?, duration_days=?,
+         vip1_quota=?, vip2_quota=?, vip3_quota=?, vip4_quota=?,
+         auto_update_note=?, ideal_for=?, est_value_vnd=?, is_popular=?, status=?, sort_order=?,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=?`
+  ).bind(name, groupType, badge, themeColor, priceVnd, durationDays, v1, v2, v3, v4, autoNote, idealFor, estValue, isPopular, status, sortOrder, id).run()
+
+  invalidateCache()
+  return c.json({ ok: true, message: `Đã lưu cấu hình gói ${name}!` })
+})
+
+app.post('/api/admin/memberships/grant', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const b = await c.req.json<any>()
+  const email = String(b.email || '').trim().toLowerCase()
+  const planSlug = String(b.plan_slug || '').trim()
+  if (!email || !planSlug) return c.json({ error: 'Vui lòng nhập email và chọn gói Hội viên' }, 400)
+  const user = await db.prepare('SELECT id, full_name, email FROM users WHERE LOWER(email)=?').bind(email).first<any>()
+  if (!user) return c.json({ error: `Không tìm thấy tài khoản với email ${email}` }, 404)
+  const plan = await getMembershipPlanBySlug(db, planSlug)
+  if (!plan) return c.json({ error: 'Không tìm thấy gói Hội viên' }, 404)
+
+  await grantUserMembership(db, { userId: user.id, plan, orderId: null })
+  await createUserNotification(db, {
+    userId: user.id,
+    type: 'admin',
+    title: `Bạn vừa được kích hoạt gói Hội viên ${plan.name}`,
+    message: `Quản trị viên đã kích hoạt gói ${plan.name} (${plan.duration_days} ngày) cho tài khoản của bạn. Truy cập "Hội viên VIP" để chọn Skill ngay.`,
+    linkUrl: '/tai-khoan/hoi-vien'
+  })
+  return c.json({ ok: true, message: `Đã kích hoạt gói ${plan.name} cho ${user.email}!` })
+})
+
+app.post('/api/admin/memberships/:id/cancel', requireAdmin, async (c) => {
+  const db = c.env.DB
+  const id = Number(c.req.param('id'))
+  await db.prepare(`UPDATE user_memberships SET status='cancelled' WHERE id=?`).bind(id).run()
+  return c.json({ ok: true, message: 'Đã thu hồi gói Hội viên!' })
 })
 
 app.get('/admin/ma-giam-gia', requireAdmin, async (c) => {

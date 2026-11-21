@@ -1,11 +1,13 @@
 import type { FC, PropsWithChildren } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
-import { EmptyState, StatusBadge, Stars } from '../components/ui'
-import { formatVND, formatDate, formatDateTime, gradientFor, PRODUCT_TYPE_LABEL, isMcpSkill } from '../lib/utils'
+import { EmptyState, SkillTierBadge, StatusBadge, Stars } from '../components/ui'
+import { formatVND, formatUSD, getUsdRate, SKILL_TIERS, SKILL_TIER_ORDER, normalizeSkillTier, formatDate, formatDateTime, gradientFor, PRODUCT_TYPE_LABEL, isMcpSkill } from '../lib/utils'
+import { getTierQuotaInfo, type UserMembership } from '../lib/tiers'
 import { buildUnifiedMcpConfigs, getSkillQuickStartGuide, resolveMcpServerName } from '../lib/mcp'
 
 const MENU = [
   { href: '/tai-khoan', icon: 'fa-gauge', label: 'Tổng quan', key: 'dash' },
+  { href: '/tai-khoan/hoi-vien', icon: 'fa-crown', label: 'Hội viên VIP', key: 'membership' },
   { href: '/tai-khoan/thong-bao', icon: 'fa-bell', label: 'Thông báo', key: 'notifications' },
   { href: '/tai-khoan/san-pham', icon: 'fa-box-archive', label: 'Sản phẩm của tôi', key: 'products' },
   { href: '/tai-khoan/don-hang', icon: 'fa-receipt', label: 'Đơn hàng', key: 'orders' },
@@ -1177,6 +1179,218 @@ export const ProfilePage: FC<LayoutProps & { profile: any; googleEnabled?: boole
           </div>
         </form>
       </div>
+    </AccountShell>
+  )
+}
+
+/* ---------- Account Membership & Skill Picker ---------- */
+export const AccountMembershipPage: FC<LayoutProps & {
+  membership: UserMembership | null
+  history: UserMembership[]
+  catalog: any[]
+  ownedIds: number[]
+  selectedTier?: string
+}> = (props) => {
+  const { membership, history, catalog, ownedIds, selectedTier = '' } = props
+  const usdRate = getUsdRate(props.settings)
+  const ownedSet = new Set(ownedIds)
+  const daysLeft = membership
+    ? Math.max(0, Math.ceil((new Date(membership.expires_at).getTime() - Date.now()) / 86400_000))
+    : 0
+  const filteredCatalog = selectedTier
+    ? catalog.filter(p => normalizeSkillTier(p.skill_tier, p.price) === selectedTier)
+    : catalog
+
+  return (
+    <AccountShell {...props} activeKey="membership" title="Hội viên VIP" heading="Hội viên VIP & Chọn Skill"
+      sub="Quản lý gói Hội viên, hạn mức VIP I – VIP IV còn lại và nhận Skill tự động vào tài khoản.">
+      {!membership ? (
+        <div class="bg-[#0f0e24] rounded-2xl border border-amber-400/35 p-8 text-center mb-6">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white grid place-items-center text-2xl mx-auto mb-4 shadow-lg shadow-amber-500/25">
+            <i class="fas fa-crown" aria-hidden="true"></i>
+          </div>
+          <h2 class="text-xl font-extrabold text-white mb-2">Bạn chưa kích hoạt gói Hội viên VIP</h2>
+          <p class="text-sm text-[#b8b6d9] max-w-lg mx-auto mb-5 leading-relaxed">
+            Đăng ký gói Hội viên (từ <b>BASIC 199K</b> đến <b>GOLD / BLACK DIAMOND</b>) để mở khoá hàng chục đến <b>Full kho Skill VIP I &amp; VIP II (update liên tục)</b> cùng hàng loạt Skill VIP III &amp; VIP IV tuỳ chọn.
+          </p>
+          <a href="/bang-gia" class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-amber-500/25 transition">
+            <i class="fas fa-crown" aria-hidden="true"></i>Xem bảng giá 6 gói Hội viên →
+          </a>
+        </div>
+      ) : (
+        <div class="space-y-6">
+          {/* Active Plan Hero Card */}
+          <div class="rounded-2xl bg-gradient-to-br from-[#16123a] via-[#12102f] to-[#1a1030] border border-amber-400/45 p-6 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-white/10">
+              <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white grid place-items-center text-xl shadow-lg">
+                  <i class="fas fa-crown" aria-hidden="true"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-xl font-black text-white uppercase">Gói {membership.plan_name}</h2>
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold">Đang hoạt động</span>
+                  </div>
+                  <div class="text-xs text-[#c2c0e0] mt-1 tabular-nums">
+                    Hiệu lực đến <b class="text-white">{formatDate(membership.expires_at)}</b> · Còn <b class="text-amber-300">{daysLeft} ngày</b>
+                  </div>
+                </div>
+              </div>
+              <a href="/bang-gia" class="h-10 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 font-bold text-xs inline-flex items-center gap-1.5 transition">
+                <i class="fas fa-arrow-up-right-dots" aria-hidden="true"></i>Nâng cấp / Gia hạn gói
+              </a>
+            </div>
+
+            {/* 4 Tier Quotas */}
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+              {(['vip1', 'vip2', 'vip3', 'vip4'] as const).map(tk => {
+                const meta = SKILL_TIERS[tk]
+                const q = getTierQuotaInfo(membership, tk)
+                return (
+                  <div class="rounded-xl bg-[#09081b]/80 border border-white/10 p-4">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                      <span class={`px-2 py-0.5 rounded border text-[10px] font-extrabold ${meta.badgeCls}`}>{meta.code}</span>
+                      <span class="text-[11px] text-[#9492b8]">{meta.priceRangeVnd}</span>
+                    </div>
+                    {q.isFull ? (
+                      <>
+                        <div class="text-lg font-black text-emerald-400 leading-tight">FULL</div>
+                        <div class="text-[11px] text-cyan-300 font-semibold mt-0.5">Tự động mở khoá &amp; update liên tục</div>
+                      </>
+                    ) : q.quota === 0 ? (
+                      <>
+                        <div class="text-lg font-black text-slate-500 leading-tight">0 lượt</div>
+                        <div class="text-[11px] text-[#9492b8] mt-0.5">Chưa có trong gói này</div>
+                      </>
+                    ) : (
+                      <>
+                        <div class="text-lg font-black text-white leading-tight tabular-nums">
+                          Còn <span class="text-amber-300">{q.remaining}</span> / {q.quota}
+                        </div>
+                        <div class="text-[11px] text-[#9492b8] mt-0.5 tabular-nums">Đã chọn {q.used} Skill</div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Skill Picker Grid */}
+          <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="font-bold text-white text-base">Chọn nhận Skill theo hạn mức Hội viên</h3>
+                <p class="text-xs text-[#9492b8] mt-0.5">Bấm "Nhận ngay" để mở khoá Skill lập tức vào mục Sản phẩm của tôi (không áp dụng cho SKILL PRO bán lẻ).</p>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <a href="/tai-khoan/hoi-vien"
+                  class={`h-8 px-3 rounded-full text-xs font-bold inline-flex items-center border transition ${!selectedTier ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-[#161436] border-[#221e54] text-[#c2c0e0]'}`}>
+                  Tất cả ({catalog.length})
+                </a>
+                {SKILL_TIER_ORDER.map(tk => {
+                  const m = SKILL_TIERS[tk]
+                  const active = selectedTier === tk
+                  return (
+                    <a href={`/tai-khoan/hoi-vien?tier=${tk}`}
+                      class={`h-8 px-3 rounded-full text-xs font-bold inline-flex items-center gap-1 border transition ${active ? `bg-gradient-to-r ${m.bannerGrad} text-white border-transparent` : `${m.badgeCls}`}`}>
+                      {m.code}
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-3.5">
+              {filteredCatalog.map(p => {
+                const tk = normalizeSkillTier(p.skill_tier, p.price)
+                const meta = SKILL_TIERS[tk]
+                const owned = ownedSet.has(p.id)
+                const q = getTierQuotaInfo(membership, tk)
+                return (
+                  <div class="p-4 rounded-xl bg-[#161436]/75 border border-[#242054] flex items-start gap-3.5">
+                    <a href={`/san-pham/${p.slug}`} class="w-24 aspect-video rounded-lg overflow-hidden shrink-0 bg-[#070614] grid place-items-center text-white"
+                      style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
+                      {p.thumbnail ? <img src={p.thumbnail} alt={p.name} class="w-full h-full object-cover" /> : <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>}
+                    </a>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                        <SkillTierBadge tier={p.skill_tier} price={p.price} />
+                        <span class="text-[11px] text-[#9492b8] tabular-nums">{formatVND(p.price)} ({formatUSD(p.price, usdRate)})</span>
+                      </div>
+                      <a href={`/san-pham/${p.slug}`} class="font-bold text-white text-sm line-clamp-1 hover:text-indigo-300 transition">{p.name}</a>
+                      <div class="mt-2.5 flex items-center gap-2 flex-wrap">
+                        {owned ? (
+                          <a href="/tai-khoan/san-pham" class="h-8 px-3 rounded-lg bg-emerald-500/20 border border-emerald-400/35 text-emerald-300 text-xs font-bold inline-flex items-center gap-1.5">
+                            <i class="fas fa-circle-check" aria-hidden="true"></i>Đã sở hữu · Dùng ngay
+                          </a>
+                        ) : meta.isRetailOnly ? (
+                          <a href={`/san-pham/${p.slug}`} class="h-8 px-3 rounded-lg bg-rose-500/15 border border-rose-400/35 text-rose-200 text-xs font-bold inline-flex items-center gap-1.5 hover:bg-rose-500/25">
+                            <i class="fas fa-star text-[10px]" aria-hidden="true"></i>SKILL PRO · Mua lẻ
+                          </a>
+                        ) : q.eligible ? (
+                          <button type="button" data-claim-pid={p.id}
+                            class="btn-mem-claim h-8 px-3.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-sm">
+                            <i class="fas fa-crown text-[10px]" aria-hidden="true"></i>
+                            {q.isFull ? `Nhận miễn phí (Full ${meta.code})` : `Đổi 1 lượt ${meta.code}`}
+                          </button>
+                        ) : (
+                          <a href={`/san-pham/${p.slug}`} class="h-8 px-3 rounded-lg bg-white/5 border border-white/10 text-[#9492b8] hover:text-white text-xs font-semibold inline-flex items-center gap-1.5">
+                            {q.quota === 0 ? `Gói chưa gồm ${meta.code} · Xem chi tiết` : `Hết lượt ${meta.code} · Mua lẻ`}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div class="mt-6 bg-[#0f0e24] rounded-2xl border border-[#221e54] overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-[#221e54] font-bold text-white text-sm">Lịch sử gói Hội viên</div>
+          <div class="divide-y divide-[#221e54] text-xs">
+            {history.map(h => (
+              <div class="px-5 py-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <b class="text-white">{h.plan_name}</b>
+                  <span class="text-[#9492b8] ml-2 tabular-nums">{formatDate(h.starts_at)} → {formatDate(h.expires_at)}</span>
+                </div>
+                <span class={`px-2 py-0.5 rounded-full font-bold ${h.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-[#9492b8]'}`}>
+                  {h.status === 'active' ? 'Đang hoạt động' : h.status === 'upgraded' ? 'Đã nâng cấp' : h.status === 'expired' ? 'Hết hạn' : 'Đã huỷ'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <script dangerouslySetInnerHTML={{
+        __html: `
+(function(){
+  document.querySelectorAll('.btn-mem-claim').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      var pid = Number(btn.getAttribute('data-claim-pid'));
+      if (!pid) return;
+      var orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Đang mở khoá...';
+      try {
+        var r = await axios.post('/api/account/membership/claim', { product_id: pid });
+        if (window.toast) toast((r.data && r.data.message) || 'Đã mở khoá Skill!', 'success');
+        setTimeout(function(){ location.reload(); }, 600);
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Không thể nhận Skill', 'error');
+      }
+    });
+  });
+})();`
+      }}></script>
     </AccountShell>
   )
 }

@@ -48,6 +48,7 @@ export interface Product {
   doc_url: string | null
   file_size: string | null
   product_type: string
+  skill_tier?: string
   mcp_endpoint?: string | null
   mcp_server_name?: string | null
   mcp_clients?: string | null
@@ -84,6 +85,8 @@ export interface Order {
   total: number
   coupon_code: string | null
   payment_method: string
+  order_type?: string
+  membership_plan_id?: number | null
   status: string
   note: string | null
   paid_at: string | null

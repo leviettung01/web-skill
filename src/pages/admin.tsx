@@ -1,6 +1,7 @@
 import type { FC, PropsWithChildren } from 'hono/jsx'
 import { StatusBadge, Pagination, EmptyState } from '../components/ui'
-import { formatVND, formatDate, formatDateTime, PRODUCT_TYPE_LABEL, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
+import { formatVND, formatUSD, DEFAULT_USD_VND_RATE, SKILL_TIERS, SKILL_TIER_ORDER, getSkillTierMeta, normalizeSkillTier, formatDate, formatDateTime, PRODUCT_TYPE_LABEL, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
+import { formatDurationLabel, type MembershipPlan } from '../lib/tiers'
 import type { SessionUser } from '../lib/types'
 
 interface AdminProps {
@@ -18,6 +19,7 @@ const MENU = [
   { href: '/admin/don-hang', icon: 'fa-receipt', label: 'Đơn hàng', key: 'orders' },
   { href: '/admin/giao-dich', icon: 'fa-building-columns', label: 'Giao dịch NH', key: 'banktx' },
   { href: '/admin/thanh-vien', icon: 'fa-users', label: 'Thành viên', key: 'users' },
+  { href: '/admin/hoi-vien', icon: 'fa-crown', label: 'Hội viên & Bảng giá', key: 'memberships' },
   { href: '/admin/ma-giam-gia', icon: 'fa-ticket', label: 'Mã giảm giá', key: 'coupons' },
   { href: '/admin/bai-viet', icon: 'fa-newspaper', label: 'Bài viết', key: 'posts' },
   { href: '/admin/danh-gia', icon: 'fa-star', label: 'Đánh giá', key: 'reviews' },
@@ -227,10 +229,12 @@ export const AdminProducts: FC<AdminProps & { products: any[]; categories: any[]
       <div class="overflow-x-auto">
         <table class="w-full admin-table text-sm">
           <thead class="bg-slate-50 border-b border-slate-200">
-            <tr><th class="text-left">Sản phẩm</th><th class="text-left">Danh mục</th><th class="text-right">Giá</th><th class="text-center">Đã bán</th><th class="text-center">Trạng thái</th><th class="text-right">Thao tác</th></tr>
+            <tr><th class="text-left">Sản phẩm</th><th class="text-center whitespace-nowrap">Hạng Skill</th><th class="text-left">Danh mục</th><th class="text-right whitespace-nowrap">Giá (VNĐ / $)</th><th class="text-center whitespace-nowrap">Đã bán</th><th class="text-center whitespace-nowrap">Trạng thái</th><th class="text-right whitespace-nowrap">Thao tác</th></tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            {props.products.map(p => (
+            {props.products.map(p => {
+              const tMeta = getSkillTierMeta(p.skill_tier, p.price)
+              return (
               <tr>
                 <td>
                   <div class="font-semibold text-slate-900 line-clamp-1 max-w-xs">{p.name}</div>
@@ -244,10 +248,15 @@ export const AdminProducts: FC<AdminProps & { products: any[]; categories: any[]
                     {p.is_featured === 1 && <span class="text-amber-600 font-semibold">★</span>}
                   </div>
                 </td>
-                <td class="text-slate-600">{p.category_name || '—'}</td>
-                <td class="text-right">
+                <td class="text-center whitespace-nowrap">
+                  <span class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-bold ${tMeta.adminBadgeCls}`}>
+                    <i class={`fas ${tMeta.icon} text-[9px]`}></i>{tMeta.code}
+                  </span>
+                </td>
+                <td class="text-slate-600 text-xs">{p.category_name || '—'}</td>
+                <td class="text-right whitespace-nowrap">
                   <div class="font-bold text-slate-900">{formatVND(p.price)}</div>
-                  {p.original_price > p.price && <div class="text-xs text-slate-400 line-through">{formatVND(p.original_price)}</div>}
+                  <div class="text-[11px] text-slate-500">{formatUSD(p.price)} {p.original_price > p.price && <span class="text-slate-400 line-through ml-1">{formatVND(p.original_price)}</span>}</div>
                 </td>
                 <td class="text-center font-semibold">{p.sold_count}</td>
                 <td class="text-center"><StatusBadge status={p.status} /></td>
@@ -258,7 +267,8 @@ export const AdminProducts: FC<AdminProps & { products: any[]; categories: any[]
                     data-url={`/api/admin/products/${p.id}`} data-name={p.name}><i class="fas fa-trash-can text-xs"></i></button>
                 </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -404,16 +414,67 @@ export const AdminProductForm: FC<AdminProps & { product: any; categories: any[]
 
         <aside class="space-y-5">
           <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
-            <h3 class="font-bold text-slate-900">Giá bán</h3>
+            <h3 class="font-bold text-slate-900">Hạng Skill &amp; Giá bán</h3>
             <div>
-              <label class={labelCls}>Giá bán (VND) *</label>
-              <input type="number" name="price" value={p.price || 0} required min="0" step="1000" class={fieldCls} />
+              <label class={labelCls}>Hạng Skill (VIP Level) *</label>
+              <select name="skill_tier" id="prod-skill-tier" class={fieldCls}>
+                {SKILL_TIER_ORDER.map(tk => {
+                  const m = SKILL_TIERS[tk]
+                  const curTier = p.skill_tier ? normalizeSkillTier(p.skill_tier, p.price) : (p.price ? normalizeSkillTier(null, p.price) : 'vip3')
+                  return (
+                    <option value={tk} selected={curTier === tk}>
+                      {m.code} — {m.priceRangeVnd} ({m.isRetailOnly ? 'Chỉ bán lẻ' : m.priceRangeUsd})
+                    </option>
+                  )
+                })}
+              </select>
+              <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                <b>VIP I–IV</b> dùng được theo hạn mức Gói Hội Viên. <b>SKILL PRO</b> chỉ bán lẻ riêng, không trừ lượt Hội viên.
+              </p>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-sm font-medium text-slate-700">Giá bán (VNĐ) *</label>
+                <span id="prod-usd-preview" class="text-xs font-bold text-indigo-600 tabular-nums">{formatUSD(p.price || 0)} USD</span>
+              </div>
+              <input type="number" name="price" id="prod-price-input" value={p.price || 0} required min="0" step="1000" class={fieldCls} />
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                {[['vip1', '135K ($5)', 135000], ['vip2', '270K ($10)', 270000], ['vip3', '499K', 499000], ['vip4', '999K', 999000], ['pro', '1.5M PRO', 1500000]].map(([tk, lb, val]) => (
+                  <button type="button" data-quick-tier={tk} data-quick-price={val}
+                    class="btn-quick-tier px-2 py-1 rounded-md bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 text-slate-600 text-[11px] font-semibold cursor-pointer">
+                    {lb}
+                  </button>
+                ))}
+              </div>
             </div>
             <div>
               <label class={labelCls}>Giá gốc (gạch ngang)</label>
               <input type="number" name="original_price" value={p.original_price || ''} min="0" step="1000" class={fieldCls} />
             </div>
           </div>
+          <script dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  var inp = document.getElementById('prod-price-input');
+  var sel = document.getElementById('prod-skill-tier');
+  var out = document.getElementById('prod-usd-preview');
+  function updateUsd(){
+    if(!inp || !out) return;
+    var v = Number(inp.value) || 0;
+    if(v <= 0){ out.textContent = '$0 USD'; return; }
+    var u = v / ${DEFAULT_USD_VND_RATE};
+    out.textContent = '~$' + (u < 10 ? u.toFixed(1) : Math.round(u)) + ' USD';
+  }
+  if(inp) inp.addEventListener('input', updateUsd);
+  document.querySelectorAll('.btn-quick-tier').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(sel) sel.value = b.getAttribute('data-quick-tier');
+      if(inp) inp.value = b.getAttribute('data-quick-price');
+      updateUsd();
+    });
+  });
+})();`
+          }}></script>
 
           <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
             <h3 class="font-bold text-slate-900">Phân loại</h3>
@@ -1958,6 +2019,331 @@ export const AdminBankTx: FC<AdminProps & {
         </div>
       </div>
       <Pagination page={props.page} totalPages={props.totalPages} baseUrl={'/admin/giao-dich?status=' + props.status} />
+    </AdminShell>
+  )
+}
+
+/* ---------------- ADMIN MEMBERSHIPS & PRICING MANAGER ---------------- */
+export const AdminMemberships: FC<AdminProps & {
+  plans: MembershipPlan[]
+  members: any[]
+  usdRate: number
+  tierCounts: Record<string, number>
+}> = (props) => {
+  const { plans, members, usdRate, tierCounts } = props
+  const activePlans = plans.filter(p => p.status === 'active').length
+  const activeMembers = members.filter(m => m.status === 'active' && new Date(m.expires_at).getTime() > Date.now()).length
+
+  return (
+    <AdminShell {...props} activeKey="memberships" heading="Hội viên VIP & Bảng giá"
+      sub="Tuỳ chỉnh giá VNĐ/USD, thời hạn & hạn mức VIP I – IV cho từng gói Hội viên (hiển thị realtime tại /bang-gia).">
+      {/* Top KPI + USD Rate Setting */}
+      <div class="grid lg:grid-cols-[1fr_360px] gap-5 mb-6 items-start">
+        <div class="grid sm:grid-cols-4 gap-3.5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4">
+            <div class="text-xs font-semibold text-slate-500">Gói đang bật</div>
+            <div class="text-2xl font-extrabold text-emerald-600 tabular-nums mt-1">{activePlans} / {plans.length}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5"><a href="/bang-gia" target="_blank" class="text-brand-600 hover:underline">Xem /bang-gia ↗</a></div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-4">
+            <div class="text-xs font-semibold text-slate-500">Hội viên đang active</div>
+            <div class="text-2xl font-extrabold text-brand-600 tabular-nums mt-1">{activeMembers}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Tổng {members.length} lượt đăng ký</div>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:col-span-2">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Phân bố Skill theo Hạng</div>
+            <div class="flex flex-wrap gap-1.5">
+              {SKILL_TIER_ORDER.map(tk => {
+                const m = SKILL_TIERS[tk]
+                return (
+                  <span class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-bold ${m.adminBadgeCls}`}>
+                    {m.code}: <b>{tierCounts[tk] || 0}</b>
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* USD Exchange Rate + Manual Grant */}
+        <form id="usd-rate-form" class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <label for="usd-rate-input" class="text-xs font-bold text-slate-800">
+              <i class="fas fa-dollar-sign text-emerald-600 mr-1"></i>Tỷ giá song song (1 USD = ? VNĐ)
+            </label>
+            <span class="text-[11px] text-slate-400">VD: 27000 (135K = $5)</span>
+          </div>
+          <div class="flex gap-2">
+            <input id="usd-rate-input" type="number" name="usd_vnd_rate" value={usdRate} min="10000" max="50000" step="100"
+              class="flex-1 h-10 px-3 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm font-bold tabular-nums" />
+            <button type="submit" class="h-10 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs cursor-pointer">
+              Lưu tỷ giá
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Editable Plans Cards */}
+      <div class="mb-7">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5">
+          <h2 class="font-extrabold text-slate-900 text-base">
+            Cấu hình các gói Hội viên <span class="text-xs font-normal text-slate-500">(Nhập <code>-1</code> ở ô hạn mức = <b>Full · Update liên tục</b>, <code>0</code> = Không)</span>
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {plans.map(pl => (
+            <form class="plan-edit-form bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs flex flex-col" data-plan-id={pl.id}>
+              <div class={`px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-2 ${pl.group_type === 'premium' ? 'bg-amber-50' : 'bg-slate-50'}`}>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${pl.group_type === 'premium' ? 'bg-amber-500 text-white' : 'bg-slate-700 text-white'}`}>
+                    {pl.group_type === 'premium' ? 'Cao cấp' : 'Cơ bản'}
+                  </span>
+                  <span class="font-extrabold text-slate-900 text-sm truncate">{pl.name}</span>
+                </div>
+                <select name="status" class={`h-7 px-2 rounded-full text-[11px] font-bold border outline-none ${pl.status === 'active' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'}`}>
+                  <option value="active" selected={pl.status === 'active'}>● Đang bật</option>
+                  <option value="inactive" selected={pl.status !== 'active'}>○ Đang tắt</option>
+                </select>
+              </div>
+
+              <div class="p-4 space-y-3 text-xs flex-1">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Tên gói</label>
+                    <input type="text" name="name" value={pl.name} required class="w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold text-slate-900" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Nhóm / Màu</label>
+                    <div class="grid grid-cols-2 gap-1.5">
+                      <select name="group_type" class="h-9 px-1.5 rounded-lg border border-slate-200 text-[11px]">
+                        <option value="premium" selected={pl.group_type === 'premium'}>Cao cấp</option>
+                        <option value="starter" selected={pl.group_type !== 'premium'}>Cơ bản</option>
+                      </select>
+                      <select name="theme_color" class="h-9 px-1.5 rounded-lg border border-slate-200 text-[11px]">
+                        {[['violet', 'Tím'], ['orange', 'Cam'], ['obsidian', 'Đen'], ['blue', 'Xanh'], ['emerald', 'Lục'], ['purple', 'Tím hồng']].map(([c, l]) => (
+                          <option value={c} selected={pl.theme_color === c}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Giá VNĐ ({formatUSD(pl.price_vnd, usdRate)})</label>
+                    <input type="number" name="price_vnd" value={pl.price_vnd} min="0" step="1000" required class="w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Thời hạn (ngày)</label>
+                    <input type="number" name="duration_days" value={pl.duration_days} min="1" required class="w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums" />
+                  </div>
+                </div>
+
+                {/* 4 Tier Quotas */}
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <div class="text-[11px] font-bold text-slate-700 mb-2">Hạn mức Skill (-1 = Full update liên tục · 0 = Không)</div>
+                  <div class="grid grid-cols-4 gap-2">
+                    {[
+                      ['vip1_quota', 'VIP I', pl.vip1_quota],
+                      ['vip2_quota', 'VIP II', pl.vip2_quota],
+                      ['vip3_quota', 'VIP III', pl.vip3_quota],
+                      ['vip4_quota', 'VIP IV', pl.vip4_quota]
+                    ].map(([nm, lb, val]) => (
+                      <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">{lb}</label>
+                        <input type="number" name={nm as string} value={val as number} min="-1"
+                          class="w-full h-8 px-2 rounded-lg border border-slate-200 bg-white font-bold text-center tabular-nums" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Nhãn nổi bật (Badge)</label>
+                    <input type="text" name="badge" value={pl.badge || ''} placeholder="VD: PHỔ BIẾN NHẤT" class="w-full h-9 px-2.5 rounded-lg border border-slate-200" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Giá trị quy đổi (đ)</label>
+                    <input type="number" name="est_value_vnd" value={pl.est_value_vnd || 0} min="0" step="10000" class="w-full h-9 px-2.5 rounded-lg border border-slate-200 tabular-nums" />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-[1fr_72px] gap-2.5">
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Phù hợp cho</label>
+                    <input type="text" name="ideal_for" value={pl.ideal_for || ''} class="w-full h-9 px-2.5 rounded-lg border border-slate-200" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Thứ tự</label>
+                    <input type="number" name="sort_order" value={pl.sort_order} class="w-full h-9 px-2 rounded-lg border border-slate-200 text-center tabular-nums" />
+                  </div>
+                </div>
+
+                <label class="inline-flex items-center gap-2 text-slate-700 cursor-pointer pt-1">
+                  <input type="checkbox" name="is_popular" value="1" checked={pl.is_popular === 1} class="accent-brand-600 w-4 h-4" />
+                  <span>Đánh dấu gói nổi bật (PHỔ BIẾN NHẤT)</span>
+                </label>
+              </div>
+
+              <div class="px-4 py-3 bg-slate-50 border-t border-slate-200">
+                <button type="submit" class="w-full h-9 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition cursor-pointer">
+                  <i class="fas fa-floppy-disk mr-1.5"></i>Lưu gói {pl.name}
+                </button>
+              </div>
+            </form>
+          ))}
+        </div>
+      </div>
+
+      {/* Active Members & Manual Grant */}
+      <div class="grid lg:grid-cols-[1fr_340px] gap-5 items-start">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-bold text-slate-900">Danh sách Hội viên ({members.length})</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full admin-table text-sm">
+              <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th class="text-left whitespace-nowrap">Khách hàng</th>
+                  <th class="text-left whitespace-nowrap">Gói</th>
+                  <th class="text-center whitespace-nowrap">VIP I / II / III / IV</th>
+                  <th class="text-left whitespace-nowrap">Hết hạn</th>
+                  <th class="text-center whitespace-nowrap">Trạng thái</th>
+                  <th class="text-right whitespace-nowrap">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {members.length === 0 ? (
+                  <tr><td colspan={6} class="py-10 text-center text-slate-500 text-sm">Chưa có khách đăng ký gói Hội viên nào.</td></tr>
+                ) : members.map(m => {
+                  const fQ = (u: number, q: number) => q < 0 ? 'Full' : `${u}/${q}`
+                  const isLive = m.status === 'active' && new Date(m.expires_at).getTime() > Date.now()
+                  return (
+                    <tr>
+                      <td>
+                        <div class="font-semibold text-slate-900 text-xs">{m.full_name}</div>
+                        <div class="text-[11px] text-slate-500">{m.email}</div>
+                      </td>
+                      <td class="whitespace-nowrap font-bold text-brand-700 text-xs">{m.plan_name}</td>
+                      <td class="text-center font-mono text-xs whitespace-nowrap tabular-nums">
+                        {fQ(m.vip1_used, m.vip1_quota)} · {fQ(m.vip2_used, m.vip2_quota)} · {fQ(m.vip3_used, m.vip3_quota)} · {fQ(m.vip4_used, m.vip4_quota)}
+                      </td>
+                      <td class="text-xs text-slate-600 whitespace-nowrap tabular-nums">{formatDate(m.expires_at)}</td>
+                      <td class="text-center whitespace-nowrap">
+                        <span class={`px-2 py-0.5 rounded-full text-[11px] font-bold ${isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                          {isLive ? 'Đang hoạt động' : m.status === 'upgraded' ? 'Đã nâng cấp' : m.status === 'cancelled' ? 'Đã huỷ' : 'Hết hạn'}
+                        </span>
+                      </td>
+                      <td class="text-right whitespace-nowrap">
+                        {isLive && (
+                          <button type="button" data-cancel-mem={m.id}
+                            class="btn-cancel-mem h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold cursor-pointer">
+                            Thu hồi
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Manual Grant Membership Form */}
+        <form id="grant-membership-form" class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3.5">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <i class="fas fa-gift text-amber-500"></i>Cấp gói Hội viên thủ công
+          </h3>
+          <p class="text-xs text-slate-500">Kích hoạt nhanh gói Hội viên cho 1 tài khoản khách (tự động mở khoá Full VIP I/II nếu gói có quyền).</p>
+          <div>
+            <label class={labelCls}>Email khách hàng *</label>
+            <input type="email" name="email" required placeholder="khach@gmail.com" class={fieldCls} />
+          </div>
+          <div>
+            <label class={labelCls}>Chọn gói Hội viên *</label>
+            <select name="plan_slug" required class={fieldCls}>
+              {plans.map(pl => (
+                <option value={pl.slug}>{pl.name} — {formatVND(pl.price_vnd)} ({formatDurationLabel(pl.duration_days)})</option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" class="w-full h-11 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition cursor-pointer">
+            <i class="fas fa-crown mr-1.5"></i>Kích hoạt gói ngay
+          </button>
+        </form>
+      </div>
+
+      <script dangerouslySetInnerHTML={{
+        __html: `
+(function(){
+  var rateForm = document.getElementById('usd-rate-form');
+  if (rateForm) {
+    rateForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var val = Number(document.getElementById('usd-rate-input').value) || 27000;
+      try {
+        var r = await axios.post('/api/admin/membership-settings', { usd_vnd_rate: val });
+        if (window.toast) toast((r.data && r.data.message) || 'Đã lưu tỷ giá!', 'success');
+        setTimeout(function(){ location.reload(); }, 500);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Lỗi lưu tỷ giá', 'error');
+      }
+    });
+  }
+
+  document.querySelectorAll('.plan-edit-form').forEach(function(form){
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var id = form.getAttribute('data-plan-id');
+      var fd = new FormData(form);
+      var data = {};
+      fd.forEach(function(v, k){ data[k] = v; });
+      data.is_popular = form.querySelector('input[name="is_popular"]').checked ? 1 : 0;
+      try {
+        var r = await axios.post('/api/admin/membership-plans/' + id, data);
+        if (window.toast) toast((r.data && r.data.message) || 'Đã lưu gói Hội viên!', 'success');
+        setTimeout(function(){ location.reload(); }, 500);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Không thể lưu gói', 'error');
+      }
+    });
+  });
+
+  var grantForm = document.getElementById('grant-membership-form');
+  if (grantForm) {
+    grantForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var fd = new FormData(grantForm);
+      var data = { email: fd.get('email'), plan_slug: fd.get('plan_slug') };
+      try {
+        var r = await axios.post('/api/admin/memberships/grant', data);
+        if (window.toast) toast((r.data && r.data.message) || 'Đã cấp gói Hội viên!', 'success');
+        setTimeout(function(){ location.reload(); }, 600);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Không thể cấp gói', 'error');
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-cancel-mem').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      if (!confirm('Thu hồi gói Hội viên đang hoạt động này?')) return;
+      var id = btn.getAttribute('data-cancel-mem');
+      try {
+        var r = await axios.post('/api/admin/memberships/' + id + '/cancel');
+        if (window.toast) toast((r.data && r.data.message) || 'Đã thu hồi gói!', 'success');
+        setTimeout(function(){ location.reload(); }, 500);
+      } catch (err) {
+        if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Lỗi thu hồi', 'error');
+      }
+    });
+  });
+})();`
+      }}></script>
     </AdminShell>
   )
 }

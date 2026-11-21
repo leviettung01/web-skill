@@ -1,7 +1,8 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
-import { Breadcrumb, ProductCard, Stars, SectionTitle } from '../components/ui'
-import { formatVND, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
+import { Breadcrumb, ProductCard, SkillTierBadge, Stars, SectionTitle } from '../components/ui'
+import { formatVND, formatUSD, getUsdRate, getSkillTierMeta, normalizeSkillTier, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
+import { getTierQuotaInfo, type UserMembership } from '../lib/tiers'
 import { buildMcpConfigs } from '../lib/mcp'
 import type { Product } from '../lib/types'
 
@@ -14,11 +15,16 @@ interface Props extends LayoutProps {
   inWishlist: boolean
   canReview: boolean
   ratingBreakdown: Record<number, number>
+  activeMembership?: UserMembership | null
   origin?: string
 }
 
 export const ProductDetailPage: FC<Props> = (props) => {
-  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings, origin = 'https://khoskill.site' } = props
+  const { product: p, related, comboItems, reviews, owned, inWishlist, canReview, ratingBreakdown, user, settings, activeMembership = null, origin = 'https://khoskill.site' } = props
+  const usdRate = getUsdRate(settings)
+  const tierKey = normalizeSkillTier(p.skill_tier, p.price)
+  const tierMeta = getSkillTierMeta(p.skill_tier, p.price)
+  const memQuota = activeMembership ? getTierQuotaInfo(activeMembership, tierKey) : null
   const off = discountPercent(p.price, p.original_price)
   const features = parseJSON<string[]>(p.features, [])
   const tech = parseJSON<string[]>(p.tech_stack, [])
@@ -352,6 +358,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 ) : (
                   <span class="px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 text-xs font-bold">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
                 )}
+                <SkillTierBadge tier={p.skill_tier} price={p.price} showRetail={true} size="sm" />
                 {p.category_name && <a href={`/danh-muc/${p.category_slug}`} class="px-2.5 py-1 rounded bg-[#161436] border border-[#221e54] text-[#c2c0e0] text-xs font-medium hover:text-white hover:border-indigo-500/40 transition">{p.category_name}</a>}
                 {comingSoon ? (
                   <span class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-bold"><i class="fas fa-clock mr-1" aria-hidden="true"></i>CHƯA MỞ BÁN</span>
@@ -381,8 +388,11 @@ export const ProductDetailPage: FC<Props> = (props) => {
 
               {/* Pricing Box */}
               <div class="rounded-2xl border border-indigo-500/35 bg-gradient-to-br from-[#0f0e24] via-[#1a184c]/55 to-[#070614] p-5 mb-4 glow-brand relative overflow-hidden">
-                <div class="flex items-end flex-wrap gap-3 mb-1.5 tabular-nums">
+                <div class="flex items-end flex-wrap gap-2.5 mb-1.5 tabular-nums">
                   <span class="text-3xl md:text-4xl font-extrabold text-rose-400 leading-none">{formatVND(p.price)}</span>
+                  <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/15 text-cyan-200 text-xs font-bold leading-none">
+                    {formatUSD(p.price, usdRate)} USD
+                  </span>
                   {p.original_price && p.original_price > p.price && (
                     <>
                       <span class="text-base text-[#9492b8] line-through leading-none">{formatVND(p.original_price)}</span>
@@ -390,8 +400,21 @@ export const ProductDetailPage: FC<Props> = (props) => {
                     </>
                   )}
                 </div>
-                {save > 0 && <div class="text-xs text-emerald-400 font-bold flex items-center gap-1 tabular-nums"><i class="fas fa-piggy-bank text-sm" aria-hidden="true"></i>Tiết kiệm {formatVND(save)}</div>}
-                <div class="mt-4 pt-3 border-t border-indigo-500/25 text-xs text-[#b8b6d9] flex flex-wrap gap-x-4 gap-y-1.5">
+                {save > 0 && <div class="text-xs text-emerald-400 font-bold flex items-center gap-1 tabular-nums"><i class="fas fa-piggy-bank text-sm" aria-hidden="true"></i>Tiết kiệm {formatVND(save)} ({formatUSD(save, usdRate)})</div>}
+                {tierMeta.isRetailOnly ? (
+                  <div class="mt-3 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/30 text-[11px] text-rose-200 flex items-center gap-2">
+                    <i class="fas fa-star text-amber-300 shrink-0" aria-hidden="true"></i>
+                    <span><b>SKILL PRO (Chỉ bán lẻ riêng)</b> — sản phẩm cao cấp bán rời, không áp dụng đổi lượt từ gói Hội viên.</span>
+                  </div>
+                ) : (
+                  <div class="mt-3 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-400/25 text-[11px] text-indigo-200 flex items-center justify-between gap-2 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5">
+                      <i class={`fas ${tierMeta.icon} ${tierMeta.accentText}`} aria-hidden="true"></i>
+                      <span>Hạng <b>{tierMeta.code}</b> ({tierMeta.subtitle}) · Áp dụng trong <a href="/bang-gia" class="text-amber-300 font-bold hover:underline">Gói Hội Viên VIP</a></span>
+                    </span>
+                  </div>
+                )}
+                <div class="mt-3.5 pt-3 border-t border-indigo-500/25 text-xs text-[#b8b6d9] flex flex-wrap gap-x-4 gap-y-1.5">
                   <span><i class="fas fa-infinity text-indigo-400 mr-1" aria-hidden="true"></i>Sở hữu trọn đời</span>
                   <span><i class="fas fa-bolt text-indigo-400 mr-1" aria-hidden="true"></i>Giao tự động</span>
                   <span><i class="fas fa-rotate-left text-indigo-400 mr-1" aria-hidden="true"></i>Hoàn tiền 7 ngày</span>
@@ -457,9 +480,35 @@ export const ProductDetailPage: FC<Props> = (props) => {
                 </div>
               ) : (
                 <div class="flex flex-col gap-2.5 mb-4">
+                  {/* Active Membership 1-click claim CTA (blocked for SKILL PRO) */}
+                  {!tierMeta.isRetailOnly && activeMembership && memQuota && (
+                    memQuota.eligible ? (
+                      <button type="button" id="btn-claim-membership" data-product-id={p.id}
+                        class="w-full h-12 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition cursor-pointer">
+                        <i class="fas fa-crown" aria-hidden="true"></i>
+                        <span>
+                          {memQuota.isFull
+                            ? `Mở khoá ngay bằng gói ${activeMembership.plan_name} (Miễn phí · Full ${tierMeta.code})`
+                            : `Đổi 1 lượt ${tierMeta.code} từ gói ${activeMembership.plan_name} (Còn ${memQuota.remaining}/${memQuota.quota})`}
+                        </span>
+                      </button>
+                    ) : (
+                      <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-xs text-amber-200 flex items-center justify-between gap-2 flex-wrap">
+                        <span>
+                          <i class="fas fa-crown text-amber-400 mr-1.5" aria-hidden="true"></i>
+                          {memQuota.quota === 0
+                            ? `Gói ${activeMembership.plan_name} chưa bao gồm lượt ${tierMeta.code}.`
+                            : `Gói ${activeMembership.plan_name} đã dùng hết ${memQuota.quota}/${memQuota.quota} lượt ${tierMeta.code}.`}
+                        </span>
+                        <a href="/bang-gia" class="font-bold text-amber-300 hover:underline whitespace-nowrap">Nâng cấp gói →</a>
+                      </div>
+                    )
+                  )}
+                  <div id="membership-claim-msg" class="hidden text-xs rounded-xl px-3 py-2"></div>
+
                   <div class="flex flex-wrap gap-2.5">
                     <button type="button" class="btn-buy-now flex-1 min-w-[150px] h-12 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold hover:opacity-95 transition shadow-lg shadow-rose-500/15 cursor-pointer" data-id={p.id}>
-                      <i class="fas fa-bolt mr-1.5" aria-hidden="true"></i>Mua ngay
+                      <i class="fas fa-bolt mr-1.5" aria-hidden="true"></i>Mua lẻ ngay
                     </button>
                     <button type="button" class="btn-add-cart flex-1 min-w-[150px] h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer" data-id={p.id} data-name={p.name}>
                       <i class="fas fa-cart-plus mr-1.5" aria-hidden="true"></i>Thêm vào giỏ
@@ -470,6 +519,17 @@ export const ProductDetailPage: FC<Props> = (props) => {
                       <i class={`${inWishlist ? 'fas' : 'far'} fa-heart`} aria-hidden="true"></i>
                     </button>
                   </div>
+
+                  {!tierMeta.isRetailOnly && !activeMembership && (
+                    <a href="/bang-gia"
+                      class="flex items-center justify-between gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-fuchsia-500/15 border border-amber-400/35 hover:border-amber-300/70 text-amber-100 text-xs font-bold transition">
+                      <span class="flex items-center gap-2">
+                        <i class="fas fa-crown text-amber-400" aria-hidden="true"></i>
+                        <span>Muốn nhận nhiều Skill {tierMeta.code} với chi phí chỉ từ vài nghìn đồng?</span>
+                      </span>
+                      <span class="text-amber-300 shrink-0 whitespace-nowrap">Xem gói Hội viên →</span>
+                    </a>
+                  )}
 
                   {/* Zalo Consultant CTA Button */}
                   <a href={`https://zalo.me/${settings?.zalo}`} target="_blank" rel="noopener"
@@ -732,7 +792,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
         <section class="max-w-7xl mx-auto px-4 py-10">
           <SectionTitle title="Sản phẩm liên quan" subtitle="Có thể bạn cũng quan tâm" />
           <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {related.map(r => <ProductCard p={r} />)}
+            {related.map(r => <ProductCard p={r} usdRate={usdRate} />)}
           </div>
         </section>
       )}
@@ -744,9 +804,7 @@ export const ProductDetailPage: FC<Props> = (props) => {
             <div class="text-[11px] text-[#9492b8] truncate">{p.name}</div>
             <div class="flex items-baseline gap-2 tabular-nums">
               <span class="text-base font-extrabold text-rose-400">{formatVND(p.price)}</span>
-              {p.original_price && p.original_price > p.price && (
-                <span class="text-[11px] text-[#9492b8] line-through">{formatVND(p.original_price)}</span>
-              )}
+              <span class="text-[11px] text-cyan-200 font-semibold">{formatUSD(p.price, usdRate)}</span>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
@@ -760,6 +818,40 @@ export const ProductDetailPage: FC<Props> = (props) => {
           </div>
         </div>
       )}
+
+      <script dangerouslySetInnerHTML={{
+        __html: `
+(function(){
+  var btn = document.getElementById('btn-claim-membership');
+  if (!btn) return;
+  btn.addEventListener('click', async function(){
+    var pid = Number(btn.getAttribute('data-product-id'));
+    if (!pid) return;
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Đang kích hoạt bằng gói Hội viên...';
+    var msg = document.getElementById('membership-claim-msg');
+    try {
+      var res = await axios.post('/api/account/membership/claim', { product_id: pid });
+      if (msg) {
+        msg.className = 'text-xs rounded-xl px-3.5 py-2.5 bg-emerald-500/15 border border-emerald-400/35 text-emerald-200 font-semibold';
+        msg.textContent = (res.data && res.data.message) || 'Đã mở khoá Skill thành công!';
+        msg.classList.remove('hidden');
+      }
+      setTimeout(function(){ location.href = '/tai-khoan/san-pham'; }, 900);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      var txt = (err.response && err.response.data && err.response.data.error) || 'Không thể đổi lượt Hội viên';
+      if (msg) {
+        msg.className = 'text-xs rounded-xl px-3.5 py-2.5 bg-rose-500/15 border border-rose-400/35 text-rose-200 font-semibold';
+        msg.textContent = txt;
+        msg.classList.remove('hidden');
+      }
+    }
+  });
+})();`
+      }}></script>
     </Layout>
   )
 }

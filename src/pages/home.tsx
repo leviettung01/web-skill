@@ -1,7 +1,7 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { ProductCard, CategoryCard, SectionTitle, PostCard, Stars } from '../components/ui'
-import { formatVND } from '../lib/utils'
+import { formatVND, getUsdRate, SKILL_TIERS, SKILL_TIER_ORDER } from '../lib/utils'
 import type { Product, Category } from '../lib/types'
 
 interface Props extends LayoutProps {
@@ -326,6 +326,7 @@ const DEMO_VIDEOS = [
 export const HomePage: FC<Props> = (props) => {
   const { categories, featured, mcpSkills = [], manualSkills = [], hot, newest, comingSoon, posts, reviews, stats } = props
   const siteName = props.settings?.site_name || 'KhoSkill AI'
+  const usdRate = getUsdRate(props.settings)
   return (
     <Layout {...props} active="home">
       <script id="demo-videos-json" type="application/json" dangerouslySetInnerHTML={{ __html: JSON.stringify(DEMO_VIDEOS).replace(/</g, '\\u003c') }}></script>
@@ -805,9 +806,43 @@ export const HomePage: FC<Props> = (props) => {
 
             {mcpSkills.length > 0 && (
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {mcpSkills.slice(0, 6).map(p => <ProductCard p={p} />)}
+                {mcpSkills.slice(0, 6).map(p => <ProductCard p={p} usdRate={usdRate} />)}
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ VIP SKILL TIERS & MEMBERSHIP HIGHLIGHT ============ */}
+      <section class="max-w-7xl mx-auto px-4 py-4 reveal">
+        <div class="rounded-3xl bg-gradient-to-r from-[#16113a] via-[#1b1240] to-[#261233] border border-amber-400/35 p-6 md:p-8 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[11px] font-black uppercase tracking-wider mb-2">
+                <i class="fas fa-crown text-amber-400" aria-hidden="true"></i>Phân hạng Skill VIP &amp; Gói Hội Viên
+              </div>
+              <h2 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Chọn mua lẻ theo hạng hoặc đăng ký Hội viên từ 199K (~$7)</h2>
+              <p class="text-xs sm:text-sm text-[#c2c0e0] mt-1">Từ gói <b>PREMIUM / GOLD / BLACK DIAMOND</b>: mở khoá <b>Full Skill VIP I &amp; VIP II (update liên tục)</b> + hạn mức VIP III &amp; VIP IV tuỳ chọn.</p>
+            </div>
+            <a href="/bang-gia" class="h-11 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-sm inline-flex items-center gap-2 shadow-lg shadow-amber-500/25 transition shrink-0">
+              <i class="fas fa-crown" aria-hidden="true"></i>Xem Bảng giá Hội viên →
+            </a>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {SKILL_TIER_ORDER.map(tk => {
+              const m = SKILL_TIERS[tk]
+              return (
+                <a href={`/san-pham?tier=${tk}`}
+                  class={`rounded-xl p-3 bg-gradient-to-r ${m.bannerGrad} text-white hover:-translate-y-0.5 transition flex items-center justify-between gap-2`}>
+                  <div class="min-w-0">
+                    <div class="text-xs font-black tracking-wide">{m.code}</div>
+                    <div class="text-xs font-bold text-white/95 mt-0.5 tabular-nums">{m.priceRangeVnd}</div>
+                    <div class="text-[10px] text-white/85 truncate">{m.priceRangeUsd} · {m.subtitle}</div>
+                  </div>
+                  <i class={`fas ${m.icon} text-white/80 text-sm shrink-0`} aria-hidden="true"></i>
+                </a>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -839,27 +874,27 @@ export const HomePage: FC<Props> = (props) => {
 
         <div role="tabpanel" class="tab-panel" data-tab="featured" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {featured.slice(0, 12).map(p => <ProductCard p={p} />)}
+            {featured.slice(0, 12).map(p => <ProductCard p={p} usdRate={usdRate} />)}
           </div>
         </div>
         <div role="tabpanel" class="tab-panel hidden" data-tab="mcp" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {mcpSkills.slice(0, 8).map(p => <ProductCard p={p} />)}
+            {mcpSkills.slice(0, 8).map(p => <ProductCard p={p} usdRate={usdRate} />)}
           </div>
         </div>
         <div role="tabpanel" class="tab-panel hidden" data-tab="manual" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {manualSkills.slice(0, 8).map(p => <ProductCard p={p} />)}
+            {manualSkills.slice(0, 8).map(p => <ProductCard p={p} usdRate={usdRate} />)}
           </div>
         </div>
         <div role="tabpanel" class="tab-panel hidden" data-tab="hot" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {hot.slice(0, 8).map(p => <ProductCard p={p} />)}
+            {hot.slice(0, 8).map(p => <ProductCard p={p} usdRate={usdRate} />)}
           </div>
         </div>
         <div role="tabpanel" class="tab-panel hidden" data-tab="new" data-group="hp">
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {newest.slice(0, 8).map(p => <ProductCard p={p} />)}
+            {newest.slice(0, 8).map(p => <ProductCard p={p} usdRate={usdRate} />)}
           </div>
         </div>
       </section>

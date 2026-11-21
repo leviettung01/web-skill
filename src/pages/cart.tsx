@@ -1,7 +1,8 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { Breadcrumb, EmptyState, StatusBadge } from '../components/ui'
-import { formatVND, gradientFor, PRODUCT_TYPE_LABEL, formatDateTime, vietQrUrl } from '../lib/utils'
+import { formatVND, formatUSD, getUsdRate, gradientFor, PRODUCT_TYPE_LABEL, formatDateTime, vietQrUrl } from '../lib/utils'
+import { formatDurationLabel, type MembershipPlan } from '../lib/tiers'
 import type { Product, Order } from '../lib/types'
 
 const CheckoutSteps: FC<{ step: 1 | 2 | 3 }> = ({ step }) => {
@@ -36,6 +37,7 @@ const CheckoutSteps: FC<{ step: 1 | 2 | 3 }> = ({ step }) => {
 /* ================= CART ================= */
 export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> = (props) => {
   const { items, subtotal } = props
+  const usdRate = getUsdRate(props.settings)
   return (
     <Layout {...props} title="Giỏ hàng">
       <div class="max-w-7xl mx-auto px-4 py-8">
@@ -66,10 +68,11 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
                     </h3>
                     <div class="text-xs text-[#9492b8] mb-2">{p.version} · Sở hữu trọn đời</div>
                     <div class="flex items-end justify-between gap-3">
-                      <div class="tabular-nums">
+                      <div class="tabular-nums flex items-baseline gap-1.5 flex-wrap">
                         {p.original_price && p.original_price > p.price &&
-                          <span class="text-xs text-[#9492b8] line-through mr-2">{formatVND(p.original_price)}</span>}
+                          <span class="text-xs text-[#9492b8] line-through">{formatVND(p.original_price)}</span>}
                         <span class="text-lg font-extrabold text-rose-400">{formatVND(p.price)}</span>
+                        <span class="text-xs text-[#9492b8] font-semibold">{formatUSD(p.price, usdRate)}</span>
                       </div>
                       <button type="button" class="btn-remove-cart w-9 h-9 rounded-lg bg-white/5 hover:bg-rose-500/15 text-[#9492b8] hover:text-rose-400 grid place-items-center text-sm transition cursor-pointer"
                         data-id={p.id} aria-label={`Xoá ${p.name} khỏi giỏ hàng`} title="Xoá">
@@ -94,7 +97,10 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
                 </div>
                 <div class="flex justify-between items-end py-4 tabular-nums">
                   <span class="font-bold text-white">Tổng cộng</span>
-                  <span class="text-2xl font-extrabold text-rose-400">{formatVND(subtotal)}</span>
+                  <div class="text-right">
+                    <div class="text-2xl font-extrabold text-rose-400 leading-none">{formatVND(subtotal)}</div>
+                    <div class="text-xs text-[#9492b8] mt-1">{formatUSD(subtotal, usdRate)} USD</div>
+                  </div>
                 </div>
                 <a href="/thanh-toan" class="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition">
                   <i class="fas fa-lock" aria-hidden="true"></i>Tiến hành thanh toán
@@ -319,9 +325,11 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
 
 /* ================= ORDER DETAIL / PAYMENT ================= */
 export const OrderPage: FC<LayoutProps & {
-  order: Order; items: any[]; bank: Record<string, string>; isNew?: boolean; holdExpiresAt?: string | null
+  order: Order; items: any[]; bank: Record<string, string>; isNew?: boolean; holdExpiresAt?: string | null; membershipPlan?: MembershipPlan | null
 }> = (props) => {
-  const { order, items, bank, holdExpiresAt } = props
+  const { order, items, bank, holdExpiresAt, membershipPlan } = props
+  const usdRate = getUsdRate(props.settings)
+  const isMembershipOrder = order.order_type === 'membership'
   const content = order.order_code
   const qr = vietQrUrl(bank.bank_code, bank.bank_account, order.total, content, bank.bank_owner)
 
@@ -349,13 +357,27 @@ export const OrderPage: FC<LayoutProps & {
         {order.status === 'paid' && (
           <div class="rounded-2xl bg-emerald-500/15 border border-emerald-500/35 p-6 mb-6 text-center">
             <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white grid place-items-center text-2xl mx-auto mb-3 shadow-lg shadow-emerald-500/25">
-              <i class="fas fa-check" aria-hidden="true"></i>
+              <i class={`fas ${isMembershipOrder ? 'fa-crown' : 'fa-check'}`} aria-hidden="true"></i>
             </div>
-            <h2 class="text-xl font-extrabold text-white mb-1.5">Thanh toán thành công!</h2>
-            <p class="text-sm text-emerald-200 mb-4">Bộ Skill AI / cấu hình kết nối MCP đã được kích hoạt trong tài khoản của bạn.</p>
-            <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
-              <i class="fas fa-box-open" aria-hidden="true"></i>Mở Sản phẩm của tôi ngay
-            </a>
+            <h2 class="text-xl font-extrabold text-white mb-1.5">
+              {isMembershipOrder ? `Gói Hội viên ${membershipPlan?.name || ''} đã kích hoạt!` : 'Thanh toán thành công!'}
+            </h2>
+            <p class="text-sm text-emerald-200 mb-4">
+              {isMembershipOrder
+                ? 'Hạn mức chọn Skill VIP I – IV (và quyền Full VIP I/II nếu có) đã được mở khoá trong tài khoản của bạn.'
+                : 'Bộ Skill AI / cấu hình kết nối MCP đã được kích hoạt trong tài khoản của bạn.'}
+            </p>
+            <div class="flex flex-wrap justify-center gap-2.5">
+              <a href={isMembershipOrder ? '/tai-khoan/hoi-vien' : '/tai-khoan/san-pham'} class="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
+                <i class={`fas ${isMembershipOrder ? 'fa-crown' : 'fa-box-open'}`} aria-hidden="true"></i>
+                {isMembershipOrder ? 'Mở Hội viên & chọn Skill ngay' : 'Mở Sản phẩm của tôi ngay'}
+              </a>
+              {isMembershipOrder && (
+                <a href="/tai-khoan/san-pham" class="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#161436] border border-[#2a2559] text-white font-semibold text-sm hover:border-indigo-400 transition">
+                  Xem Sản phẩm của tôi
+                </a>
+              )}
+            </div>
           </div>
         )}
 
@@ -448,7 +470,26 @@ export const OrderPage: FC<LayoutProps & {
                 <StatusBadge status={order.status} />
               </div>
               <div class="p-5 space-y-3">
-                {items.map(it => (
+                {isMembershipOrder && membershipPlan ? (
+                  <div class="flex gap-3.5 items-center">
+                    <div class="w-16 h-12 rounded-xl shrink-0 grid place-items-center text-white bg-gradient-to-br from-amber-500 to-orange-600 shadow-md">
+                      <i class="fas fa-crown text-lg" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="font-bold text-white text-sm">Gói Hội viên {membershipPlan.name} ({formatDurationLabel(membershipPlan.duration_days)})</div>
+                      <div class="text-xs text-[#9492b8] mt-0.5">
+                        VIP I: {membershipPlan.vip1_quota < 0 ? 'Full' : membershipPlan.vip1_quota} ·
+                        VIP II: {membershipPlan.vip2_quota < 0 ? 'Full' : membershipPlan.vip2_quota} ·
+                        VIP III: {membershipPlan.vip3_quota < 0 ? 'Full' : membershipPlan.vip3_quota} ·
+                        VIP IV: {membershipPlan.vip4_quota < 0 ? 'Full' : membershipPlan.vip4_quota}
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0 tabular-nums">
+                      <div class="font-bold text-white text-sm">{formatVND(order.subtotal)}</div>
+                      <div class="text-[11px] text-[#9492b8]">{formatUSD(order.subtotal, usdRate)}</div>
+                    </div>
+                  </div>
+                ) : items.map(it => (
                   <div class="flex gap-3.5 items-center pb-3 border-b border-[#221e54] last:border-0 last:pb-0">
                     <div class="w-16 aspect-video rounded-lg shrink-0 grid place-items-center text-white"
                       style={`background:${gradientFor(it.product_id)}`}><i class="fas fa-wand-magic-sparkles text-sm" aria-hidden="true"></i></div>
@@ -456,7 +497,10 @@ export const OrderPage: FC<LayoutProps & {
                       <div class="font-semibold text-white text-sm line-clamp-2 leading-snug">{it.product_name}</div>
                       {it.slug && <a href={`/san-pham/${it.slug}`} class="text-xs text-indigo-400 hover:underline">Xem sản phẩm</a>}
                     </div>
-                    <div class="font-bold text-white text-sm shrink-0 tabular-nums">{formatVND(it.price)}</div>
+                    <div class="text-right shrink-0 tabular-nums">
+                      <div class="font-bold text-white text-sm">{formatVND(it.price)}</div>
+                      <div class="text-[11px] text-[#9492b8]">{formatUSD(it.price, usdRate)}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -479,7 +523,10 @@ export const OrderPage: FC<LayoutProps & {
                 )}
                 <div class="flex justify-between items-end pt-2.5 border-t border-[#221e54]">
                   <span class="font-bold text-white">Tổng cộng</span>
-                  <span class="text-xl font-extrabold text-rose-400">{formatVND(order.total)}</span>
+                  <div class="text-right">
+                    <div class="text-xl font-extrabold text-rose-400 leading-none">{formatVND(order.total)}</div>
+                    <div class="text-xs text-[#9492b8] mt-1">{formatUSD(order.total, usdRate)} USD</div>
+                  </div>
                 </div>
               </div>
               {order.note && (
@@ -615,6 +662,245 @@ export const OrderPage: FC<LayoutProps & {
   // Kiểm tra ngay khi tải trang
   check(true);
 })();`}}></script>
+    </Layout>
+  )
+}
+
+/* ================= MEMBERSHIP CHECKOUT ================= */
+export const MembershipCheckoutPage: FC<LayoutProps & {
+  plan: MembershipPlan; balance: number; isDemoFree?: boolean
+}> = (props) => {
+  const { plan, balance, isDemoFree = false } = props
+  const usdRate = getUsdRate(props.settings)
+  const subtotal = plan.price_vnd
+  const fmtQuota = (q: number, label: string) =>
+    q < 0 ? `Full ${label} (Update liên tục)` : q > 0 ? `${q} Skill ${label}` : 'Không'
+
+  return (
+    <Layout {...props} active="pricing" title={`Đăng ký gói Hội viên ${plan.name}`}>
+      <div class="max-w-5xl mx-auto px-4 py-8">
+        <Breadcrumb items={[{ label: 'Bảng giá Hội viên', href: '/bang-gia' }, { label: `Đăng ký ${plan.name}` }]} />
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-6">
+          Đăng ký gói Hội viên <span class="text-amber-300">{plan.name}</span>
+        </h1>
+
+        <form id="mem-checkout-form" class="grid lg:grid-cols-[1fr_360px] gap-6">
+          <div class="space-y-5">
+            {/* Customer Info */}
+            <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
+              <h2 class="font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-user text-indigo-400" aria-hidden="true"></i>Tài khoản kích hoạt
+              </h2>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-[#b8b6d9] mb-1.5">Họ tên</label>
+                  <input type="text" value={props.user?.full_name} disabled class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-sm text-[#c2c0e0]" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-[#b8b6d9] mb-1.5">Email kích hoạt</label>
+                  <input type="text" value={props.user?.email} disabled class="w-full h-11 px-3.5 rounded-xl bg-[#161436] border border-[#221e54] text-sm text-[#c2c0e0]" />
+                </div>
+              </div>
+              <div class="mt-4">
+                <label for="mem-checkout-note" class="block text-xs font-semibold text-[#b8b6d9] mb-1.5">Ghi chú <span class="text-[#9492b8] font-normal">(tuỳ chọn)</span></label>
+                <textarea id="mem-checkout-note" rows={2} placeholder="Ghi chú thêm cho đơn đăng ký hội viên..."
+                  class="w-full p-3 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm resize-none"></textarea>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
+              <h2 class="font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-credit-card text-indigo-400" aria-hidden="true"></i>Phương thức thanh toán
+              </h2>
+              {isDemoFree && (
+                <div class="mb-4 p-4 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-xs text-emerald-200 leading-relaxed">
+                  <div class="font-extrabold text-emerald-300 text-sm mb-1 flex items-center gap-1.5">
+                    <i class="fas fa-flask" aria-hidden="true"></i>Tài khoản Khách Demo — Kích hoạt Hội viên 0đ ngay
+                  </div>
+                  Bấm nút kích hoạt bên phải để mở khoá ngay gói <b>{plan.name}</b> mà không cần chuyển khoản.
+                </div>
+              )}
+              <div class="space-y-3">
+                <label class="flex items-start gap-3.5 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 cursor-pointer">
+                  <input type="radio" name="payment_method" value="bank" checked class="mt-1 accent-indigo-500" />
+                  <div class="w-10 h-10 rounded-xl bg-indigo-600/25 border border-indigo-500/35 text-indigo-300 grid place-items-center shrink-0">
+                    <i class="fas fa-qrcode" aria-hidden="true"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-bold text-white text-sm flex items-center justify-between gap-2 flex-wrap">
+                      <span>Chuyển khoản VietQR (Ngân hàng / MoMo)</span>
+                      <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">TỰ ĐỘNG 24/7</span>
+                    </div>
+                    <p class="text-xs text-[#b8b6d9] mt-0.5">Quét mã QR — kích hoạt gói Hội viên ngay khi nhận giao dịch.</p>
+                  </div>
+                </label>
+
+                <label class={`flex items-start gap-3.5 p-4 rounded-xl border border-[#221e54] bg-[#161436]/50 ${balance < subtotal ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50'}`}>
+                  <input type="radio" name="payment_method" value="balance" disabled={balance < subtotal} class="mt-1 accent-indigo-500" />
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 grid place-items-center shrink-0">
+                    <i class="fas fa-wallet" aria-hidden="true"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-bold text-white text-sm">Số dư ví (<span class="text-emerald-400 tabular-nums">{formatVND(balance)}</span>)</div>
+                    <p class="text-xs text-[#9492b8] mt-0.5">{balance < subtotal ? 'Số dư không đủ cho gói này' : 'Thanh toán tức thì bằng số dư ví'}</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Coupon */}
+            <div class="bg-[#0f0e24] rounded-2xl border border-[#221e54] p-5">
+              <label for="mem-coupon-input" class="font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fas fa-ticket text-indigo-400" aria-hidden="true"></i>Mã giảm giá
+              </label>
+              <p class="text-xs text-[#9492b8] mb-3">Nhập mã khuyến mãi (nếu có). Mã được giữ tạm trong <b class="text-white">10 phút</b> khi chờ thanh toán.</p>
+              <div class="flex gap-2">
+                <input id="mem-coupon-input" type="text" placeholder="Nhập mã giảm giá..." style="text-transform:uppercase"
+                  class="flex-1 h-11 px-3.5 rounded-xl bg-[#161436] border border-[#2a2559] focus:border-indigo-500 text-white placeholder-[#9492b8] outline-none text-sm font-mono" />
+                <button type="button" id="mem-apply-coupon" class="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer">Áp dụng</button>
+                <button type="button" id="mem-clear-coupon" class="hidden h-11 px-3.5 rounded-xl border border-[#2e2968] hover:border-rose-400 text-[#c2c0e0] hover:text-rose-300 font-semibold text-xs transition cursor-pointer">Bỏ mã</button>
+              </div>
+              <div id="mem-coupon-msg" class="mt-2.5 text-sm hidden" role="status"></div>
+            </div>
+          </div>
+
+          {/* Summary Sidebar */}
+          <aside class="lg:sticky-side">
+            <div class="bg-[#0f0e24] rounded-2xl border border-amber-400/35 p-5">
+              <div class="flex items-center gap-3 pb-4 border-b border-[#221e54]">
+                <span class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white grid place-items-center text-lg shrink-0 shadow-lg">
+                  <i class="fas fa-crown" aria-hidden="true"></i>
+                </span>
+                <div class="min-w-0">
+                  <div class="font-black text-white text-base">Gói {plan.name}</div>
+                  <div class="text-xs text-amber-300 font-semibold">{formatDurationLabel(plan.duration_days)}</div>
+                </div>
+              </div>
+
+              <ul class="space-y-2 py-4 border-b border-[#221e54] text-xs text-[#d6d4ee]">
+                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP I</span><b class="text-white text-right">{fmtQuota(plan.vip1_quota, 'VIP I')}</b></li>
+                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP II</span><b class="text-white text-right">{fmtQuota(plan.vip2_quota, 'VIP II')}</b></li>
+                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP III</span><b class="text-white text-right">{fmtQuota(plan.vip3_quota, 'VIP III')}</b></li>
+                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP IV</span><b class="text-white text-right">{fmtQuota(plan.vip4_quota, 'VIP IV')}</b></li>
+                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">SKILL PRO</span><span class="text-rose-300 font-semibold">Chỉ bán lẻ riêng</span></li>
+              </ul>
+
+              <div class="space-y-2 text-sm py-4 border-b border-[#221e54] tabular-nums">
+                <div class="flex justify-between">
+                  <span class="text-[#9492b8]">Giá gói</span>
+                  <div class="text-right">
+                    <b class="text-white">{formatVND(subtotal)}</b>
+                    <span class="text-xs text-[#9492b8] ml-1">({formatUSD(subtotal, usdRate)})</span>
+                  </div>
+                </div>
+                {isDemoFree ? (
+                  <div class="flex justify-between"><span class="text-[#9492b8]">Ưu đãi Demo Test</span><b class="text-emerald-400">-{formatVND(subtotal)}</b></div>
+                ) : (
+                  <div class="flex justify-between" id="mem-discount-row" style="display:none">
+                    <span class="text-[#9492b8]">Giảm giá</span><b class="text-emerald-400" id="mem-sum-discount">-0đ</b>
+                  </div>
+                )}
+              </div>
+
+              <div class="flex justify-between items-end py-4 tabular-nums">
+                <span class="font-bold text-white">Tổng thanh toán</span>
+                <div class="text-right">
+                  <div class={`text-2xl font-extrabold leading-none ${isDemoFree ? 'text-emerald-400' : 'text-rose-400'}`} id="mem-sum-total">
+                    {isDemoFree ? '0đ' : formatVND(subtotal)}
+                  </div>
+                  {!isDemoFree && <div class="text-xs text-[#9492b8] mt-1" id="mem-sum-usd">{formatUSD(subtotal, usdRate)} USD</div>}
+                </div>
+              </div>
+
+              <button type="submit" id="mem-place-order-btn"
+                class={`flex items-center justify-center gap-2 w-full h-12 rounded-xl text-white font-extrabold hover:opacity-95 shadow-lg transition cursor-pointer ${isDemoFree ? 'bg-gradient-to-r from-emerald-500 to-cyan-600 shadow-emerald-500/25' : 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 shadow-amber-500/25'}`}>
+                <i class="fas fa-crown" aria-hidden="true"></i>
+                {isDemoFree ? `Kích hoạt ${plan.name} Demo (0đ)` : `Thanh toán gói ${plan.name}`}
+              </button>
+              <a href="/bang-gia" class="block text-center text-xs text-[#9492b8] hover:text-white mt-3">← Chọn lại gói Hội viên khác</a>
+            </div>
+          </aside>
+        </form>
+      </div>
+
+      <script dangerouslySetInnerHTML={{
+        __html: `
+(function(){
+  var subtotal = ${subtotal};
+  var usdRate = ${usdRate};
+  var isDemoFree = ${isDemoFree ? 'true' : 'false'};
+  var planSlug = ${JSON.stringify(plan.slug)};
+  var coupon = null, discount = 0;
+  function fmt(n){ return new Intl.NumberFormat('vi-VN').format(n)+'đ'; }
+  function fmtUsd(n){
+    if(n<=0) return '$0 USD';
+    var u = n / usdRate;
+    return '~$' + (u < 10 ? u.toFixed(1) : Math.round(u)) + ' USD';
+  }
+  function render(){
+    if (isDemoFree) return;
+    var sd = document.getElementById('mem-sum-discount');
+    var dr = document.getElementById('mem-discount-row');
+    var st = document.getElementById('mem-sum-total');
+    var su = document.getElementById('mem-sum-usd');
+    var finalAmt = Math.max(0, subtotal - discount);
+    if (sd) sd.textContent = '-' + fmt(discount);
+    if (dr) dr.style.display = discount > 0 ? 'flex' : 'none';
+    if (st) st.textContent = fmt(finalAmt);
+    if (su) su.textContent = fmtUsd(finalAmt);
+  }
+  var clearBtn = document.getElementById('mem-clear-coupon');
+  if (clearBtn) {
+    clearBtn.onclick = async function(){
+      coupon = null; discount = 0; render();
+      document.getElementById('mem-coupon-input').value = '';
+      clearBtn.classList.add('hidden');
+      var msg = document.getElementById('mem-coupon-msg');
+      if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
+      try { await axios.post('/api/coupons/release'); } catch(e){}
+    };
+  }
+  document.getElementById('mem-apply-coupon').onclick = async function(){
+    var code = (document.getElementById('mem-coupon-input').value || '').trim().toUpperCase();
+    var msg = document.getElementById('mem-coupon-msg');
+    if (!code) return;
+    try {
+      var r = await axios.post('/api/coupons/check', { code: code, subtotal: subtotal });
+      coupon = r.data.code || code; discount = r.data.discount; render();
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      var holdMin = r.data.hold_minutes || 10;
+      msg.className = 'mt-2.5 text-sm text-emerald-400';
+      msg.innerHTML = '<i class="fas fa-circle-check mr-1"></i>Áp dụng thành công! Giảm <b>' + fmt(discount) + '</b> · Giữ tạm mã trong <b>' + holdMin + ' phút</b>.';
+      msg.classList.remove('hidden');
+    } catch (e) {
+      coupon = null; discount = 0; render();
+      if (clearBtn) clearBtn.classList.add('hidden');
+      msg.className = 'mt-2.5 text-sm text-rose-400';
+      msg.innerHTML = '<i class="fas fa-circle-xmark mr-1"></i>' + ((e.response && e.response.data && e.response.data.error) || 'Mã không hợp lệ');
+      msg.classList.remove('hidden');
+    }
+  };
+  document.getElementById('mem-checkout-form').onsubmit = async function(e){
+    e.preventDefault();
+    var btn = document.getElementById('mem-place-order-btn'); var o = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Đang tạo đơn...';
+    try {
+      var pm = document.querySelector('input[name=payment_method]:checked').value;
+      var r = await axios.post('/api/membership/orders/create', {
+        plan_slug: planSlug,
+        payment_method: pm,
+        coupon_code: coupon,
+        note: document.getElementById('mem-checkout-note').value
+      });
+      location.href = '/don-hang/' + r.data.order_code;
+    } catch (err) {
+      btn.disabled = false; btn.innerHTML = o;
+      if (window.toast) toast((err.response && err.response.data && err.response.data.error) || 'Không thể tạo đơn hội viên', 'error');
+    }
+  };
+})();`
+      }}></script>
     </Layout>
   )
 }

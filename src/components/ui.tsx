@@ -1,6 +1,19 @@
 import type { FC } from 'hono/jsx'
 import type { Product, Category } from '../lib/types'
-import { formatVND, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isMcpSkill, parseMcpClients } from '../lib/utils'
+import { formatVND, formatUSD, DEFAULT_USD_VND_RATE, getSkillTierMeta, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isMcpSkill, parseMcpClients } from '../lib/utils'
+
+export const SkillTierBadge: FC<{ tier?: string | null; price?: number; showRetail?: boolean; size?: 'xs' | 'sm' }> = ({ tier, price, showRetail = false, size = 'xs' }) => {
+  const meta = getSkillTierMeta(tier, price)
+  const cls = size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-2 py-0.5 text-[10px]'
+  return (
+    <span class={`inline-flex items-center gap-1 rounded border font-extrabold uppercase tracking-wide whitespace-nowrap ${cls} ${meta.badgeCls}`}
+      title={meta.isRetailOnly ? 'SKILL PRO — Chỉ bán lẻ riêng, không áp dụng gói Hội viên' : `Hạng ${meta.code} (${meta.priceRangeVnd} · ${meta.priceRangeUsd})`}>
+      <i class={`fas ${meta.icon} text-[9px]`} aria-hidden="true"></i>
+      <span>{meta.code}</span>
+      {showRetail && meta.isRetailOnly && <span class="opacity-85 font-semibold normal-case">· Chỉ bán lẻ</span>}
+    </span>
+  )
+}
 
 export const Stars: FC<{ rating: number; size?: string }> = ({ rating, size = 'text-xs' }) => (
   <span class={`text-amber-400 ${size}`} aria-label={`Đánh giá ${rating.toFixed(1)} trên 5 sao`}>
@@ -10,11 +23,12 @@ export const Stars: FC<{ rating: number; size?: string }> = ({ rating, size = 't
   </span>
 )
 
-export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact }) => {
+export const ProductCard: FC<{ p: Product; compact?: boolean; usdRate?: number }> = ({ p, compact, usdRate = DEFAULT_USD_VND_RATE }) => {
   const off = discountPercent(p.price, p.original_price)
   const comingSoon = p.status === 'coming_soon'
   const mcp = isMcpSkill(p.product_type)
   const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : []
+  const tierMeta = getSkillTierMeta(p.skill_tier, p.price)
   return (
     <article class={`product-card group bg-[#0f0e24] rounded-2xl border overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${mcp ? 'border-cyan-500/35 hover:border-cyan-400/65 hover:shadow-cyan-500/15' : 'border-[#221e54] hover:border-indigo-500/40 hover:shadow-indigo-500/15'} ${comingSoon ? 'opacity-90' : ''}`}>
       {/* Media area - adaptive 16:9 frame */}
@@ -87,12 +101,8 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
           ) : (
             <span class="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold uppercase">{PRODUCT_TYPE_LABEL[p.product_type]}</span>
           )}
-          <span class="font-mono text-[10px]">{p.version}</span>
-          {p.product_type === 'skill' && (
-            <span class="ml-auto text-[10px] text-[#9492b8]" title="Tải về máy & làm theo hướng dẫn">
-              <i class="fas fa-download mr-0.5 text-[9px]" aria-hidden="true"></i>Tự tải về
-            </span>
-          )}
+          <SkillTierBadge tier={p.skill_tier} price={p.price} />
+          <span class="font-mono text-[10px] ml-auto">{p.version}</span>
         </div>
 
         <h3 class={`font-semibold text-sm leading-snug text-white line-clamp-2 mb-2 transition ${mcp ? 'group-hover:text-cyan-300' : 'group-hover:text-indigo-300'}`}>
@@ -126,13 +136,21 @@ export const ProductCard: FC<{ p: Product; compact?: boolean }> = ({ p, compact 
         <div class="mt-auto pt-3 border-t border-[#221e54] flex items-end justify-between gap-2">
           <div class="min-w-0">
             {comingSoon ? (
-              <div class="text-xs font-semibold text-amber-300 tabular-nums whitespace-nowrap">Dự kiến: {formatVND(p.price)}</div>
+              <div class="text-xs font-semibold text-amber-300 tabular-nums whitespace-nowrap">
+                Dự kiến: {formatVND(p.price)} <span class="text-[#9492b8] font-normal">({formatUSD(p.price, usdRate)})</span>
+              </div>
             ) : (
               <>
                 {p.original_price && p.original_price > p.price && (
                   <div class="text-[11px] text-[#9492b8] line-through leading-none mb-0.5 tabular-nums">{formatVND(p.original_price)}</div>
                 )}
-                <div class="text-base font-extrabold text-rose-400 leading-none tabular-nums">{formatVND(p.price)}</div>
+                <div class="flex items-baseline gap-1.5 flex-wrap">
+                  <span class="text-base font-extrabold text-rose-400 leading-none tabular-nums">{formatVND(p.price)}</span>
+                  <span class="text-[11px] font-semibold text-[#9492b8] leading-none tabular-nums">{formatUSD(p.price, usdRate)}</span>
+                </div>
+                {tierMeta.isRetailOnly && (
+                  <div class="text-[10px] text-amber-300/90 font-semibold mt-1 leading-none">Chỉ bán lẻ</div>
+                )}
               </>
             )}
           </div>
