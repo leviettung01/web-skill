@@ -2,7 +2,7 @@ import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { Breadcrumb, ProductCard, SkillTierBadge, Stars, SectionTitle } from '../components/ui'
 import { formatVND, formatUSD, getUsdRate, getSkillTierMeta, normalizeSkillTier, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
-import { getTierQuotaInfo, type UserMembership } from '../lib/tiers'
+import { getTierQuotaInfo, getMemberRetailDiscount, type UserMembership } from '../lib/tiers'
 import { buildMcpConfigs } from '../lib/mcp'
 import type { Product } from '../lib/types'
 
@@ -25,6 +25,8 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const tierKey = normalizeSkillTier(p.skill_tier, p.price)
   const tierMeta = getSkillTierMeta(p.skill_tier, p.price)
   const memQuota = activeMembership ? getTierQuotaInfo(activeMembership, tierKey) : null
+  const memberRetail = getMemberRetailDiscount(activeMembership)
+  const diamondPrice = memberRetail.percent > 0 ? memberRetail.discountedPrice(p.price) : p.price
   const off = discountPercent(p.price, p.original_price)
   const features = parseJSON<string[]>(p.features, [])
   const tech = parseJSON<string[]>(p.tech_stack, [])
@@ -401,6 +403,18 @@ export const ProductDetailPage: FC<Props> = (props) => {
                   )}
                 </div>
                 {save > 0 && <div class="text-xs text-emerald-400 font-bold flex items-center gap-1 tabular-nums"><i class="fas fa-piggy-bank text-sm" aria-hidden="true"></i>Tiết kiệm {formatVND(save)} ({formatUSD(save, usdRate)})</div>}
+                {memberRetail.percent > 0 && (
+                  <div class="mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-emerald-500/15 border border-amber-400/45 flex flex-wrap items-center justify-between gap-2">
+                    <div class="text-xs text-amber-100 font-bold flex items-center gap-2">
+                      <i class="fas fa-gem text-amber-300" aria-hidden="true"></i>
+                      <span>Đặc quyền {memberRetail.planName} (-{memberRetail.percent}% mua lẻ):</span>
+                    </div>
+                    <div class="flex items-baseline gap-1.5 tabular-nums">
+                      <span class="text-lg font-black text-emerald-300">{formatVND(diamondPrice)}</span>
+                      <span class="text-xs font-bold text-amber-200">{formatUSD(diamondPrice, usdRate)}</span>
+                    </div>
+                  </div>
+                )}
                 {tierMeta.isRetailOnly ? (
                   <div class="mt-3 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/30 text-[11px] text-rose-200 flex items-center gap-2">
                     <i class="fas fa-star text-amber-300 shrink-0" aria-hidden="true"></i>

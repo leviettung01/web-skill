@@ -1,0 +1,26 @@
+-- Migration 0013: Daily download limit (50 skills/day) + Retail discount (40% for Black Diamond) (SQLite/D1)
+
+ALTER TABLE membership_plans ADD COLUMN daily_download_limit INTEGER NOT NULL DEFAULT 50;
+ALTER TABLE membership_plans ADD COLUMN retail_discount_percent INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE user_memberships ADD COLUMN daily_download_limit INTEGER NOT NULL DEFAULT 50;
+ALTER TABLE user_memberships ADD COLUMN retail_discount_percent INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE membership_claims ADD COLUMN day_key TEXT;
+
+UPDATE membership_plans SET daily_download_limit = 50 WHERE daily_download_limit IS NULL OR daily_download_limit <= 0;
+UPDATE membership_plans SET retail_discount_percent = 40 WHERE slug = 'black-diamond';
+UPDATE user_memberships SET daily_download_limit = 50 WHERE daily_download_limit IS NULL OR daily_download_limit <= 0;
+UPDATE user_memberships SET retail_discount_percent = 40 WHERE plan_slug = 'black-diamond';
+
+CREATE TABLE IF NOT EXISTS membership_daily_downloads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  day_key TEXT NOT NULL,
+  download_count INTEGER NOT NULL DEFAULT 1,
+  last_at TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, product_id, day_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mem_daily_dl_user_day ON membership_daily_downloads(user_id, day_key);
+CREATE INDEX IF NOT EXISTS idx_mem_claims_user_day ON membership_claims(user_id, day_key);

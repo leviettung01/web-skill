@@ -34,10 +34,17 @@ const CheckoutSteps: FC<{ step: 1 | 2 | 3 }> = ({ step }) => {
   )
 }
 
+export interface MemberDiscountSummary {
+  percent: number
+  planName: string
+  amount: number
+}
+
 /* ================= CART ================= */
-export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> = (props) => {
-  const { items, subtotal } = props
+export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number; memberDiscount?: MemberDiscountSummary | null }> = (props) => {
+  const { items, subtotal, memberDiscount = null } = props
   const usdRate = getUsdRate(props.settings)
+  const netSubtotal = Math.max(0, subtotal - (memberDiscount?.amount || 0))
   return (
     <Layout {...props} title="Giỏ hàng">
       <div class="max-w-7xl mx-auto px-4 py-8">
@@ -93,13 +100,19 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
                 <div class="space-y-2.5 text-sm pb-4 border-b border-[#221e54] tabular-nums">
                   <div class="flex justify-between"><span class="text-[#9492b8]">Số sản phẩm</span><b class="text-white">{items.length}</b></div>
                   <div class="flex justify-between"><span class="text-[#9492b8]">Tạm tính</span><b class="text-white">{formatVND(subtotal)}</b></div>
+                  {memberDiscount && memberDiscount.amount > 0 && (
+                    <div class="flex justify-between gap-2">
+                      <span class="text-amber-300 font-semibold"><i class="fas fa-gem mr-1 text-[11px]" aria-hidden="true"></i>Ưu đãi {memberDiscount.planName} (-{memberDiscount.percent}%)</span>
+                      <b class="text-emerald-400">-{formatVND(memberDiscount.amount)}</b>
+                    </div>
+                  )}
                   <div class="flex justify-between"><span class="text-[#9492b8]">Phí giao hàng</span><b class="text-emerald-400">Miễn phí</b></div>
                 </div>
                 <div class="flex justify-between items-end py-4 tabular-nums">
                   <span class="font-bold text-white">Tổng cộng</span>
                   <div class="text-right">
-                    <div class="text-2xl font-extrabold text-rose-400 leading-none">{formatVND(subtotal)}</div>
-                    <div class="text-xs text-[#9492b8] mt-1">{formatUSD(subtotal, usdRate)} USD</div>
+                    <div class="text-2xl font-extrabold text-rose-400 leading-none">{formatVND(netSubtotal)}</div>
+                    <div class="text-xs text-[#9492b8] mt-1">{formatUSD(netSubtotal, usdRate)} USD</div>
                   </div>
                 </div>
                 <a href="/thanh-toan" class="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white font-bold hover:opacity-95 shadow-lg shadow-indigo-500/25 transition">
@@ -120,8 +133,13 @@ export const CartPage: FC<LayoutProps & { items: Product[]; subtotal: number }> 
 }
 
 /* ================= CHECKOUT ================= */
-export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number; balance: number; isDemoFree?: boolean }> = (props) => {
-  const { items, subtotal, balance, isDemoFree = false } = props
+export const CheckoutPage: FC<LayoutProps & {
+  items: Product[]; subtotal: number; balance: number; isDemoFree?: boolean; memberDiscount?: MemberDiscountSummary | null
+}> = (props) => {
+  const { items, subtotal, balance, isDemoFree = false, memberDiscount = null } = props
+  const usdRate = getUsdRate(props.settings)
+  const memberDiscAmt = isDemoFree ? 0 : (memberDiscount?.amount || 0)
+  const afterMember = Math.max(0, subtotal - memberDiscAmt)
   return (
     <Layout {...props} title="Thanh toán">
       <div class="max-w-7xl mx-auto px-4 py-8">
@@ -187,12 +205,12 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
                   <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">KHUYÊN DÙNG</span>
                 </label>
 
-                <label class={`flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? 'border-[#2a2559] bg-[#161436]/50 hover:border-indigo-500/40' : 'border-[#221e54] bg-[#070614]/40 opacity-50 cursor-not-allowed'}`}>
-                  <input type="radio" name="payment_method" value="balance" disabled={balance < subtotal} class="accent-indigo-500" />
+                <label class={`flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= afterMember ? 'border-[#2a2559] bg-[#161436]/50 hover:border-indigo-500/40' : 'border-[#221e54] bg-[#070614]/40 opacity-50 cursor-not-allowed'}`}>
+                  <input type="radio" name="payment_method" value="balance" disabled={balance < afterMember} class="accent-indigo-500" />
                   <div class="w-10 h-10 rounded-lg bg-emerald-500/15 grid place-items-center text-emerald-400 shrink-0"><i class="fas fa-piggy-bank" aria-hidden="true"></i></div>
                   <div class="flex-1">
                     <div class="font-semibold text-white text-sm tabular-nums">Số dư ví <span class="text-emerald-400">({formatVND(balance)})</span></div>
-                    <div class="text-xs text-[#b8b6d9]">{balance >= subtotal ? 'Thanh toán tức thì, nhận link tải Skill ngay' : 'Số dư không đủ cho đơn hàng này'}</div>
+                    <div class="text-xs text-[#b8b6d9]">{balance >= afterMember ? 'Thanh toán tức thì, nhận link tải Skill ngay' : 'Số dư không đủ cho đơn hàng này'}</div>
                   </div>
                 </label>
               </div>
@@ -235,14 +253,25 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
                     <span class="text-[#9492b8]">Ưu đãi Demo Test</span><b class="text-emerald-400">-{formatVND(subtotal)}</b>
                   </div>
                 ) : (
-                  <div class="flex justify-between" id="discount-row" style="display:none">
-                    <span class="text-[#9492b8]">Giảm giá</span><b class="text-emerald-400" id="sum-discount">-0đ</b>
-                  </div>
+                  <>
+                    {memberDiscount && memberDiscAmt > 0 && (
+                      <div class="flex justify-between gap-2">
+                        <span class="text-amber-300 font-semibold"><i class="fas fa-gem mr-1 text-[11px]" aria-hidden="true"></i>Hội viên {memberDiscount.planName} (-{memberDiscount.percent}%)</span>
+                        <b class="text-emerald-400">-{formatVND(memberDiscAmt)}</b>
+                      </div>
+                    )}
+                    <div class="flex justify-between" id="discount-row" style="display:none">
+                      <span class="text-[#9492b8]">Mã giảm giá</span><b class="text-emerald-400" id="sum-discount">-0đ</b>
+                    </div>
+                  </>
                 )}
               </div>
               <div class="flex justify-between items-end py-4 tabular-nums">
                 <span class="font-bold text-white">Tổng thanh toán</span>
-                <span class={`text-2xl font-extrabold ${isDemoFree ? 'text-emerald-400' : 'text-rose-400'}`} id="sum-total" data-subtotal={subtotal}>{isDemoFree ? '0đ' : formatVND(subtotal)}</span>
+                <div class="text-right">
+                  <div class={`text-2xl font-extrabold leading-none ${isDemoFree ? 'text-emerald-400' : 'text-rose-400'}`} id="sum-total" data-subtotal={afterMember}>{isDemoFree ? '0đ' : formatVND(afterMember)}</div>
+                  {!isDemoFree && <div class="text-xs text-[#9492b8] mt-1" id="sum-total-usd">{formatUSD(afterMember, usdRate)} USD</div>}
+                </div>
               </div>
               <button type="submit" id="place-order-btn"
                 class={`flex items-center justify-center gap-2 w-full h-12 rounded-xl text-white font-bold hover:opacity-95 shadow-lg transition cursor-pointer ${isDemoFree ? 'bg-gradient-to-r from-emerald-500 to-cyan-600 shadow-emerald-500/25' : 'bg-gradient-to-r from-rose-500 to-orange-500 shadow-rose-500/25'}`}>
@@ -259,18 +288,27 @@ export const CheckoutPage: FC<LayoutProps & { items: Product[]; subtotal: number
       <script dangerouslySetInnerHTML={{
         __html: `
 (function(){
-  var subtotal = ${subtotal};
+  var subtotal = ${afterMember};
+  var usdRate = ${usdRate};
   var isDemoFree = ${isDemoFree ? 'true' : 'false'};
   var coupon = null, discount = 0;
   function fmt(n){ return new Intl.NumberFormat('vi-VN').format(n)+'đ'; }
+  function fmtUsd(n){
+    if(n<=0) return '$0 USD';
+    var u = n / usdRate;
+    return '~$' + (u < 10 ? u.toFixed(1) : Math.round(u)) + ' USD';
+  }
   function render(){
     if (isDemoFree) return;
     var sd = document.getElementById('sum-discount');
     var dr = document.getElementById('discount-row');
     var st = document.getElementById('sum-total');
+    var su = document.getElementById('sum-total-usd');
+    var net = Math.max(0, subtotal-discount);
     if (sd) sd.textContent = '-'+fmt(discount);
     if (dr) dr.style.display = discount>0?'flex':'none';
-    if (st) st.textContent = fmt(Math.max(0, subtotal-discount));
+    if (st) st.textContent = fmt(net);
+    if (su) su.textContent = fmtUsd(net);
   }
   var clearBtn = document.getElementById('clear-coupon');
   if (clearBtn) {
@@ -783,7 +821,12 @@ export const MembershipCheckoutPage: FC<LayoutProps & {
                 <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP II</span><b class="text-white text-right">{fmtQuota(plan.vip2_quota, 'VIP II')}</b></li>
                 <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP III</span><b class="text-white text-right">{fmtQuota(plan.vip3_quota, 'VIP III')}</b></li>
                 <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Skill VIP IV</span><b class="text-white text-right">{fmtQuota(plan.vip4_quota, 'VIP IV')}</b></li>
-                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">SKILL PRO</span><span class="text-rose-300 font-semibold">Chỉ bán lẻ riêng</span></li>
+                <li class="flex justify-between gap-2"><span class="text-[#9492b8]">Giới hạn tải</span><b class="text-cyan-300 text-right">{plan.daily_download_limit || 50} Skill / ngày</b></li>
+                {Number(plan.retail_discount_percent || 0) > 0 ? (
+                  <li class="flex justify-between gap-2"><span class="text-amber-300 font-semibold">Ưu đãi mua Skill lẻ</span><b class="text-emerald-400 text-right">Giảm {plan.retail_discount_percent}% (kể cả PRO)</b></li>
+                ) : (
+                  <li class="flex justify-between gap-2"><span class="text-[#9492b8]">SKILL PRO</span><span class="text-rose-300 font-semibold">Chỉ bán lẻ riêng</span></li>
+                )}
               </ul>
 
               <div class="space-y-2 text-sm py-4 border-b border-[#221e54] tabular-nums">

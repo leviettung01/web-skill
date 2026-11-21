@@ -6,6 +6,12 @@
 import { genCode } from './auth'
 
 export const DEFAULT_USD_VND_RATE = 27000
+export const DEFAULT_DAILY_DOWNLOAD_LIMIT = 50
+
+export function getVietnamDayKey(now = new Date()): string {
+  const vn = new Date(now.getTime() + 7 * 3600_000)
+  return vn.toISOString().slice(0, 10)
+}
 
 export type SkillTierKey = 'vip1' | 'vip2' | 'vip3' | 'vip4' | 'pro'
 
@@ -160,6 +166,8 @@ export interface MembershipPlan {
   vip2_quota: number   // -1 = Full (update liên tục), 0 = Không, >0 = số lượng
   vip3_quota: number   // -1 = Full, 0 = Không, >0 = số lượng
   vip4_quota: number   // -1 = Full, 0 = Không, >0 = số lượng
+  daily_download_limit: number // Giới hạn tải Skill / ngày (mặc định 50)
+  retail_discount_percent: number // % ưu đãi khi mua Skill lẻ (Black Diamond = 40)
   auto_update_note: string | null
   ideal_for: string | null
   est_value_vnd: number
@@ -183,6 +191,8 @@ export interface UserMembership {
   vip2_used: number
   vip3_used: number
   vip4_used: number
+  daily_download_limit?: number
+  retail_discount_percent?: number
   starts_at: string
   expires_at: string
   status: string
@@ -203,6 +213,8 @@ export const DEFAULT_MEMBERSHIP_PLANS: Omit<MembershipPlan, 'id'>[] = [
     vip2_quota: -1,
     vip3_quota: 10,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: 'Full VIP I & VIP II (update liên tục)',
     ideal_for: 'Dùng thử 3 tháng · Full VIP I & II',
     est_value_vnd: 25000000,
@@ -222,6 +234,8 @@ export const DEFAULT_MEMBERSHIP_PLANS: Omit<MembershipPlan, 'id'>[] = [
     vip2_quota: -1,
     vip3_quota: 20,
     vip4_quota: 1,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: 'Full VIP I & VIP II (update liên tục)',
     ideal_for: 'Dùng cả năm, tối ưu chi phí nhất',
     est_value_vnd: 35000000,
@@ -241,8 +255,10 @@ export const DEFAULT_MEMBERSHIP_PLANS: Omit<MembershipPlan, 'id'>[] = [
     vip2_quota: -1,
     vip3_quota: 20,
     vip4_quota: 5,
+    daily_download_limit: 50,
+    retail_discount_percent: 40,
     auto_update_note: 'Full VIP I & VIP II (update liên tục)',
-    ideal_for: 'Agency / Team cần nhiều Skill VIP IV',
+    ideal_for: 'Agency / Team · Giảm 40% mua Skill lẻ',
     est_value_vnd: 50000000,
     is_popular: 0,
     status: 'active',
@@ -261,6 +277,8 @@ export const DEFAULT_MEMBERSHIP_PLANS: Omit<MembershipPlan, 'id'>[] = [
     vip2_quota: 0,
     vip3_quota: 0,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: null,
     ideal_for: 'Trải nghiệm ngắn hạn',
     est_value_vnd: 1350000,
@@ -280,6 +298,8 @@ export const DEFAULT_MEMBERSHIP_PLANS: Omit<MembershipPlan, 'id'>[] = [
     vip2_quota: 10,
     vip3_quota: 0,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: null,
     ideal_for: 'Dùng đều 1 tháng',
     est_value_vnd: 6750000,
@@ -299,6 +319,8 @@ export const DEFAULT_MEMBERSHIP_PLANS: Omit<MembershipPlan, 'id'>[] = [
     vip2_quota: 20,
     vip3_quota: 10,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: null,
     ideal_for: 'Làm nhiều dự án 3 tháng',
     est_value_vnd: 17140000,
@@ -470,14 +492,17 @@ export async function grantUserMembership(
      (user_id, plan_id, order_id, plan_name, plan_slug,
       vip1_quota, vip2_quota, vip3_quota, vip4_quota,
       vip1_used, vip2_used, vip3_used, vip4_used,
+      daily_download_limit, retail_discount_percent,
       starts_at, expires_at, status)
-     VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?)`
+     VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?,?,?)`
   ).bind(
     userId, plan.id, orderId, plan.name, plan.slug,
     Number(plan.vip1_quota || 0),
     Number(plan.vip2_quota || 0),
     Number(plan.vip3_quota || 0),
     Number(plan.vip4_quota || 0),
+    Math.max(1, Number(plan.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT)),
+    Math.min(100, Math.max(0, Number(plan.retail_discount_percent || 0))),
     startsAt, expiresAt, 'active'
   ).run()
 
@@ -550,6 +575,20 @@ export async function claimSkillWithMembership(
     return { ok: false, error: msg, status: 400 }
   }
 
+  // Enforce daily membership skill claim/download cap (default 50 skills/day, VN UTC+7)
+  const dailyLimit = Math.max(1, Number(m.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT))
+  const dayKey = getVietnamDayKey()
+  const claimedTodayRow = await db.prepare(
+    `SELECT COUNT(*) AS n FROM membership_claims WHERE user_id=? AND day_key=?`
+  ).bind(userId, dayKey).first<any>().catch(() => ({ n: 0 }))
+  if (Number(claimedTodayRow?.n || 0) >= dailyLimit) {
+    return {
+      ok: false,
+      error: `Bạn đã đạt giới hạn nhận/tải tối đa ${dailyLimit} Skill/ngày của gói ${m.plan_name}. Hạn mức sẽ tự làm mới lúc 00:00 ngày mai.`,
+      status: 429
+    }
+  }
+
   // Atomic quota increment for bounded tiers (prevents race condition)
   if (!info.isFull) {
     const colUsed = tier === 'vip1' ? 'vip1_used'
@@ -577,9 +616,9 @@ export async function claimSkillWithMembership(
   ).bind(userId, productId, m.order_id ?? null, licenseKey, 'membership', m.id).run()
 
   await db.prepare(
-    `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
-     VALUES (?,?,?,?)`
-  ).bind(m.id, userId, productId, tier).run().catch(() => null)
+    `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier, day_key)
+     VALUES (?,?,?,?,?)`
+  ).bind(m.id, userId, productId, tier, dayKey).run().catch(() => null)
 
   await db.prepare('UPDATE products SET sold_count = sold_count + 1 WHERE id = ?').bind(productId).run().catch(() => null)
 
@@ -590,4 +629,94 @@ export async function claimSkillWithMembership(
       ? `Đã mở khoá "${product.name}" (Miễn phí · Full ${tierMeta.code} gói ${m.plan_name})!`
       : `Đã mở khoá "${product.name}" bằng 1 lượt ${tierMeta.code} (còn ${Math.max(0, info.remaining - 1)}/${info.quota} lượt)!`
   }
+}
+
+/**
+ * Computes automatic retail discount for active member (e.g., BLACK DIAMOND = 40% off retail skills).
+ */
+export function getMemberRetailDiscount(m: UserMembership | null): {
+  percent: number
+  planName: string
+  calcDiscount: (subtotal: number) => number
+  discountedPrice: (price: number) => number
+} {
+  const pct = m ? Math.min(100, Math.max(0, Number(m.retail_discount_percent || 0))) : 0
+  const planName = m?.plan_name || ''
+  return {
+    percent: pct,
+    planName,
+    calcDiscount: (subtotal: number) => (pct > 0 && subtotal > 0 ? Math.floor((subtotal * pct) / 100) : 0),
+    discountedPrice: (price: number) => (pct > 0 && price > 0 ? Math.max(0, price - Math.floor((price * pct) / 100)) : price)
+  }
+}
+
+/**
+ * Returns today's membership download usage (distinct skills downloaded today in VN timezone UTC+7).
+ */
+export async function getDailyDownloadUsage(
+  db: D1Database,
+  userId: number,
+  membership?: UserMembership | null
+): Promise<{ used: number; limit: number; remaining: number; dayKey: string }> {
+  const dayKey = getVietnamDayKey()
+  const m = membership !== undefined ? membership : await getActiveUserMembership(db, userId)
+  const limit = Math.max(1, Number(m?.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT))
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS n FROM membership_daily_downloads WHERE user_id=? AND day_key=?`
+  ).bind(userId, dayKey).first<any>().catch(() => ({ n: 0 }))
+  const used = Number(row?.n || 0)
+  return { used, limit, remaining: Math.max(0, limit - used), dayKey }
+}
+
+/**
+ * Enforces the daily download cap (default 50 distinct skills/day per membership plan).
+ * - Retail purchased licenses (`source !== 'membership'`) are NOT restricted by membership daily cap.
+ * - Re-downloading the same skill on the same day does NOT consume an extra slot.
+ */
+export async function checkAndRecordDailyDownload(
+  db: D1Database,
+  opts: { userId: number; productId: number; licenseSource?: string | null }
+): Promise<{ ok: true; used: number; limit: number } | { ok: false; used: number; limit: number; error: string }> {
+  const { userId, productId, licenseSource } = opts
+  if (licenseSource !== 'membership') {
+    return { ok: true, used: 0, limit: 0 }
+  }
+
+  const m = await getActiveUserMembership(db, userId)
+  const limit = Math.max(1, Number(m?.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT))
+  const dayKey = getVietnamDayKey()
+  const nowIso = new Date().toISOString()
+
+  // Already downloaded this exact skill today? Allow freely without incrementing distinct skill count
+  const existing = await db.prepare(
+    `SELECT id FROM membership_daily_downloads WHERE user_id=? AND product_id=? AND day_key=?`
+  ).bind(userId, productId, dayKey).first<any>().catch(() => null)
+
+  if (existing?.id) {
+    await db.prepare(
+      `UPDATE membership_daily_downloads SET download_count = download_count + 1, last_at = ? WHERE id = ?`
+    ).bind(nowIso, existing.id).run().catch(() => null)
+    const usage = await getDailyDownloadUsage(db, userId, m)
+    return { ok: true, used: usage.used, limit }
+  }
+
+  const cntRow = await db.prepare(
+    `SELECT COUNT(*) AS n FROM membership_daily_downloads WHERE user_id=? AND day_key=?`
+  ).bind(userId, dayKey).first<any>().catch(() => ({ n: 0 }))
+  const used = Number(cntRow?.n || 0)
+  if (used >= limit) {
+    return {
+      ok: false,
+      used,
+      limit,
+      error: `Bạn đã đạt giới hạn tải tối đa ${limit} Skill/ngày của gói Hội viên (${used}/${limit} Skill hôm nay). Hạn mức sẽ tự động đặt lại lúc 00:00 ngày mai (giờ Việt Nam).`
+    }
+  }
+
+  await db.prepare(
+    `INSERT INTO membership_daily_downloads (user_id, product_id, day_key, download_count, last_at)
+     VALUES (?,?,?,1,?)`
+  ).bind(userId, productId, dayKey, nowIso).run().catch(() => null)
+
+  return { ok: true, used: used + 1, limit }
 }

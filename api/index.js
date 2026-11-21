@@ -7896,6 +7896,11 @@ function genLicenseKey() {
 
 // src/lib/tiers.ts
 var DEFAULT_USD_VND_RATE = 27e3;
+var DEFAULT_DAILY_DOWNLOAD_LIMIT = 50;
+function getVietnamDayKey(now = /* @__PURE__ */ new Date()) {
+  const vn = new Date(now.getTime() + 7 * 36e5);
+  return vn.toISOString().slice(0, 10);
+}
 var SKILL_TIER_ORDER = ["vip1", "vip2", "vip3", "vip4", "pro"];
 var SKILL_TIERS = {
   vip1: {
@@ -8023,6 +8028,8 @@ var DEFAULT_MEMBERSHIP_PLANS = [
     vip2_quota: -1,
     vip3_quota: 10,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: "Full VIP I & VIP II (update li\xEAn t\u1EE5c)",
     ideal_for: "D\xF9ng th\u1EED 3 th\xE1ng \xB7 Full VIP I & II",
     est_value_vnd: 25e6,
@@ -8042,6 +8049,8 @@ var DEFAULT_MEMBERSHIP_PLANS = [
     vip2_quota: -1,
     vip3_quota: 20,
     vip4_quota: 1,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: "Full VIP I & VIP II (update li\xEAn t\u1EE5c)",
     ideal_for: "D\xF9ng c\u1EA3 n\u0103m, t\u1ED1i \u01B0u chi ph\xED nh\u1EA5t",
     est_value_vnd: 35e6,
@@ -8061,8 +8070,10 @@ var DEFAULT_MEMBERSHIP_PLANS = [
     vip2_quota: -1,
     vip3_quota: 20,
     vip4_quota: 5,
+    daily_download_limit: 50,
+    retail_discount_percent: 40,
     auto_update_note: "Full VIP I & VIP II (update li\xEAn t\u1EE5c)",
-    ideal_for: "Agency / Team c\u1EA7n nhi\u1EC1u Skill VIP IV",
+    ideal_for: "Agency / Team \xB7 Gi\u1EA3m 40% mua Skill l\u1EBB",
     est_value_vnd: 5e7,
     is_popular: 0,
     status: "active",
@@ -8081,6 +8092,8 @@ var DEFAULT_MEMBERSHIP_PLANS = [
     vip2_quota: 0,
     vip3_quota: 0,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: null,
     ideal_for: "Tr\u1EA3i nghi\u1EC7m ng\u1EAFn h\u1EA1n",
     est_value_vnd: 135e4,
@@ -8100,6 +8113,8 @@ var DEFAULT_MEMBERSHIP_PLANS = [
     vip2_quota: 10,
     vip3_quota: 0,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: null,
     ideal_for: "D\xF9ng \u0111\u1EC1u 1 th\xE1ng",
     est_value_vnd: 675e4,
@@ -8119,6 +8134,8 @@ var DEFAULT_MEMBERSHIP_PLANS = [
     vip2_quota: 20,
     vip3_quota: 10,
     vip4_quota: 0,
+    daily_download_limit: 50,
+    retail_discount_percent: 0,
     auto_update_note: null,
     ideal_for: "L\xE0m nhi\u1EC1u d\u1EF1 \xE1n 3 th\xE1ng",
     est_value_vnd: 1714e4,
@@ -8239,8 +8256,9 @@ async function grantUserMembership(db, opts) {
      (user_id, plan_id, order_id, plan_name, plan_slug,
       vip1_quota, vip2_quota, vip3_quota, vip4_quota,
       vip1_used, vip2_used, vip3_used, vip4_used,
+      daily_download_limit, retail_discount_percent,
       starts_at, expires_at, status)
-     VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?)`
+     VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?,?,?)`
   ).bind(
     userId,
     plan.id,
@@ -8251,6 +8269,8 @@ async function grantUserMembership(db, opts) {
     Number(plan.vip2_quota || 0),
     Number(plan.vip3_quota || 0),
     Number(plan.vip4_quota || 0),
+    Math.max(1, Number(plan.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT)),
+    Math.min(100, Math.max(0, Number(plan.retail_discount_percent || 0))),
     startsAt,
     expiresAt,
     "active"
@@ -8303,6 +8323,18 @@ async function claimSkillWithMembership(db, userId, productId) {
     const msg = info.quota === 0 ? `G\xF3i ${m.plan_name} kh\xF4ng bao g\u1ED3m l\u01B0\u1EE3t nh\u1EADn ${tierMeta.code}. B\u1EA1n c\xF3 th\u1EC3 mua l\u1EBB ho\u1EB7c n\xE2ng c\u1EA5p g\xF3i cao h\u01A1n.` : `B\u1EA1n \u0111\xE3 d\xF9ng h\u1EBFt ${info.quota}/${info.quota} l\u01B0\u1EE3t ${tierMeta.code} c\u1EE7a g\xF3i ${m.plan_name}.`;
     return { ok: false, error: msg, status: 400 };
   }
+  const dailyLimit = Math.max(1, Number(m.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT));
+  const dayKey = getVietnamDayKey();
+  const claimedTodayRow = await db.prepare(
+    `SELECT COUNT(*) AS n FROM membership_claims WHERE user_id=? AND day_key=?`
+  ).bind(userId, dayKey).first().catch(() => ({ n: 0 }));
+  if (Number(claimedTodayRow?.n || 0) >= dailyLimit) {
+    return {
+      ok: false,
+      error: `B\u1EA1n \u0111\xE3 \u0111\u1EA1t gi\u1EDBi h\u1EA1n nh\u1EADn/t\u1EA3i t\u1ED1i \u0111a ${dailyLimit} Skill/ng\xE0y c\u1EE7a g\xF3i ${m.plan_name}. H\u1EA1n m\u1EE9c s\u1EBD t\u1EF1 l\xE0m m\u1EDBi l\xFAc 00:00 ng\xE0y mai.`,
+      status: 429
+    };
+  }
   if (!info.isFull) {
     const colUsed = tier === "vip1" ? "vip1_used" : tier === "vip2" ? "vip2_used" : tier === "vip3" ? "vip3_used" : "vip4_used";
     const colQuota = tier === "vip1" ? "vip1_quota" : tier === "vip2" ? "vip2_quota" : tier === "vip3" ? "vip3_quota" : "vip4_quota";
@@ -8321,15 +8353,72 @@ async function claimSkillWithMembership(db, userId, productId) {
      VALUES (?,?,?,?,?,?)`
   ).bind(userId, productId, m.order_id ?? null, licenseKey, "membership", m.id).run();
   await db.prepare(
-    `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
-     VALUES (?,?,?,?)`
-  ).bind(m.id, userId, productId, tier).run().catch(() => null);
+    `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier, day_key)
+     VALUES (?,?,?,?,?)`
+  ).bind(m.id, userId, productId, tier, dayKey).run().catch(() => null);
   await db.prepare("UPDATE products SET sold_count = sold_count + 1 WHERE id = ?").bind(productId).run().catch(() => null);
   return {
     ok: true,
     licenseKey,
     message: info.isFull ? `\u0110\xE3 m\u1EDF kho\xE1 "${product.name}" (Mi\u1EC5n ph\xED \xB7 Full ${tierMeta.code} g\xF3i ${m.plan_name})!` : `\u0110\xE3 m\u1EDF kho\xE1 "${product.name}" b\u1EB1ng 1 l\u01B0\u1EE3t ${tierMeta.code} (c\xF2n ${Math.max(0, info.remaining - 1)}/${info.quota} l\u01B0\u1EE3t)!`
   };
+}
+function getMemberRetailDiscount(m) {
+  const pct = m ? Math.min(100, Math.max(0, Number(m.retail_discount_percent || 0))) : 0;
+  const planName = m?.plan_name || "";
+  return {
+    percent: pct,
+    planName,
+    calcDiscount: (subtotal) => pct > 0 && subtotal > 0 ? Math.floor(subtotal * pct / 100) : 0,
+    discountedPrice: (price) => pct > 0 && price > 0 ? Math.max(0, price - Math.floor(price * pct / 100)) : price
+  };
+}
+async function getDailyDownloadUsage(db, userId, membership) {
+  const dayKey = getVietnamDayKey();
+  const m = membership !== void 0 ? membership : await getActiveUserMembership(db, userId);
+  const limit = Math.max(1, Number(m?.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT));
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS n FROM membership_daily_downloads WHERE user_id=? AND day_key=?`
+  ).bind(userId, dayKey).first().catch(() => ({ n: 0 }));
+  const used = Number(row?.n || 0);
+  return { used, limit, remaining: Math.max(0, limit - used), dayKey };
+}
+async function checkAndRecordDailyDownload(db, opts) {
+  const { userId, productId, licenseSource } = opts;
+  if (licenseSource !== "membership") {
+    return { ok: true, used: 0, limit: 0 };
+  }
+  const m = await getActiveUserMembership(db, userId);
+  const limit = Math.max(1, Number(m?.daily_download_limit || DEFAULT_DAILY_DOWNLOAD_LIMIT));
+  const dayKey = getVietnamDayKey();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const existing = await db.prepare(
+    `SELECT id FROM membership_daily_downloads WHERE user_id=? AND product_id=? AND day_key=?`
+  ).bind(userId, productId, dayKey).first().catch(() => null);
+  if (existing?.id) {
+    await db.prepare(
+      `UPDATE membership_daily_downloads SET download_count = download_count + 1, last_at = ? WHERE id = ?`
+    ).bind(nowIso, existing.id).run().catch(() => null);
+    const usage = await getDailyDownloadUsage(db, userId, m);
+    return { ok: true, used: usage.used, limit };
+  }
+  const cntRow = await db.prepare(
+    `SELECT COUNT(*) AS n FROM membership_daily_downloads WHERE user_id=? AND day_key=?`
+  ).bind(userId, dayKey).first().catch(() => ({ n: 0 }));
+  const used = Number(cntRow?.n || 0);
+  if (used >= limit) {
+    return {
+      ok: false,
+      used,
+      limit,
+      error: `B\u1EA1n \u0111\xE3 \u0111\u1EA1t gi\u1EDBi h\u1EA1n t\u1EA3i t\u1ED1i \u0111a ${limit} Skill/ng\xE0y c\u1EE7a g\xF3i H\u1ED9i vi\xEAn (${used}/${limit} Skill h\xF4m nay). H\u1EA1n m\u1EE9c s\u1EBD t\u1EF1 \u0111\u1ED9ng \u0111\u1EB7t l\u1EA1i l\xFAc 00:00 ng\xE0y mai (gi\u1EDD Vi\u1EC7t Nam).`
+    };
+  }
+  await db.prepare(
+    `INSERT INTO membership_daily_downloads (user_id, product_id, day_key, download_count, last_at)
+     VALUES (?,?,?,1,?)`
+  ).bind(userId, productId, dayKey, nowIso).run().catch(() => null);
+  return { ok: true, used: used + 1, limit };
 }
 
 // src/lib/utils.ts
@@ -9826,12 +9915,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261129", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261130", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261129", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261130", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -13054,6 +13143,8 @@ var ProductDetailPage = (props) => {
   const tierKey = normalizeSkillTier(p.skill_tier, p.price);
   const tierMeta = getSkillTierMeta(p.skill_tier, p.price);
   const memQuota = activeMembership ? getTierQuotaInfo(activeMembership, tierKey) : null;
+  const memberRetail = getMemberRetailDiscount(activeMembership);
+  const diamondPrice = memberRetail.percent > 0 ? memberRetail.discountedPrice(p.price) : p.price;
   const off = discountPercent(p.price, p.original_price);
   const features = parseJSON(p.features, []);
   const tech = parseJSON(p.tech_stack, []);
@@ -13547,6 +13638,22 @@ var ProductDetailPage = (props) => {
                   " (",
                   formatUSD(save, usdRate),
                   ")"
+                ] }),
+                memberRetail.percent > 0 && /* @__PURE__ */ jsxDEV("div", { class: "mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-emerald-500/15 border border-amber-400/45 flex flex-wrap items-center justify-between gap-2", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-amber-100 font-bold flex items-center gap-2", children: [
+                    /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gem text-amber-300", "aria-hidden": "true" }),
+                    /* @__PURE__ */ jsxDEV("span", { children: [
+                      "\u0110\u1EB7c quy\u1EC1n ",
+                      memberRetail.planName,
+                      " (-",
+                      memberRetail.percent,
+                      "% mua l\u1EBB):"
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "flex items-baseline gap-1.5 tabular-nums", children: [
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-lg font-black text-emerald-300", children: formatVND(diamondPrice) }),
+                    /* @__PURE__ */ jsxDEV("span", { class: "text-xs font-bold text-amber-200", children: formatUSD(diamondPrice, usdRate) })
+                  ] })
                 ] }),
                 tierMeta.isRetailOnly ? /* @__PURE__ */ jsxDEV("div", { class: "mt-3 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-400/30 text-[11px] text-rose-200 flex items-center gap-2", children: [
                   /* @__PURE__ */ jsxDEV("i", { class: "fas fa-star text-amber-300 shrink-0", "aria-hidden": "true" }),
@@ -14615,8 +14722,9 @@ var CheckoutSteps = ({ step }) => {
   }) }) });
 };
 var CartPage = (props) => {
-  const { items, subtotal } = props;
+  const { items, subtotal, memberDiscount = null } = props;
   const usdRate = getUsdRate(props.settings);
+  const netSubtotal = Math.max(0, subtotal - (memberDiscount?.amount || 0));
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Gi\u1ECF h\xE0ng", children: /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
     /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng" }] }),
     /* @__PURE__ */ jsxDEV("h1", { class: "text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-5", children: "Gi\u1ECF h\xE0ng c\u1EE7a b\u1EA1n" }),
@@ -14684,6 +14792,20 @@ var CartPage = (props) => {
             /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "T\u1EA1m t\xEDnh" }),
             /* @__PURE__ */ jsxDEV("b", { class: "text-white", children: formatVND(subtotal) })
           ] }),
+          memberDiscount && memberDiscount.amount > 0 && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between gap-2", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300 font-semibold", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gem mr-1 text-[11px]", "aria-hidden": "true" }),
+              "\u01AFu \u0111\xE3i ",
+              memberDiscount.planName,
+              " (-",
+              memberDiscount.percent,
+              "%)"
+            ] }),
+            /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: [
+              "-",
+              formatVND(memberDiscount.amount)
+            ] })
+          ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Ph\xED giao h\xE0ng" }),
             /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: "Mi\u1EC5n ph\xED" })
@@ -14692,9 +14814,9 @@ var CartPage = (props) => {
         /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
           /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng c\u1ED9ng" }),
           /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
-            /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-rose-400 leading-none", children: formatVND(subtotal) }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-2xl font-extrabold text-rose-400 leading-none", children: formatVND(netSubtotal) }),
             /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-1", children: [
-              formatUSD(subtotal, usdRate),
+              formatUSD(netSubtotal, usdRate),
               " USD"
             ] })
           ] })
@@ -14722,7 +14844,10 @@ var CartPage = (props) => {
   ] }) });
 };
 var CheckoutPage = (props) => {
-  const { items, subtotal, balance, isDemoFree = false } = props;
+  const { items, subtotal, balance, isDemoFree = false, memberDiscount = null } = props;
+  const usdRate = getUsdRate(props.settings);
+  const memberDiscAmt = isDemoFree ? 0 : memberDiscount?.amount || 0;
+  const afterMember = Math.max(0, subtotal - memberDiscAmt);
   return /* @__PURE__ */ jsxDEV(Layout, { ...props, title: "Thanh to\xE1n", children: [
     /* @__PURE__ */ jsxDEV("div", { class: "max-w-7xl mx-auto px-4 py-8", children: [
       /* @__PURE__ */ jsxDEV(Breadcrumb, { items: [{ label: "Gi\u1ECF h\xE0ng", href: "/gio-hang" }, { label: "Thanh to\xE1n" }] }),
@@ -14801,8 +14926,8 @@ var CheckoutPage = (props) => {
                 ] }),
                 /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold", children: "KHUY\xCAN D\xD9NG" })
               ] }),
-              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= subtotal ? "border-[#2a2559] bg-[#161436]/50 hover:border-indigo-500/40" : "border-[#221e54] bg-[#070614]/40 opacity-50 cursor-not-allowed"}`, children: [
-                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "balance", disabled: balance < subtotal, class: "accent-indigo-500" }),
+              /* @__PURE__ */ jsxDEV("label", { class: `flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition ${balance >= afterMember ? "border-[#2a2559] bg-[#161436]/50 hover:border-indigo-500/40" : "border-[#221e54] bg-[#070614]/40 opacity-50 cursor-not-allowed"}`, children: [
+                /* @__PURE__ */ jsxDEV("input", { type: "radio", name: "payment_method", value: "balance", disabled: balance < afterMember, class: "accent-indigo-500" }),
                 /* @__PURE__ */ jsxDEV("div", { class: "w-10 h-10 rounded-lg bg-emerald-500/15 grid place-items-center text-emerald-400 shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-piggy-bank", "aria-hidden": "true" }) }),
                 /* @__PURE__ */ jsxDEV("div", { class: "flex-1", children: [
                   /* @__PURE__ */ jsxDEV("div", { class: "font-semibold text-white text-sm tabular-nums", children: [
@@ -14813,7 +14938,7 @@ var CheckoutPage = (props) => {
                       ")"
                     ] })
                   ] }),
-                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#b8b6d9]", children: balance >= subtotal ? "Thanh to\xE1n t\u1EE9c th\xEC, nh\u1EADn link t\u1EA3i Skill ngay" : "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho \u0111\u01A1n h\xE0ng n\xE0y" })
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#b8b6d9]", children: balance >= afterMember ? "Thanh to\xE1n t\u1EE9c th\xEC, nh\u1EADn link t\u1EA3i Skill ngay" : "S\u1ED1 d\u01B0 kh\xF4ng \u0111\u1EE7 cho \u0111\u01A1n h\xE0ng n\xE0y" })
                 ] })
               ] })
             ] })
@@ -14876,14 +15001,36 @@ var CheckoutPage = (props) => {
                 "-",
                 formatVND(subtotal)
               ] })
-            ] }) : /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", id: "discount-row", style: "display:none", children: [
-              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Gi\u1EA3m gi\xE1" }),
-              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", id: "sum-discount", children: "-0\u0111" })
+            ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+              memberDiscount && memberDiscAmt > 0 && /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between gap-2", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300 font-semibold", children: [
+                  /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gem mr-1 text-[11px]", "aria-hidden": "true" }),
+                  "H\u1ED9i vi\xEAn ",
+                  memberDiscount.planName,
+                  " (-",
+                  memberDiscount.percent,
+                  "%)"
+                ] }),
+                /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", children: [
+                  "-",
+                  formatVND(memberDiscAmt)
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between", id: "discount-row", style: "display:none", children: [
+                /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "M\xE3 gi\u1EA3m gi\xE1" }),
+                /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400", id: "sum-discount", children: "-0\u0111" })
+              ] })
             ] })
           ] }),
           /* @__PURE__ */ jsxDEV("div", { class: "flex justify-between items-end py-4 tabular-nums", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "font-bold text-white", children: "T\u1ED5ng thanh to\xE1n" }),
-            /* @__PURE__ */ jsxDEV("span", { class: `text-2xl font-extrabold ${isDemoFree ? "text-emerald-400" : "text-rose-400"}`, id: "sum-total", "data-subtotal": subtotal, children: isDemoFree ? "0\u0111" : formatVND(subtotal) })
+            /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: `text-2xl font-extrabold leading-none ${isDemoFree ? "text-emerald-400" : "text-rose-400"}`, id: "sum-total", "data-subtotal": afterMember, children: isDemoFree ? "0\u0111" : formatVND(afterMember) }),
+              !isDemoFree && /* @__PURE__ */ jsxDEV("div", { class: "text-xs text-[#9492b8] mt-1", id: "sum-total-usd", children: [
+                formatUSD(afterMember, usdRate),
+                " USD"
+              ] })
+            ] })
           ] }),
           /* @__PURE__ */ jsxDEV(
             "button",
@@ -14908,18 +15055,27 @@ var CheckoutPage = (props) => {
     /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
       __html: `
 (function(){
-  var subtotal = ${subtotal};
+  var subtotal = ${afterMember};
+  var usdRate = ${usdRate};
   var isDemoFree = ${isDemoFree ? "true" : "false"};
   var coupon = null, discount = 0;
   function fmt(n){ return new Intl.NumberFormat('vi-VN').format(n)+'\u0111'; }
+  function fmtUsd(n){
+    if(n<=0) return '$0 USD';
+    var u = n / usdRate;
+    return '~$' + (u < 10 ? u.toFixed(1) : Math.round(u)) + ' USD';
+  }
   function render(){
     if (isDemoFree) return;
     var sd = document.getElementById('sum-discount');
     var dr = document.getElementById('discount-row');
     var st = document.getElementById('sum-total');
+    var su = document.getElementById('sum-total-usd');
+    var net = Math.max(0, subtotal-discount);
     if (sd) sd.textContent = '-'+fmt(discount);
     if (dr) dr.style.display = discount>0?'flex':'none';
-    if (st) st.textContent = fmt(Math.max(0, subtotal-discount));
+    if (st) st.textContent = fmt(net);
+    if (su) su.textContent = fmtUsd(net);
   }
   var clearBtn = document.getElementById('clear-coupon');
   if (clearBtn) {
@@ -15478,6 +15634,20 @@ var MembershipCheckoutPage = (props) => {
               /* @__PURE__ */ jsxDEV("b", { class: "text-white text-right", children: fmtQuota(plan.vip4_quota, "VIP IV") })
             ] }),
             /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "Gi\u1EDBi h\u1EA1n t\u1EA3i" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-cyan-300 text-right", children: [
+                plan.daily_download_limit || 50,
+                " Skill / ng\xE0y"
+              ] })
+            ] }),
+            Number(plan.retail_discount_percent || 0) > 0 ? /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
+              /* @__PURE__ */ jsxDEV("span", { class: "text-amber-300 font-semibold", children: "\u01AFu \u0111\xE3i mua Skill l\u1EBB" }),
+              /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-400 text-right", children: [
+                "Gi\u1EA3m ",
+                plan.retail_discount_percent,
+                "% (k\u1EC3 c\u1EA3 PRO)"
+              ] })
+            ] }) : /* @__PURE__ */ jsxDEV("li", { class: "flex justify-between gap-2", children: [
               /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8]", children: "SKILL PRO" }),
               /* @__PURE__ */ jsxDEV("span", { class: "text-rose-300 font-semibold", children: "Ch\u1EC9 b\xE1n l\u1EBB ri\xEAng" })
             ] })
@@ -16981,9 +17151,12 @@ var ProfilePage = (props) => {
   ] });
 };
 var AccountMembershipPage = (props) => {
-  const { membership, history, catalog, ownedIds, selectedTier = "" } = props;
+  const { membership, history, catalog, ownedIds, selectedTier = "", dailyUsage = null } = props;
   const usdRate = getUsdRate(props.settings);
   const ownedSet = new Set(ownedIds);
+  const retailDiscPct = membership ? Number(membership.retail_discount_percent || 0) : 0;
+  const dlLimit = dailyUsage?.limit || Number(membership?.daily_download_limit || 50);
+  const dlUsed = dailyUsage?.used || 0;
   const daysLeft = membership ? Math.max(0, Math.ceil((new Date(membership.expires_at).getTime() - Date.now()) / 864e5)) : 0;
   const filteredCatalog = selectedTier ? catalog.filter((p) => normalizeSkillTier(p.skill_tier, p.price) === selectedTier) : catalog;
   return /* @__PURE__ */ jsxDEV(
@@ -17038,6 +17211,50 @@ var AccountMembershipPage = (props) => {
               /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "h-10 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 font-bold text-xs inline-flex items-center gap-1.5 transition", children: [
                 /* @__PURE__ */ jsxDEV("i", { class: "fas fa-arrow-up-right-dots", "aria-hidden": "true" }),
                 "N\xE2ng c\u1EA5p / Gia h\u1EA1n g\xF3i"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 gap-3 mt-4", children: [
+              /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#09081b]/80 border border-cyan-500/30 p-3.5 flex items-center justify-between gap-3", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gauge-high", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Gi\u1EDBi h\u1EA1n t\u1EA3i Skill h\xF4m nay" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: "L\xE0m m\u1EDBi t\u1EF1 \u0111\u1ED9ng l\xFAc 00:00 (gi\u1EDD VN)" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "text-right shrink-0 tabular-nums", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: `text-base font-black ${dlUsed >= dlLimit ? "text-rose-400" : "text-cyan-300"}`, children: [
+                    dlUsed,
+                    " / ",
+                    dlLimit
+                  ] }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "text-[10px] text-[#9492b8]", children: "Skill / ng\xE0y" })
+                ] })
+              ] }),
+              retailDiscPct > 0 ? /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-emerald-500/15 border border-amber-400/45 p-3.5 flex items-center justify-between gap-3", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "w-9 h-9 rounded-lg bg-amber-500/20 text-amber-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gem", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-extrabold text-amber-200", children: [
+                      "\u0110\u1EB7c quy\u1EC1n ",
+                      membership.plan_name,
+                      ": Gi\u1EA3m ",
+                      retailDiscPct,
+                      "% mua l\u1EBB"
+                    ] }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-emerald-300", children: "T\u1EF1 \u0111\u1ED9ng \xE1p d\u1EE5ng khi mua m\u1ECDi Skill l\u1EBB (k\u1EC3 c\u1EA3 SKILL PRO)" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/san-pham?tier=pro", class: "shrink-0 h-8 px-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-[11px] inline-flex items-center", children: "Xem PRO \u2192" })
+              ] }) : /* @__PURE__ */ jsxDEV("div", { class: "rounded-xl bg-[#09081b]/80 border border-white/10 p-3.5 flex items-center justify-between gap-3", children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 min-w-0", children: [
+                  /* @__PURE__ */ jsxDEV("span", { class: "w-9 h-9 rounded-lg bg-amber-500/10 text-amber-300 grid place-items-center text-sm shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gem", "aria-hidden": "true" }) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "min-w-0", children: [
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-xs font-bold text-white", children: "Mu\u1ED1n gi\u1EA3m 40% khi mua Skill l\u1EBB & SKILL PRO?" }),
+                    /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-[#9492b8]", children: "N\xE2ng c\u1EA5p l\xEAn g\xF3i BLACK DIAMOND \u0111\u1EC3 h\u01B0\u1EDFng \u01B0u \u0111\xE3i -40%" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("a", { href: "/bang-gia", class: "shrink-0 text-xs font-bold text-amber-300 hover:underline whitespace-nowrap", children: "Xem g\xF3i \u2192" })
               ] })
             ] }),
             /* @__PURE__ */ jsxDEV("div", { class: "grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5", children: ["vip1", "vip2", "vip3", "vip4"].map((tk) => {
@@ -17412,6 +17629,30 @@ var MembershipCard = ({ plan, usdRate, isCurrent }) => {
           ] }),
           /* @__PURE__ */ jsxDEV(QuotaCell, { quota: plan.vip4_quota, tierLabel: "VIP IV", isOptionalPick: true })
         ] }),
+        /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs sm:text-sm text-[#c2c0e0]", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-cyan-500/15 text-cyan-300 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-gauge-high", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("span", { children: "Gi\u1EDBi h\u1EA1n t\u1EA3i / ng\xE0y" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("span", { class: "font-extrabold text-cyan-300 text-xs sm:text-sm tabular-nums whitespace-nowrap", children: [
+            plan.daily_download_limit || 50,
+            " Skill / ng\xE0y"
+          ] })
+        ] }),
+        Number(plan.retail_discount_percent || 0) > 0 && /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs sm:text-sm text-amber-200 font-semibold", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-percent", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxDEV("span", { children: "\u01AFu \u0111\xE3i mua Skill l\u1EBB" })
+          ] }),
+          /* @__PURE__ */ jsxDEV("div", { class: "text-right", children: [
+            /* @__PURE__ */ jsxDEV("div", { class: "font-black text-amber-300 text-sm", children: [
+              "Gi\u1EA3m ",
+              plan.retail_discount_percent,
+              "%"
+            ] }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] text-emerald-400 font-semibold", children: "\xC1p d\u1EE5ng c\u1EA3 SKILL PRO" })
+          ] })
+        ] }),
         plan.est_value_vnd > 0 && /* @__PURE__ */ jsxDEV("div", { class: "py-3 flex items-center justify-between gap-3", children: [
           /* @__PURE__ */ jsxDEV("div", { class: "flex items-center gap-2.5 text-xs sm:text-sm text-[#c2c0e0]", children: [
             /* @__PURE__ */ jsxDEV("span", { class: "w-7 h-7 rounded-lg bg-amber-500/10 text-amber-300 grid place-items-center text-xs shrink-0", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-coins", "aria-hidden": "true" }) }),
@@ -17525,9 +17766,15 @@ var PricingPage = (props) => {
               /* @__PURE__ */ jsxDEV("p", { class: "leading-relaxed", children: [
                 "G\xF3i H\u1ED9i vi\xEAn ch\u1EC9 \xE1p d\u1EE5ng nh\u1EADn c\xE1c Skill l\u1EBB thu\u1ED9c h\u1EA1ng ",
                 /* @__PURE__ */ jsxDEV("b", { children: "VIP I \u2013 VIP IV" }),
-                " theo h\u1EA1n m\u1EE9c c\u1EE7a t\u1EEBng g\xF3i, ",
+                " theo h\u1EA1n m\u1EE9c c\u1EE7a t\u1EEBng g\xF3i (t\u1ED1i \u0111a ",
+                /* @__PURE__ */ jsxDEV("b", { class: "text-cyan-300", children: "50 Skill / ng\xE0y" }),
+                "), ",
                 /* @__PURE__ */ jsxDEV("b", { class: "text-amber-300", children: "kh\xF4ng \xE1p d\u1EE5ng cho SKILL PRO (ch\u1EC9 b\xE1n l\u1EBB ri\xEAng)" }),
-                " \u1EDF b\u1EA5t k\u1EF3 m\u1EE9c gi\xE1 n\xE0o. T\u1EF7 gi\xE1 tham kh\u1EA3o: ",
+                ". \u0110\u1EB7c bi\u1EC7t: H\u1ED9i vi\xEAn ",
+                /* @__PURE__ */ jsxDEV("b", { class: "text-amber-300", children: "BLACK DIAMOND" }),
+                " \u0111\u01B0\u1EE3c ",
+                /* @__PURE__ */ jsxDEV("b", { class: "text-emerald-300", children: "gi\u1EA3m ngay 40%" }),
+                " khi mua b\u1EA5t k\u1EF3 Skill l\u1EBB n\xE0o (k\u1EC3 c\u1EA3 SKILL PRO). T\u1EF7 gi\xE1 tham kh\u1EA3o: ",
                 /* @__PURE__ */ jsxDEV("b", { class: "tabular-nums", children: [
                   "1 USD \u2248 ",
                   formatVND(usdRate)
@@ -17628,8 +17875,27 @@ var PricingPage = (props) => {
                   ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-rose-400", children: "Kh\xF4ng" }) }))
                 ] }),
                 /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "Gi\u1EDBi h\u1EA1n t\u1EA3i m\u1ED7i ng\xE0y" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center text-xs font-bold text-cyan-300 whitespace-nowrap", children: [
+                    pl.daily_download_limit || 50,
+                    " Skill/ng\xE0y"
+                  ] }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
+                  /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "\u01AFu \u0111\xE3i mua Skill l\u1EBB (k\u1EC3 c\u1EA3 PRO)" }),
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center font-extrabold", children: Number(pl.retail_discount_percent || 0) > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs", children: [
+                    "Gi\u1EA3m ",
+                    pl.retail_discount_percent,
+                    "%"
+                  ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-[#9492b8] font-normal", children: "\u2014" }) }))
+                ] }),
+                /* @__PURE__ */ jsxDEV("tr", { children: [
                   /* @__PURE__ */ jsxDEV("td", { class: "py-3 pr-3 text-[#c2c0e0] font-semibold", children: "SKILL PRO (Si\xEAu c\u1EA5p b\xE1n l\u1EBB)" }),
-                  [...starterPlans, ...premiumPlans].map(() => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center text-xs text-rose-300 font-semibold", children: "Ch\u1EC9 b\xE1n l\u1EBB" }))
+                  [...starterPlans, ...premiumPlans].map((pl) => /* @__PURE__ */ jsxDEV("td", { class: "py-3 px-2.5 text-center text-xs font-semibold", children: Number(pl.retail_discount_percent || 0) > 0 ? /* @__PURE__ */ jsxDEV("span", { class: "text-emerald-300", children: [
+                    "Mua l\u1EBB -",
+                    pl.retail_discount_percent,
+                    "%"
+                  ] }) : /* @__PURE__ */ jsxDEV("span", { class: "text-rose-300", children: "Ch\u1EC9 b\xE1n l\u1EBB" }) }))
                 ] })
               ] })
             ] }) })
@@ -20361,6 +20627,37 @@ var AdminMemberships = (props) => {
               ] }),
               /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-2.5", children: [
                 /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Gi\u1EDBi h\u1EA1n t\u1EA3i / ng\xE0y" }),
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "number",
+                      name: "daily_download_limit",
+                      value: pl.daily_download_limit || 50,
+                      min: "1",
+                      max: "1000",
+                      required: true,
+                      class: "w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "\u01AFu \u0111\xE3i mua Skill l\u1EBB (%)" }),
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "number",
+                      name: "retail_discount_percent",
+                      value: pl.retail_discount_percent || 0,
+                      min: "0",
+                      max: "100",
+                      class: "w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums"
+                    }
+                  )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 gap-2.5", children: [
+                /* @__PURE__ */ jsxDEV("div", { children: [
                   /* @__PURE__ */ jsxDEV("label", { class: "block text-slate-500 font-semibold mb-1", children: "Nh\xE3n n\u1ED5i b\u1EADt (Badge)" }),
                   /* @__PURE__ */ jsxDEV("input", { type: "text", name: "badge", value: pl.badge || "", placeholder: "VD: PH\u1ED4 BI\u1EBEN NH\u1EA4T", class: "w-full h-9 px-2.5 rounded-lg border border-slate-200" })
                 ] }),
@@ -21073,7 +21370,7 @@ async function runOnce(db, env) {
   try {
     await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
     await runOptionalDemoUserBootstrap(db, env).catch((err) => console.error("[DEMO_USER_BOOTSTRAP]", err));
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first().catch(() => null),
@@ -21082,9 +21379,10 @@ async function runOnce(db, env) {
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0009_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first().catch(() => null)
     ]);
-    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1") {
+    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1" && flag13?.value === "1") {
       _done = true;
       return;
     }
@@ -21675,6 +21973,58 @@ async function runOnce(db, env) {
         ).run().catch(async () => {
           await db.prepare(
             `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0012_done', '1')`
+          ).run().catch(() => null);
+        });
+        mutated = true;
+      }
+    }
+    if (flag13?.value !== "1") {
+      const alters13 = [
+        `ALTER TABLE membership_plans ADD COLUMN daily_download_limit INTEGER NOT NULL DEFAULT 50`,
+        `ALTER TABLE membership_plans ADD COLUMN retail_discount_percent INTEGER NOT NULL DEFAULT 0`,
+        `ALTER TABLE user_memberships ADD COLUMN daily_download_limit INTEGER NOT NULL DEFAULT 50`,
+        `ALTER TABLE user_memberships ADD COLUMN retail_discount_percent INTEGER NOT NULL DEFAULT 0`,
+        `ALTER TABLE membership_claims ADD COLUMN day_key TEXT`
+      ];
+      for (const sql of alters13) {
+        await db.prepare(sql).run().catch(() => null);
+      }
+      await db.prepare(`UPDATE membership_plans SET daily_download_limit = 50 WHERE daily_download_limit IS NULL OR daily_download_limit <= 0`).run().catch(() => null);
+      await db.prepare(`UPDATE membership_plans SET retail_discount_percent = 40, ideal_for = 'Agency / Team \xB7 Gi\u1EA3m 40% mua Skill l\u1EBB' WHERE slug = 'black-diamond'`).run().catch(() => null);
+      await db.prepare(`UPDATE user_memberships SET daily_download_limit = 50 WHERE daily_download_limit IS NULL OR daily_download_limit <= 0`).run().catch(() => null);
+      await db.prepare(`UPDATE user_memberships SET retail_discount_percent = 40 WHERE plan_slug = 'black-diamond'`).run().catch(() => null);
+      const pgDailySql = `CREATE TABLE IF NOT EXISTS membership_daily_downloads (
+        id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        day_key TEXT NOT NULL,
+        download_count INTEGER NOT NULL DEFAULT 1,
+        last_at TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id, day_key)
+      )`;
+      const sqliteDailySql = `CREATE TABLE IF NOT EXISTS membership_daily_downloads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        day_key TEXT NOT NULL,
+        download_count INTEGER NOT NULL DEFAULT 1,
+        last_at TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, product_id, day_key)
+      )`;
+      await db.prepare(pgDailySql).run().catch(async () => {
+        await db.prepare(sqliteDailySql).run();
+      });
+      await db.prepare("CREATE INDEX IF NOT EXISTS idx_mem_daily_dl_user_day ON membership_daily_downloads(user_id, day_key)").run().catch(() => null);
+      await db.prepare("CREATE INDEX IF NOT EXISTS idx_mem_claims_user_day ON membership_claims(user_id, day_key)").run().catch(() => null);
+      const dlOk = await db.prepare("SELECT COUNT(*) c FROM membership_daily_downloads").first().catch(() => null);
+      if (dlOk !== null) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0013_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0013_done', '1')`
           ).run().catch(() => null);
         });
         mutated = true;
@@ -22663,11 +23013,17 @@ app.post("/api/wishlist/toggle", requireAuth, async (c) => {
 });
 app.get("/gio-hang", requireAuth, async (c) => {
   const u = c.get("user");
-  const rows = await c.env.DB.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published' ORDER BY ci.id DESC`
-  ).bind(u.id).all();
+  const [rows, activeMem] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published' ORDER BY ci.id DESC`
+    ).bind(u.id).all(),
+    getActiveUserMembership(c.env.DB, u.id)
+  ]);
   const items = rows.results;
-  return c.html(/* @__PURE__ */ jsxDEV(CartPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0) }));
+  const subtotal = items.reduce((s, i) => s + i.price, 0);
+  const mDisc = getMemberRetailDiscount(activeMem);
+  const memberDiscount = mDisc.percent > 0 ? { percent: mDisc.percent, planName: mDisc.planName, amount: mDisc.calcDiscount(subtotal) } : null;
+  return c.html(/* @__PURE__ */ jsxDEV(CartPage, { ...base(c), items, subtotal, memberDiscount }));
 });
 function isDemoFreeUser(env, email) {
   if (!email) return false;
@@ -22678,13 +23034,19 @@ function isDemoFreeUser(env, email) {
 }
 app.get("/thanh-toan", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
-  const rows = await db.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published'`
-  ).bind(u.id).all();
+  const [rows, me, activeMem] = await Promise.all([
+    db.prepare(
+      `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published'`
+    ).bind(u.id).all(),
+    db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first(),
+    getActiveUserMembership(db, u.id)
+  ]);
   const items = rows.results;
   if (items.length === 0) return c.redirect("/gio-hang");
-  const me = await db.prepare("SELECT balance FROM users WHERE id=?").bind(u.id).first();
-  return c.html(/* @__PURE__ */ jsxDEV(CheckoutPage, { ...base(c), items, subtotal: items.reduce((s, i) => s + i.price, 0), balance: me?.balance || 0, isDemoFree: isDemoFreeUser(c.env, u.email) }));
+  const subtotal = items.reduce((s, i) => s + i.price, 0);
+  const mDisc = getMemberRetailDiscount(activeMem);
+  const memberDiscount = mDisc.percent > 0 ? { percent: mDisc.percent, planName: mDisc.planName, amount: mDisc.calcDiscount(subtotal) } : null;
+  return c.html(/* @__PURE__ */ jsxDEV(CheckoutPage, { ...base(c), items, subtotal, balance: me?.balance || 0, isDemoFree: isDemoFreeUser(c.env, u.email), memberDiscount }));
 });
 app.post("/api/coupons/check", requireAuth, async (c) => {
   const u = c.get("user");
@@ -22741,26 +23103,31 @@ app.post("/api/orders/create", requireAuth, async (c) => {
   }
   const demoFree = isDemoFreeUser(c.env, u.email);
   const subtotal = items.reduce((s, i) => s + i.price, 0);
-  let discount = 0, couponCode = null, heldCouponId = null;
+  const activeMem = !demoFree ? await getActiveUserMembership(db, u.id) : null;
+  const mDisc = getMemberRetailDiscount(activeMem);
+  const memberDiscountAmt = !demoFree ? mDisc.calcDiscount(subtotal) : 0;
+  const afterMember = Math.max(0, subtotal - memberDiscountAmt);
+  let couponDiscount = 0, couponCode = null, heldCouponId = null;
   if (demoFree) {
-    discount = subtotal;
+    couponDiscount = subtotal;
     couponCode = "DEMO_FREE";
   } else if (b.coupon_code) {
     const holdRes = await validateAndHoldCoupon({
       db,
       code: String(b.coupon_code),
       userId: u.id,
-      subtotal
+      subtotal: afterMember
     });
     if (!holdRes.ok) {
       return c.json({ error: holdRes.error }, holdRes.status || 400);
     }
-    discount = holdRes.discount;
+    couponDiscount = holdRes.discount;
     couponCode = holdRes.coupon.code;
     heldCouponId = holdRes.holdId;
   } else {
     await releaseUserDraftHolds(db, u.id);
   }
+  const discount = demoFree ? subtotal : Math.min(subtotal, memberDiscountAmt + couponDiscount);
   const total = demoFree ? 0 : Math.max(0, subtotal - discount);
   const pm = demoFree ? "demo_free" : ["bank", "momo", "balance"].includes(b.payment_method) ? b.payment_method : "bank";
   let status = demoFree ? "paid" : "pending";
@@ -22771,6 +23138,8 @@ app.post("/api/orders/create", requireAuth, async (c) => {
     status = "paid";
   }
   const code = genCode("DH", 8);
+  const memberNote = memberDiscountAmt > 0 ? `\u01AFu \u0111\xE3i H\u1ED9i vi\xEAn ${mDisc.planName} (-${mDisc.percent}%): -${formatVND(memberDiscountAmt)}` : "";
+  const finalNote = [String(b.note || "").trim(), memberNote, demoFree ? "\u0110\u01A1n test mi\u1EC5n ph\xED (Demo Account)" : ""].filter(Boolean).join(" | ") || null;
   const ord = await db.prepare(
     `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, status, note, paid_at, paid_amount, paid_via)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
@@ -22783,7 +23152,7 @@ app.post("/api/orders/create", requireAuth, async (c) => {
     couponCode,
     pm,
     status,
-    b.note || (demoFree ? "\u0110\u01A1n test mi\u1EC5n ph\xED (Demo Account)" : null),
+    finalNote,
     status === "paid" ? (/* @__PURE__ */ new Date()).toISOString() : null,
     status === "paid" ? total : null,
     demoFree ? "demo_free" : status === "paid" ? "balance" : null
@@ -23786,6 +24155,7 @@ app.get("/tai-khoan/hoi-vien", requireAuth, async (c) => {
     db.prepare("SELECT product_id FROM licenses WHERE user_id=?").bind(u.id).all()
   ]);
   const ownedIds = (ownedRes.results || []).map((x) => Number(x.product_id));
+  const dailyUsage = membership ? await getDailyDownloadUsage(db, u.id, membership) : null;
   return c.html(
     /* @__PURE__ */ jsxDEV(
       AccountMembershipPage,
@@ -23795,7 +24165,8 @@ app.get("/tai-khoan/hoi-vien", requireAuth, async (c) => {
         history: historyRes.results || [],
         catalog: catalogRes.results || [],
         ownedIds,
-        selectedTier
+        selectedTier,
+        dailyUsage
       }
     )
   );
@@ -23834,9 +24205,33 @@ app.post("/api/account/notifications/read-all", requireAuth, async (c) => {
 app.get("/tai-xuong/:licenseId", requireAuth, async (c) => {
   const db = c.env.DB, u = c.get("user");
   const l = await db.prepare(
-    `SELECT l.id, p.download_url FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.id=? AND l.user_id=?`
+    `SELECT l.id, l.product_id, COALESCE(l.source, 'purchase') AS source, p.download_url, p.name
+     FROM licenses l JOIN products p ON p.id=l.product_id
+     WHERE l.id=? AND l.user_id=?`
   ).bind(c.req.param("licenseId"), u.id).first();
   if (!l?.download_url) return c.html(/* @__PURE__ */ jsxDEV(NotFoundPage, { ...base(c) }), 404);
+  const cap = await checkAndRecordDailyDownload(db, {
+    userId: u.id,
+    productId: Number(l.product_id),
+    licenseSource: l.source
+  });
+  if (!cap.ok) {
+    return c.html(
+      /* @__PURE__ */ jsxDEV(
+        DocPage,
+        {
+          ...base(c),
+          heading: "\u0110\xE3 \u0111\u1EA1t gi\u1EDBi h\u1EA1n t\u1EA3i Skill trong ng\xE0y",
+          html: `<div style="text-align:center;padding:12px 0">
+          <p style="font-size:16px;font-weight:700;color:#fbbf24;margin-bottom:10px">${cap.error}</p>
+          <p style="color:#c2c0e0;margin-bottom:18px">C\xE1c Skill b\u1EA1n \u0111\xE3 t\u1EA3i trong h\xF4m nay v\u1EABn c\xF3 th\u1EC3 t\u1EA3i l\u1EA1i t\u1EF1 do. Gi\u1EDBi h\u1EA1n ch\u1EC9 \xE1p d\u1EE5ng cho c\xE1c Skill thu\u1ED9c g\xF3i H\u1ED9i vi\xEAn (Skill mua l\u1EBB ri\xEAng kh\xF4ng b\u1ECB gi\u1EDBi h\u1EA1n).</p>
+          <a href="/tai-khoan/hoi-vien" style="display:inline-block;padding:10px 20px;border-radius:12px;background:#4f46e5;color:#fff;font-weight:700;text-decoration:none">Quay l\u1EA1i trang H\u1ED9i vi\xEAn VIP</a>
+        </div>`
+        }
+      ),
+      429
+    );
+  }
   await db.prepare("UPDATE licenses SET download_count=download_count+1, last_download_at=? WHERE id=?").bind((/* @__PURE__ */ new Date()).toISOString(), l.id).run();
   return c.redirect(l.download_url);
 });
@@ -24664,6 +25059,8 @@ app.post("/api/admin/membership-plans/:id", requireAdmin, async (c) => {
   const v2 = parseQuota(b.vip2_quota);
   const v3 = parseQuota(b.vip3_quota);
   const v4 = parseQuota(b.vip4_quota);
+  const dailyLimit = Math.max(1, Math.min(1e3, Math.round(Number(b.daily_download_limit) || DEFAULT_DAILY_DOWNLOAD_LIMIT)));
+  const retailDisc = Math.max(0, Math.min(100, Math.round(Number(b.retail_discount_percent) || 0)));
   const badge = String(b.badge || "").trim() || null;
   const idealFor = String(b.ideal_for || "").trim() || null;
   const estValue = Math.max(0, Math.round(Number(b.est_value_vnd) || 0));
@@ -24675,10 +25072,11 @@ app.post("/api/admin/membership-plans/:id", requireAdmin, async (c) => {
     `UPDATE membership_plans
      SET name=?, group_type=?, badge=?, theme_color=?, price_vnd=?, duration_days=?,
          vip1_quota=?, vip2_quota=?, vip3_quota=?, vip4_quota=?,
+         daily_download_limit=?, retail_discount_percent=?,
          auto_update_note=?, ideal_for=?, est_value_vnd=?, is_popular=?, status=?, sort_order=?,
          updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
-  ).bind(name, groupType, badge, themeColor, priceVnd, durationDays, v1, v2, v3, v4, autoNote, idealFor, estValue, isPopular, status, sortOrder, id).run();
+  ).bind(name, groupType, badge, themeColor, priceVnd, durationDays, v1, v2, v3, v4, dailyLimit, retailDisc, autoNote, idealFor, estValue, isPopular, status, sortOrder, id).run();
   invalidateCache();
   return c.json({ ok: true, message: `\u0110\xE3 l\u01B0u c\u1EA5u h\xECnh g\xF3i ${name}!` });
 });

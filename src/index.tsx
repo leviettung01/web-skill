@@ -63,7 +63,11 @@ import {
   syncUnlimitedMembershipSkills,
   activateMembershipFromOrder,
   grantUserMembership,
-  claimSkillWithMembership
+  claimSkillWithMembership,
+  getMemberRetailDiscount,
+  getDailyDownloadUsage,
+  checkAndRecordDailyDownload,
+  DEFAULT_DAILY_DOWNLOAD_LIMIT
 } from './lib/tiers'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -817,11 +821,17 @@ app.post('/api/wishlist/toggle', requireAuth, async (c) => {
 
 app.get('/gio-hang', requireAuth, async (c) => {
   const u = c.get('user')!
-  const rows = await c.env.DB.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published' ORDER BY ci.id DESC`
-  ).bind(u.id).all()
+  const [rows, activeMem] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published' ORDER BY ci.id DESC`
+    ).bind(u.id).all(),
+    getActiveUserMembership(c.env.DB, u.id)
+  ])
   const items = rows.results as any[]
-  return c.html(<CartPage {...base(c)} items={items} subtotal={items.reduce((s, i) => s + i.price, 0)} />)
+  const subtotal = items.reduce((s, i) => s + i.price, 0)
+  const mDisc = getMemberRetailDiscount(activeMem)
+  const memberDiscount = mDisc.percent > 0 ? { percent: mDisc.percent, planName: mDisc.planName, amount: mDisc.calcDiscount(subtotal) } : null
+  return c.html(<CartPage {...base(c)} items={items} subtotal={subtotal} memberDiscount={memberDiscount} />)
 })
 
 /* ============================================================
@@ -840,13 +850,19 @@ function isDemoFreeUser(env: any, email?: string | null): boolean {
 
 app.get('/thanh-toan', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
-  const rows = await db.prepare(
-    `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published'`
-  ).bind(u.id).all()
+  const [rows, me, activeMem] = await Promise.all([
+    db.prepare(
+      `SELECT p.* FROM cart_items ci JOIN products p ON p.id=ci.product_id WHERE ci.user_id=? AND p.status='published'`
+    ).bind(u.id).all(),
+    db.prepare('SELECT balance FROM users WHERE id=?').bind(u.id).first<any>(),
+    getActiveUserMembership(db, u.id)
+  ])
   const items = rows.results as any[]
   if (items.length === 0) return c.redirect('/gio-hang')
-  const me = await db.prepare('SELECT balance FROM users WHERE id=?').bind(u.id).first<any>()
-  return c.html(<CheckoutPage {...base(c)} items={items} subtotal={items.reduce((s, i) => s + i.price, 0)} balance={me?.balance || 0} isDemoFree={isDemoFreeUser(c.env, u.email)} />)
+  const subtotal = items.reduce((s, i) => s + i.price, 0)
+  const mDisc = getMemberRetailDiscount(activeMem)
+  const memberDiscount = mDisc.percent > 0 ? { percent: mDisc.percent, planName: mDisc.planName, amount: mDisc.calcDiscount(subtotal) } : null
+  return c.html(<CheckoutPage {...base(c)} items={items} subtotal={subtotal} balance={me?.balance || 0} isDemoFree={isDemoFreeUser(c.env, u.email)} memberDiscount={memberDiscount} />)
 })
 
 app.post('/api/coupons/check', requireAuth, async (c) => {
@@ -910,27 +926,33 @@ app.post('/api/orders/create', requireAuth, async (c) => {
 
   const demoFree = isDemoFreeUser(c.env, u.email)
   const subtotal = items.reduce((s, i) => s + i.price, 0)
-  let discount = 0, couponCode: string | null = null, heldCouponId: number | null = null
+  const activeMem = !demoFree ? await getActiveUserMembership(db, u.id) : null
+  const mDisc = getMemberRetailDiscount(activeMem)
+  const memberDiscountAmt = !demoFree ? mDisc.calcDiscount(subtotal) : 0
+  const afterMember = Math.max(0, subtotal - memberDiscountAmt)
+
+  let couponDiscount = 0, couponCode: string | null = null, heldCouponId: number | null = null
   if (demoFree) {
-    discount = subtotal
+    couponDiscount = subtotal
     couponCode = 'DEMO_FREE'
   } else if (b.coupon_code) {
     const holdRes = await validateAndHoldCoupon({
       db,
       code: String(b.coupon_code),
       userId: u.id,
-      subtotal
+      subtotal: afterMember
     })
     if (!holdRes.ok) {
       return c.json({ error: holdRes.error }, (holdRes.status || 400) as any)
     }
-    discount = holdRes.discount
+    couponDiscount = holdRes.discount
     couponCode = holdRes.coupon.code
     heldCouponId = holdRes.holdId
   } else {
     // User placed order without coupon -> release any draft hold they held during checkout
     await releaseUserDraftHolds(db, u.id)
   }
+  const discount = demoFree ? subtotal : Math.min(subtotal, memberDiscountAmt + couponDiscount)
   const total = demoFree ? 0 : Math.max(0, subtotal - discount)
   const pm = demoFree ? 'demo_free' : (['bank', 'momo', 'balance'].includes(b.payment_method) ? b.payment_method : 'bank')
 
@@ -944,10 +966,12 @@ app.post('/api/orders/create', requireAuth, async (c) => {
   }
 
   const code = genCode('DH', 8)
+  const memberNote = memberDiscountAmt > 0 ? `Ưu đãi Hội viên ${mDisc.planName} (-${mDisc.percent}%): -${formatVND(memberDiscountAmt)}` : ''
+  const finalNote = [String(b.note || '').trim(), memberNote, demoFree ? 'Đơn test miễn phí (Demo Account)' : ''].filter(Boolean).join(' | ') || null
   const ord = await db.prepare(
     `INSERT INTO orders (order_code, user_id, subtotal, discount, total, coupon_code, payment_method, status, note, paid_at, paid_amount, paid_via)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
-  ).bind(code, u.id, subtotal, discount, total, couponCode, pm, status, b.note || (demoFree ? 'Đơn test miễn phí (Demo Account)' : null),
+  ).bind(code, u.id, subtotal, discount, total, couponCode, pm, status, finalNote,
     status === 'paid' ? new Date().toISOString() : null,
     status === 'paid' ? total : null,
     demoFree ? 'demo_free' : (status === 'paid' ? 'balance' : null)).run()
@@ -2081,6 +2105,7 @@ app.get('/tai-khoan/hoi-vien', requireAuth, async (c) => {
     db.prepare('SELECT product_id FROM licenses WHERE user_id=?').bind(u.id).all()
   ])
   const ownedIds = ((ownedRes.results || []) as any[]).map(x => Number(x.product_id))
+  const dailyUsage = membership ? await getDailyDownloadUsage(db, u.id, membership) : null
   return c.html(
     <AccountMembershipPage
       {...base(c)}
@@ -2089,6 +2114,7 @@ app.get('/tai-khoan/hoi-vien', requireAuth, async (c) => {
       catalog={(catalogRes.results || []) as any}
       ownedIds={ownedIds}
       selectedTier={selectedTier}
+      dailyUsage={dailyUsage}
     />
   )
 })
@@ -2131,13 +2157,34 @@ app.post('/api/account/notifications/read-all', requireAuth, async (c) => {
   return c.json({ ok: true, message: 'Đã đánh dấu tất cả thông báo là đã đọc!' })
 })
 
-/* Download redirect - đếm lượt tải và bảo vệ link */
+/* Download redirect - đếm lượt tải, bảo vệ link & giới hạn 50 Skill/ngày theo gói Hội viên */
 app.get('/tai-xuong/:licenseId', requireAuth, async (c) => {
   const db = c.env.DB, u = c.get('user')!
   const l = await db.prepare(
-    `SELECT l.id, p.download_url FROM licenses l JOIN products p ON p.id=l.product_id WHERE l.id=? AND l.user_id=?`
+    `SELECT l.id, l.product_id, COALESCE(l.source, 'purchase') AS source, p.download_url, p.name
+     FROM licenses l JOIN products p ON p.id=l.product_id
+     WHERE l.id=? AND l.user_id=?`
   ).bind(c.req.param('licenseId'), u.id).first<any>()
   if (!l?.download_url) return c.html(<NotFoundPage {...base(c)} />, 404)
+
+  const cap = await checkAndRecordDailyDownload(db, {
+    userId: u.id,
+    productId: Number(l.product_id),
+    licenseSource: l.source
+  })
+  if (!cap.ok) {
+    return c.html(
+      <DocPage {...base(c)} heading="Đã đạt giới hạn tải Skill trong ngày"
+        html={`<div style="text-align:center;padding:12px 0">
+          <p style="font-size:16px;font-weight:700;color:#fbbf24;margin-bottom:10px">${cap.error}</p>
+          <p style="color:#c2c0e0;margin-bottom:18px">Các Skill bạn đã tải trong hôm nay vẫn có thể tải lại tự do. Giới hạn chỉ áp dụng cho các Skill thuộc gói Hội viên (Skill mua lẻ riêng không bị giới hạn).</p>
+          <a href="/tai-khoan/hoi-vien" style="display:inline-block;padding:10px 20px;border-radius:12px;background:#4f46e5;color:#fff;font-weight:700;text-decoration:none">Quay lại trang Hội viên VIP</a>
+        </div>`}
+      />,
+      429
+    )
+  }
+
   await db.prepare('UPDATE licenses SET download_count=download_count+1, last_download_at=? WHERE id=?')
     .bind(new Date().toISOString(), l.id).run()
   return c.redirect(l.download_url)
@@ -2881,6 +2928,8 @@ app.post('/api/admin/membership-plans/:id', requireAdmin, async (c) => {
   const v2 = parseQuota(b.vip2_quota)
   const v3 = parseQuota(b.vip3_quota)
   const v4 = parseQuota(b.vip4_quota)
+  const dailyLimit = Math.max(1, Math.min(1000, Math.round(Number(b.daily_download_limit) || DEFAULT_DAILY_DOWNLOAD_LIMIT)))
+  const retailDisc = Math.max(0, Math.min(100, Math.round(Number(b.retail_discount_percent) || 0)))
   const badge = String(b.badge || '').trim() || null
   const idealFor = String(b.ideal_for || '').trim() || null
   const estValue = Math.max(0, Math.round(Number(b.est_value_vnd) || 0))
@@ -2893,10 +2942,11 @@ app.post('/api/admin/membership-plans/:id', requireAdmin, async (c) => {
     `UPDATE membership_plans
      SET name=?, group_type=?, badge=?, theme_color=?, price_vnd=?, duration_days=?,
          vip1_quota=?, vip2_quota=?, vip3_quota=?, vip4_quota=?,
+         daily_download_limit=?, retail_discount_percent=?,
          auto_update_note=?, ideal_for=?, est_value_vnd=?, is_popular=?, status=?, sort_order=?,
          updated_at=CURRENT_TIMESTAMP
      WHERE id=?`
-  ).bind(name, groupType, badge, themeColor, priceVnd, durationDays, v1, v2, v3, v4, autoNote, idealFor, estValue, isPopular, status, sortOrder, id).run()
+  ).bind(name, groupType, badge, themeColor, priceVnd, durationDays, v1, v2, v3, v4, dailyLimit, retailDisc, autoNote, idealFor, estValue, isPopular, status, sortOrder, id).run()
 
   invalidateCache()
   return c.json({ ok: true, message: `Đã lưu cấu hình gói ${name}!` })

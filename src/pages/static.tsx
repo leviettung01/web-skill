@@ -247,6 +247,35 @@ const MembershipCard: FC<{
             <QuotaCell quota={plan.vip4_quota} tierLabel="VIP IV" isOptionalPick />
           </div>
 
+          {/* Daily Download Cap (50 skills/day) */}
+          <div class="py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 text-xs sm:text-sm text-[#c2c0e0]">
+              <span class="w-7 h-7 rounded-lg bg-cyan-500/15 text-cyan-300 grid place-items-center text-xs shrink-0">
+                <i class="fas fa-gauge-high" aria-hidden="true"></i>
+              </span>
+              <span>Giới hạn tải / ngày</span>
+            </div>
+            <span class="font-extrabold text-cyan-300 text-xs sm:text-sm tabular-nums whitespace-nowrap">
+              {plan.daily_download_limit || 50} Skill / ngày
+            </span>
+          </div>
+
+          {/* Retail Discount Perk (e.g., BLACK DIAMOND -40% off individual skills!) */}
+          {Number(plan.retail_discount_percent || 0) > 0 && (
+            <div class="py-3 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5 text-xs sm:text-sm text-amber-200 font-semibold">
+                <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 grid place-items-center text-xs shrink-0">
+                  <i class="fas fa-percent" aria-hidden="true"></i>
+                </span>
+                <span>Ưu đãi mua Skill lẻ</span>
+              </div>
+              <div class="text-right">
+                <div class="font-black text-amber-300 text-sm">Giảm {plan.retail_discount_percent}%</div>
+                <div class="text-[11px] text-emerald-400 font-semibold">Áp dụng cả SKILL PRO</div>
+              </div>
+            </div>
+          )}
+
           {/* Estimated Value */}
           {plan.est_value_vnd > 0 && (
             <div class="py-3 flex items-center justify-between gap-3">
@@ -364,7 +393,7 @@ export const PricingPage: FC<LayoutProps & {
               <i class="fas fa-info" aria-hidden="true"></i>
             </span>
             <p class="leading-relaxed">
-              Gói Hội viên chỉ áp dụng nhận các Skill lẻ thuộc hạng <b>VIP I – VIP IV</b> theo hạn mức của từng gói, <b class="text-amber-300">không áp dụng cho SKILL PRO (chỉ bán lẻ riêng)</b> ở bất kỳ mức giá nào. Tỷ giá tham khảo: <b class="tabular-nums">1 USD ≈ {formatVND(usdRate)}</b>.
+              Gói Hội viên chỉ áp dụng nhận các Skill lẻ thuộc hạng <b>VIP I – VIP IV</b> theo hạn mức của từng gói (tối đa <b class="text-cyan-300">50 Skill / ngày</b>), <b class="text-amber-300">không áp dụng cho SKILL PRO (chỉ bán lẻ riêng)</b>. Đặc biệt: Hội viên <b class="text-amber-300">BLACK DIAMOND</b> được <b class="text-emerald-300">giảm ngay 40%</b> khi mua bất kỳ Skill lẻ nào (kể cả SKILL PRO). Tỷ giá tham khảo: <b class="tabular-nums">1 USD ≈ {formatVND(usdRate)}</b>.
             </p>
           </div>
         </section>
@@ -502,9 +531,31 @@ export const PricingPage: FC<LayoutProps & {
                     ))}
                   </tr>
                   <tr>
+                    <td class="py-3 pr-3 text-[#c2c0e0] font-semibold">Giới hạn tải mỗi ngày</td>
+                    {[...starterPlans, ...premiumPlans].map(pl => (
+                      <td class="py-3 px-2.5 text-center text-xs font-bold text-cyan-300 whitespace-nowrap">
+                        {pl.daily_download_limit || 50} Skill/ngày
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td class="py-3 pr-3 text-[#c2c0e0] font-semibold">Ưu đãi mua Skill lẻ (kể cả PRO)</td>
+                    {[...starterPlans, ...premiumPlans].map(pl => (
+                      <td class="py-3 px-2.5 text-center font-extrabold">
+                        {Number(pl.retail_discount_percent || 0) > 0
+                          ? <span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs">Giảm {pl.retail_discount_percent}%</span>
+                          : <span class="text-[#9492b8] font-normal">—</span>}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
                     <td class="py-3 pr-3 text-[#c2c0e0] font-semibold">SKILL PRO (Siêu cấp bán lẻ)</td>
-                    {[...starterPlans, ...premiumPlans].map(() => (
-                      <td class="py-3 px-2.5 text-center text-xs text-rose-300 font-semibold">Chỉ bán lẻ</td>
+                    {[...starterPlans, ...premiumPlans].map(pl => (
+                      <td class="py-3 px-2.5 text-center text-xs font-semibold">
+                        {Number(pl.retail_discount_percent || 0) > 0
+                          ? <span class="text-emerald-300">Mua lẻ -{pl.retail_discount_percent}%</span>
+                          : <span class="text-rose-300">Chỉ bán lẻ</span>}
+                      </td>
                     ))}
                   </tr>
                 </tbody>

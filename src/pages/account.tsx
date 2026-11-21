@@ -1190,10 +1190,14 @@ export const AccountMembershipPage: FC<LayoutProps & {
   catalog: any[]
   ownedIds: number[]
   selectedTier?: string
+  dailyUsage?: { used: number; limit: number; remaining: number; dayKey: string } | null
 }> = (props) => {
-  const { membership, history, catalog, ownedIds, selectedTier = '' } = props
+  const { membership, history, catalog, ownedIds, selectedTier = '', dailyUsage = null } = props
   const usdRate = getUsdRate(props.settings)
   const ownedSet = new Set(ownedIds)
+  const retailDiscPct = membership ? Number(membership.retail_discount_percent || 0) : 0
+  const dlLimit = dailyUsage?.limit || Number(membership?.daily_download_limit || 50)
+  const dlUsed = dailyUsage?.used || 0
   const daysLeft = membership
     ? Math.max(0, Math.ceil((new Date(membership.expires_at).getTime() - Date.now()) / 86400_000))
     : 0
@@ -1239,6 +1243,55 @@ export const AccountMembershipPage: FC<LayoutProps & {
               <a href="/bang-gia" class="h-10 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 font-bold text-xs inline-flex items-center gap-1.5 transition">
                 <i class="fas fa-arrow-up-right-dots" aria-hidden="true"></i>Nâng cấp / Gia hạn gói
               </a>
+            </div>
+
+            {/* Daily download cap & Black Diamond 40% retail discount bar */}
+            <div class="grid sm:grid-cols-2 gap-3 mt-4">
+              <div class="rounded-xl bg-[#09081b]/80 border border-cyan-500/30 p-3.5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-9 h-9 rounded-lg bg-cyan-500/15 text-cyan-300 grid place-items-center text-sm shrink-0">
+                    <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white">Giới hạn tải Skill hôm nay</div>
+                    <div class="text-[11px] text-[#9492b8]">Làm mới tự động lúc 00:00 (giờ VN)</div>
+                  </div>
+                </div>
+                <div class="text-right shrink-0 tabular-nums">
+                  <div class={`text-base font-black ${dlUsed >= dlLimit ? 'text-rose-400' : 'text-cyan-300'}`}>{dlUsed} / {dlLimit}</div>
+                  <div class="text-[10px] text-[#9492b8]">Skill / ngày</div>
+                </div>
+              </div>
+
+              {retailDiscPct > 0 ? (
+                <div class="rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-emerald-500/15 border border-amber-400/45 p-3.5 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-300 grid place-items-center text-sm shrink-0">
+                      <i class="fas fa-gem" aria-hidden="true"></i>
+                    </span>
+                    <div class="min-w-0">
+                      <div class="text-xs font-extrabold text-amber-200">Đặc quyền {membership.plan_name}: Giảm {retailDiscPct}% mua lẻ</div>
+                      <div class="text-[11px] text-emerald-300">Tự động áp dụng khi mua mọi Skill lẻ (kể cả SKILL PRO)</div>
+                    </div>
+                  </div>
+                  <a href="/san-pham?tier=pro" class="shrink-0 h-8 px-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-[11px] inline-flex items-center">
+                    Xem PRO →
+                  </a>
+                </div>
+              ) : (
+                <div class="rounded-xl bg-[#09081b]/80 border border-white/10 p-3.5 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-300 grid place-items-center text-sm shrink-0">
+                      <i class="fas fa-gem" aria-hidden="true"></i>
+                    </span>
+                    <div class="min-w-0">
+                      <div class="text-xs font-bold text-white">Muốn giảm 40% khi mua Skill lẻ &amp; SKILL PRO?</div>
+                      <div class="text-[11px] text-[#9492b8]">Nâng cấp lên gói BLACK DIAMOND để hưởng ưu đãi -40%</div>
+                    </div>
+                  </div>
+                  <a href="/bang-gia" class="shrink-0 text-xs font-bold text-amber-300 hover:underline whitespace-nowrap">Xem gói →</a>
+                </div>
+              )}
             </div>
 
             {/* 4 Tier Quotas */}

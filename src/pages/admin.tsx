@@ -2161,6 +2161,19 @@ export const AdminMemberships: FC<AdminProps & {
 
                 <div class="grid grid-cols-2 gap-2.5">
                   <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Giới hạn tải / ngày</label>
+                    <input type="number" name="daily_download_limit" value={pl.daily_download_limit || 50} min="1" max="1000" required
+                      class="w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums" />
+                  </div>
+                  <div>
+                    <label class="block text-slate-500 font-semibold mb-1">Ưu đãi mua Skill lẻ (%)</label>
+                    <input type="number" name="retail_discount_percent" value={pl.retail_discount_percent || 0} min="0" max="100"
+                      class="w-full h-9 px-2.5 rounded-lg border border-slate-200 font-bold tabular-nums" />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
                     <label class="block text-slate-500 font-semibold mb-1">Nhãn nổi bật (Badge)</label>
                     <input type="text" name="badge" value={pl.badge || ''} placeholder="VD: PHỔ BIẾN NHẤT" class="w-full h-9 px-2.5 rounded-lg border border-slate-200" />
                   </div>
