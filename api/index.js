@@ -8568,6 +8568,35 @@ function isDirectVideoUrl(url) {
   if (!url) return false;
   return /\.(mp4|webm|mov)(\?.*)?$/i.test(url.trim());
 }
+function parseDemoVideos(p) {
+  const parsed = parseJSON(p.demo_videos, null);
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const out = [];
+    for (let i = 0; i < parsed.length; i++) {
+      const it = parsed[i];
+      if (!it || typeof it !== "object" || !it.url) continue;
+      const aspect = it.aspect === "9:16" ? "9:16" : "16:9";
+      out.push({
+        label: String(it.label || `Video ${i + 1}`),
+        shortLabel: String(it.shortLabel || `Video ${i + 1}`),
+        aspect,
+        url: String(it.url),
+        poster: String(it.poster || p.thumbnail || "")
+      });
+    }
+    if (out.length > 0) return out;
+  }
+  if (p.demo_video_url && (isDirectVideoUrl(p.demo_video_url) || p.demo_video_url.includes("/videos/"))) {
+    return [{
+      label: "Video Demo",
+      shortLabel: "Video 1",
+      aspect: "16:9",
+      url: p.demo_video_url,
+      poster: p.thumbnail || ""
+    }];
+  }
+  return [];
+}
 function toEmbedVideoUrl(url) {
   const raw2 = (url || "").trim();
   if (!raw2) return "";
@@ -9924,12 +9953,12 @@ var Layout = (props) => {
       props.ogImage && /* @__PURE__ */ jsxDEV("meta", { property: "og:image", content: props.ogImage }),
       canonical && /* @__PURE__ */ jsxDEV("link", { rel: "canonical", href: canonical }),
       /* @__PURE__ */ jsxDEV("link", { rel: "icon", href: "/static/favicon.svg", type: "image/svg+xml" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261130", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/tailwind.css?v=20261131", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.googleapis.com" }),
       /* @__PURE__ */ jsxDEV("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("link", { href: "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css", rel: "stylesheet" }),
-      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261130", rel: "stylesheet" }),
+      /* @__PURE__ */ jsxDEV("link", { href: "/static/style.css?v=20261131", rel: "stylesheet" }),
       /* @__PURE__ */ jsxDEV("script", { dangerouslySetInnerHTML: {
         __html: `(function(){try{var s=localStorage.getItem('khoskill_sidebar_state');if(s==='expanded')document.documentElement.classList.add('sb-pinned');}catch(e){}})();`
       } })
@@ -10421,7 +10450,7 @@ var Layout = (props) => {
       ] }),
       /* @__PURE__ */ jsxDEV("div", { id: "toast-container", "aria-live": "polite", "aria-atomic": "true", role: "status", class: "fixed top-20 right-4 z-[100] flex flex-col gap-2" }),
       /* @__PURE__ */ jsxDEV("script", { src: "https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js" }),
-      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261127" })
+      /* @__PURE__ */ jsxDEV("script", { src: "/static/app.js?v=20261131" })
     ] })
   ] });
 };
@@ -10450,72 +10479,93 @@ var ProductCard = ({ p, compact, usdRate = DEFAULT_USD_VND_RATE }) => {
   const mcp = isMcpSkill(p.product_type);
   const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : [];
   const tierMeta = getSkillTierMeta(p.skill_tier, p.price);
+  const demoVideos = parseDemoVideos(p);
+  const hoverVideoUrl = demoVideos[0]?.url || (isDirectVideoUrl(p.demo_video_url) ? p.demo_video_url : "");
+  const hasMultiDemo = demoVideos.length >= 2;
+  const modalVideoUrl = demoVideos[0]?.url || p.demo_video_url || "";
   return /* @__PURE__ */ jsxDEV("article", { class: `product-card group bg-[#0f0e24] rounded-2xl border overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${mcp ? "border-cyan-500/35 hover:border-cyan-400/65 hover:shadow-cyan-500/15" : "border-[#221e54] hover:border-indigo-500/40 hover:shadow-indigo-500/15"} ${comingSoon ? "opacity-90" : ""}`, children: [
-    /* @__PURE__ */ jsxDEV("div", { class: "product-card-media relative aspect-video overflow-hidden bg-[#070614]", style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`, children: [
-      p.thumbnail ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
-        /* @__PURE__ */ jsxDEV(
-          "div",
-          {
-            class: "product-card-ambient absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-0 transition-opacity duration-200 pointer-events-none",
-            style: `background-image:url('${p.thumbnail}')`
-          }
-        ),
-        /* @__PURE__ */ jsxDEV(
-          "img",
-          {
-            src: p.thumbnail,
-            alt: p.name,
-            loading: "lazy",
-            decoding: "async",
-            class: `product-card-img relative z-[1] w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? "opacity-80 grayscale-[15%]" : ""}`
-          }
-        )
-      ] }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
-        /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-4xl mb-2 opacity-95`, "aria-hidden": "true" }),
-        /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold uppercase tracking-widest opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" })
-      ] }) }),
-      /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 pointer-events-none", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black tracking-wider uppercase inline-flex items-center gap-1 shadow-md", children: [
-        /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[9px]", "aria-hidden": "true" }),
-        "Ch\u01B0a m\u1EDF b\xE1n"
-      ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
-        mcp && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-cyan-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[9px]", "aria-hidden": "true" }),
-          "MCP LIVE"
-        ] }),
-        p.raw_video_url && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-columns text-[9px]", "aria-hidden": "true" }),
-          "RAW \u2194 EDIT"
-        ] }),
-        p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold shadow-md inline-flex items-center gap-1", children: [
-          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[9px]", "aria-hidden": "true" }),
-          "HOT"
-        ] }),
-        !mcp && p.is_hot !== 1 && p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md", children: "M\u1EDAI" }),
-        off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold tabular-nums shadow-md", children: [
-          "-",
-          off,
-          "%"
-        ] })
-      ] }) }),
-      p.demo_video_url && /* @__PURE__ */ jsxDEV(
-        "button",
-        {
-          type: "button",
-          class: "absolute bottom-2.5 right-2.5 z-30 h-9 px-3 rounded-full bg-[#070614]/85 backdrop-blur-md border border-white/25 hover:bg-indigo-600 hover:border-indigo-400 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-lg transition cursor-pointer",
-          "data-video": p.demo_video_url,
-          "data-poster": p.thumbnail || "",
-          "data-title": p.name,
-          "data-aspect": "auto",
-          "aria-label": `Xem video demo ${p.name}`,
-          title: "Xem Demo",
-          children: [
-            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play text-[10px]", "aria-hidden": "true" }),
-            /* @__PURE__ */ jsxDEV("span", { children: "Xem Demo" })
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "absolute inset-0 z-10", "aria-label": `Xem chi ti\u1EBFt ${p.name}` })
-    ] }),
+    /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        class: "product-card-media relative aspect-video overflow-hidden bg-[#070614]",
+        style: p.thumbnail ? "" : `background:${gradientFor(p.id)}`,
+        "data-hover-video": hoverVideoUrl || void 0,
+        "data-hover-poster": p.thumbnail || void 0,
+        children: [
+          p.thumbnail ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+            /* @__PURE__ */ jsxDEV(
+              "div",
+              {
+                class: "product-card-ambient absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-0 transition-opacity duration-200 pointer-events-none",
+                style: `background-image:url('${p.thumbnail}')`
+              }
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "img",
+              {
+                src: p.thumbnail,
+                alt: p.name,
+                loading: "lazy",
+                decoding: "async",
+                class: `product-card-img relative z-[1] w-full h-full object-cover transition duration-500 ${hoverVideoUrl ? "" : "group-hover:scale-105"} ${comingSoon ? "opacity-80 grayscale-[15%]" : ""}`
+              }
+            )
+          ] }) : /* @__PURE__ */ jsxDEV("div", { class: "w-full h-full grid place-items-center text-white/95 p-4 text-center", children: /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("i", { class: `fas ${PRODUCT_TYPE_ICON[p.product_type] || "fa-cube"} text-4xl mb-2 opacity-95`, "aria-hidden": "true" }),
+            /* @__PURE__ */ jsxDEV("div", { class: "text-[11px] font-bold uppercase tracking-widest opacity-80", children: PRODUCT_TYPE_LABEL[p.product_type] || "S\u1EA3n ph\u1EA9m" })
+          ] }) }),
+          /* @__PURE__ */ jsxDEV("div", { class: "absolute top-3 left-3 flex flex-wrap gap-1.5 z-20 pointer-events-none", children: comingSoon ? /* @__PURE__ */ jsxDEV("span", { class: "px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black tracking-wider uppercase inline-flex items-center gap-1 shadow-md", children: [
+            /* @__PURE__ */ jsxDEV("i", { class: "fas fa-clock text-[9px]", "aria-hidden": "true" }),
+            "Ch\u01B0a m\u1EDF b\xE1n"
+          ] }) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+            mcp && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-cyan-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-plug-circle-bolt text-[9px]", "aria-hidden": "true" }),
+              "MCP LIVE"
+            ] }),
+            p.raw_video_url && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 text-[10px] font-black shadow-md inline-flex items-center gap-1", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-columns text-[9px]", "aria-hidden": "true" }),
+              "RAW \u2194 EDIT"
+            ] }),
+            p.is_hot === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold shadow-md inline-flex items-center gap-1", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-fire text-[9px]", "aria-hidden": "true" }),
+              "HOT"
+            ] }),
+            !mcp && p.is_hot !== 1 && p.is_new === 1 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md", children: "M\u1EDAI" }),
+            off > 0 && /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold tabular-nums shadow-md", children: [
+              "-",
+              off,
+              "%"
+            ] })
+          ] }) }),
+          hoverVideoUrl && /* @__PURE__ */ jsxDEV("div", { class: "card-playing-pill absolute top-3 right-3 z-20 pointer-events-none px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-cyan-400/40 text-cyan-200 text-[10px] font-bold inline-flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxDEV("span", { class: "w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" }),
+            /* @__PURE__ */ jsxDEV("span", { children: "Preview" })
+          ] }),
+          modalVideoUrl && /* @__PURE__ */ jsxDEV("div", { class: "card-media-corner absolute bottom-2.5 right-2.5 z-30 flex items-center gap-1.5", children: [
+            hasMultiDemo && /* @__PURE__ */ jsxDEV("span", { class: "card-idle-pill pointer-events-none h-6 px-2 rounded-full bg-[#070614]/75 backdrop-blur-md border border-white/15 text-white/95 text-[10px] font-bold inline-flex items-center gap-1 shadow", children: [
+              /* @__PURE__ */ jsxDEV("i", { class: "fas fa-film text-cyan-300 text-[9px]", "aria-hidden": "true" }),
+              /* @__PURE__ */ jsxDEV("span", { children: "2 Video" })
+            ] }),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                class: "card-expand-btn w-7 h-7 rounded-full bg-[#070614]/70 hover:bg-indigo-600 backdrop-blur-md border border-white/20 hover:border-indigo-400 text-white/90 hover:text-white grid place-items-center shadow-md transition cursor-pointer",
+                "data-video": modalVideoUrl,
+                "data-videos": demoVideos.length > 0 ? JSON.stringify(demoVideos) : void 0,
+                "data-poster": p.thumbnail || "",
+                "data-title": p.name,
+                "data-aspect": "auto",
+                "aria-label": `Ph\xF3ng to video demo ${p.name}`,
+                title: hasMultiDemo ? "M\u1EDF tr\xECnh ph\xE1t l\u1EDBn (16:9 & 9:16)" : "M\u1EDF tr\xECnh ph\xE1t l\u1EDBn",
+                children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand text-[10px]", "aria-hidden": "true" })
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxDEV("a", { href: `/san-pham/${p.slug}`, class: "absolute inset-0 z-10", "aria-label": `Xem chi ti\u1EBFt ${p.name}` })
+        ]
+      }
+    ),
     /* @__PURE__ */ jsxDEV("div", { class: "p-4 flex flex-col flex-1", children: [
       /* @__PURE__ */ jsxDEV("div", { class: "flex flex-wrap items-center gap-1.5 mb-2 text-[11px] text-[#9492b8]", children: [
         mcp ? /* @__PURE__ */ jsxDEV("span", { class: "px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 font-bold uppercase inline-flex items-center gap-1", children: [
@@ -11677,12 +11727,12 @@ var HomePage = (props) => {
 
 // src/pages/products.tsx
 var SORTS = [
-  ["newest", "M\u1EDBi nh\u1EA5t"],
+  ["featured", "\u0110\u1EC1 xu\u1EA5t (Cao c\u1EA5p tr\u01B0\u1EDBc)"],
   ["bestseller", "B\xE1n ch\u1EA1y"],
-  ["price_asc", "Gi\xE1 th\u1EA5p \u2192 cao"],
   ["price_desc", "Gi\xE1 cao \u2192 th\u1EA5p"],
+  ["price_asc", "Gi\xE1 th\u1EA5p \u2192 cao"],
   ["rating", "\u0110\xE1nh gi\xE1 cao"],
-  ["featured", "N\u1ED5i b\u1EADt"]
+  ["newest", "M\u1EDBi nh\u1EA5t"]
 ];
 var TYPES = [
   ["", "T\u1EA5t c\u1EA3 lo\u1EA1i"],
@@ -13160,6 +13210,9 @@ var ProductDetailPage = (props) => {
   const gallery = parseJSON(p.gallery, []);
   const save = (p.original_price || 0) - p.price;
   const isMp4 = isDirectVideoUrl(p.demo_video_url) || !!p.demo_video_url?.includes("/videos/");
+  const demoVideos = parseDemoVideos(p);
+  const hasMultiDemo = demoVideos.length >= 2;
+  const isSilentMotionLoop = p.slug.startsWith("bs-");
   const embedVideoUrl = isMp4 ? p.demo_video_url : toEmbedVideoUrl(p.demo_video_url);
   const replacedPoster = isMp4 ? p.demo_video_url.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, "/videos/posters/poster-$2.jpg") : void 0;
   const demoPoster = p.thumbnail || (replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : void 0);
@@ -13426,7 +13479,81 @@ var ProductDetailPage = (props) => {
                     ] })) })
                   ]
                 }
-              ) : p.demo_video_url ? /* @__PURE__ */ jsxDEV(
+              ) : hasMultiDemo ? /* @__PURE__ */ jsxDEV("div", { class: "demo-gallery-player mb-4", "data-demo-gallery": true, children: [
+                /* @__PURE__ */ jsxDEV("div", { class: "demo-gallery-stage relative aspect-video w-full rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl", children: [
+                  /* @__PURE__ */ jsxDEV("div", { class: "video-ambient-bg", "data-dg-ambient": true, style: `background-image:url('${demoVideos[0].poster || demoPoster || ""}')` }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "relative z-[2] w-full h-full flex items-center justify-center", children: /* @__PURE__ */ jsxDEV(
+                    "video",
+                    {
+                      "data-dg-video": true,
+                      src: demoVideos[0].url,
+                      poster: demoVideos[0].poster || demoPoster || void 0,
+                      class: "w-full h-full object-contain bg-transparent",
+                      controls: true,
+                      autoplay: true,
+                      muted: true,
+                      loop: true,
+                      playsinline: true,
+                      preload: "metadata"
+                    }
+                  ) }),
+                  /* @__PURE__ */ jsxDEV("div", { class: "absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5", children: [
+                    /* @__PURE__ */ jsxDEV("span", { "data-dg-badge": true, class: "text-[10px] font-bold text-white tracking-wider bg-black/75 backdrop-blur px-2.5 py-1 rounded-md border border-white/15 uppercase", children: demoVideos[0].label }),
+                    /* @__PURE__ */ jsxDEV(
+                      "button",
+                      {
+                        type: "button",
+                        "data-dg-expand": true,
+                        "data-video": demoVideos[0].url,
+                        "data-videos": JSON.stringify(demoVideos),
+                        "data-poster": demoVideos[0].poster || demoPoster || "",
+                        "data-title": p.name,
+                        "data-aspect": demoVideos[0].aspect === "9:16" ? "vertical" : "landscape",
+                        class: "pointer-events-auto text-[10px] font-bold text-indigo-200 hover:text-white bg-black/75 hover:bg-indigo-600 backdrop-blur px-2.5 py-1 rounded-md border border-white/15 transition cursor-pointer",
+                        title: "M\u1EDF tr\xECnh ph\xE1t l\u1EDBn",
+                        "aria-label": `Ph\xF3ng to video demo ${p.name}`,
+                        children: [
+                          /* @__PURE__ */ jsxDEV("i", { class: "fas fa-expand mr-1", "aria-hidden": "true" }),
+                          "Ph\xF3ng to"
+                        ]
+                      }
+                    )
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxDEV("div", { class: "grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3", role: "tablist", "aria-label": "Ch\u1ECDn \u0111\u1ECBnh d\u1EA1ng video demo", children: demoVideos.map((dv, idx) => /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    role: "tab",
+                    "aria-selected": idx === 0 ? "true" : "false",
+                    "data-dg-thumb": idx,
+                    "data-url": dv.url,
+                    "data-poster": dv.poster,
+                    "data-label": dv.label,
+                    "data-aspect": dv.aspect,
+                    class: `dg-thumb-btn group text-left rounded-xl overflow-hidden border-2 bg-[#0a091d] transition-all cursor-pointer ${idx === 0 ? "is-active border-cyan-400 shadow-lg shadow-cyan-500/20" : "border-[#221e54] hover:border-indigo-400/70 opacity-80 hover:opacity-100"}`,
+                    children: [
+                      /* @__PURE__ */ jsxDEV("div", { class: "relative aspect-video w-full bg-[#060512] overflow-hidden flex items-center justify-center", children: [
+                        dv.poster && /* @__PURE__ */ jsxDEV(
+                          "img",
+                          {
+                            src: dv.poster,
+                            alt: `${p.name} \u2014 ${dv.label}`,
+                            loading: "lazy",
+                            class: `w-full h-full ${dv.aspect === "9:16" ? "object-contain" : "object-cover"} group-hover:scale-105 transition duration-300`
+                          }
+                        ),
+                        /* @__PURE__ */ jsxDEV("span", { class: "absolute bottom-1.5 left-1.5 w-6 h-6 rounded-full bg-black/75 backdrop-blur border border-white/25 text-white grid place-items-center text-[9px]", children: /* @__PURE__ */ jsxDEV("i", { class: "fas fa-play ml-0.5", "aria-hidden": "true" }) }),
+                        /* @__PURE__ */ jsxDEV("span", { class: "absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[9px] font-bold text-cyan-200 border border-white/15", children: dv.aspect })
+                      ] }),
+                      /* @__PURE__ */ jsxDEV("div", { class: "px-2.5 py-1.5 flex items-center justify-between gap-1 bg-[#0d0c24] border-t border-white/5", children: [
+                        /* @__PURE__ */ jsxDEV("span", { class: "text-[11px] font-bold text-white truncate", children: dv.shortLabel }),
+                        /* @__PURE__ */ jsxDEV("span", { class: "text-[10px] text-[#9492b8] shrink-0", children: dv.aspect === "9:16" ? "D\u1ECDc" : "Ngang" })
+                      ] })
+                    ]
+                  }
+                )) })
+              ] }) : p.demo_video_url ? /* @__PURE__ */ jsxDEV(
                 "div",
                 {
                   class: "adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl relative aspect-video w-full",
@@ -13442,7 +13569,10 @@ var ProductDetailPage = (props) => {
                         class: "adaptive-demo-video w-full h-full object-contain bg-transparent",
                         controls: true,
                         playsinline: true,
-                        preload: "metadata"
+                        preload: "metadata",
+                        autoplay: isSilentMotionLoop ? true : void 0,
+                        muted: isSilentMotionLoop ? true : void 0,
+                        loop: isSilentMotionLoop ? true : void 0
                       }
                     ) : /* @__PURE__ */ jsxDEV("iframe", { src: embedVideoUrl, title: `Demo ${p.name}`, class: "w-full h-full border-none", allow: "autoplay; encrypted-media", allowfullscreen: true }) }),
                     /* @__PURE__ */ jsxDEV("div", { class: "absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5", children: [
@@ -21329,6 +21459,7 @@ var RAW_BATCH01 = [
     "originalPrice": 1199e3,
     "folderId": "1JB995Gu0o6RdOs8_qhOhUn0rGKTCwear",
     "demoId": "1N_veegJDlvLJtS2DUU5_k8mZ0YgpM-rv",
+    "hasPortrait": true,
     "isFeatured": 1,
     "isHot": 1,
     "soldCount": 36,
@@ -21349,6 +21480,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1lguCFOEDgE-EC7gRMBoBs60dQ0zEMNV6",
     "demoId": "1Albzy-VUi0udyCrBg17K9-KC-gGfqT8n",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 23,
@@ -21369,6 +21501,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1-woS0I3vZMX2HAaWyreG6F67ljjQAGKW",
     "demoId": "1TwFbqV3l4PAv8Fhtkm25aKIGZVSSL7-4",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 16,
@@ -21389,6 +21522,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1eOd9RxF5VwY_iLE-YwhDmxDfWr4oyQP1",
     "demoId": "1vSB0pCm7Da3huI3papNd0DmXUxZWWCmd",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 27,
@@ -21409,6 +21543,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1NYtJ15IdIk-ZrDesde68tDMDv6q4Zd_N",
     "demoId": "1v3YH2kaR2v743p1Xq_J_lMyQ9p27H_OS",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 27,
@@ -21429,6 +21564,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1BPkwPZvjtD1lScEebFsI8inngRxpvcc_",
     "demoId": "1zOMDotabbijI80j4SH-Y4XZibE5lxQOW",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 14,
@@ -21449,6 +21585,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1WcJhdn_UV_aV6S9iKrEy8dFHvOmha2zn",
     "demoId": "1wk0tQlxUKE27LM_9_-oFoXKHGNUIbFte",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 16,
@@ -21469,6 +21606,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1n9domx3R20l_rcqRkr88d1e9-v4jxudX",
     "demoId": "1BUOj4Izd5ZeP5bn7mUk35A-uVizqKaRd",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 30,
@@ -21489,6 +21627,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1I497x9ekfms7_69trimeehQgvpa1thMi",
     "demoId": "1wA16cURpY8NdgoYR1xgBJBzg9tQpOq5K",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 16,
@@ -21509,6 +21648,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "11FrA0RbzpG74qhCDO5aZtnImVW8Uwmqn",
     "demoId": "1EdsqQl4Q_-iZvRR7DEJQ18i7vaSqHf2s",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 1,
     "soldCount": 29,
@@ -21529,6 +21669,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1lDV6NbisHD4gvOeszCvR2NY_oynRRZxN",
     "demoId": "1wJPV3oSTr_EWyo3c20KlD7dRNxaRrwW7",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 27,
@@ -21549,6 +21690,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1dfxr09FADOhs1pzfIChdwWsmUmlGgBAO",
     "demoId": "1cWYKlpHOkgQVE2PGZzxQTmg6c7EfPXsy",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 28,
@@ -21569,6 +21711,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "176Huzwp0Fd0FbpuTWBw8h6j7khZGU0Ag",
     "demoId": "1av4qaTX4xkjTNJ-vwP8_Xnt54Ih9GBcM",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 24,
@@ -21589,6 +21732,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "14fzWD60tGnRO8RrfgwY0AZtEYaoTsRY5",
     "demoId": "1KDVCVwRiBqBXNCaTR-bhcuiTsCu5mbr4",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 21,
@@ -21609,6 +21753,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1wkbXss41UV9y04aC-4eRyEQD1dhz12PL",
     "demoId": "1vtbX3DIFyKD9CKVyLLljcmJZyMBX_xkd",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 20,
@@ -21629,6 +21774,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1Uolg1eHfUyA-v66JfejNbZji_Rs4rwpP",
     "demoId": "1d0aTdjCCMDh2Yef-1BL1BYldQzrNwjXg",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 24,
@@ -21649,6 +21795,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1pP7AfxoGXCqPA0TB1OItowDo0c07fFd3",
     "demoId": "1Al2DA8TSAz0tm7knpyIl49IHHsulR9bc",
+    "hasPortrait": false,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 24,
@@ -21669,6 +21816,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1b1aa4lInDU_KTDVRQNhxYdXiv5Yq7wSg",
     "demoId": "1gh0kc5HppXjRSERy3KOjz2Zfrbxj20NB",
+    "hasPortrait": false,
     "isFeatured": 0,
     "isHot": 1,
     "soldCount": 23,
@@ -21689,6 +21837,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1VD5P65-pis5aV7oBlqopi-PBX1awJZyh",
     "demoId": "13RnlYMuRXRG6Omm8ZVObkVqhrBixlB2I",
+    "hasPortrait": false,
     "isFeatured": 0,
     "isHot": 1,
     "soldCount": 29,
@@ -21709,6 +21858,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1fsTnBhYgA-o9-3PmzNSZSAvIzMyGkBOW",
     "demoId": "1hzH1vmu2qwkT1Z-IuQ2smQM9RDLA5vOV",
+    "hasPortrait": false,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 21,
@@ -21729,6 +21879,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1AxtFji-ATynDznXD0aiDQ3foUPJVbEAr",
     "demoId": "1jqPMcpA2qP3WIVanUQyYzMI_Fq7yQEmd",
+    "hasPortrait": false,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 20,
@@ -21749,6 +21900,7 @@ var RAW_BATCH01 = [
     "originalPrice": 799e3,
     "folderId": "1RbrPxYQmzwRwG4ad6QSE6htuj9qCb3TD",
     "demoId": "1Sw9uqpDEVTTiDy_iiAgXlW_nIsT7qzeN",
+    "hasPortrait": false,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 12,
@@ -21769,6 +21921,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "13zdMcVXwCNnRgsA1fpa0Kk4UeypSjXH2",
     "demoId": "1FZV6qspGoXDtyEtpU9FKWR-LmrmA7tZJ",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 1,
     "soldCount": 22,
@@ -21789,6 +21942,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1hmSKi0hVGg3ldOa79RD_1aKHYoVbmIDA",
     "demoId": "1N5c2bltj-3MNd5SA_E5TtxAUFJkt1xW0",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 22,
@@ -21809,6 +21963,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1U3k6baQWLeK74L-bVYL68_YAr57NbC2f",
     "demoId": "1xjP3Y3YsOKtr8BfAHh859Ik-_kwWLd-O",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 28,
@@ -21829,6 +21984,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1GlQomvcrgr3fLLo1yc0xx6Nvtug-UoaF",
     "demoId": "1dGWIs4ZFQ9C8057AwIuWqgmlCozcZ4uD",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 12,
@@ -21849,6 +22005,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "141QDXJdvOvwOwUIipc84-tRVUGpcRdoc",
     "demoId": "1oZy4jCkjkRpZnM7czVStiMWFITGf2QBY",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 16,
@@ -21869,6 +22026,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "13WHlwbpONKifWocnfDEUONimB6jdCdk9",
     "demoId": "1GeaDhDCb28jOm9wjyAdpV6j-KN0uuLUm",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 18,
@@ -21889,6 +22047,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1zcnVU6gGJg5-wlosiaN9xPtbhwEBOJPy",
     "demoId": "1QQRiwNQ8f29s0FJpDL6C8W6yG-Bmi-p9",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 28,
@@ -21909,6 +22068,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1fpfdL5Uk6ObCY2fAArDOERoDlQy3my5q",
     "demoId": "1Eski_zVPA1UxJDbpdUVUQWDWy3o1yRVg",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 26,
@@ -21929,6 +22089,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1touPOtj5y-wUEkEPS-_7XGYZaRdrTsSH",
     "demoId": "1lA3lPhHr7t-rNSSYFdxV7OqVrHWMhg4B",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 30,
@@ -21949,6 +22110,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1VZ9YN2s5_W05qzQQUXrRhVwtUjI5lEX4",
     "demoId": "15GOXvBtosLX7U6LzkywyGAr-ZYUYocUy",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 27,
@@ -21969,6 +22131,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1B6fvmH9-WVxi1HUesiBMF_MfioCvlemA",
     "demoId": "1zTtWVHh_xg4bgVysooq7MaWas2lVwXuT",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 20,
@@ -21989,6 +22152,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1FZvE2KJyXH0t_J7yMAMG0gp4Ot-oa8cS",
     "demoId": "15cWGZhDRopNAblNtWUrnIMZR3n4EyvMC",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 23,
@@ -22009,6 +22173,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1qEkrNeOuor5TOfUFRQed5delM7JLhBnh",
     "demoId": "1N7uRddjGN2NpX76R0YwU6D4gQCO2MNuT",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 27,
@@ -22029,6 +22194,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1be7xKXc5Q2vnm0YFPHPk0oQBvriV3JPL",
     "demoId": "13F8b2UZDJFl-06NJNAn07kJQqsHFR8MX",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 15,
@@ -22049,6 +22215,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1YY7SFbiYPEm84XfU78CPVB1Rvls2J65S",
     "demoId": "1PM4ldT76FkN8K1dWjw7QzxzrO6AW9cWJ",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 1,
     "soldCount": 25,
@@ -22069,6 +22236,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "130g3_8kVCQJEyaSi8uH7wdEPww4wKVR3",
     "demoId": "12DbFGM70svMo3rSXzJbRO_cfCMl64pr8",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 17,
@@ -22089,6 +22257,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1I2HepFpE5iKNluhqWM2kFadV8VnHHP2H",
     "demoId": "108XykgN5FTeGxC_6io4Db1q_x-DoNx99",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 27,
@@ -22109,6 +22278,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1GGW-kvmP0S-jcb-qFGoC5o_jiOCsvg3v",
     "demoId": "18sbhCdJV33dVcNvt2Fwkqxn7lBNGtTVt",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 17,
@@ -22129,6 +22299,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1LSuLifyHoBZrKHAytuLvUXLG5A48eORI",
     "demoId": "1LN0FKQCahBYvI6tJXcDfb30ph4GaE4Z6",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 1,
     "soldCount": 14,
@@ -22149,6 +22320,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1a7Gk3zaCHw8QitVXjvL673ZvxdeDfvVI",
     "demoId": "1Rmz8MoUjKPjty_NRAD1Dmy0Gj3tnrEE2",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 13,
@@ -22169,6 +22341,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1Yajr-35dJN-5lle3B-26J-moHCIwvr98",
     "demoId": "1oHPsJeEpPtr6xcBZDm4j10lkByfUOD5d",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 13,
@@ -22189,6 +22362,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1YYHJJVpsUyQR1VsxCpaOj62N65eEgueb",
     "demoId": "1SDlhjUxpCr3VNLSp-pmUwCTSpkqp7CUK",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 25,
@@ -22209,6 +22383,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1dxOPmyVZGQVNZPNW8-BewWDyaLYmnlzu",
     "demoId": "1-KjbZUEg-pe2Epeb1ASH1xqUofnoa0xw",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 26,
@@ -22229,6 +22404,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "18O9M5NqCas67hjWesQp_azwByTbBqLa0",
     "demoId": "1ETJqR-h5QMNm6elFz4pRo-Bccot_C9B-",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 16,
@@ -22249,6 +22425,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1DmH9cp3ad33vN62v8WokdQqLQpVhHG74",
     "demoId": "1Yj1rwd4N7Osqt3uafkq9uuUjWtA9hWKV",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 23,
@@ -22269,6 +22446,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "15dN31-J88TldrHfcB1Vj3MIHsPVZGAdW",
     "demoId": "1ku0gmq4rzeBc2TonV9kCN-6ctDJHAvx6",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 26,
@@ -22289,6 +22467,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1ArlSDp7LZTZoMNj19PYrzxZegKW46xJG",
     "demoId": "1T_LcU5v0FmOfLgrjZCxhtKkk1JIfdRbi",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 21,
@@ -22309,6 +22488,7 @@ var RAW_BATCH01 = [
     "originalPrice": 54e4,
     "folderId": "1ltXW_jArFausjGT0Fnu3-3Dp66guRDM9",
     "demoId": "1CqYhxUdgzDogJ4f57D0kVD966PcT6kDv",
+    "hasPortrait": true,
     "isFeatured": 0,
     "isHot": 0,
     "soldCount": 17,
@@ -22379,6 +22559,27 @@ function buildShortDesc(r) {
   const sp = cut.lastIndexOf(" ");
   return (sp > 180 ? cut.slice(0, sp) : cut) + "\u2026";
 }
+function buildDemoVideosJson(r) {
+  const items = [
+    {
+      label: "Video 1 \xB7 Ngang (16:9)",
+      shortLabel: "Video 1 \xB7 16:9",
+      aspect: "16:9",
+      url: `/static/demos/catalog/${r.slug}-16x9.mp4`,
+      poster: `/static/demos/catalog/${r.slug}.jpg`
+    }
+  ];
+  if (r.hasPortrait) {
+    items.push({
+      label: "Video 2 \xB7 D\u1ECDc (9:16)",
+      shortLabel: "Video 2 \xB7 9:16",
+      aspect: "9:16",
+      url: `/static/demos/catalog/${r.slug}-9x16.mp4`,
+      poster: `/static/demos/catalog/${r.slug}-9x16.jpg`
+    });
+  }
+  return JSON.stringify(items);
+}
 var DRIVE_BATCH01_SKILLS = RAW_BATCH01.map((r) => ({
   slug: r.slug,
   name: r.name,
@@ -22393,7 +22594,8 @@ var DRIVE_BATCH01_SKILLS = RAW_BATCH01.map((r) => ({
   price: r.price,
   original_price: r.originalPrice,
   thumbnail: `/static/demos/catalog/${r.slug}.jpg`,
-  demo_video_url: `https://drive.google.com/file/d/${r.demoId}/preview`,
+  demo_video_url: `/static/demos/catalog/${r.slug}-16x9.mp4`,
+  demo_videos: buildDemoVideosJson(r),
   raw_video_url: "",
   download_url: `https://drive.google.com/drive/folders/${r.folderId}`,
   doc_url: "https://khoskill.site/huong-dan",
@@ -22485,7 +22687,7 @@ async function runOnce(db, env) {
   try {
     await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
     await runOptionalDemoUserBootstrap(db, env).catch((err) => console.error("[DEMO_USER_BOOTSTRAP]", err));
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13, flag14] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13, flag14, flag15] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first().catch(() => null),
@@ -22496,9 +22698,10 @@ async function runOnce(db, env) {
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0014_done'`).first().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0014_done'`).first().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0015_done'`).first().catch(() => null)
     ]);
-    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1" && flag13?.value === "1" && flag14?.value === "1") {
+    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1" && flag13?.value === "1" && flag14?.value === "1" && flag15?.value === "1") {
       _done = true;
       return;
     }
@@ -23261,6 +23464,33 @@ async function runOnce(db, env) {
         mutated = true;
       }
     }
+    if (flag15?.value !== "1") {
+      await db.prepare(`ALTER TABLE products ADD COLUMN demo_videos TEXT`).run().catch(() => null);
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < DRIVE_BATCH01_SKILLS.length; i += BATCH_SIZE) {
+        const chunk = DRIVE_BATCH01_SKILLS.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          chunk.map(
+            (p) => db.prepare(
+              `UPDATE products SET demo_video_url=?, demo_videos=? WHERE slug=?`
+            ).bind(p.demo_video_url, p.demo_videos, p.slug).run().catch(() => null)
+          )
+        );
+      }
+      const check15 = await db.prepare(
+        `SELECT demo_videos FROM products WHERE slug='bs-creatormotion'`
+      ).first().catch(() => null);
+      if (check15?.demo_videos && String(check15.demo_videos).includes("-9x16.mp4")) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0015_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0015_done', '1')`
+          ).run().catch(() => null);
+        });
+        mutated = true;
+      }
+    }
     if (mutated) invalidateCache();
     _done = true;
   } catch (err) {
@@ -23622,15 +23852,15 @@ app.get("/", async (c) => {
       db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                   FROM categories c ORDER BY c.sort_order`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 12`).all(),
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.price DESC, p.sold_count DESC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.id ASC LIMIT 12`).all(),
+                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.price DESC, p.sold_count DESC, p.id ASC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.product_type='skill' ORDER BY p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.product_type='skill' ORDER BY p.price DESC, p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.price DESC, p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
+                  WHERE p.status='published' ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.price DESC, p.id DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                   WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
       db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
@@ -23666,7 +23896,7 @@ async function renderProductList(c, opts) {
   const db = c.env.DB;
   const q = (c.req.query("q") || "").trim();
   const cat = opts.catSlug || c.req.query("cat") || "";
-  const sort = c.req.query("sort") || "newest";
+  const sort = c.req.query("sort") || "featured";
   const type = opts.comboOnly ? "combo" : c.req.query("type") || "";
   const rawTier = (c.req.query("tier") || "").trim().toLowerCase();
   const tier = ["vip1", "vip2", "vip3", "vip4", "pro"].includes(rawTier) ? rawTier : "";
@@ -23701,16 +23931,17 @@ async function renderProductList(c, opts) {
     where.push(`p.price <= ?`);
     binds.push(+maxPrice);
   }
+  const priorityOrder = `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.is_featured DESC, p.price DESC, p.sold_count DESC, p.id ASC`;
   const orderMap = {
-    newest: "p.id DESC",
-    bestseller: "p.sold_count DESC",
-    hot: "p.sold_count DESC",
-    price_asc: "p.price ASC",
-    price_desc: "p.price DESC",
-    rating: "p.rating DESC, p.rating_count DESC",
-    featured: "p.is_featured DESC, p.sold_count DESC"
+    featured: priorityOrder,
+    bestseller: `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.sold_count DESC, p.price DESC`,
+    hot: `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.sold_count DESC, p.price DESC`,
+    price_desc: `p.price DESC, (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.sold_count DESC`,
+    price_asc: `p.price ASC, (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.id ASC`,
+    rating: `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.rating DESC, p.rating_count DESC, p.price DESC`,
+    newest: "p.id DESC"
   };
-  const orderBy = orderMap[sort] || orderMap.newest;
+  const orderBy = orderMap[sort] || priorityOrder;
   const w = where.join(" AND ");
   const fetchList = () => Promise.all([
     db.prepare(`SELECT COUNT(*) n FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE ${w}`).bind(...binds).first(),
@@ -23771,7 +24002,7 @@ app.get("/san-pham/:slug", async (c) => {
     cached(`product:extra:${p.id}`, 2e4, async () => {
       const [related, comboItems, reviews, breakdown] = await Promise.all([
         db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                    WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
+                    WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.price DESC, p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
         p.product_type === "combo" ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all() : Promise.resolve({ results: [] }),
         db.prepare(`SELECT r.*, u.full_name FROM reviews r JOIN users u ON u.id=r.user_id
                     WHERE r.product_id=? AND r.status='approved' ORDER BY r.id DESC LIMIT 20`).bind(p.id).all(),
@@ -25382,7 +25613,7 @@ app.get("/tai-khoan/hoi-vien", requireAuth, async (c) => {
   const [membership, historyRes, catalogRes, ownedRes] = await Promise.all([
     getActiveUserMembership(db, u.id),
     db.prepare("SELECT * FROM user_memberships WHERE user_id=? ORDER BY id DESC LIMIT 10").bind(u.id).all().catch(() => ({ results: [] })),
-    db.prepare(`SELECT id, slug, name, thumbnail, price, skill_tier, product_type FROM products WHERE status='published' ORDER BY price ASC, id DESC`).all(),
+    db.prepare(`SELECT id, slug, name, thumbnail, price, skill_tier, product_type FROM products WHERE status='published' ORDER BY (CASE WHEN slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, price DESC, id ASC`).all(),
     db.prepare("SELECT product_id FROM licenses WHERE user_id=?").bind(u.id).all()
   ]);
   const ownedIds = (ownedRes.results || []).map((x) => Number(x.product_id));

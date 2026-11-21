@@ -1,7 +1,7 @@
 import type { FC } from 'hono/jsx'
 import { Layout, type LayoutProps } from '../components/Layout'
 import { Breadcrumb, ProductCard, SkillTierBadge, Stars, SectionTitle } from '../components/ui'
-import { formatVND, formatUSD, getUsdRate, getSkillTierMeta, normalizeSkillTier, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl, isMcpSkill, parseMcpClients, parseMcpTools } from '../lib/utils'
+import { formatVND, formatUSD, getUsdRate, getSkillTierMeta, normalizeSkillTier, discountPercent, parseJSON, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isDirectVideoUrl, toEmbedVideoUrl, isMcpSkill, parseMcpClients, parseMcpTools, parseDemoVideos } from '../lib/utils'
 import { getTierQuotaInfo, getMemberRetailDiscount, type UserMembership } from '../lib/tiers'
 import { buildMcpConfigs } from '../lib/mcp'
 import type { Product } from '../lib/types'
@@ -34,6 +34,9 @@ export const ProductDetailPage: FC<Props> = (props) => {
   const save = (p.original_price || 0) - p.price
 
   const isMp4 = isDirectVideoUrl(p.demo_video_url) || !!p.demo_video_url?.includes('/videos/')
+  const demoVideos = parseDemoVideos(p)
+  const hasMultiDemo = demoVideos.length >= 2
+  const isSilentMotionLoop = p.slug.startsWith('bs-')
   const embedVideoUrl = isMp4 ? p.demo_video_url : toEmbedVideoUrl(p.demo_video_url)
   const replacedPoster = isMp4 ? p.demo_video_url!.replace(/(\/videos)?\/demo-([^/?]+)\.mp4(\?.*)?$/i, '/videos/posters/poster-$2.jpg') : undefined
   const demoPoster = p.thumbnail || (replacedPoster && replacedPoster !== p.demo_video_url ? replacedPoster : undefined)
@@ -213,6 +216,68 @@ export const ProductDetailPage: FC<Props> = (props) => {
                     ))}
                   </div>
                 </div>
+              ) : hasMultiDemo ? (
+                <div class="demo-gallery-player mb-4" data-demo-gallery>
+                  <div class="demo-gallery-stage relative aspect-video w-full rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl">
+                    <div class="video-ambient-bg" data-dg-ambient style={`background-image:url('${demoVideos[0].poster || demoPoster || ''}')`}></div>
+                    <div class="relative z-[2] w-full h-full flex items-center justify-center">
+                      <video
+                        data-dg-video
+                        src={demoVideos[0].url}
+                        poster={demoVideos[0].poster || demoPoster || undefined}
+                        class="w-full h-full object-contain bg-transparent"
+                        controls autoplay muted loop playsinline preload="metadata"
+                      ></video>
+                    </div>
+                    <div class="absolute top-2.5 left-2.5 z-10 pointer-events-none flex items-center gap-1.5">
+                      <span data-dg-badge class="text-[10px] font-bold text-white tracking-wider bg-black/75 backdrop-blur px-2.5 py-1 rounded-md border border-white/15 uppercase">
+                        {demoVideos[0].label}
+                      </span>
+                      <button type="button"
+                        data-dg-expand
+                        data-video={demoVideos[0].url}
+                        data-videos={JSON.stringify(demoVideos)}
+                        data-poster={demoVideos[0].poster || demoPoster || ''}
+                        data-title={p.name}
+                        data-aspect={demoVideos[0].aspect === '9:16' ? 'vertical' : 'landscape'}
+                        class="pointer-events-auto text-[10px] font-bold text-indigo-200 hover:text-white bg-black/75 hover:bg-indigo-600 backdrop-blur px-2.5 py-1 rounded-md border border-white/15 transition cursor-pointer"
+                        title="Mở trình phát lớn" aria-label={`Phóng to video demo ${p.name}`}>
+                        <i class="fas fa-expand mr-1" aria-hidden="true"></i>Phóng to
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Video Switcher Strip (16:9 Ngang & 9:16 Dọc) */}
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3" role="tablist" aria-label="Chọn định dạng video demo">
+                    {demoVideos.map((dv, idx) => (
+                      <button type="button" role="tab"
+                        aria-selected={idx === 0 ? 'true' : 'false'}
+                        data-dg-thumb={idx}
+                        data-url={dv.url}
+                        data-poster={dv.poster}
+                        data-label={dv.label}
+                        data-aspect={dv.aspect}
+                        class={`dg-thumb-btn group text-left rounded-xl overflow-hidden border-2 bg-[#0a091d] transition-all cursor-pointer ${idx === 0 ? 'is-active border-cyan-400 shadow-lg shadow-cyan-500/20' : 'border-[#221e54] hover:border-indigo-400/70 opacity-80 hover:opacity-100'}`}>
+                        <div class="relative aspect-video w-full bg-[#060512] overflow-hidden flex items-center justify-center">
+                          {dv.poster && (
+                            <img src={dv.poster} alt={`${p.name} — ${dv.label}`} loading="lazy"
+                              class={`w-full h-full ${dv.aspect === '9:16' ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition duration-300`} />
+                          )}
+                          <span class="absolute bottom-1.5 left-1.5 w-6 h-6 rounded-full bg-black/75 backdrop-blur border border-white/25 text-white grid place-items-center text-[9px]">
+                            <i class="fas fa-play ml-0.5" aria-hidden="true"></i>
+                          </span>
+                          <span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[9px] font-bold text-cyan-200 border border-white/15">
+                            {dv.aspect}
+                          </span>
+                        </div>
+                        <div class="px-2.5 py-1.5 flex items-center justify-between gap-1 bg-[#0d0c24] border-t border-white/5">
+                          <span class="text-[11px] font-bold text-white truncate">{dv.shortLabel}</span>
+                          <span class="text-[10px] text-[#9492b8] shrink-0">{dv.aspect === '9:16' ? 'Dọc' : 'Ngang'}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : p.demo_video_url ? (
                 <div class="adaptive-player-wrapper mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-[#221e54] bg-[#070614] shadow-2xl relative aspect-video w-full"
                   data-poster={demoPoster || p.thumbnail || ''}
@@ -221,7 +286,11 @@ export const ProductDetailPage: FC<Props> = (props) => {
                   <div class="relative z-[2] w-full h-full flex items-center justify-center">
                     {isMp4 ? (
                       <video src={p.demo_video_url} poster={demoPoster || p.thumbnail || undefined}
-                        class="adaptive-demo-video w-full h-full object-contain bg-transparent" controls playsinline preload="metadata"></video>
+                        class="adaptive-demo-video w-full h-full object-contain bg-transparent"
+                        controls playsinline preload="metadata"
+                        autoplay={isSilentMotionLoop ? true : undefined}
+                        muted={isSilentMotionLoop ? true : undefined}
+                        loop={isSilentMotionLoop ? true : undefined}></video>
                     ) : (
                       <iframe src={embedVideoUrl} title={`Demo ${p.name}`} class="w-full h-full border-none" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     )}

@@ -24,12 +24,12 @@ interface ListProps extends LayoutProps {
 }
 
 const SORTS = [
-  ['newest', 'Mới nhất'],
+  ['featured', 'Đề xuất (Cao cấp trước)'],
   ['bestseller', 'Bán chạy'],
-  ['price_asc', 'Giá thấp → cao'],
   ['price_desc', 'Giá cao → thấp'],
+  ['price_asc', 'Giá thấp → cao'],
   ['rating', 'Đánh giá cao'],
-  ['featured', 'Nổi bật']
+  ['newest', 'Mới nhất']
 ]
 
 const TYPES: [string, string][] = [

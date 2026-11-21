@@ -1,6 +1,6 @@
 import type { FC } from 'hono/jsx'
 import type { Product, Category } from '../lib/types'
-import { formatVND, formatUSD, DEFAULT_USD_VND_RATE, getSkillTierMeta, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isMcpSkill, parseMcpClients } from '../lib/utils'
+import { formatVND, formatUSD, DEFAULT_USD_VND_RATE, getSkillTierMeta, discountPercent, gradientFor, PRODUCT_TYPE_LABEL, PRODUCT_TYPE_ICON, formatDate, isMcpSkill, parseMcpClients, parseDemoVideos, isDirectVideoUrl } from '../lib/utils'
 
 export const SkillTierBadge: FC<{ tier?: string | null; price?: number; showRetail?: boolean; size?: 'xs' | 'sm' }> = ({ tier, price, showRetail = false, size = 'xs' }) => {
   const meta = getSkillTierMeta(tier, price)
@@ -29,17 +29,26 @@ export const ProductCard: FC<{ p: Product; compact?: boolean; usdRate?: number }
   const mcp = isMcpSkill(p.product_type)
   const mcpClients = mcp ? parseMcpClients(p.mcp_clients) : []
   const tierMeta = getSkillTierMeta(p.skill_tier, p.price)
+  const demoVideos = parseDemoVideos(p)
+  const hoverVideoUrl = demoVideos[0]?.url || (isDirectVideoUrl(p.demo_video_url) ? p.demo_video_url! : '')
+  const hasMultiDemo = demoVideos.length >= 2
+  const modalVideoUrl = demoVideos[0]?.url || p.demo_video_url || ''
   return (
     <article class={`product-card group bg-[#0f0e24] rounded-2xl border overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${mcp ? 'border-cyan-500/35 hover:border-cyan-400/65 hover:shadow-cyan-500/15' : 'border-[#221e54] hover:border-indigo-500/40 hover:shadow-indigo-500/15'} ${comingSoon ? 'opacity-90' : ''}`}>
-      {/* Media area - adaptive 16:9 frame */}
-      <div class="product-card-media relative aspect-video overflow-hidden bg-[#070614]" style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}>
+      {/* Media area - adaptive 16:9 frame with instant hover/hold video preview */}
+      <div
+        class="product-card-media relative aspect-video overflow-hidden bg-[#070614]"
+        style={p.thumbnail ? '' : `background:${gradientFor(p.id)}`}
+        data-hover-video={hoverVideoUrl || undefined}
+        data-hover-poster={p.thumbnail || undefined}
+      >
         {p.thumbnail
           ? (
             <>
               <div class="product-card-ambient absolute inset-0 bg-cover bg-center scale-110 blur-md opacity-0 transition-opacity duration-200 pointer-events-none"
                 style={`background-image:url('${p.thumbnail}')`}></div>
               <img src={p.thumbnail} alt={p.name} loading="lazy" decoding="async"
-                class={`product-card-img relative z-[1] w-full h-full object-cover group-hover:scale-105 transition duration-500 ${comingSoon ? 'opacity-80 grayscale-[15%]' : ''}`} />
+                class={`product-card-img relative z-[1] w-full h-full object-cover transition duration-500 ${hoverVideoUrl ? '' : 'group-hover:scale-105'} ${comingSoon ? 'opacity-80 grayscale-[15%]' : ''}`} />
             </>
           )
           : (
@@ -51,8 +60,8 @@ export const ProductCard: FC<{ p: Product; compact?: boolean; usdRate?: number }
             </div>
           )}
 
-        {/* Top-left single priority badge (De-cluttered image surface) */}
-        <div class="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 pointer-events-none">
+        {/* Top-left priority badges */}
+        <div class="absolute top-3 left-3 flex flex-wrap gap-1.5 z-20 pointer-events-none">
           {comingSoon ? (
             <span class="px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black tracking-wider uppercase inline-flex items-center gap-1 shadow-md">
               <i class="fas fa-clock text-[9px]" aria-hidden="true"></i>Chưa mở bán
@@ -76,15 +85,35 @@ export const ProductCard: FC<{ p: Product; compact?: boolean; usdRate?: number }
           )}
         </div>
 
-        {/* Always-accessible Video Demo pill trigger (Touch + Desktop safe, sits above detail link overlay) */}
-        {p.demo_video_url && (
-          <button type="button"
-            class="absolute bottom-2.5 right-2.5 z-30 h-9 px-3 rounded-full bg-[#070614]/85 backdrop-blur-md border border-white/25 hover:bg-indigo-600 hover:border-indigo-400 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-lg transition cursor-pointer"
-            data-video={p.demo_video_url} data-poster={p.thumbnail || ''} data-title={p.name} data-aspect="auto"
-            aria-label={`Xem video demo ${p.name}`} title="Xem Demo">
-            <i class="fas fa-play text-[10px]" aria-hidden="true"></i>
-            <span>Xem Demo</span>
-          </button>
+        {/* Live hover-preview indicator (fades in smoothly while playing) */}
+        {hoverVideoUrl && (
+          <div class="card-playing-pill absolute top-3 right-3 z-20 pointer-events-none px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-cyan-400/40 text-cyan-200 text-[10px] font-bold inline-flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>Preview</span>
+          </div>
+        )}
+
+        {/* Subtle media meta pill (auto-fades out when hover preview plays; clicking expands fullscreen modal with 16:9 + 9:16 switcher) */}
+        {modalVideoUrl && (
+          <div class="card-media-corner absolute bottom-2.5 right-2.5 z-30 flex items-center gap-1.5">
+            {hasMultiDemo && (
+              <span class="card-idle-pill pointer-events-none h-6 px-2 rounded-full bg-[#070614]/75 backdrop-blur-md border border-white/15 text-white/95 text-[10px] font-bold inline-flex items-center gap-1 shadow">
+                <i class="fas fa-film text-cyan-300 text-[9px]" aria-hidden="true"></i>
+                <span>2 Video</span>
+              </span>
+            )}
+            <button type="button"
+              class="card-expand-btn w-7 h-7 rounded-full bg-[#070614]/70 hover:bg-indigo-600 backdrop-blur-md border border-white/20 hover:border-indigo-400 text-white/90 hover:text-white grid place-items-center shadow-md transition cursor-pointer"
+              data-video={modalVideoUrl}
+              data-videos={demoVideos.length > 0 ? JSON.stringify(demoVideos) : undefined}
+              data-poster={p.thumbnail || ''}
+              data-title={p.name}
+              data-aspect="auto"
+              aria-label={`Phóng to video demo ${p.name}`}
+              title={hasMultiDemo ? 'Mở trình phát lớn (16:9 & 9:16)' : 'Mở trình phát lớn'}>
+              <i class="fas fa-expand text-[10px]" aria-hidden="true"></i>
+            </button>
+          </div>
         )}
 
         {/* Click area to go to detail page */}

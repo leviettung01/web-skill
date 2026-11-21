@@ -42,6 +42,7 @@ export interface Product {
   thumbnail: string | null
   gallery: string | null
   demo_video_url: string | null
+  demo_videos?: string | null
   raw_video_url?: string | null
   demo_url: string | null
   download_url: string | null

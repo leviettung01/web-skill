@@ -101,7 +101,7 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
     await runOptionalDemoUserBootstrap(db, env).catch(err => console.error('[DEMO_USER_BOOTSTRAP]', err))
 
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13, flag14] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13, flag14, flag15] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null),
@@ -112,7 +112,8 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first<any>().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0014_done'`).first<any>().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0014_done'`).first<any>().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0015_done'`).first<any>().catch(() => null)
     ])
 
     if (
@@ -126,7 +127,8 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       flag11?.value === '1' &&
       flag12?.value === '1' &&
       flag13?.value === '1' &&
-      flag14?.value === '1'
+      flag14?.value === '1' &&
+      flag15?.value === '1'
     ) {
       _done = true
       return
@@ -837,6 +839,37 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
         ).run().catch(async () => {
           await db.prepare(
             `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0014_done', '1')`
+          ).run().catch(() => null)
+        })
+        mutated = true
+      }
+    }
+
+    // ---- Stage 12: Migration 0015 (Native CDN dual demo videos 16:9 + 9:16 for hover-to-play & detail switcher) ----
+    if (flag15?.value !== '1') {
+      await db.prepare(`ALTER TABLE products ADD COLUMN demo_videos TEXT`).run().catch(() => null)
+
+      const BATCH_SIZE = 10
+      for (let i = 0; i < DRIVE_BATCH01_SKILLS.length; i += BATCH_SIZE) {
+        const chunk = DRIVE_BATCH01_SKILLS.slice(i, i + BATCH_SIZE)
+        await Promise.all(
+          chunk.map((p) =>
+            db.prepare(
+              `UPDATE products SET demo_video_url=?, demo_videos=? WHERE slug=?`
+            ).bind(p.demo_video_url, p.demo_videos, p.slug).run().catch(() => null)
+          )
+        )
+      }
+
+      const check15 = await db.prepare(
+        `SELECT demo_videos FROM products WHERE slug='bs-creatormotion'`
+      ).first<any>().catch(() => null)
+      if (check15?.demo_videos && String(check15.demo_videos).includes('-9x16.mp4')) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0015_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0015_done', '1')`
           ).run().catch(() => null)
         })
         mutated = true

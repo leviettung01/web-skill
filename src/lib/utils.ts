@@ -167,6 +167,45 @@ export function isDirectVideoUrl(url?: string | null): boolean {
   return /\.(mp4|webm|mov)(\?.*)?$/i.test(url.trim())
 }
 
+export interface DemoVideoEntry {
+  label: string
+  shortLabel: string
+  aspect: '16:9' | '9:16'
+  url: string
+  poster: string
+}
+
+/** Phân tích danh sách nhiều video demo (ví dụ Ngang 16:9 + Dọc 9:16), fallback về demo_video_url đơn */
+export function parseDemoVideos(p: { demo_videos?: string | null; demo_video_url?: string | null; thumbnail?: string | null }): DemoVideoEntry[] {
+  const parsed = parseJSON<any>(p.demo_videos, null)
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const out: DemoVideoEntry[] = []
+    for (let i = 0; i < parsed.length; i++) {
+      const it = parsed[i]
+      if (!it || typeof it !== 'object' || !it.url) continue
+      const aspect: '16:9' | '9:16' = it.aspect === '9:16' ? '9:16' : '16:9'
+      out.push({
+        label: String(it.label || `Video ${i + 1}`),
+        shortLabel: String(it.shortLabel || `Video ${i + 1}`),
+        aspect,
+        url: String(it.url),
+        poster: String(it.poster || p.thumbnail || '')
+      })
+    }
+    if (out.length > 0) return out
+  }
+  if (p.demo_video_url && (isDirectVideoUrl(p.demo_video_url) || p.demo_video_url.includes('/videos/'))) {
+    return [{
+      label: 'Video Demo',
+      shortLabel: 'Video 1',
+      aspect: '16:9',
+      url: p.demo_video_url,
+      poster: p.thumbnail || ''
+    }]
+  }
+  return []
+}
+
 /** Chuẩn hóa link YouTube (/watch?v=, youtu.be/, /shorts/) hoặc Google Drive (/file/d/<ID>) sang URL embed */
 export function toEmbedVideoUrl(url?: string | null): string {
   const raw = (url || '').trim()

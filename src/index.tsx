@@ -204,15 +204,15 @@ app.get('/', async (c) => {
       db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id=c.id AND p.status='published') product_count
                   FROM categories c ORDER BY c.sort_order`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 12`).all(),
+                  WHERE p.status='published' AND p.is_featured=1 ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, (CASE WHEN p.product_type='mcp_skill' THEN 0 ELSE 1 END), p.price DESC, p.sold_count DESC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY p.id ASC LIMIT 12`).all(),
+                  WHERE p.status='published' AND p.product_type='mcp_skill' ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.price DESC, p.sold_count DESC, p.id ASC LIMIT 12`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' AND p.product_type='skill' ORDER BY p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' AND p.product_type='skill' ORDER BY p.price DESC, p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' ORDER BY p.sold_count DESC LIMIT 8`).all(),
+                  WHERE p.status='published' ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.price DESC, p.sold_count DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                  WHERE p.status='published' ORDER BY p.id DESC LIMIT 8`).all(),
+                  WHERE p.status='published' ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.price DESC, p.id DESC LIMIT 8`).all(),
       db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
                   WHERE p.status='coming_soon' ORDER BY p.id ASC LIMIT 6`).all(),
       db.prepare(`SELECT * FROM posts WHERE status='published' ORDER BY id DESC LIMIT 4`).all(),
@@ -240,7 +240,7 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   const db = c.env.DB
   const q = (c.req.query('q') || '').trim()
   const cat = opts.catSlug || c.req.query('cat') || ''
-  const sort = c.req.query('sort') || 'newest'
+  const sort = c.req.query('sort') || 'featured'
   const type = opts.comboOnly ? 'combo' : (c.req.query('type') || '')
   const rawTier = (c.req.query('tier') || '').trim().toLowerCase()
   const tier = ['vip1', 'vip2', 'vip3', 'vip4', 'pro'].includes(rawTier) ? rawTier : ''
@@ -259,11 +259,17 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   if (minPrice) { where.push(`p.price >= ?`); binds.push(+minPrice) }
   if (maxPrice) { where.push(`p.price <= ?`); binds.push(+maxPrice) }
 
+  const priorityOrder = `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.is_featured DESC, p.price DESC, p.sold_count DESC, p.id ASC`
   const orderMap: Record<string, string> = {
-    newest: 'p.id DESC', bestseller: 'p.sold_count DESC', hot: 'p.sold_count DESC', price_asc: 'p.price ASC',
-    price_desc: 'p.price DESC', rating: 'p.rating DESC, p.rating_count DESC', featured: 'p.is_featured DESC, p.sold_count DESC'
+    featured: priorityOrder,
+    bestseller: `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.sold_count DESC, p.price DESC`,
+    hot: `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.sold_count DESC, p.price DESC`,
+    price_desc: `p.price DESC, (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.sold_count DESC`,
+    price_asc: `p.price ASC, (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.id ASC`,
+    rating: `(CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, p.rating DESC, p.rating_count DESC, p.price DESC`,
+    newest: 'p.id DESC'
   }
-  const orderBy = orderMap[sort] || orderMap.newest
+  const orderBy = orderMap[sort] || priorityOrder
   const w = where.join(' AND ')
 
   const fetchList = () => Promise.all([
@@ -330,7 +336,7 @@ app.get('/san-pham/:slug', async (c) => {
     cached(`product:extra:${p.id}`, 20000, async () => {
       const [related, comboItems, reviews, breakdown] = await Promise.all([
         db.prepare(`SELECT p.*, c.name category_name, c.slug category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-                    WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
+                    WHERE p.status='published' AND p.id!=? ORDER BY (CASE WHEN p.slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, (CASE WHEN p.category_id=? THEN 0 ELSE 1 END), p.price DESC, p.sold_count DESC LIMIT 4`).bind(p.id, p.category_id).all(),
         p.product_type === 'combo'
           ? db.prepare(`SELECT p.* FROM combo_items ci JOIN products p ON p.id=ci.product_id WHERE ci.combo_id=?`).bind(p.id).all()
           : Promise.resolve({ results: [] }),
@@ -2101,7 +2107,7 @@ app.get('/tai-khoan/hoi-vien', requireAuth, async (c) => {
   const [membership, historyRes, catalogRes, ownedRes] = await Promise.all([
     getActiveUserMembership(db, u.id),
     db.prepare('SELECT * FROM user_memberships WHERE user_id=? ORDER BY id DESC LIMIT 10').bind(u.id).all().catch(() => ({ results: [] })),
-    db.prepare(`SELECT id, slug, name, thumbnail, price, skill_tier, product_type FROM products WHERE status='published' ORDER BY price ASC, id DESC`).all(),
+    db.prepare(`SELECT id, slug, name, thumbnail, price, skill_tier, product_type FROM products WHERE status='published' ORDER BY (CASE WHEN slug LIKE 'bs-%' THEN 1 ELSE 0 END) ASC, price DESC, id ASC`).all(),
     db.prepare('SELECT product_id FROM licenses WHERE user_id=?').bind(u.id).all()
   ])
   const ownedIds = ((ownedRes.results || []) as any[]).map(x => Number(x.product_id))
