@@ -451,17 +451,26 @@ export async function syncUnlimitedMembershipSkills(db: D1Database, userId: numb
          AND NOT EXISTS (SELECT 1 FROM licenses l WHERE l.user_id=? AND l.product_id=p.id)`
     ).bind(...fullTiers, userId).all()
 
-    for (const prod of (missing.results || []) as any[]) {
-      const key = `${genCode('', 4)}-${genCode('', 4)}-${genCode('', 4)}-${genCode('', 4)}`
-      await db.prepare(
-        `INSERT INTO licenses (user_id, product_id, order_id, license_key, source, membership_id)
-         VALUES (?,?,?,?,?,?)`
-      ).bind(userId, prod.id, m.order_id ?? null, key, 'membership', m.id).run().catch(() => null)
-      await db.prepare(
-        `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
-         VALUES (?,?,?,?)`
-      ).bind(m.id, userId, prod.id, prod.skill_tier).run().catch(() => null)
-      granted++
+    const list = (missing.results || []) as any[]
+    const BATCH = 10
+    for (let i = 0; i < list.length; i += BATCH) {
+      const chunk = list.slice(i, i + BATCH)
+      await Promise.all(
+        chunk.map(async (prod) => {
+          const key = `${genCode('', 4)}-${genCode('', 4)}-${genCode('', 4)}-${genCode('', 4)}`
+          await Promise.all([
+            db.prepare(
+              `INSERT INTO licenses (user_id, product_id, order_id, license_key, source, membership_id)
+               VALUES (?,?,?,?,?,?)`
+            ).bind(userId, prod.id, m.order_id ?? null, key, 'membership', m.id).run().catch(() => null),
+            db.prepare(
+              `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
+               VALUES (?,?,?,?)`
+            ).bind(m.id, userId, prod.id, prod.skill_tier).run().catch(() => null)
+          ])
+          granted++
+        })
+      )
     }
   } catch {
     return granted

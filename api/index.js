@@ -8226,17 +8226,26 @@ async function syncUnlimitedMembershipSkills(db, userId) {
        WHERE p.status='published' AND p.skill_tier IN (${placeholders})
          AND NOT EXISTS (SELECT 1 FROM licenses l WHERE l.user_id=? AND l.product_id=p.id)`
     ).bind(...fullTiers, userId).all();
-    for (const prod of missing.results || []) {
-      const key = `${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}`;
-      await db.prepare(
-        `INSERT INTO licenses (user_id, product_id, order_id, license_key, source, membership_id)
-         VALUES (?,?,?,?,?,?)`
-      ).bind(userId, prod.id, m.order_id ?? null, key, "membership", m.id).run().catch(() => null);
-      await db.prepare(
-        `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
-         VALUES (?,?,?,?)`
-      ).bind(m.id, userId, prod.id, prod.skill_tier).run().catch(() => null);
-      granted++;
+    const list = missing.results || [];
+    const BATCH = 10;
+    for (let i = 0; i < list.length; i += BATCH) {
+      const chunk = list.slice(i, i + BATCH);
+      await Promise.all(
+        chunk.map(async (prod) => {
+          const key = `${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}-${genCode("", 4)}`;
+          await Promise.all([
+            db.prepare(
+              `INSERT INTO licenses (user_id, product_id, order_id, license_key, source, membership_id)
+               VALUES (?,?,?,?,?,?)`
+            ).bind(userId, prod.id, m.order_id ?? null, key, "membership", m.id).run().catch(() => null),
+            db.prepare(
+              `INSERT INTO membership_claims (membership_id, user_id, product_id, skill_tier)
+               VALUES (?,?,?,?)`
+            ).bind(m.id, userId, prod.id, prod.skill_tier).run().catch(() => null)
+          ]);
+          granted++;
+        })
+      );
     }
   } catch {
     return granted;
@@ -21296,6 +21305,1112 @@ var REAL_MCP_VIDEO_SKILLS = [
   }
 ];
 
+// src/lib/drive-batch01-skills.ts
+var STANDARD_MCP_CLIENTS = '["Claude", "Codex", "Antigravity"]';
+var STANDARD_MCP_TOOLS = JSON.stringify([
+  { name: "list_licensed_skills", description: "Li\u1EC7t k\xEA to\xE0n b\u1ED9 Skill AI Agent (MCP) \u0111ang k\xEDch ho\u1EA1t k\xE8m link t\u1EA3i Google Drive" },
+  { name: "get_skill_blueprint", description: "N\u1EA1p h\u01B0\u1EDBng d\u1EABn SKILL.md, c\u1EA5u tr\xFAc c\u1EA3nh, th\xF4ng s\u1ED1 b\u1ED1 c\u1EE5c & ti\xEAu chu\u1EA9n xu\u1EA5t 4K c\u1EE7a Skill" },
+  { name: "get_skill_assets_and_setup", description: "L\u1EA5y link Google Drive b\u1ED9 Skill Kit (ZIP c\xE0i \u0111\u1EB7t + video demo 16:9 & 9:16) v\xE0 b\u01B0\u1EDBc gi\u1EA3i n\xE9n cho AI Agent" },
+  { name: "generate_video_storyboard", description: "L\u1EADp k\u1ECBch b\u1EA3n chia nh\u1ECBp th\u1EDDi gian, n\u1ED9i dung ch\u1EEF/th\u1EBB v\xE0 c\u1EA5u tr\xFAc c\u1EA3nh kh\u1EDBp l\u1EDDi n\xF3i" },
+  { name: "create_video_from_skill", description: "T\u1EA1o k\u1EBF ho\u1EA1ch th\u1EF1c thi \u0111\u1EC3 AI Agent d\u1EF1ng v\xE0 xu\u1EA5t video MP4 s\u1EAFc n\xE9t (16:9 ngang ho\u1EB7c 9:16 d\u1ECDc)" }
+]);
+var RAW_BATCH01 = [
+  {
+    "slug": "bs-creatormotion",
+    "name": "CreatorMotion \xB7 Th\u01B0 vi\u1EC7n hi\u1EC7u \u1EE9ng chuy\u1EC3n \u0111\u1ED9ng \u0111\u1EA7y \u0111\u1EE7",
+    "enName": "CreatorMotion \xB7 Complete Motion Effects Library",
+    "summary": "G\u1ED3m to\xE0n b\u1ED9 hi\u1EC7u \u1EE9ng CreatorMotion: bi\u1EC3u \u0111\u1ED3, s\u01A1 \u0111\u1ED3, ch\u1EEF \u0111\u1ED9ng, b\u1ED1 c\u1EE5c ng\u01B0\u1EDDi d\u1EABn, th\u1EBB ch\u01B0\u01A1ng, chuy\u1EC3n c\u1EA3nh \u2014 m\u1ED7i \u0111o\u1EA1n \u0111\u1EC1u ch\u1EC9nh s\u1EEDa \u0111\u01B0\u1EE3c, m\u1EB7c \u0111\u1ECBnh 4K, \u0111\u1EE7 t\u1EC9 l\u1EC7 16:9, 9:16, 4:3, 3:4.",
+    "useCase": "D\xF9ng khi mu\u1ED1n agent t\u1EF1 ch\u1ECDn hi\u1EC7u \u1EE9ng cho t\u1EEBng \u0111o\u1EA1n k\u1ECBch b\u1EA3n thay v\xEC ph\u1EA3i ch\u1ECDn tay t\u1EEBng hi\u1EC7u \u1EE9ng.",
+    "version": "v1.0.1 MCP",
+    "sizeLabel": "15.7 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 599e3,
+    "originalPrice": 1199e3,
+    "folderId": "1JB995Gu0o6RdOs8_qhOhUn0rGKTCwear",
+    "demoId": "1N_veegJDlvLJtS2DUU5_k8mZ0YgpM-rv",
+    "isFeatured": 1,
+    "isHot": 1,
+    "soldCount": 36,
+    "viewCount": 2480,
+    "ratingCount": 16
+  },
+  {
+    "slug": "bs-creatormotion-cards-foreground-row",
+    "name": "CreatorMotion \xB7 H\xE0ng th\u1EBB n\u1ED5i ph\xEDa tr\u01B0\u1EDBc ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Presenter Foreground Card Row",
+    "summary": "M\u1ED9t h\xE0ng th\u1EBB h\xECnh \u1EA3nh hi\u1EC7n l\xEAn ph\xEDa tr\u01B0\u1EDBc ng\u01B0\u1EDDi d\u1EABn, x\u1EBFp \u0111\u1EC1u nhau m\xE0 kh\xF4ng che m\u1EB7t ng\u01B0\u1EDDi n\xF3i.",
+    "useCase": "D\xF9ng khi c\u1EA7n gi\u1EDBi thi\u1EC7u nhi\u1EC1u \xFD, nhi\u1EC1u s\u1EA3n ph\u1EA9m c\xF9ng l\xFAc trong l\xFAc ng\u01B0\u1EDDi d\u1EABn v\u1EABn \u0111ang n\xF3i.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "7.2 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1lguCFOEDgE-EC7gRMBoBs60dQ0zEMNV6",
+    "demoId": "1Albzy-VUi0udyCrBg17K9-KC-gGfqT8n",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 23,
+    "viewCount": 730,
+    "ratingCount": 14
+  },
+  {
+    "slug": "bs-creatormotion-collage-scatter-presenter",
+    "name": "CreatorMotion \xB7 \u1EA2nh v\u1EE1 ra r\u1ED3i l\u1ED9 ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Scattered Images to Presenter Wall",
+    "summary": "M\u1ED9t \u1EA3nh to\xE0n khung v\u1EE1 th\xE0nh nhi\u1EC1u t\u1EA5m \u1EA3nh x\u1EBFp ch\u1ED3ng, r\u1ED3i c\xE1c t\u1EA5m \u1EA3nh d\u1EA1t sang hai b\xEAn \u0111\u1EC3 l\u1ED9 ng\u01B0\u1EDDi d\u1EABn \u1EDF gi\u1EEFa khung h\xECnh.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF \u0111\u1EA7u \u0111o\u1EA1n n\xF3i, chuy\u1EC3n t\u1EEB h\xECnh minh h\u1ECDa sang ng\u01B0\u1EDDi d\u1EABn m\u1ED9t c\xE1ch \u1EA5n t\u01B0\u1EE3ng.",
+    "version": "v1.0.3 MCP",
+    "sizeLabel": "7.2 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1-woS0I3vZMX2HAaWyreG6F67ljjQAGKW",
+    "demoId": "1TwFbqV3l4PAv8Fhtkm25aKIGZVSSL7-4",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 16,
+    "viewCount": 1024,
+    "ratingCount": 10
+  },
+  {
+    "slug": "bs-creatormotion-pip-chat-response",
+    "name": "CreatorMotion \xB7 Khung chat tr\u1EA3 l\u1EDDi",
+    "enName": "CreatorMotion \xB7 Chat Response Presenter",
+    "summary": "M\xE0n h\xECnh hi\u1EC7n trang n\u1ED9i dung c\xF9ng khung tr\xF2n ng\u01B0\u1EDDi n\xF3i, r\u1ED3i m\u1ED9t \u0111o\u1EA1n trao \u0111\u1ED5i ng\u1EAFn di\u1EC5n ra: c\xE2u h\u1ECFi, nh\u1ECBp ch\u1EDD, c\xE2u tr\u1EA3 l\u1EDDi m\u1EDF r\u1ED9ng, m\u1ED7i nh\u1ECBp c\xF3 th\u1EDDi gian ri\xEAng.",
+    "useCase": "D\xF9ng khi mu\u1ED1n minh h\u1ECDa m\u1ED9t \u0111o\u1EA1n h\u1ECFi-\u0111\xE1p, tin nh\u1EAFn hay b\xECnh lu\u1EADn trong l\xFAc ng\u01B0\u1EDDi d\u1EABn gi\u1EA3i th\xEDch.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.4 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1eOd9RxF5VwY_iLE-YwhDmxDfWr4oyQP1",
+    "demoId": "1vSB0pCm7Da3huI3papNd0DmXUxZWWCmd",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 27,
+    "viewCount": 1075,
+    "ratingCount": 6
+  },
+  {
+    "slug": "bs-creatormotion-pip-slides-focus",
+    "name": "CreatorMotion \xB7 Ng\u01B0\u1EDDi d\u1EABn b\xEAn slide thuy\u1EBFt tr\xECnh",
+    "enName": "CreatorMotion \xB7 Slide Focus Presenter",
+    "summary": "Slide thuy\u1EBFt tr\xECnh chi\u1EBFm g\u1EA7n h\u1EBFt khung h\xECnh, ng\u01B0\u1EDDi n\xF3i hi\u1EC7n trong khung nh\u1ECF b\xEAn c\u1EA1nh; khi chuy\u1EC3n trang, b\u1ED1 c\u1EE5c slide \u0111\u01B0\u1EE3c gi\u1EEF nguy\xEAn r\u1ED3i camera l\xF9i ra \u0111\u1EC3 l\u1ED9 kh\xF4ng gian l\xE0m vi\u1EC7c xung quanh.",
+    "useCase": "D\xF9ng khi thuy\u1EBFt tr\xECnh, gi\u1EA3ng gi\u1EA3i theo slide m\xE0 v\u1EABn mu\u1ED1n th\u1EA5y m\u1EB7t ng\u01B0\u1EDDi n\xF3i.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.6 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1NYtJ15IdIk-ZrDesde68tDMDv6q4Zd_N",
+    "demoId": "1v3YH2kaR2v743p1Xq_J_lMyQ9p27H_OS",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 27,
+    "viewCount": 1157,
+    "ratingCount": 7
+  },
+  {
+    "slug": "bs-creatormotion-split-chart-swap",
+    "name": "CreatorMotion \xB7 \u0110\u1ED5i ch\u1ED7 bi\u1EC3u \u0111\u1ED3 v\xE0 ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Chart Presenter Swap",
+    "summary": "Bi\u1EC3u \u0111\u1ED3 l\u1EDBn chi\u1EBFm ph\u1EA7n ch\xEDnh c\u1EE7a khung h\xECnh, ng\u01B0\u1EDDi n\xF3i \u0111\u1EE9ng \u1EDF m\xE9p; hai b\xEAn \u0111\u1ED5i v\u1ECB tr\xED v\xE0i l\u1EA7n \u0111\u1EC3 so s\xE1nh s\u1ED1 li\u1EC7u, hai \u0111\u01B0\u1EDDng bi\u1EC3u \u0111\u1ED3 v\u1EBD l\u1EA7n l\u01B0\u1EE3t theo t\u1EEBng nh\u1ECBp \u0111\u1ECDc.",
+    "useCase": "D\xF9ng khi ph\xE2n t\xEDch bi\u1EC3u \u0111\u1ED3, so s\xE1nh hai b\u1ED9 s\u1ED1 li\u1EC7u trong l\xFAc ng\u01B0\u1EDDi d\u1EABn b\xECnh lu\u1EADn.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1BPkwPZvjtD1lScEebFsI8inngRxpvcc_",
+    "demoId": "1zOMDotabbijI80j4SH-Y4XZibE5lxQOW",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 14,
+    "viewCount": 1258,
+    "ratingCount": 9
+  },
+  {
+    "slug": "bs-creatormotion-split-phone-callouts",
+    "name": "CreatorMotion \xB7 Ghi ch\xFA t\xEDnh n\u0103ng tr\xEAn \u0111i\u1EC7n tho\u1EA1i",
+    "enName": "CreatorMotion \xB7 Phone Feature Callouts",
+    "summary": "Ng\u01B0\u1EDDi d\u1EABn hi\u1EC7n \u1EDF n\u1EEDa khung h\xECnh, b\xEAn c\u1EA1nh l\xE0 m\xE0n h\xECnh \u0111i\u1EC7n tho\u1EA1i ph\xF3ng to \u0111ang demo; hai nh\xE3n t\xEDnh n\u0103ng ng\u1EAFn hi\u1EC7n l\xEAn trong m\xE0n h\xECnh \u0111i\u1EC7n tho\u1EA1i sau khi th\xF4ng \u0111i\u1EC7p ch\xEDnh \u0111\xE3 r\xF5.",
+    "useCase": "D\xF9ng khi gi\u1EDBi thi\u1EC7u t\xEDnh n\u0103ng app, demo tr\xEAn \u0111i\u1EC7n tho\u1EA1i.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.4 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1WcJhdn_UV_aV6S9iKrEy8dFHvOmha2zn",
+    "demoId": "1wk0tQlxUKE27LM_9_-oFoXKHGNUIbFte",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 16,
+    "viewCount": 1084,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-split-progressive-list",
+    "name": "CreatorMotion \xB7 Danh s\xE1ch \xFD hi\u1EC7n d\u1EA7n b\xEAn ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Progressive Presenter List",
+    "summary": "Ng\u01B0\u1EDDi n\xF3i \u0111\u1EE9ng y\xEAn m\u1ED9t ch\u1ED7, c\xE1c \xFD ng\u1EAFn l\u1EA7n l\u01B0\u1EE3t hi\u1EC7n l\xEAn th\xE0nh c\u1ED9t danh s\xE1ch b\xEAn c\u1EA1nh, \xFD c\u0169 v\u1EABn gi\u1EEF nguy\xEAn \u0111\u1EC3 ng\u01B0\u1EDDi xem \u0111\u1ECDc l\u1EA1i \u0111\u01B0\u1EE3c.",
+    "useCase": "D\xF9ng khi li\u1EC7t k\xEA lu\u1EADn \u0111i\u1EC3m, c\xE1c b\u01B0\u1EDBc, c\xE1c \xFD ch\xEDnh trong l\xFAc ng\u01B0\u1EDDi d\u1EABn n\xF3i.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1n9domx3R20l_rcqRkr88d1e9-v4jxudX",
+    "demoId": "1BUOj4Izd5ZeP5bn7mUk35A-uVizqKaRd",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 30,
+    "viewCount": 961,
+    "ratingCount": 12
+  },
+  {
+    "slug": "bs-creatormotion-split-status-focus",
+    "name": "CreatorMotion \xB7 \u0110i\u1EC3m nh\u1EA5n ch\u1EA1y qua 3 \xFD ch\xEDnh",
+    "enName": "CreatorMotion \xB7 Status Focus Sidebar",
+    "summary": "Ng\u01B0\u1EDDi d\u1EABn \u1EDF m\u1ED9t b\xEAn khung h\xECnh, b\xEAn c\xF2n l\u1EA1i l\xE0 ba c\xE2u ng\u1EAFn c\xE1ch \u0111\u1EC1u nhau; m\u1ED9t \u0111i\u1EC3m nh\u1EA5n nh\u1ECF ch\u1EA1y qua t\u1EEBng c\xE2u, m\u1ED7i tr\u1EA1ng th\xE1i hi\u1EC7n l\xEAn th\xE0nh m\u1ED9t nh\u1ECBp ri\xEAng.",
+    "useCase": "D\xF9ng khi c\u1EA7n nh\u1EA5n m\u1EA1nh l\u1EA7n l\u01B0\u1EE3t t\u1EEBng \xFD, t\u1EEBng tr\u1EA1ng th\xE1i.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1I497x9ekfms7_69trimeehQgvpa1thMi",
+    "demoId": "1wA16cURpY8NdgoYR1xgBJBzg9tQpOq5K",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 16,
+    "viewCount": 629,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-type-behind-subject",
+    "name": "CreatorMotion \xB7 Ti\xEAu \u0111\u1EC1 l\u1EDBn sau l\u01B0ng ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Title Behind Subject",
+    "summary": "Ti\xEAu \u0111\u1EC1 ch\u1EEF l\u1EDBn n\u1EDF ra ph\xEDa sau ng\u01B0\u1EDDi d\u1EABn m\xE0 kh\xF4ng che m\u1EB7t, gi\xFAp m\u1ED9t c\u1EE5m t\u1EEB ng\u1EAFn tr\xF4ng to v\xE0 c\xF3 l\u1EF1c h\u01A1n.",
+    "useCase": "D\xF9ng khi mu\u1ED1n nh\u1EA5n m\u1EA1nh m\u1ED9t t\u1EEB kh\xF3a, m\u1ED9t c\xE2u ch\u1EE7 \u0111\u1EC1 trong l\xFAc ng\u01B0\u1EDDi d\u1EABn \u0111ang n\xF3i.",
+    "version": "v1.0.3 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "11FrA0RbzpG74qhCDO5aZtnImVW8Uwmqn",
+    "demoId": "1EdsqQl4Q_-iZvRR7DEJQ18i7vaSqHf2s",
+    "isFeatured": 0,
+    "isHot": 1,
+    "soldCount": 29,
+    "viewCount": 867,
+    "ratingCount": 14
+  },
+  {
+    "slug": "bs-creatormotion-type-keyword-caption",
+    "name": "CreatorMotion \xB7 Ph\u1EE5 \u0111\u1EC1 nh\u1EA5n t\u1EEB kh\xF3a",
+    "enName": "CreatorMotion \xB7 Keyword Caption Build",
+    "summary": "Ph\u1EE5 \u0111\u1EC1 ng\u1EAFn hi\u1EC7n theo l\u1EDDi n\xF3i, t\u1EEB kh\xF3a quan tr\u1ECDng \u0111\u01B0\u1EE3c t\xF4 m\xE0u nh\u1EA5n; ch\u1EC9 2 d\xF2ng c\xE2n \u0111\u1ED1i n\xEAn v\u1EABn \u0111\u1ECDc \u0111\u01B0\u1EE3c khi \u0111\xE8 l\xEAn h\xECnh ng\u01B0\u1EDDi d\u1EABn.",
+    "useCase": "D\xF9ng khi mu\u1ED1n ng\u01B0\u1EDDi xem v\u1EEBa nghe v\u1EEBa nh\u1EDB \u0111\u01B0\u1EE3c t\u1EEB kh\xF3a ch\xEDnh.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1lDV6NbisHD4gvOeszCvR2NY_oynRRZxN",
+    "demoId": "1wJPV3oSTr_EWyo3c20KlD7dRNxaRrwW7",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 27,
+    "viewCount": 1095,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-type-opposing-labels",
+    "name": "CreatorMotion \xB7 Hai nh\xE3n \u0111\u1ED1i l\u1EADp hai b\xEAn",
+    "enName": "CreatorMotion \xB7 Opposing Side Labels",
+    "summary": "Hai nh\xE3n tr\xE1i ng\u01B0\u1EE3c nhau hi\u1EC7n \u1EDF hai b\xEAn ng\u01B0\u1EDDi d\u1EABn, m\u1ED7i b\xEAn m\u1ED9t c\xE1ch th\u1EC3 hi\u1EC7n kh\xE1c nhau \u0111\u1EC3 th\u1EA5y r\xF5 s\u1EF1 \u0111\u1ED1i l\u1EADp, r\u1ED3i m\u1ED9t nh\xE3n thay th\u1EBF nh\xE3n c\xF2n l\u1EA1i t\u1EA1o c\xFA l\u1EADt.",
+    "useCase": "D\xF9ng khi so s\xE1nh hai m\u1EB7t \u0111\u1ED1i l\u1EADp: c\u0169-m\u1EDBi, \u0111\xFAng-sai, tr\u01B0\u1EDBc-sau.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1dfxr09FADOhs1pzfIChdwWsmUmlGgBAO",
+    "demoId": "1cWYKlpHOkgQVE2PGZzxQTmg6c7EfPXsy",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 28,
+    "viewCount": 1392,
+    "ratingCount": 15
+  },
+  {
+    "slug": "bs-creatormotion-type-tag-stack",
+    "name": "CreatorMotion \xB7 Nh\xE3n tag x\u1EBFp ch\u1ED3ng b\xEAn ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Wrapping Tag Stack",
+    "summary": "C\xE1c tr\u01B0\u1EDDng h\u1EE3p s\u1EED d\u1EE5ng ng\u1EAFn hi\u1EC7n th\xE0nh nh\u1EEFng nh\xE3n tag g\u1ECDn g\xE0ng b\xEAn c\u1EA1nh ng\u01B0\u1EDDi d\u1EABn, tag m\u1EDBi l\u1EA5p \u0111\u1EA7y ch\u1ED7 tr\u1ED1ng, tag c\u0169 v\u1EABn d\u1EC5 qu\xE9t m\u1EAFt.",
+    "useCase": "D\xF9ng khi li\u1EC7t k\xEA nhi\u1EC1u c\xF4ng d\u1EE5ng, nhi\u1EC1u t\xECnh hu\u1ED1ng d\xF9ng c\u1EE7a m\u1ED9t s\u1EA3n ph\u1EA9m.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "176Huzwp0Fd0FbpuTWBw8h6j7khZGU0Ag",
+    "demoId": "1av4qaTX4xkjTNJ-vwP8_Xnt54Ih9GBcM",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 24,
+    "viewCount": 832,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-type-title-takeover",
+    "name": "CreatorMotion \xB7 Ti\xEAu \u0111\u1EC1 kh\u1ED5ng l\u1ED3 chi\u1EBFm khung h\xECnh",
+    "enName": "CreatorMotion \xB7 Title Scene Takeover",
+    "summary": "Ti\xEAu \u0111\u1EC1 ch\u1EEF to \u0111\xF9ng \u0111\u1EADp v\xE0o ph\xEDa sau ng\u01B0\u1EDDi d\u1EABn, r\u1ED3i c\u1EAFt sang c\u1EA3nh ch\u1EC9 c\xF2n ch\u1EEF, gi\u1EEF nguy\xEAn c\u1EE1 ch\u1EEF v\xE0 v\u1ECB tr\xED.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF \u0111\u1EA7u ho\u1EB7c chuy\u1EC3n ch\u01B0\u01A1ng b\u1EB1ng m\u1ED9t c\xE2u ti\xEAu \u0111\u1EC1 th\u1EADt m\u1EA1nh.",
+    "version": "v1.0.3 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "14fzWD60tGnRO8RrfgwY0AZtEYaoTsRY5",
+    "demoId": "1KDVCVwRiBqBXNCaTR-bhcuiTsCu5mbr4",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 21,
+    "viewCount": 1038,
+    "ratingCount": 10
+  },
+  {
+    "slug": "bs-creatormotion-type-topic-cloud",
+    "name": "CreatorMotion \xB7 \u0110\xE1m m\xE2y ch\u1EE7 \u0111\u1EC1 sau ng\u01B0\u1EDDi d\u1EABn",
+    "enName": "CreatorMotion \xB7 Topic Cloud Behind Presenter",
+    "summary": "Ti\xEAu \u0111\u1EC1 ch\u1EE7 \u0111\u1EC1 l\u1EDBn hi\u1EC7n sau ng\u01B0\u1EDDi d\u1EABn, c\xE1c t\u1EEB li\xEAn quan t\u1EE5 l\u1EA1i xung quanh v\u1EDBi nhi\u1EC1u c\u1EE1 ch\u1EEF kh\xE1c nhau, t\u1EA1o c\u1EA3m gi\xE1c m\u1ED9t l\u0129nh v\u1EF1c \xFD t\u01B0\u1EDFng \u0111ang m\u1EDF r\u1ED9ng.",
+    "useCase": "D\xF9ng khi gi\u1EDBi thi\u1EC7u m\u1ED9t ch\u1EE7 \u0111\u1EC1 l\u1EDBn v\u1EDBi nhi\u1EC1u kh\xEDa c\u1EA1nh li\xEAn quan.",
+    "version": "v1.0.3 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1wkbXss41UV9y04aC-4eRyEQD1dhz12PL",
+    "demoId": "1vtbX3DIFyKD9CKVyLLljcmJZyMBX_xkd",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 20,
+    "viewCount": 1169,
+    "ratingCount": 8
+  },
+  {
+    "slug": "bs-creatormotion-type-wall-checklist",
+    "name": "CreatorMotion \xB7 Checklist hi\u1EC7n tr\xEAn t\u01B0\u1EDDng",
+    "enName": "CreatorMotion \xB7 Wall Checklist Reveal",
+    "summary": "Camera \u0111\u1ED5i khung \u0111\u1EC3 ch\u1EEBa ch\u1ED7 cho m\u1ED9t checklist tr\xEAn b\u1EE9c t\u01B0\u1EDDng tr\u1ED1ng; ng\u01B0\u1EDDi d\u1EABn l\xF9i v\u1EC1 m\xE9p khung, h\u01A1i m\u1EDD v\xE0 nh\u1EA1t \u0111i, trong khi t\u1EEBng d\xF2ng checklist l\u1EA7n l\u01B0\u1EE3t hi\u1EC7n ra.",
+    "useCase": "D\xF9ng khi c\u1EA7n ng\u01B0\u1EDDi xem t\u1EADp trung \u0111\u1ECDc checklist thay v\xEC nh\xECn ng\u01B0\u1EDDi d\u1EABn.",
+    "version": "v1.0.3 MCP",
+    "sizeLabel": "6.1 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 CreatorMotion",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1Uolg1eHfUyA-v66JfejNbZji_Rs4rwpP",
+    "demoId": "1d0aTdjCCMDh2Yef-1BL1BYldQzrNwjXg",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 24,
+    "viewCount": 452,
+    "ratingCount": 7
+  },
+  {
+    "slug": "bs-hyperframes-partnership-aroll-launch",
+    "name": "Phim c\xF4ng b\u1ED1 h\u1EE3p t\xE1c",
+    "enName": "Partnership Announcement Film",
+    "summary": "Phim c\xF4ng b\u1ED1 h\u1EE3p t\xE1c chuy\xEAn nghi\u1EC7p: ng\u01B0\u1EDDi d\u1EABn trong khung c\u1EEDa s\u1ED5 \u0111\u01B0\u1EE3c x\u1EED l\xFD m\u01B0\u1EE3t m\xE0, logo hai b\xEAn \u0111\u1ED1i t\xE1c, c\xE1c b\u01B0\u1EDBc h\u01B0\u1EDBng d\u1EABn b\u1EB1ng th\u1EBB k\xE8m m\xE0n h\xECnh terminal, danh s\xE1ch \u0111\u1ED9ng t\u1EEB ch\u1EA1y li\xEAn t\u1EE5c v\xE0 k\u1EBFt th\xFAc b\u1EB1ng hi\u1EC7u \u1EE9ng chuy\u1EC3n tr\u1EAFng sang tr\u1ECDng.",
+    "useCase": "D\xF9ng khi ra m\u1EAFt quan h\u1EC7 h\u1EE3p t\xE1c, li\xEAn doanh ho\u1EB7c c\xF4ng b\u1ED1 s\u1EA3n ph\u1EA9m m\u1EDBi; xu\u1EA5t \u0111\u1EA7y \u0111\u1EE7 c\u1EA3 video MP4 4K l\u1EABn project ch\u1EC9nh s\u1EEDa \u0111\u01B0\u1EE3c.",
+    "version": "v1.0.0 MCP",
+    "sizeLabel": "10 KB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 LaunchMotion & Film",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1pP7AfxoGXCqPA0TB1OItowDo0c07fFd3",
+    "demoId": "1Al2DA8TSAz0tm7knpyIl49IHHsulR9bc",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 24,
+    "viewCount": 1053,
+    "ratingCount": 14
+  },
+  {
+    "slug": "bs-launchmotion-data-products-you-own",
+    "name": "LaunchMotion \xB7 M\u1ED9t t\u1EF7 l\u01B0\u1EE3t xem",
+    "enName": "LaunchMotion \xB7 Billion Views",
+    "summary": "Ng\u01B0\u1EDDi d\u1EABn n\xF3i \u0111\u1EA7y khung h\xECnh tr\xEAn s\xE2n th\u01B0\u1EE3ng m\u1EDD s\u01B0\u01A1ng, ch\u1EEF theo l\u1EDDi n\xF3i hi\u1EC7n quanh anh ta, huy hi\u1EC7u chia s\u1EBB v\xE0 ch\u1EEF kh\u1ED5ng l\u1ED3 tr\xF4i sau \u0111\u1EA7u, \u1EA3nh th\xE0nh ph\u1ED1 x\xF2e ra ph\xEDa sau, r\u1ED3i c\u1EA3nh n\xE2ng l\xEAn th\xE0nh b\u1ED9 \u0111\u1EBFm leo t\u1EDBi m\u1ED9t t\u1EF7 l\u01B0\u1EE3t xem.",
+    "useCase": "D\xF9ng \u0111\u1EC3 khoe c\u1ED9t m\u1ED1c l\u01B0\u1EE3t xem ho\u1EB7c m\u1EDF \u0111\u1EA7u video talking-head th\u1EADt \u1EA5n t\u01B0\u1EE3ng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "8.5 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 LaunchMotion & Film",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1b1aa4lInDU_KTDVRQNhxYdXiv5Yq7wSg",
+    "demoId": "1gh0kc5HppXjRSERy3KOjz2Zfrbxj20NB",
+    "isFeatured": 0,
+    "isHot": 1,
+    "soldCount": 23,
+    "viewCount": 798,
+    "ratingCount": 15
+  },
+  {
+    "slug": "bs-launchmotion-flow-presenter-slashes-out",
+    "name": "LaunchMotion \xB7 G\u1EA1ch b\u1ECF c\xE1ch c\u0169, ch\u1ED1t c\xE1ch m\u1EDBi",
+    "enName": "LaunchMotion \xB7 Presenter Shift",
+    "summary": "Ng\u01B0\u1EDDi d\u1EABn n\xF3i \u0111\u1EA7y khung h\xECnh tr\xEAn n\u1EC1n l\u01B0\u1EDBi t\u1ED1i chuy\xEAn nghi\u1EC7p, ch\u1EEF l\u1EDBn hi\u1EC7n \u0111\u1ED3ng b\u1ED9 theo l\u1EDDi n\xF3i v\xE0 tr\xF4i sau l\u01B0ng ch\u1EE7 th\u1EC3; c\xE1ch l\xE0m c\u0169 b\u1ECB g\u1EA1ch b\u1ECF d\u1EE9t kho\xE1t, c\xE1ch l\xE0m m\u1EDBi n\u1ED5i b\u1EADt tr\xEAn d\u1EA3i m\xE0u t\u01B0\u01A1ng ph\u1EA3n, r\u1ED3i ng\u01B0\u1EDDi d\u1EABn tr\u01B0\u1EE3t sang m\u1ED9t b\xEAn \u0111\u1EC3 t\xEAn th\u01B0\u01A1ng hi\u1EC7u khoanh tr\xF2n hi\u1EC7n c\xF9ng danh s\xE1ch t\xEDnh n\u0103ng.",
+    "useCase": "D\xF9ng khi mu\u1ED1n \u0111\u1ED1i l\u1EADp c\xE1ch c\u0169 v\u1EDBi c\xE1ch m\u1EDBi, gi\u1EDBi thi\u1EC7u gi\u1EA3i ph\xE1p \u0111\u1ED9t ph\xE1 ho\u1EB7c ch\u1ED1t \u0111\u1ECBnh v\u1ECB s\u1EA3n ph\u1EA9m.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "7.4 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 LaunchMotion & Film",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1VD5P65-pis5aV7oBlqopi-PBX1awJZyh",
+    "demoId": "13RnlYMuRXRG6Omm8ZVObkVqhrBixlB2I",
+    "isFeatured": 0,
+    "isHot": 1,
+    "soldCount": 29,
+    "viewCount": 1219,
+    "ratingCount": 6
+  },
+  {
+    "slug": "bs-launchmotion-ui-agent-completes-checklist",
+    "name": "LaunchMotion \xB7 Agent t\xEDch xong checklist",
+    "enName": "LaunchMotion \xB7 Agent Checklist",
+    "summary": "Th\u1EBB agent t\xEDch xong b\u1ED1n b\u01B0\u1EDBc ch\u1EC9nh s\u1EEDa \u1EDF c\u1EA3nh c\u1EADn, r\u1ED3i camera l\xF9i ra to\xE0n c\u1EA3nh tr\xECnh ch\u1EC9nh s\u1EEDa, \u0111o\u1EA1n clip talking-head \u0111\xE3 ho\xE0n th\xE0nh ph\xE1t l\xEAn v\xE0 \u0111\u01B0\u1EE3c \u0111\xE1nh d\u1EA5u s\u1EB5n s\xE0ng.",
+    "useCase": "D\xF9ng khi demo quy tr\xECnh t\u1EF1 \u0111\u1ED9ng: agent l\xE0m xong vi\u1EC7c, clip \u0111\xE3 s\u1EB5n s\xE0ng \u0111\u0103ng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "1.8 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 LaunchMotion & Film",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1fsTnBhYgA-o9-3PmzNSZSAvIzMyGkBOW",
+    "demoId": "1hzH1vmu2qwkT1Z-IuQ2smQM9RDLA5vOV",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 21,
+    "viewCount": 580,
+    "ratingCount": 14
+  },
+  {
+    "slug": "bs-launchmotion-ui-thermal-head-answers",
+    "name": "LaunchMotion \xB7 Ch\xE2n dung ph\xE1t s\xE1ng th\xE0nh h\u1ED3 s\u01A1",
+    "enName": "LaunchMotion \xB7 Show, Don't Tell",
+    "summary": "Hai d\xF2ng ch\u1EEF n\u1EB1m c\u1EA1nh ch\xE2n dung ph\xE1t s\xE1ng, ch\xE2n dung thu nh\u1ECF th\xE0nh avatar, c\xE1c s\u1EDF th\xEDch bung ra xoay quanh r\u1ED3i x\u1EBFp g\u1ECDn th\xE0nh k\u1EC7 h\u1ED3 s\u01A1.",
+    "useCase": "D\xF9ng \u0111\u1EC3 gi\u1EDBi thi\u1EC7u m\u1ED9t ng\u01B0\u1EDDi, m\u1ED9t nh\xE2n v\u1EADt, ho\u1EB7c t\xF3m t\u1EAFt s\u1EDF th\xEDch, \u0111\u1EB7c \u0111i\u1EC3m th\xE0nh h\u1ED3 s\u01A1 tr\u1EF1c quan.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "2.4 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 LaunchMotion & Film",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1AxtFji-ATynDznXD0aiDQ3foUPJVbEAr",
+    "demoId": "1jqPMcpA2qP3WIVanUQyYzMI_Fq7yQEmd",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 20,
+    "viewCount": 813,
+    "ratingCount": 15
+  },
+  {
+    "slug": "bs-launchmotion-ui-typed-question-asks",
+    "name": "LaunchMotion \xB7 B\xE0i \u0111\u0103ng n\xE0o b\xE1n \u0111\u01B0\u1EE3c h\xE0ng",
+    "enName": "LaunchMotion \xB7 Which Post Sold",
+    "summary": "Con tr\u1ECF bi\u1EBFn th\xE0nh d\u1EA5u nh\xE1y g\xF5 ra c\xE2u h\u1ECFi, vi\xEAn thu\u1ED1c s\xE1ng g\xF5 ra c\xE2u tr\u1EA3 l\u1EDDi, hai b\xE0i \u0111\u0103ng c\u1EE7a ng\u01B0\u1EDDi d\u1EABn xu\u1EA5t hi\u1EC7n l\xE0m \u1EE9ng vi\xEAn, b\xE0i th\u1EAFng \u0111\u01B0\u1EE3c khoanh tr\xF2n k\xE8m t\u1EC9 l\u1EC7 lead n\xF3 mang l\u1EA1i.",
+    "useCase": "D\xF9ng khi k\u1EC3 chuy\u1EC7n b\u1EB1ng s\u1ED1 li\u1EC7u: b\xE0i n\xE0o hi\u1EC7u qu\u1EA3 nh\u1EA5t, c\xE1i g\xEC mang l\u1EA1i kh\xE1ch h\xE0ng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "2.0 MB Kit + MCP",
+    "tier": "vip3",
+    "subGroup": "Talking-Head \xB7 LaunchMotion & Film",
+    "price": 399e3,
+    "originalPrice": 799e3,
+    "folderId": "1RbrPxYQmzwRwG4ad6QSE6htuj9qCb3TD",
+    "demoId": "1Sw9uqpDEVTTiDy_iiAgXlW_nIsT7qzeN",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 12,
+    "viewCount": 990,
+    "ratingCount": 13
+  },
+  {
+    "slug": "bs-creatormotion-cards-action-checklist",
+    "name": "CreatorMotion \xB7 Checklist \u0111\u1ED3ng b\u1ED9 demo m\xE0n h\xECnh",
+    "enName": "CreatorMotion \xB7 Synchronized Action Checklist",
+    "summary": "Checklist t\xEDch xong \u0111\xFAng l\xFAc v\u1EDBi t\u1EEBng b\u01B0\u1EDBc tr\xEAn m\xE0n h\xECnh demo, checklist v\xE0 h\xECnh \u1EA3nh lu\xF4n kh\u1EDBp nhau trong m\u1ED9t khung h\xECnh.",
+    "useCase": "D\xF9ng khi h\u01B0\u1EDBng d\u1EABn thao t\xE1c, demo quy tr\xECnh t\u1EEBng b\u01B0\u1EDBc.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.2 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "13zdMcVXwCNnRgsA1fpa0Kk4UeypSjXH2",
+    "demoId": "1FZV6qspGoXDtyEtpU9FKWR-LmrmA7tZJ",
+    "isFeatured": 0,
+    "isHot": 1,
+    "soldCount": 22,
+    "viewCount": 880,
+    "ratingCount": 6
+  },
+  {
+    "slug": "bs-creatormotion-cards-card-counter",
+    "name": "CreatorMotion \xB7 Th\u1EBB t\xEDch l\u0169y k\xE8m b\u1ED9 \u0111\u1EBFm",
+    "enName": "CreatorMotion \xB7 Accumulating Cards and Counter",
+    "summary": "C\xE1c th\u1EBB l\u1EB7p l\u1EA1i xu\u1EA5t hi\u1EC7n d\u1ED3n l\xEAn, t\u1ED5ng s\u1ED1 c\u1EADp nh\u1EADt \u0111\u1ED3ng b\u1ED9 theo t\u1EEBng th\u1EBB, k\u1EBFt th\xFAc b\u1EB1ng m\u1ED9t huy hi\u1EC7u t\u1ED5ng k\u1EBFt.",
+    "useCase": "D\xF9ng khi mu\u1ED1n cho th\u1EA5y s\u1ED1 l\u01B0\u1EE3ng t\u0103ng d\u1EA7n: \u0111\u01A1n h\xE0ng, kh\xE1ch h\xE0ng, t\xEDnh n\u0103ng c\u1ED9ng d\u1ED3n.",
+    "version": "v1.0.5 MCP",
+    "sizeLabel": "8.4 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1hmSKi0hVGg3ldOa79RD_1aKHYoVbmIDA",
+    "demoId": "1N5c2bltj-3MNd5SA_E5TtxAUFJkt1xW0",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 22,
+    "viewCount": 1075,
+    "ratingCount": 9
+  },
+  {
+    "slug": "bs-creatormotion-cards-chapter-stack",
+    "name": "CreatorMotion \xB7 Ch\u01B0\u01A1ng m\u1EDF ra th\xE0nh ch\u1ED3ng th\u1EBB",
+    "enName": "CreatorMotion \xB7 Chapter to Stacked Detail",
+    "summary": "Ch\u01B0\u01A1ng m\u1EDF \u0111\u1EA7u b\u1EB1ng m\u1ED9t s\u1ED1 l\u1EDBn, r\u1ED3i s\u1ED1 \u0111\xF3 \u0111\u01B0\u1EE3c thay b\u1EB1ng ch\u1ED3ng th\u1EBB gi\u1EA3i th\xEDch x\u1EBFp l\u1EDBp; ch\u1ED3ng th\u1EBB \u0111\u1EA9y l\xEAn \u0111\u1EC3 nh\u1EA5n m\u1EA1nh chi ti\u1EBFt \u0111ang n\xF3i.",
+    "useCase": "D\xF9ng \u0111\u1EC3 chuy\u1EC3n ch\u01B0\u01A1ng r\u1ED3i \u0111i s\xE2u v\xE0o chi ti\u1EBFt t\u1EEBng \xFD.",
+    "version": "v1.0.5 MCP",
+    "sizeLabel": "6.9 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1U3k6baQWLeK74L-bVYL68_YAr57NbC2f",
+    "demoId": "1xjP3Y3YsOKtr8BfAHh859Ik-_kwWLd-O",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 28,
+    "viewCount": 467,
+    "ratingCount": 10
+  },
+  {
+    "slug": "bs-creatormotion-cards-chat-stack",
+    "name": "CreatorMotion \xB7 Ch\u1ED3ng tin nh\u1EAFn chat",
+    "enName": "CreatorMotion \xB7 Chat Message Stack",
+    "summary": "Tin nh\u1EAFn chat l\u1EA7n l\u01B0\u1EE3t th\xEAm v\xE0o khung h\u1ED9i tho\u1EA1i \u1ED5n \u0111\u1ECBnh, gi\u1EEF nguy\xEAn c\xE1ch ng\u1EAFt d\xF2ng v\xE0 \xF4 nh\u1EADp chung khi ch\u1ED3ng tin nh\u1EAFn cao d\u1EA7n.",
+    "useCase": "D\xF9ng khi minh h\u1ECDa \u0111o\u1EA1n h\u1ED9i tho\u1EA1i, tin nh\u1EAFn kh\xE1ch h\xE0ng, b\xECnh lu\u1EADn.",
+    "version": "v1.0.5 MCP",
+    "sizeLabel": "6.1 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1GlQomvcrgr3fLLo1yc0xx6Nvtug-UoaF",
+    "demoId": "1dGWIs4ZFQ9C8057AwIuWqgmlCozcZ4uD",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 12,
+    "viewCount": 1001,
+    "ratingCount": 15
+  },
+  {
+    "slug": "bs-creatormotion-cards-context-conflict",
+    "name": "CreatorMotion \xB7 Xung \u0111\u1ED9t ng\u1EEF c\u1EA3nh d\xF9ng chung",
+    "enName": "CreatorMotion \xB7 Shared Context Conflict",
+    "summary": "C\xE1c th\u1EBB vai tr\xF2 ri\xEAng v\u1EABn hi\u1EC3n th\u1ECB trong khi ng\u1EEF c\u1EA3nh d\xF9ng chung m\u1EDBi l\u1EA5p \u0111\u1EA7y ph\xEDa d\u01B0\u1EDBi, k\u1EBFt th\xFAc b\u1EB1ng c\u1EA3nh b\xE1o l\u1ED9 ra ph\u1EA7n ch\u1ED3ng ch\xE9o kh\xF4ng mong mu\u1ED1n.",
+    "useCase": "D\xF9ng khi gi\u1EA3i th\xEDch xung \u0111\u1ED9t quy\u1EC1n truy c\u1EADp, d\u1EEF li\u1EC7u d\xF9ng chung b\u1ECB l\u1ED9 sang ch\u1ED7 kh\xF4ng n\xEAn.",
+    "version": "v1.0.5 MCP",
+    "sizeLabel": "7.1 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "141QDXJdvOvwOwUIipc84-tRVUGpcRdoc",
+    "demoId": "1oZy4jCkjkRpZnM7czVStiMWFITGf2QBY",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 16,
+    "viewCount": 616,
+    "ratingCount": 7
+  },
+  {
+    "slug": "bs-creatormotion-cards-corner-tags",
+    "name": "CreatorMotion \xB7 C\xE2u trung t\xE2m v\xE0 4 nh\xE3n g\xF3c",
+    "enName": "CreatorMotion \xB7 Center and Corner Tags",
+    "summary": "M\u1ED9t c\xE2u ch\xEDnh gi\u1EEF c\u1ED1 \u0111\u1ECBnh \u1EDF gi\u1EEFa, b\u1ED1n nh\xE3n xung quanh \u1EDF b\u1ED1n g\xF3c ho\xE0n thi\u1EC7n b\u1EE9c tranh, kho\u1EA3ng tr\u1ED1ng quanh trung t\xE2m v\u1EABn tho\xE1ng.",
+    "useCase": "D\xF9ng khi tr\xECnh b\xE0y m\u1ED9t \xFD ch\xEDnh k\xE8m b\u1ED1n y\u1EBFu t\u1ED1 b\u1ED5 sung.",
+    "version": "v1.0.5 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "13WHlwbpONKifWocnfDEUONimB6jdCdk9",
+    "demoId": "1GeaDhDCb28jOm9wjyAdpV6j-KN0uuLUm",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 18,
+    "viewCount": 1248,
+    "ratingCount": 13
+  },
+  {
+    "slug": "bs-creatormotion-cards-cost-range",
+    "name": "CreatorMotion \xB7 Hai m\u1EE9c gi\xE1 th\xE0nh kho\u1EA3ng gi\xE1",
+    "enName": "CreatorMotion \xB7 Cost Cards to Range",
+    "summary": "Hai m\u1EE9c chi ph\xED hi\u1EC7n ra, r\u1ED3i b\u1ED9 \u0111\u1EBFm ch\u1EA1y l\xEAn m\u1EE9c th\u1EA5p v\xE0 m\u1EE9c cao c\u1EE7a kho\u1EA3ng gi\xE1 g\u1ED9p, c\u1EA3 hai \u0111\u1EA7u v\u1EABn \u0111\u1ECDc \u0111\u01B0\u1EE3c r\xF5 khi s\u1ED1 \u0111ang ch\u1EA1y.",
+    "useCase": "D\xF9ng khi b\xE1o gi\xE1 theo kho\u1EA3ng, so s\xE1nh chi ph\xED th\u1EA5p-cao.",
+    "version": "v1.0.4 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1zcnVU6gGJg5-wlosiaN9xPtbhwEBOJPy",
+    "demoId": "1QQRiwNQ8f29s0FJpDL6C8W6yG-Bmi-p9",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 28,
+    "viewCount": 1378,
+    "ratingCount": 7
+  },
+  {
+    "slug": "bs-creatormotion-cards-folder-grid",
+    "name": "CreatorMotion \xB7 L\u01B0\u1EDBi th\u01B0 m\u1EE5c gom t\xE0i li\u1EC7u",
+    "enName": "CreatorMotion \xB7 Folder Grid Filing",
+    "summary": "L\u01B0\u1EDBi th\u01B0 m\u1EE5c \u0111\u01B0\u1EE3c s\u1EAFp x\u1EBFp, c\xE1c t\xE0i li\u1EC7u l\u1EBB bay v\xE0o \u0111\xFAng th\u01B0 m\u1EE5c c\u1EE7a ch\xFAng, v\u1ECB tr\xED th\u01B0 m\u1EE5c gi\u1EEF nguy\xEAn su\u1ED1t l\xFAc gom.",
+    "useCase": "D\xF9ng khi minh h\u1ECDa s\u1EAFp x\u1EBFp, ph\xE2n lo\u1EA1i t\xE0i li\u1EC7u, d\u1ECDn d\u1EB9p g\u1ECDn g\xE0ng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1fpfdL5Uk6ObCY2fAArDOERoDlQy3my5q",
+    "demoId": "1Eski_zVPA1UxJDbpdUVUQWDWy3o1yRVg",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 26,
+    "viewCount": 591,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-cards-grid-priority",
+    "name": "CreatorMotion \xB7 L\u01B0\u1EDBi 4 \xF4 nh\u1EA5n \xF4 \u01B0u ti\xEAn",
+    "enName": "CreatorMotion \xB7 Grid with Priority Reveal",
+    "summary": "L\u01B0\u1EDBi b\u1ED1n th\u1EBB ho\xE0n thi\u1EC7n d\u1EA7n, \xF4 cu\u1ED1i c\xF9ng tr\u1EDF th\xE0nh \xF4 \u01B0u ti\xEAn \u0111\u01B0\u1EE3c nh\u1EA5n m\u1EA1nh, c\xE1c th\u1EBB c\u0169 v\u1EABn gi\u1EEF nguy\xEAn khi \u0111i\u1EC3m nh\u1EA5n m\u1EDBi xu\u1EA5t hi\u1EC7n.",
+    "useCase": "D\xF9ng khi tr\xECnh b\xE0y b\u1ED1n \xFD v\xE0 ch\u1ED1t l\u1EA1i \xFD quan tr\u1ECDng nh\u1EA5t.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "7.1 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1touPOtj5y-wUEkEPS-_7XGYZaRdrTsSH",
+    "demoId": "1lA3lPhHr7t-rNSSYFdxV7OqVrHWMhg4B",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 30,
+    "viewCount": 1085,
+    "ratingCount": 13
+  },
+  {
+    "slug": "bs-creatormotion-cards-inspect-split",
+    "name": "CreatorMotion \xB7 T\xE1ch hai th\u1EBB \u0111\u1EC3 l\u1ED9 k\u1EBFt qu\u1EA3",
+    "enName": "CreatorMotion \xB7 Inspect Split Reveal",
+    "summary": "Hai th\u1EBB \u0111\u01B0\u1EE3c xem x\xE9t r\u1ED3i t\xE1ch ra hai b\xEAn, \u0111\u1EC3 l\u1ED9 k\u1EBFt qu\u1EA3 \u1EDF gi\u1EEFa; cu\u1ED1i c\xF9ng s\u1EF1 ch\xFA \xFD d\u1ED3n v\xE0o k\u1EBFt qu\u1EA3 trung t\xE2m.",
+    "useCase": "D\xF9ng khi so s\xE1nh hai th\u1EE9 r\u1ED3i r\xFAt ra k\u1EBFt lu\u1EADn \u1EDF gi\u1EEFa.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.9 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1VZ9YN2s5_W05qzQQUXrRhVwtUjI5lEX4",
+    "demoId": "15GOXvBtosLX7U6LzkywyGAr-ZYUYocUy",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 27,
+    "viewCount": 607,
+    "ratingCount": 8
+  },
+  {
+    "slug": "bs-creatormotion-cards-keyword-resolve",
+    "name": "CreatorMotion \xB7 \u0110\xE1m t\u1EEB kh\xF3a gom th\xE0nh k\u1EBFt lu\u1EADn",
+    "enName": "CreatorMotion \xB7 Keyword Cloud to Conclusion",
+    "summary": "C\xE1c t\u1EEB kh\xF3a li\xEAn quan t\u1ECFa ra quanh m\u1ED9t \xFD ch\xEDnh, r\u1ED3i \u0111\xE1m t\u1EEB kh\xF3a gom l\u1EA1i th\xE0nh k\u1EBFt lu\u1EADn trung t\xE2m k\xE8m th\u1EBB b\u1EB1ng ch\u1EE9ng, gi\u1EEF r\xF5 hai giai \u0111o\u1EA1n.",
+    "useCase": "D\xF9ng khi t\u1ED5ng k\u1EBFt nhi\u1EC1u \xFD l\u1EBB th\xE0nh m\u1ED9t k\u1EBFt lu\u1EADn.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.4 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1B6fvmH9-WVxi1HUesiBMF_MfioCvlemA",
+    "demoId": "1zTtWVHh_xg4bgVysooq7MaWas2lVwXuT",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 20,
+    "viewCount": 1139,
+    "ratingCount": 9
+  },
+  {
+    "slug": "bs-creatormotion-cards-list-audience",
+    "name": "CreatorMotion \xB7 Danh s\xE1ch c\xE2u h\u1ECFi t\u1EDBi \u0111\xE1m \u0111\xF4ng",
+    "enName": "CreatorMotion \xB7 Question List to Audience",
+    "summary": "Danh s\xE1ch c\xE2u h\u1ECFi x\xE2y l\xEAn b\xEAn c\u1EA1nh m\u1ED9t m\u1EA3ng kh\xE1n gi\u1EA3 ng\xE0y c\xE0ng \u0111\xF4ng, s\u1EF1 m\u1EDF r\u1ED9ng c\u1EE7a danh s\xE1ch g\u1EAFn v\u1EDBi b\u01B0\u1EDBc chuy\u1EC3n t\u1EEB m\u1ED9t ng\u01B0\u1EDDi sang nhi\u1EC1u ng\u01B0\u1EDDi.",
+    "useCase": "D\xF9ng khi n\xF3i v\u1EC1 c\xE2u h\u1ECFi m\xE0 nhi\u1EC1u ng\u01B0\u1EDDi c\xF9ng th\u1EAFc m\u1EAFc, t\u1EEB c\xE1 nh\xE2n t\u1EDBi c\u1ED9ng \u0111\u1ED3ng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1FZvE2KJyXH0t_J7yMAMG0gp4Ot-oa8cS",
+    "demoId": "15cWGZhDRopNAblNtWUrnIMZR3n4EyvMC",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 23,
+    "viewCount": 1366,
+    "ratingCount": 6
+  },
+  {
+    "slug": "bs-creatormotion-cards-matrix-fill",
+    "name": "CreatorMotion \xB7 B\u1EA3ng ma tr\u1EADn \u0111i\u1EC1n d\u1EA7n",
+    "enName": "CreatorMotion \xB7 Matrix Fill and Pan",
+    "summary": "Camera lia qua b\u1EA3ng trong khi t\u1EEBng c\u1EB7p \xF4 \u0111\u01B0\u1EE3c \u0111i\u1EC1n theo th\u1EE9 t\u1EF1, c\xE1c h\xE0ng lu\xF4n th\u1EB3ng h\xE0ng \u0111\u1EC3 m\u1ED7i nh\xE3n \u0111\u1ECDc c\xF9ng v\u1EDBi b\u1EB1ng ch\u1EE9ng t\u01B0\u01A1ng \u1EE9ng.",
+    "useCase": "D\xF9ng khi tr\xECnh b\xE0y b\u1EA3ng so s\xE1nh, b\u1EA3ng t\xEDnh n\u0103ng theo h\xE0ng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1qEkrNeOuor5TOfUFRQed5delM7JLhBnh",
+    "demoId": "1N7uRddjGN2NpX76R0YwU6D4gQCO2MNuT",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 27,
+    "viewCount": 1333,
+    "ratingCount": 10
+  },
+  {
+    "slug": "bs-creatormotion-cards-ratio-bridge",
+    "name": "CreatorMotion \xB7 T\u1EC9 l\u1EC7 n\u1ED1i hai ph\xEDa",
+    "enName": "CreatorMotion \xB7 Ratio Between Two Sides",
+    "summary": "M\u1ED9t t\u1EC9 l\u1EC7 ph\u1EA7n tr\u0103m ch\u1EA1y gi\u1EEFa hai nh\xF3m \u1ED5n \u0111\u1ECBnh, m\xE0u tr\u1EA1ng th\xE1i \u0111\u1ED5i khi t\u1EC9 l\u1EC7 c\u1EA3i thi\u1EC7n, hai \u0111\u1EA7u c\u1ED1 \u0111\u1ECBnh \u0111\u1EC3 th\u1EA5y r\xF5 t\u1EC9 l\u1EC7 \u0111ang m\xF4 t\u1EA3 c\xE1i g\xEC.",
+    "useCase": "D\xF9ng khi tr\xECnh b\xE0y t\u1EC9 l\u1EC7 chuy\u1EC3n \u0111\u1ED5i, t\u1EC9 l\u1EC7 t\u0103ng tr\u01B0\u1EDFng gi\u1EEFa hai nh\xF3m.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.6 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1be7xKXc5Q2vnm0YFPHPk0oQBvriV3JPL",
+    "demoId": "13F8b2UZDJFl-06NJNAn07kJQqsHFR8MX",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 15,
+    "viewCount": 1326,
+    "ratingCount": 6
+  },
+  {
+    "slug": "bs-creatormotion-cards-roadmap-focus",
+    "name": "CreatorMotion \xB7 L\u1ED9 tr\xECnh r\u1ED3i zoom v\xE0o b\u01B0\u1EDBc \u0111\u1EA7u",
+    "enName": "CreatorMotion \xB7 Roadmap Focus Push",
+    "summary": "L\u1ED9 tr\xECnh nhi\u1EC1u t\u1EA7ng \u0111\u01B0\u1EE3c l\u1EA5p \u0111\u1EA7y, r\u1ED3i camera \u0111\u1EA9y v\xE0o ph\u1EA7n h\xE0nh \u0111\u1ED9ng \u0111\u1EA7u ti\xEAn, ti\xEAu \u0111\u1EC1 thay \u0111\u1ED5i v\xE0 m\u1ED9t m\u1EE5c \u0111\u01B0\u1EE3c t\xF4 nh\u1EA5n khi khung h\xECnh thu h\u1EB9p.",
+    "useCase": "D\xF9ng khi tr\xECnh b\xE0y l\u1ED9 tr\xECnh r\u1ED3i t\u1EADp trung v\xE0o b\u01B0\u1EDBc l\xE0m ngay \u0111\u01B0\u1EE3c.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1YY7SFbiYPEm84XfU78CPVB1Rvls2J65S",
+    "demoId": "1PM4ldT76FkN8K1dWjw7QzxzrO6AW9cWJ",
+    "isFeatured": 0,
+    "isHot": 1,
+    "soldCount": 25,
+    "viewCount": 711,
+    "ratingCount": 12
+  },
+  {
+    "slug": "bs-creatormotion-cards-sequential-list",
+    "name": "CreatorMotion \xB7 Danh s\xE1ch hi\u1EC7n t\u1EEBng d\xF2ng",
+    "enName": "CreatorMotion \xB7 Sequential List Reveal",
+    "summary": "C\xE1c d\xF2ng danh s\xE1ch hi\u1EC7n l\u1EA7n l\u01B0\u1EE3t theo th\u1EE9 t\u1EF1 \u0111\u1ECDc, c\xF3 th\u1EC3 ch\u1ECDn d\u1EA1ng s\u1ED1 trong vi\xEAn nang ho\u1EB7c d\u1EA1ng g\u1EA1ch \u0111\u1EA7u d\xF2ng, gi\u1EEF nh\u1ECBp so le v\xE0 khung gi\u1EEF cu\u1ED1i.",
+    "useCase": "D\xF9ng khi li\u1EC7t k\xEA c\xE1c b\u01B0\u1EDBc, c\xE1c m\u1EE5c theo th\u1EE9 t\u1EF1.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "130g3_8kVCQJEyaSi8uH7wdEPww4wKVR3",
+    "demoId": "12DbFGM70svMo3rSXzJbRO_cfCMl64pr8",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 17,
+    "viewCount": 566,
+    "ratingCount": 8
+  },
+  {
+    "slug": "bs-creatormotion-cards-status-row",
+    "name": "CreatorMotion \xB7 H\xE0ng th\u1EBB g\u1EAFn huy hi\u1EC7u tr\u1EA1ng th\xE1i",
+    "enName": "CreatorMotion \xB7 Card Row Status Badges",
+    "summary": "Huy hi\u1EC7u tr\u1EA1ng th\xE1i v\xE0 k\u1EBFt lu\u1EADn b\u1ED5 sung \u0111\u01B0\u1EE3c g\u1EAFn th\xEAm v\xE0o h\xE0ng th\u1EBB \u0111\xE3 c\xF3, c\xE1c th\u1EBB gi\u1EEF nguy\xEAn \u0111\u1EC3 tr\u1EA1ng th\xE1i m\u1EDBi l\xE0 t\xE2m \u0111i\u1EC3m.",
+    "useCase": "D\xF9ng khi c\u1EADp nh\u1EADt tr\u1EA1ng th\xE1i cho m\u1ED9t lo\u1EA1t m\u1EE5c: xong, \u0111ang l\xE0m, ch\u1EDD duy\u1EC7t.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1I2HepFpE5iKNluhqWM2kFadV8VnHHP2H",
+    "demoId": "108XykgN5FTeGxC_6io4Db1q_x-DoNx99",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 27,
+    "viewCount": 918,
+    "ratingCount": 11
+  },
+  {
+    "slug": "bs-creatormotion-cards-steps-title",
+    "name": "CreatorMotion \xB7 Th\u1EBB c\xE1c b\u01B0\u1EDBc chuy\u1EC3n sang ti\xEAu \u0111\u1EC1 ch\u01B0\u01A1ng",
+    "enName": "CreatorMotion \xB7 Step Cards to Chapter",
+    "summary": "\u0110i\u1EC3m nh\u1EA5n ch\u1EA1y qua c\xE1c th\u1EBB b\u01B0\u1EDBc li\xEAn k\u1EBFt, r\u1ED3i khung h\xECnh nh\u01B0\u1EDDng ch\u1ED7 cho ti\xEAu \u0111\u1EC1 ch\u01B0\u01A1ng; \u0111i\u1EC3m nh\u1EA5n cu\u1ED1i l\xE0m t\xEDn hi\u1EC7u chuy\u1EC3n c\u1EA3nh.",
+    "useCase": "D\xF9ng \u0111\u1EC3 k\u1EBFt th\xFAc m\u1ED9t chu\u1ED7i b\u01B0\u1EDBc v\xE0 m\u1EDF ch\u01B0\u01A1ng m\u1EDBi.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Cards & UI Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1GGW-kvmP0S-jcb-qFGoC5o_jiOCsvg3v",
+    "demoId": "18sbhCdJV33dVcNvt2Fwkqxn7lBNGtTVt",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 17,
+    "viewCount": 970,
+    "ratingCount": 11
+  },
+  {
+    "slug": "bs-creatormotion-chapter-border-orbit",
+    "name": "CreatorMotion \xB7 Vi\u1EC1n s\xE1ng ch\u1EA1y quanh th\u1EBB ch\u01B0\u01A1ng",
+    "enName": "CreatorMotion \xB7 Chapter Border Orbit",
+    "summary": "Th\u1EBB ch\u01B0\u01A1ng \u1ED5n \u0111\u1ECBnh tr\xEAn n\u1EC1n m\u1EDD, m\u1ED9t v\u1EC7t s\xE1ng h\u1EB9p ch\u1EA1y quanh vi\u1EC1n th\u1EBB, th\xEAm n\u0103ng l\u01B0\u1EE3ng m\xE0 kh\xF4ng l\xE0m r\u1ED1i ch\u1EEF.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF ch\u01B0\u01A1ng m\u1EDBi m\u1ED9t c\xE1ch nh\u1EB9 nh\xE0ng, sang tr\u1ECDng.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1LSuLifyHoBZrKHAytuLvUXLG5A48eORI",
+    "demoId": "1LN0FKQCahBYvI6tJXcDfb30ph4GaE4Z6",
+    "isFeatured": 0,
+    "isHot": 1,
+    "soldCount": 14,
+    "viewCount": 808,
+    "ratingCount": 14
+  },
+  {
+    "slug": "bs-creatormotion-chapter-browser-reveal",
+    "name": "CreatorMotion \xB7 Ch\u01B0\u01A1ng m\u1EDF trong c\u1EEDa s\u1ED5 tr\xECnh duy\u1EC7t",
+    "enName": "CreatorMotion \xB7 Browser Chapter Reveal",
+    "summary": "C\u1EEDa s\u1ED5 tr\xECnh duy\u1EC7t t\u1ED1i gi\u1EA3n th\xE0nh s\xE2n kh\u1EA5u ch\u01B0\u01A1ng, ti\xEAu \u0111\u1EC1 l\u1EDBn s\u1EAFc n\xE9t d\u1EA7n t\u1EEBng d\xF2ng r\u1ED3i c\u1EEDa s\u1ED5 v\u1EE1 th\xE0nh c\xE1c \xF4 nh\u1ECF bay ra.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF ch\u01B0\u01A1ng trong video v\u1EC1 web, app, s\u1EA3n ph\u1EA9m s\u1ED1.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1a7Gk3zaCHw8QitVXjvL673ZvxdeDfvVI",
+    "demoId": "1Rmz8MoUjKPjty_NRAD1Dmy0Gj3tnrEE2",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 13,
+    "viewCount": 499,
+    "ratingCount": 11
+  },
+  {
+    "slug": "bs-creatormotion-chapter-character-reveal",
+    "name": "CreatorMotion \xB7 Ti\xEAu \u0111\u1EC1 ch\u01B0\u01A1ng hi\u1EC7n t\u1EEBng ch\u1EEF",
+    "enName": "CreatorMotion \xB7 Chapter Character Reveal",
+    "summary": "Nh\xE3n ch\u01B0\u01A1ng gi\u1EDBi thi\u1EC7u m\u1ED9t ti\xEAu \u0111\u1EC1 hi\u1EC7n r\xF5 t\u1EEBng k\xFD t\u1EF1 m\u1ED9t, c\u1EE5m t\u1EEB ho\xE0n ch\u1EC9nh gi\u1EEF tr\xEAn s\xE2n kh\u1EA5u to\xE0n m\xE0n h\xECnh y\xEAn t\u0129nh.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF ch\u01B0\u01A1ng b\u1EB1ng m\u1ED9t c\xE2u ti\xEAu \u0111\u1EC1 mu\u1ED1n ng\u01B0\u1EDDi xem \u0111\u1ECDc k\u1EF9 t\u1EEBng ch\u1EEF.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1Yajr-35dJN-5lle3B-26J-moHCIwvr98",
+    "demoId": "1oHPsJeEpPtr6xcBZDm4j10lkByfUOD5d",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 13,
+    "viewCount": 897,
+    "ratingCount": 9
+  },
+  {
+    "slug": "bs-creatormotion-chapter-grid-flip",
+    "name": "CreatorMotion \xB7 L\u01B0\u1EDBi \xF4 icon l\u1EADt sang ch\u01B0\u01A1ng m\u1EDBi",
+    "enName": "CreatorMotion \xB7 Chapter Grid Flip",
+    "summary": "M\u1ED9t v\xF9ng \xF4 icon nh\u1ECF l\u1EADt chuy\u1EC3n khi camera t\xECm t\u1EDBi ch\u01B0\u01A1ng ti\u1EBFp theo, \xF4 \u0111\u01B0\u1EE3c t\xF4 s\xE1ng k\xE8m nh\xE3n ng\u1EAFn gi\xFAp d\u1EC5 x\xE1c \u0111\u1ECBnh \u0111ang \u1EDF ph\u1EA7n n\xE0o.",
+    "useCase": "D\xF9ng \u0111\u1EC3 chuy\u1EC3n ch\u01B0\u01A1ng trong video c\xF3 nhi\u1EC1u m\u1EE5c, nhi\u1EC1u ph\u1EA7n.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1YYHJJVpsUyQR1VsxCpaOj62N65eEgueb",
+    "demoId": "1SDlhjUxpCr3VNLSp-pmUwCTSpkqp7CUK",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 25,
+    "viewCount": 723,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-chapter-grid-pan",
+    "name": "CreatorMotion \xB7 Camera lia qua l\u01B0\u1EDBi icon t\u1EDBi ch\u01B0\u01A1ng m\u1EDBi",
+    "enName": "CreatorMotion \xB7 Chapter Grid Pan",
+    "summary": "Camera di chuy\u1EC3n qua l\u01B0\u1EDBi icon kh\u1ED5 l\u1EDBn t\u1EDBi ch\u01B0\u01A1ng m\u1EDBi, \xF4 \u0111\u01B0\u1EE3c ch\u1ECDn nh\u1EADn ti\xEAu \u0111\u1EC1 nhi\u1EC1u d\xF2ng s\u1EAFc n\xE9t d\u1EA7n.",
+    "useCase": "D\xF9ng \u0111\u1EC3 chuy\u1EC3n ch\u01B0\u01A1ng v\u1EDBi c\u1EA3m gi\xE1c di chuy\u1EC3n, kh\xE1m ph\xE1.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1dxOPmyVZGQVNZPNW8-BewWDyaLYmnlzu",
+    "demoId": "1-KjbZUEg-pe2Epeb1ASH1xqUofnoa0xw",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 26,
+    "viewCount": 958,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-chapter-label-stack",
+    "name": "CreatorMotion \xB7 Ti\xEAu \u0111\u1EC1 ch\u01B0\u01A1ng 3 t\u1EA7ng",
+    "enName": "CreatorMotion \xB7 Chapter Label Stack",
+    "summary": "Huy hi\u1EC7u ch\u01B0\u01A1ng nh\u1ECF, ti\xEAu \u0111\u1EC1 l\u1EDBn v\xE0 ph\u1EE5 \u0111\u1EC1 ng\u1EAFn x\u1EBFp th\xE0nh ti\xEAu \u0111\u1EC1 ba t\u1EA7ng r\xF5 r\xE0ng, m\u1ED7i d\xF2ng c\xF3 l\u1ED1i v\xE0o v\xE0 nh\u1ECBp \u0111\u1ECDc ri\xEAng.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF ch\u01B0\u01A1ng v\u1EDBi \u0111\u1EA7y \u0111\u1EE7 th\xF4ng tin: s\u1ED1 ch\u01B0\u01A1ng, t\xEAn ch\u01B0\u01A1ng, m\xF4 t\u1EA3 ng\u1EAFn.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.0 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "18O9M5NqCas67hjWesQp_azwByTbBqLa0",
+    "demoId": "1ETJqR-h5QMNm6elFz4pRo-Bccot_C9B-",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 16,
+    "viewCount": 884,
+    "ratingCount": 8
+  },
+  {
+    "slug": "bs-creatormotion-chapter-title-stamp",
+    "name": "CreatorMotion \xB7 Ti\xEAu \u0111\u1EC1 ch\u01B0\u01A1ng \u0111\xF3ng d\u1EA5u",
+    "enName": "CreatorMotion \xB7 Chapter Title Stamp",
+    "summary": "Ti\xEAu \u0111\u1EC1 ch\u01B0\u01A1ng g\u1ECDn \u0111\xE1p xu\u1ED1ng v\u1EDBi \u0111\u1ED9 nghi\xEAng nh\u1EB9, ti\u1EBFp theo l\xE0 s\u1ED1 th\u1EE9 t\u1EF1 nh\u1ECF, m\u1ED9t khung h\xECnh h\u1ECDc n\u1ED1i sang c\u1EA3nh ti\u1EBFp theo.",
+    "useCase": "D\xF9ng \u0111\u1EC3 m\u1EDF ch\u01B0\u01A1ng nhanh, d\u1EE9t kho\xE1t, ki\u1EC3u \u0111\xF3ng d\u1EA5u.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "6.2 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Chapter & Title Motion",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1DmH9cp3ad33vN62v8WokdQqLQpVhHG74",
+    "demoId": "1Yj1rwd4N7Osqt3uafkq9uuUjWtA9hWKV",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 23,
+    "viewCount": 1355,
+    "ratingCount": 7
+  },
+  {
+    "slug": "bs-creatormotion-collage-document-stack",
+    "name": "CreatorMotion \xB7 Ch\u1ED3ng t\xE0i li\u1EC7u nghi\xEAng thay nhau",
+    "enName": "CreatorMotion \xB7 Tilted Document Stack Cycle",
+    "summary": "C\xE1c t\xE0i li\u1EC7u cao to\xE0n khung thay nhau \u1EDF m\u1EB7t tr\u01B0\u1EDBc c\u1EE7a ch\u1ED3ng gi\u1EA5y nghi\xEAng, c\xE1c t\u1EDD tr\u01B0\u1EDBc v\u1EABn l\u1ED9 \u1EDF m\xE9p, t\u1EA1o c\u1EA3m gi\xE1c l\u1EADt gi\u1EA5y th\u1EADt thay v\xEC carousel.",
+    "useCase": "D\xF9ng khi tr\xECnh b\xE0y nhi\u1EC1u t\xE0i li\u1EC7u, trang gi\u1EA5y li\xEAn ti\u1EBFp.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "7.3 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Collage & Storytelling",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "15dN31-J88TldrHfcB1Vj3MIHsPVZGAdW",
+    "demoId": "1ku0gmq4rzeBc2TonV9kCN-6ctDJHAvx6",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 26,
+    "viewCount": 637,
+    "ratingCount": 5
+  },
+  {
+    "slug": "bs-creatormotion-collage-dossier-role",
+    "name": "CreatorMotion \xB7 H\u1ED3 s\u01A1 b\xEAn c\u1EA1nh ch\xE2n dung vai tr\xF2",
+    "enName": "CreatorMotion \xB7 Dossier Beside a Role",
+    "summary": "Ch\xE2n dung vai tr\xF2 \u1ED5n \u0111\u1ECBnh neo m\u1ED9t b\xEAn, h\u1ED3 s\u01A1 t\xE0i li\u1EC7u thay \u0111\u1ED5i b\xEAn c\u1EA1nh: m\u1ED9t t\xE0i li\u1EC7u ch\xEDnh th\xE0nh b\u1ED1n trang c\xF3 nh\xE3n, r\u1ED3i m\u1ED9t giao di\u1EC7n gom t\u1EA5t c\u1EA3 th\xE0nh k\u1EBFt qu\u1EA3 d\xF9ng \u0111\u01B0\u1EE3c.",
+    "useCase": "D\xF9ng khi gi\u1EDBi thi\u1EC7u m\u1ED9t ng\u01B0\u1EDDi c\xF9ng v\u1EDBi c\xF4ng vi\u1EC7c, t\xE0i li\u1EC7u c\u1EE7a h\u1ECD.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "7.8 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Collage & Storytelling",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1ArlSDp7LZTZoMNj19PYrzxZegKW46xJG",
+    "demoId": "1T_LcU5v0FmOfLgrjZCxhtKkk1JIfdRbi",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 21,
+    "viewCount": 663,
+    "ratingCount": 12
+  },
+  {
+    "slug": "bs-creatormotion-collage-evidence-summary",
+    "name": "CreatorMotion \xB7 T\u01B0\u1EDDng b\u1EB1ng ch\u1EE9ng v\xE0 k\u1EBFt lu\u1EADn",
+    "enName": "CreatorMotion \xB7 Evidence Wall Summary",
+    "summary": "B\u1EE9c t\u01B0\u1EDDng ghi ch\xFA ngu\u1ED3n \u0111a d\u1EA1ng v\u1EABn hi\u1EC7n ph\xEDa sau m\u1ED9t k\u1EBFt lu\u1EADn ng\u1EAFn g\u1ECDn; ng\u01B0\u1EDDi n\xF3i ch\u1EC9 xu\u1EA5t hi\u1EC7n sau khi t\xE0i li\u1EC7u \u0111\xE3 r\xF5, gi\u1EEF t\xE0i li\u1EC7u l\xE0m b\u1EB1ng ch\u1EE9ng ch\xEDnh.",
+    "useCase": "D\xF9ng khi k\u1EBFt lu\u1EADn d\u1EF1a tr\xEAn nhi\u1EC1u ngu\u1ED3n, mu\u1ED1n ng\u01B0\u1EDDi xem th\u1EA5y b\u1EB1ng ch\u1EE9ng tr\u01B0\u1EDBc r\u1ED3i m\u1EDBi nghe k\u1EBFt lu\u1EADn.",
+    "version": "v1.0.2 MCP",
+    "sizeLabel": "7.1 MB Kit + MCP",
+    "tier": "vip2",
+    "subGroup": "Collage & Storytelling",
+    "price": 27e4,
+    "originalPrice": 54e4,
+    "folderId": "1ltXW_jArFausjGT0Fnu3-3Dp66guRDM9",
+    "demoId": "1CqYhxUdgzDogJ4f57D0kVD966PcT6kDv",
+    "isFeatured": 0,
+    "isHot": 0,
+    "soldCount": 17,
+    "viewCount": 890,
+    "ratingCount": 14
+  }
+];
+function escHtml2(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function buildDescriptionHtml(r) {
+  const tierBadge = r.tier === "vip3" ? "VIP III \xB7 Talking-Head Studio" : "VIP II \xB7 Motion Graphics";
+  const isFullLib = r.slug === "bs-creatormotion";
+  const leadHeading = isFullLib ? "Th\u01B0 vi\u1EC7n t\u1ED5ng h\u1EE3p to\xE0n b\u1ED9 hi\u1EC7u \u1EE9ng CreatorMotion cho AI Agent" : `Hi\u1EC7u \u1EE9ng ${escHtml2(r.subGroup)} t\u1EF1 \u0111\u1ED9ng ho\xE1 ho\xE0n to\xE0n b\u1EB1ng AI Agent`;
+  const extraBullet = isFullLib ? "<li><b>Tr\u1ECDn b\u1ED9 \u0111\u1EA7y \u0111\u1EE7 nh\u1EA5t:</b> Gom to\xE0n b\u1ED9 nh\xF3m hi\u1EC7u \u1EE9ng bi\u1EC3u \u0111\u1ED3, s\u01A1 \u0111\u1ED3, ch\u1EEF \u0111\u1ED9ng, b\u1ED1 c\u1EE5c ng\u01B0\u1EDDi d\u1EABn, th\u1EBB ch\u01B0\u01A1ng v\xE0 chuy\u1EC3n c\u1EA3nh trong 1 th\u01B0 vi\u1EC7n \u0111\u1EC3 AI Agent t\u1EF1 ch\u1ECDn hi\u1EC7u \u1EE9ng ph\xF9 h\u1EE3p cho t\u1EEBng \u0111o\u1EA1n k\u1ECBch b\u1EA3n.</li>" : "<li><b>T\u1ED1i \u01B0u s\u1EB5n 2 t\u1EF7 l\u1EC7 khung h\xECnh:</b> H\u1ED7 tr\u1EE3 xu\u1EA5t s\u1EAFc n\xE9t t\u1EDBi 4K cho c\u1EA3 <b>video ngang 16:9</b> (YouTube, thuy\u1EBFt tr\xECnh, kh\xF3a h\u1ECDc) v\xE0 <b>video d\u1ECDc 9:16</b> (TikTok, Reels, Shorts), k\xE8m s\u1EB5n 2 video demo tham chi\u1EBFu trong th\u01B0 m\u1EE5c Drive.</li>";
+  return `<h3>${leadHeading}</h3><p><b>${escHtml2(r.name)}</b> (<i>${escHtml2(r.enName)}</i>) l\xE0 Skill thu\u1ED9c h\u1EA1ng <b>${tierBadge}</b> d\xE0nh cho <b>Claude Code, OpenAI Codex v\xE0 Antigravity</b>. ${escHtml2(r.summary)}</p><p><b>\u1EE8ng d\u1EE5ng th\u1EF1c t\u1EBF:</b> ${escHtml2(r.useCase)}</p><h3>B\xEAn trong b\u1ED9 Skill KhoSkill AI c\xF3 g\xEC?</h3><ul><li><b>G\xF3i Skill Kit \u0111\xF3ng g\xF3i ho\xE0n ch\u1EC9nh (.ZIP):</b> Ch\u1EE9a \u0111\u1EA7y \u0111\u1EE7 <code>SKILL.md</code>, c\u1EA5u tr\xFAc hi\u1EC7u \u1EE9ng motion, template d\u1EF1ng c\u1EA3nh v\xE0 c\u1EA5u h\xECnh m\xE0u s\u1EAFc/typography c\xF3 th\u1EC3 tu\u1EF3 bi\u1EBFn 100% n\u1ED9i dung ti\u1EBFng Vi\u1EC7t ho\u1EB7c ti\u1EBFng Anh.</li>` + extraBullet + `<li><b>D\u1EC5 d\xF9ng cho c\u1EA3 ng\u01B0\u1EDDi kh\xF4ng r\xE0nh k\u1EF9 thu\u1EADt:</b> Ch\u1EC9 c\u1EA7n gi\u1EA3i n\xE9n v\xE0o th\u01B0 m\u1EE5c skills c\u1EE7a AI Agent ho\u1EB7c k\u1EBFt n\u1ED1i 1 l\u1EA7n qua <b>KhoSkill MCP Server</b>, sau \u0111\xF3 g\xF5 m\xF4 t\u1EA3 n\u1ED9i dung b\u1EA1n mu\u1ED1n d\u1EF1ng.</li><li><b>Giao h\xE0ng t\u1EE9c th\xEC &amp; h\u1ED7 tr\u1EE3 H\u1ED9i vi\xEAn:</b> M\u1EDF kh\xF3a ngay <b>Link Google Drive t\u1EA3i tr\u1ECDn b\u1ED9 ZIP + Video Demo g\u1ED1c</b> trong t\xE0i kho\u1EA3n v\xE0 email, \u0111\u1ED3ng th\u1EDDi n\u1EB1m trong quy\u1EC1n l\u1EE3i g\xF3i <b>H\u1ED9i vi\xEAn KhoSkill</b> t\u01B0\u01A1ng \u1EE9ng h\u1EA1ng <b>${r.tier === "vip3" ? "VIP III" : "VIP II"}</b>.</li></ul>`;
+}
+function buildFeaturesJson(r) {
+  const tierLine = r.tier === "vip3" ? "Thu\u1ED9c h\u1EA1ng VIP III \u2014 chuy\xEAn hi\u1EC7u \u1EE9ng Talking-Head & Presenter n\u1ED5i b\u1EADt tr\xEAn khung h\xECnh" : "Thu\u1ED9c h\u1EA1ng VIP II \u2014 chuy\xEAn Motion Graphics (Cards, Chapter, Collage) s\u1EAFc n\xE9t chu\u1EA9n Studio";
+  return JSON.stringify([
+    r.summary,
+    r.useCase,
+    "Xu\u1EA5t video ch\u1EA5t l\u01B0\u1EE3ng cao \u0111\u1EBFn 4K, h\u1ED7 tr\u1EE3 c\u1EA3 khung ngang 16:9 (YouTube) v\xE0 d\u1ECDc 9:16 (TikTok/Reels/Shorts)",
+    tierLine,
+    "T\u01B0\u01A1ng th\xEDch tr\u1EF1c ti\u1EBFp Claude Code, OpenAI Codex, Antigravity qua MCP & g\xF3i ZIP Google Drive",
+    "T\u1EB7ng k\xE8m 2 video Demo m\u1EABu (ngang 16:9 + d\u1ECDc 9:16) trong th\u01B0 m\u1EE5c Google Drive t\u1EA3i v\u1EC1 t\u1EE9c th\xEC"
+  ]);
+}
+function buildSkillPrompt(r) {
+  const driveUrl = `https://drive.google.com/drive/folders/${r.folderId}`;
+  const tierLabel = r.tier === "vip3" ? "VIP III (Talking-Head)" : "VIP II (Motion Graphics)";
+  return [
+    `---`,
+    `name: ${r.slug}`,
+    `title: ${r.name}`,
+    `english_name: ${r.enName}`,
+    `tier: ${tierLabel}`,
+    `category: ${r.subGroup}`,
+    `version: ${r.version}`,
+    `---`,
+    ``,
+    `# ${r.name} (${r.enName})`,
+    ``,
+    `## M\xF4 t\u1EA3 hi\u1EC7u \u1EE9ng`,
+    r.summary,
+    ``,
+    `## Khi n\xE0o n\xEAn d\xF9ng Skill n\xE0y`,
+    r.useCase,
+    ``,
+    `## B\u1ED9 t\xE0i nguy\xEAn KhoSkill AI`,
+    `- **Th\u01B0 m\u1EE5c Google Drive (ZIP Skill Kit + 2 Video Demo 16:9 & 9:16):** ${driveUrl}`,
+    `- **T\u01B0\u01A1ng th\xEDch AI Agent:** Claude Code, OpenAI Codex, Antigravity`,
+    `- **T\u1EF7 l\u1EC7 khung h\xECnh h\u1ED7 tr\u1EE3:** 16:9 (1920x1080 / 4K), 9:16 (1080x1920), 4:3, 3:4`,
+    ``,
+    `## Quy tr\xECnh th\u1EF1c thi chu\u1EA9n cho AI Agent`,
+    `1. **Ki\u1EC3m tra b\u1ED9 Skill Kit c\u1EE5c b\u1ED9:** N\u1EBFu m\xE1y ng\u01B0\u1EDDi d\xF9ng ch\u01B0a c\xF3 th\u01B0 m\u1EE5c \`${r.slug}\` trong \`.claude/skills/\`, \`.codex/skills/\` ho\u1EB7c \`.agents/skills/\`, h\u01B0\u1EDBng d\u1EABn ng\u01B0\u1EDDi d\xF9ng t\u1EA3i file ZIP t\u1EEB link Google Drive b\xEAn tr\xEAn v\xE0 gi\u1EA3i n\xE9n v\xE0o th\u01B0 m\u1EE5c skills c\u1EE7a d\u1EF1 \xE1n.`,
+    `2. **\u0110\u1ECDc chi ti\u1EBFt \`SKILL.md\` trong g\xF3i ZIP \u0111\xE3 gi\u1EA3i n\xE9n:** Tu\xE2n th\u1EE7 \u0111\xFAng timing, b\u1ED1 c\u1EE5c typography, v\xF9ng an to\xE0n khu\xF4n m\u1EB7t ng\u01B0\u1EDDi d\u1EABn (n\u1EBFu l\xE0 Talking-Head) v\xE0 b\u1EA3ng m\xE0u c\u1EE7a hi\u1EC7u \u1EE9ng \`${r.slug}\`.`,
+    `3. **Nh\u1EADn brief t\u1EEB ng\u01B0\u1EDDi d\xF9ng:** X\xE1c nh\u1EADn n\u1ED9i dung ch\u1EEF/\xFD ch\xEDnh, ng\xF4n ng\u1EEF (h\u1ED7 tr\u1EE3 \u0111\u1EA7y \u0111\u1EE7 d\u1EA5u ti\u1EBFng Vi\u1EC7t), t\u1EF7 l\u1EC7 khung h\xECnh (16:9 ho\u1EB7c 9:16) v\xE0 file video/\u1EA3nh \u0111\u1EA7u v\xE0o (n\u1EBFu c\xF3).`,
+    `4. **D\u1EF1ng c\u1EA3nh & ki\u1EC3m tra tr\u1EF1c quan:** T\u1EA1o b\u1EA3n xem tr\u01B0\u1EDBc khung h\xECnh ch\xEDnh \u0111\u1EC3 \u0111\u1EA3m b\u1EA3o ch\u1EEF kh\xF4ng tr\xE0n l\u1EC1, kh\xF4ng che ch\u1EE7 th\u1EC3 v\xE0 nh\u1ECBp chuy\u1EC3n \u0111\u1ED9ng m\u01B0\u1EE3t m\xE0 tr\u01B0\u1EDBc khi render file MP4 ho\xE0n ch\u1EC9nh.`,
+    `5. **B\xE0n giao s\u1EA3n ph\u1EA9m:** Xu\u1EA5t file MP4 ch\u1EA5t l\u01B0\u1EE3ng cao k\xE8m b\u1EA3n project d\u1EC5 ch\u1EC9nh s\u1EEDa n\u1ED9i dung cho c\xE1c l\u1EA7n sau.`
+  ].join("\n");
+}
+function buildShortDesc(r) {
+  const combined = `${r.summary} ${r.useCase}`.trim();
+  if (combined.length <= 255) return combined;
+  if (r.summary.length <= 255) return r.summary;
+  const cut = r.summary.slice(0, 252);
+  const sp = cut.lastIndexOf(" ");
+  return (sp > 180 ? cut.slice(0, sp) : cut) + "\u2026";
+}
+var DRIVE_BATCH01_SKILLS = RAW_BATCH01.map((r) => ({
+  slug: r.slug,
+  name: r.name,
+  short_desc: buildShortDesc(r),
+  description: buildDescriptionHtml(r),
+  features: buildFeaturesJson(r),
+  tech_stack: JSON.stringify(
+    r.tier === "vip3" ? ["MCP Protocol", "Claude", "Codex", "Antigravity", "Talking-Head AI", "Motion 4K", "16:9 & 9:16"] : ["MCP Protocol", "Claude", "Codex", "Antigravity", "Motion Graphics", "UI Animation 4K", "16:9 & 9:16"]
+  ),
+  version: r.version,
+  skill_tier: r.tier,
+  price: r.price,
+  original_price: r.originalPrice,
+  thumbnail: `/static/demos/catalog/${r.slug}.jpg`,
+  demo_video_url: `https://drive.google.com/file/d/${r.demoId}/preview`,
+  raw_video_url: "",
+  download_url: `https://drive.google.com/drive/folders/${r.folderId}`,
+  doc_url: "https://khoskill.site/huong-dan",
+  file_size: r.sizeLabel,
+  is_featured: r.isFeatured,
+  is_hot: r.isHot,
+  is_new: 1,
+  sold_count: r.soldCount,
+  view_count: r.viewCount,
+  rating: 5,
+  rating_count: r.ratingCount,
+  mcp_server_name: `khoskill-${r.slug.replace(/^bs-/, "")}`,
+  mcp_clients: STANDARD_MCP_CLIENTS,
+  mcp_tools: STANDARD_MCP_TOOLS,
+  mcp_skill_prompt: buildSkillPrompt(r)
+}));
+
 // src/lib/mcp-bootstrap.ts
 var _done = false;
 var _inflight = null;
@@ -21370,7 +22485,7 @@ async function runOnce(db, env) {
   try {
     await runOptionalAdminBootstrap(db, env).catch((err) => console.error("[ADMIN_BOOTSTRAP]", err));
     await runOptionalDemoUserBootstrap(db, env).catch((err) => console.error("[DEMO_USER_BOOTSTRAP]", err));
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13, flag14] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first().catch(() => null),
@@ -21380,9 +22495,10 @@ async function runOnce(db, env) {
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0014_done'`).first().catch(() => null)
     ]);
-    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1" && flag13?.value === "1") {
+    if (flag04?.value === "1" && flag05?.value === "1" && flag06?.value === "1" && flag07?.value === "1" && flag08?.value === "1" && flag09?.value === "1" && flag10?.value === "1" && flag11?.value === "1" && flag12?.value === "1" && flag13?.value === "1" && flag14?.value === "1") {
       _done = true;
       return;
     }
@@ -22030,6 +23146,121 @@ async function runOnce(db, env) {
         mutated = true;
       }
     }
+    if (flag14?.value !== "1") {
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
+      ).first().catch(() => null);
+      let catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first().catch(() => null);
+      if (!catRow?.id) {
+        catRow = await db.prepare(`SELECT id FROM categories ORDER BY sort_order ASC LIMIT 1`).first().catch(() => null);
+      }
+      const catId = catRow?.id || null;
+      const existingRes = await db.prepare(`SELECT id, slug FROM products WHERE slug LIKE 'bs-%'`).all().catch(() => ({ results: [] }));
+      const existingBySlug = /* @__PURE__ */ new Map();
+      for (const r of existingRes.results || []) {
+        if (r?.slug && r?.id) existingBySlug.set(String(r.slug), Number(r.id));
+      }
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < DRIVE_BATCH01_SKILLS.length; i += BATCH_SIZE) {
+        const chunk = DRIVE_BATCH01_SKILLS.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          chunk.map(async (p) => {
+            const existId = existingBySlug.get(p.slug);
+            if (!existId) {
+              await db.prepare(
+                `INSERT INTO products (
+                  slug, name, category_id, short_desc, description, features, tech_stack, version,
+                  skill_tier, price, original_price, thumbnail, demo_video_url, raw_video_url, demo_url, download_url, doc_url,
+                  file_size, product_type, is_featured, is_hot, is_new, status,
+                  sold_count, view_count, rating, rating_count,
+                  mcp_endpoint, mcp_server_name, mcp_clients, mcp_tools, mcp_skill_prompt, mcp_render_webhook
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+              ).bind(
+                p.slug,
+                p.name,
+                catId,
+                p.short_desc,
+                p.description,
+                p.features,
+                p.tech_stack,
+                p.version,
+                p.skill_tier,
+                p.price,
+                p.original_price,
+                p.thumbnail,
+                p.demo_video_url,
+                p.raw_video_url,
+                "",
+                p.download_url,
+                p.doc_url,
+                p.file_size,
+                "mcp_skill",
+                p.is_featured,
+                p.is_hot,
+                p.is_new,
+                "published",
+                p.sold_count,
+                p.view_count,
+                p.rating,
+                p.rating_count,
+                "",
+                p.mcp_server_name,
+                p.mcp_clients,
+                p.mcp_tools,
+                p.mcp_skill_prompt,
+                ""
+              ).run().catch((err) => {
+                console.error("[MIGRATION_0014_INSERT]", p.slug, err);
+                return null;
+              });
+            } else {
+              await db.prepare(
+                `UPDATE products SET
+                  name=?, category_id=?, short_desc=?, description=?, features=?, tech_stack=?, version=?,
+                  skill_tier=?, price=?, original_price=?, thumbnail=?, demo_video_url=?, download_url=?, doc_url=?,
+                  file_size=?, product_type='mcp_skill', is_featured=?, is_hot=?, status='published',
+                  mcp_server_name=?, mcp_clients=?, mcp_tools=?, mcp_skill_prompt=?
+                 WHERE id=?`
+              ).bind(
+                p.name,
+                catId,
+                p.short_desc,
+                p.description,
+                p.features,
+                p.tech_stack,
+                p.version,
+                p.skill_tier,
+                p.price,
+                p.original_price,
+                p.thumbnail,
+                p.demo_video_url,
+                p.download_url,
+                p.doc_url,
+                p.file_size,
+                p.is_featured,
+                p.is_hot,
+                p.mcp_server_name,
+                p.mcp_clients,
+                p.mcp_tools,
+                p.mcp_skill_prompt,
+                existId
+              ).run().catch(() => null);
+            }
+          })
+        );
+      }
+      const seeded = await db.prepare(`SELECT COUNT(*) c FROM products WHERE slug LIKE 'bs-%'`).first().catch(() => null);
+      if (seeded && Number(seeded.c || 0) >= DRIVE_BATCH01_SKILLS.length) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0014_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0014_done', '1')`
+          ).run().catch(() => null);
+        });
+        mutated = true;
+      }
+    }
     if (mutated) invalidateCache();
     _done = true;
   } catch (err) {
@@ -22442,7 +23673,7 @@ async function renderProductList(c, opts) {
   const minPrice = c.req.query("min") || "";
   const maxPrice = c.req.query("max") || "";
   const page = Math.max(1, parseInt(c.req.query("page") || "1"));
-  const perPage = 12;
+  const perPage = 18;
   const includeComingSoon = opts.comboOnly || ["course", "chatbot", "app", "combo"].includes(type) || !!cat && cat !== "skill-video-ai" && cat !== "skill-ai-agent-mcp";
   const where = [includeComingSoon ? `p.status IN ('published','coming_soon')` : `p.status='published'`];
   const binds = [];

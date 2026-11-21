@@ -10,6 +10,7 @@
 
 import { invalidateCache } from './cache'
 import { LEGACY_PLACEHOLDER_MCP_SLUGS, REAL_MCP_VIDEO_SKILLS } from './real-mcp-skills'
+import { DRIVE_BATCH01_SKILLS } from './drive-batch01-skills'
 import { DEFAULT_MEMBERSHIP_PLANS, DEFAULT_USD_VND_RATE } from './tiers'
 
 let _done = false
@@ -100,7 +101,7 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
     await runOptionalAdminBootstrap(db, env).catch(err => console.error('[ADMIN_BOOTSTRAP]', err))
     await runOptionalDemoUserBootstrap(db, env).catch(err => console.error('[DEMO_USER_BOOTSTRAP]', err))
 
-    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13] = await Promise.all([
+    const [flag04, flag05, flag06, flag07, flag08, flag09, flag10, flag11, flag12, flag13, flag14] = await Promise.all([
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0004_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0005_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0006_done'`).first<any>().catch(() => null),
@@ -110,7 +111,8 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0010_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0011_done'`).first<any>().catch(() => null),
       db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0012_done'`).first<any>().catch(() => null),
-      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first<any>().catch(() => null)
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0013_done'`).first<any>().catch(() => null),
+      db.prepare(`SELECT value FROM settings WHERE key='mcp_migration_0014_done'`).first<any>().catch(() => null)
     ])
 
     if (
@@ -123,7 +125,8 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
       flag10?.value === '1' &&
       flag11?.value === '1' &&
       flag12?.value === '1' &&
-      flag13?.value === '1'
+      flag13?.value === '1' &&
+      flag14?.value === '1'
     ) {
       _done = true
       return
@@ -758,6 +761,82 @@ async function runOnce(db: D1Database, env?: any): Promise<void> {
         ).run().catch(async () => {
           await db.prepare(
             `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0013_done', '1')`
+          ).run().catch(() => null)
+        })
+        mutated = true
+      }
+    }
+
+    // ---- Stage 11: Migration 0014 (Publish 50 Drive Batch 01 Skills: 28 Motion VIP II + 22 Talking-Head VIP III) ----
+    if (flag14?.value !== '1') {
+      await db.prepare(
+        `SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), (SELECT COUNT(*) > 0 FROM products))`
+      ).first().catch(() => null)
+
+      let catRow = await db.prepare(`SELECT id FROM categories WHERE slug='skill-ai-agent-mcp'`).first<any>().catch(() => null)
+      if (!catRow?.id) {
+        catRow = await db.prepare(`SELECT id FROM categories ORDER BY sort_order ASC LIMIT 1`).first<any>().catch(() => null)
+      }
+      const catId = catRow?.id || null
+
+      const existingRes = await db.prepare(`SELECT id, slug FROM products WHERE slug LIKE 'bs-%'`).all().catch(() => ({ results: [] }))
+      const existingBySlug = new Map<string, number>()
+      for (const r of (existingRes.results || []) as any[]) {
+        if (r?.slug && r?.id) existingBySlug.set(String(r.slug), Number(r.id))
+      }
+
+      const BATCH_SIZE = 10
+      for (let i = 0; i < DRIVE_BATCH01_SKILLS.length; i += BATCH_SIZE) {
+        const chunk = DRIVE_BATCH01_SKILLS.slice(i, i + BATCH_SIZE)
+        await Promise.all(
+          chunk.map(async (p) => {
+            const existId = existingBySlug.get(p.slug)
+            if (!existId) {
+              await db.prepare(
+                `INSERT INTO products (
+                  slug, name, category_id, short_desc, description, features, tech_stack, version,
+                  skill_tier, price, original_price, thumbnail, demo_video_url, raw_video_url, demo_url, download_url, doc_url,
+                  file_size, product_type, is_featured, is_hot, is_new, status,
+                  sold_count, view_count, rating, rating_count,
+                  mcp_endpoint, mcp_server_name, mcp_clients, mcp_tools, mcp_skill_prompt, mcp_render_webhook
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+              ).bind(
+                p.slug, p.name, catId, p.short_desc, p.description, p.features, p.tech_stack, p.version,
+                p.skill_tier, p.price, p.original_price, p.thumbnail, p.demo_video_url, p.raw_video_url, '', p.download_url, p.doc_url,
+                p.file_size, 'mcp_skill', p.is_featured, p.is_hot, p.is_new, 'published',
+                p.sold_count, p.view_count, p.rating, p.rating_count,
+                '', p.mcp_server_name, p.mcp_clients, p.mcp_tools, p.mcp_skill_prompt, ''
+              ).run().catch((err) => {
+                console.error('[MIGRATION_0014_INSERT]', p.slug, err)
+                return null
+              })
+            } else {
+              await db.prepare(
+                `UPDATE products SET
+                  name=?, category_id=?, short_desc=?, description=?, features=?, tech_stack=?, version=?,
+                  skill_tier=?, price=?, original_price=?, thumbnail=?, demo_video_url=?, download_url=?, doc_url=?,
+                  file_size=?, product_type='mcp_skill', is_featured=?, is_hot=?, status='published',
+                  mcp_server_name=?, mcp_clients=?, mcp_tools=?, mcp_skill_prompt=?
+                 WHERE id=?`
+              ).bind(
+                p.name, catId, p.short_desc, p.description, p.features, p.tech_stack, p.version,
+                p.skill_tier, p.price, p.original_price, p.thumbnail, p.demo_video_url, p.download_url, p.doc_url,
+                p.file_size, p.is_featured, p.is_hot,
+                p.mcp_server_name, p.mcp_clients, p.mcp_tools, p.mcp_skill_prompt,
+                existId
+              ).run().catch(() => null)
+            }
+          })
+        )
+      }
+
+      const seeded = await db.prepare(`SELECT COUNT(*) c FROM products WHERE slug LIKE 'bs-%'`).first<any>().catch(() => null)
+      if (seeded && Number(seeded.c || 0) >= DRIVE_BATCH01_SKILLS.length) {
+        await db.prepare(
+          `INSERT INTO settings (key, value) VALUES ('mcp_migration_0014_done', '1') ON CONFLICT(key) DO UPDATE SET value='1'`
+        ).run().catch(async () => {
+          await db.prepare(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_migration_0014_done', '1')`
           ).run().catch(() => null)
         })
         mutated = true

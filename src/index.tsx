@@ -247,7 +247,7 @@ async function renderProductList(c: any, opts: { catSlug?: string; comboOnly?: b
   const minPrice = c.req.query('min') || ''
   const maxPrice = c.req.query('max') || ''
   const page = Math.max(1, parseInt(c.req.query('page') || '1'))
-  const perPage = 12
+  const perPage = 18
 
   const includeComingSoon = opts.comboOnly || ['course', 'chatbot', 'app', 'combo'].includes(type) || (!!cat && cat !== 'skill-video-ai' && cat !== 'skill-ai-agent-mcp')
   const where: string[] = [includeComingSoon ? `p.status IN ('published','coming_soon')` : `p.status='published'`]
